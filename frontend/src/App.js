@@ -3,26 +3,9 @@ import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { routes } from "./helpers/autoRoutes";
 import ProtectedRoute from "./helpers/ProtectedRoute";
 
-// Simpler Adminerkennung (z.B. im Token, sonst im localStorage)
-function isAdmin() {
-  return localStorage.getItem("is_admin") === "1";
-}
-
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [isAdminFlag, setIsAdminFlag] = useState(localStorage.getItem("is_admin") === "1");
-
-  // Nur Hauptseiten ohne Login/Register/Logout und ohne Parameter
-  const navPages = routes
-    .filter(
-      r =>
-        !["/logout", "/login", "/register"].includes(r.path) &&
-        !/:/.test(r.path)
-    )
-    .filter(r =>
-      // "Create" nur für Admin zeigen
-      !(r.path === "/create" && !isAdminFlag)
-    );
 
   return (
     <Router>
@@ -81,9 +64,9 @@ function App() {
 
       {/* --- Routen --- */}
       <Routes>
-        {/* Login & Register immer erreichbar */}
+        {/* Login, Register & Reset immer erreichbar */}
         {routes
-          .filter(r => r.path === "/login" || r.path === "/register")
+          .filter(r => r.path === "/login" || r.path === "/register" || r.path === "/reset")
           .map(r => (
             <Route
               key={r.path}
@@ -96,7 +79,7 @@ function App() {
 
         {/* Geschützte Seiten */}
         {routes
-          .filter(r => r.path !== "/login" && r.path !== "/register")
+          .filter(r => r.path !== "/login" && r.path !== "/register" && r.path !== "/reset")
           .map(r => (
             <Route
               key={r.path}
