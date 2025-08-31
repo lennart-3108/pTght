@@ -1,0 +1,34 @@
+## Projektüberblick: pTght
+
+### Kurzbeschreibung & Funktionsweise
+
+Das Projekt **pTght** ist eine webbasierte Sportplattform, die aus einem React-Frontend und einem Node.js/Express-Backend besteht. Sie ermöglicht die Verwaltung von Sportarten, Benutzerregistrierung mit E-Mail-Bestätigung, Login/Profilanzeige und bietet eine Adminfunktion für die Erstellung neuer Inhalte.
+
+---
+
+### Architektur
+
+- **Frontend:**  
+  Implementiert mit React (bootstrapped mit Create React App). Es gibt verschiedene Seiten wie Login, Registrierung, Sportartenliste, Sportartdetails, User-Profil und eine Admin-Seite zur Erstellung von Einträgen. Die Navigation ist rollenbasiert (Admin vs. User).
+- **Backend:**  
+  Node.js mit Express, SQLite als Datenbank. Das Backend bietet REST-Endpunkte für Sportarten, Nutzerprofile und Registrierung.  
+  Wichtige Features:
+  - JWT-basierte Authentifizierung
+  - Bcrypt-Passworthashing
+  - Nodemailer für E-Mail-Bestätigung (Mailtrap für Tests)
+  - Admin-Erkennung (z.B. via Token)
+  - CORS sauber konfiguriert für Frontend-Integration
+
+---
+
+### Features
+
+- Registrierung mit E-Mail-Bestätigung
+- Login & Profilansicht für Nutzer
+- Sportartenübersicht und Detailansicht
+- Rollenbasierte Navigation (Admin kann neue Inhalte anlegen)
+- Sicherer Passwortumgang (Hashing)
+- REST-API für alle Kern-Entities
+- SQLite als leichtgewichtige Datenbank
+
+---
