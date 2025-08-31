@@ -20,3 +20,4 @@ export default function LogoutPage({ setToken, setIsAdminFlag }) {
     </div>
   );
 }
+

@@ -195,3 +195,4 @@ app.get("/sports/:id", (req, res) => {
 }
 
 setupAndStart();
+
