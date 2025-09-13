@@ -1,0 +1,36 @@
+@startuml Use Case Diagramm - Sportplattform
+
+actor User as U
+actor Admin as A
+
+rectangle "Sportplattform" {
+  usecase "Registrieren" as UC1
+  usecase "E-Mail bestätigen" as UC2
+  usecase "Einloggen" as UC3
+  usecase "Profil anzeigen" as UC4
+  usecase "Sportarten anzeigen" as UC5
+  usecase "Ligen/Städte anzeigen" as UC6
+  usecase "Ausloggen" as UC7
+  usecase "Inhalte erstellen (Admin)" as UC8
+  usecase "Login fehlgeschlagen" as UC9
+  usecase "E-Mail erneut senden" as UC10
+}
+
+U --> UC1
+U --> UC2
+U --> UC3
+U --> UC4
+U --> UC5
+U --> UC6
+U --> UC7
+U --> UC9
+U --> UC10
+
+A --> UC8
+A --> UC3
+A --> UC4
+A --> UC5
+A --> UC6
+A --> UC7
+
+@enduml
