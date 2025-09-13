@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-export default function LoginPage() {
+export default function LoginPage({ setToken, setIsAdminFlag }) {
+  const navigate = useNavigate();
   // Login-Form-States
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -23,12 +25,20 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      if (data.success) {
-        setLoginMsg("✅ Login erfolgreich!");
-        // Weiterleitung etc. hier
-      } else {
+      if (!res.ok) {
         setLoginMsg(data.error || "Login fehlgeschlagen.");
+        return;
       }
+      // Erfolg: Backend liefert { token, is_admin }
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("is_admin", data.is_admin ? "1" : "0");
+      setToken(data.token);
+      setIsAdminFlag(!!data.is_admin);
+      setLoginMsg("✅ Login erfolgreich!");
+      // Banner-Flags für App setzen und anschließend weiterleiten
+      sessionStorage.setItem("loginSuccessAt", new Date().toISOString());
+      sessionStorage.setItem("loginEmail", email);
+      navigate("/");
     } catch {
       setLoginMsg("Server nicht erreichbar.");
     }
@@ -69,6 +79,7 @@ export default function LoginPage() {
           value={email}
           onChange={e => setEmail(e.target.value)}
           required
+          autoComplete="email"
           style={{ display: "block", marginBottom: 8, width: "100%" }}
         />
         <input
@@ -77,6 +88,7 @@ export default function LoginPage() {
           value={password}
           onChange={e => setPassword(e.target.value)}
           required
+          autoComplete="current-password"
           style={{ display: "block", marginBottom: 8, width: "100%" }}
         />
         <button type="submit" style={{ width: "100%" }}>Login</button>
@@ -105,6 +117,7 @@ export default function LoginPage() {
             value={resetUsername}
             onChange={e => setResetUsername(e.target.value)}
             required
+            autoComplete="username"
             style={{ display: "block", marginBottom: 8, width: "100%" }}
           />
           <input
@@ -114,6 +127,7 @@ export default function LoginPage() {
             onChange={e => setResetPassword(e.target.value)}
             required
             minLength={6}
+            autoComplete="new-password"
             style={{ display: "block", marginBottom: 8, width: "100%" }}
           />
           <button type="submit" style={{ width: "100%" }}>Zurücksetzen</button>
