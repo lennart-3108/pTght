@@ -16,7 +16,8 @@ export default function UserDetailPage() {
   useEffect(() => {
     let mounted = true;
     setErr("");
-    fetch(`http://localhost:5001/users/${userId}`, { headers: { Authorization: `Bearer ${token}` } })
+    const apiBase = process.env.REACT_APP_API_BASE || "http://localhost:5001";  // Neu: ENV für API-Base
+    fetch(`${apiBase}/users/${userId}`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then(j => mounted && setU(j))
       .catch(e => mounted && setErr(e.message || "Fehler"));
@@ -25,15 +26,16 @@ export default function UserDetailPage() {
 
   useEffect(() => {
     let mounted = true;
+    const apiBase = process.env.REACT_APP_API_BASE || "http://localhost:5001";  // Neu: ENV für API-Base
     // Ligen des Users
-    fetch(`http://localhost:5001/users/${userId}/leagues`, {
+    fetch(`${apiBase}/users/${userId}/leagues`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(r => (r.ok ? r.json() : []))
       .then(j => mounted && setLeagues(Array.isArray(j) ? j : []))
       .catch(() => mounted && setLeagues([]));
     // Spiele des Users
-    fetch(`http://localhost:5001/users/${userId}/games`, {
+    fetch(`${apiBase}/users/${userId}/games`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(r => (r.ok ? r.json() : { upcoming: [], completed: [] }))

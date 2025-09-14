@@ -42,6 +42,7 @@ module.exports = function authRoutes(ctx) {
           });
 
         if (mailerState?.enabled && transporter) {
+          console.log("Mailer aktiviert, versende E-Mail an:", email);
           transporter.sendMail(
             {
               from: process.env.MAIL_FROM || "no-reply@example.com",
@@ -55,15 +56,18 @@ module.exports = function authRoutes(ctx) {
             },
             (mailErr) => {
               if (mailErr) {
+                console.error("E-Mail-Versand fehlgeschlagen an:", email, "Fehler:", mailErr.message);
                 return res.status(201).json({
                   message: "Registrierung erfolgreich, aber E-Mail-Versand fehlgeschlagen.",
                   ...(process.env.NODE_ENV === "development" ? { confirmUrl } : {})
                 });
               }
+              console.log("E-Mail erfolgreich versendet an:", email);
               return sendSuccess();
             }
           );
         } else {
+          console.log("Mailer nicht aktiviert, E-Mail nicht versendet an:", email, "enabled:", mailerState?.enabled, "transporter:", !!transporter);
           sendSuccess();
         }
       }
