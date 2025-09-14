@@ -22,29 +22,19 @@ module.exports = function sportsRoutes(ctx) {
     });
   });
 
-  router.get("/sports", (_req, res) => {
+  // Namen aller Sportarten (ohne IDs)
+  router.get("/names", (_req, res) => {
     db.all("SELECT name FROM sports ORDER BY name", (err, rows) =>
-      err ? res.status(500).json({ error: "Datenbankfehler" }) : res.json(rows.map(r => r.name))
+      err ? res.status(500).json({ error: "Datenbankfehler" }) : res.json((rows || []).map(r => r.name))
     );
   });
 
-  router.get("/sports/list", (_req, res) => {
-    db.all("SELECT id, name FROM sports ORDER BY name", (err, rows) =>
-      err ? res.status(500).json({ error: "Datenbankfehler" }) : res.json(rows)
-    );
-  });
-
-  router.get("/sports/:id", (req, res) => {
-    const id = Number(req.params.id);
-    db.get("SELECT * FROM sports WHERE id = ?", [id], (err, row) => {
-      if (err) return res.status(500).json({ error: "Datenbankfehler" });
-      if (!row) return res.status(404).json({ error: "Sportart nicht gefunden" });
-      res.json(row);
-    });
-  });
-
-  router.get("/sports/:id/leagues", (req, res) => {
+  // Ligen einer Sportart
+  router.get("/:id/leagues", (req, res) => {
     const sportId = Number(req.params.id);
+    if (!Number.isInteger(sportId)) {
+      return res.status(400).json({ error: "Ungültige ID" });
+    }
     const sql = `
       SELECT l.id, l.name,
              c.id AS cityId, c.name AS city,

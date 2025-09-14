@@ -16,7 +16,10 @@ app.use(cors(cfg.cors));
 app.options("*", cors());
 app.use(express.json());
 
-const db = initDb(cfg.DB_PATH);
+const sqlite3 = require("sqlite3").verbose();
+const db = new sqlite3.Database(process.env.DB_FILE || "database.sqlite");
+
+const { ensureCommunityLeagues } = require("./src/jobs/ensureCommunityLeagues");
 
 // Mailer
 const { transporter, state: mailerState, sendMail } = createMailer(cfg.mailer);
@@ -40,8 +43,15 @@ createIncrementalAdmin(db, (info) => {
   lastStartupAdmin.value = info;
 });
 
+ensureCommunityLeagues(db, () => console.log("Community-Ligen synchronisiert."));
+
 // Routes
 registerRoutes(app, ctx);
+
+const sportsRoutes = require("./src/routes/sports");
+
+// Mount routes BEFORE any 404 handler
+app.use("/sports", sportsRoutes({ db }));
 
 // Start server
 app.listen(PORT, () => {

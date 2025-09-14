@@ -4,6 +4,8 @@ import { API_BASE } from "../config";
 
 export default function UserDetailPage() {
   const { id } = useParams();
+  console.log("User ID from URL:", id); // Debugging-Log hinzufügen
+
   const [user, setUser] = useState(null);
   const [leagues, setLeagues] = useState([]);
   const [games, setGames] = useState([]);
@@ -11,6 +13,15 @@ export default function UserDetailPage() {
   const [err, setErr] = useState("");
 
   useEffect(() => {
+    if (!id) {
+      console.error("User ID is undefined. Cannot fetch data.");
+      setErr("Ungültige Benutzer-ID.");
+      setLoading(false);
+      return;
+    }
+
+    console.log("Fetching data for user ID:", id);
+
     let mounted = true;
     setLoading(true);
     setErr("");
@@ -24,9 +35,23 @@ export default function UserDetailPage() {
           fetch(`${API_BASE}/users/${id}/games`, { headers: { Authorization: `Bearer ${token}` } }),
         ]);
 
-        if (!userRes.ok) throw new Error(`User not found (HTTP ${userRes.status})`);
-        if (!leaguesRes.ok) throw new Error(`Leagues not found (HTTP ${leaguesRes.status})`);
-        if (!gamesRes.ok) throw new Error(`Games not found (HTTP ${gamesRes.status})`);
+        // Log detailed responses for debugging
+        console.log("User response:", userRes);
+        console.log("Leagues response:", leaguesRes);
+        console.log("Games response:", gamesRes);
+
+        if (!userRes.ok) {
+          const errorText = await userRes.text();
+          throw new Error(`User not found (HTTP ${userRes.status}): ${errorText}`);
+        }
+        if (!leaguesRes.ok) {
+          const errorText = await leaguesRes.text();
+          throw new Error(`Leagues not found (HTTP ${leaguesRes.status}): ${errorText}`);
+        }
+        if (!gamesRes.ok) {
+          const errorText = await gamesRes.text();
+          throw new Error(`Games not found (HTTP ${gamesRes.status}): ${errorText}`);
+        }
 
         const userData = await userRes.json();
         const leaguesData = await leaguesRes.json();
@@ -38,6 +63,7 @@ export default function UserDetailPage() {
           setGames(Array.isArray(gamesData) ? gamesData : []);
         }
       } catch (e) {
+        console.error("Error fetching user data:", e.message || e);
         if (mounted) setErr(e.message || "Fehler beim Laden der Benutzerdaten.");
       } finally {
         if (mounted) setLoading(false);
@@ -46,6 +72,33 @@ export default function UserDetailPage() {
 
     fetchUserData();
     return () => { mounted = false; };
+  }, [id]);
+
+  useEffect(() => {
+    const fetchLeagues = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const response = await fetch(`${API_BASE}/users/${id}/leagues`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+        console.log("Leagues response:", response);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Error fetching leagues: ${errorText}`); // Fehlerprotokollierung
+          throw new Error(`Leagues not found (HTTP ${response.status}): ${errorText}`);
+        }
+
+        const leaguesData = await response.json();
+        setLeagues(Array.isArray(leaguesData) ? leaguesData : []);
+      } catch (e) {
+        console.error("Error fetching leagues:", e.message || e);
+        setErr(e.message || "Fehler beim Laden der Ligen.");
+      }
+    };
+
+    fetchLeagues();
   }, [id]);
 
   if (loading) return <div style={{ padding: 16 }}>Lade Benutzerdaten...</div>;

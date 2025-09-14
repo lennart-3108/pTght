@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { API_BASE } from "../config";
 
 export default function GameDetailPage() {
   const { gameId } = useParams();
@@ -9,7 +10,7 @@ export default function GameDetailPage() {
   useEffect(() => {
     let mounted = true;
     setErr("");
-    fetch(`http://localhost:5001/games/${gameId}`)
+    fetch(`${API_BASE}/games/${gameId}`)
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then(j => mounted && setG(j))
       .catch(e => mounted && setErr(e.message || "Fehler"));

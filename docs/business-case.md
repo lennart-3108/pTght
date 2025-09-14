@@ -77,7 +77,7 @@ Datenmodell (Kurz)
 - user_sports(user_id INTEGER FK users(id), sport_id INTEGER FK sports(id), PRIMARY KEY(user_id, sport_id))
 - cities(id PRIMARY KEY, name TEXT UNIQUE NOT NULL)
 - leagues(id PRIMARY KEY, name TEXT NOT NULL, city_id INTEGER FK cities(id), sport_id INTEGER FK sports(id), created_at DATETIME DEFAULT CURRENT_TIMESTAMP)
-- league_members(league_id INTEGER FK leagues(id), user_id INTEGER FK users(id), joined_at DATETIME DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(league_id, user_id))
+- user_leagues(league_id INTEGER FK leagues(id), user_id INTEGER FK users(id), joined_at DATETIME DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(league_id, user_id))
 
 Marktanalyse
 - Zielmarkt: Sportbegeisterte in Deutschland/Österreich (geschätzt 10M+ aktive Sportler; Quelle: DOSB-Statistiken).
