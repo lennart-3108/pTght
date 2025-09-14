@@ -6,7 +6,7 @@ require("dotenv").config({ path: path.join(__dirname, ".env") });
 const { loadConfig } = require("./src/config");
 const { initDb, getDbSchema, schemaToHtml, createIncrementalAdmin } = require("./src/db");
 const { createMailer, verifyAndSendAcceptance } = require("./src/mailer");
-const { registerRoutes } = require("./src/routes");
+const { registerRoutes } = require("./src/routes/index");
 
 const app = express();
 const cfg = loadConfig();
