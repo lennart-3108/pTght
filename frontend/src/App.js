@@ -20,9 +20,26 @@ function isAdmin() {
   return localStorage.getItem("is_admin") === "1";
 }
 
+// Globale Fehlerbehandlung für API-Aufrufe
+function fetchWithErrorLogging(url, options) {
+  return fetch(url, options).then(async (response) => {
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Error fetching ${url} (HTTP ${response.status}): ${errorText}`);
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+    return response.json();
+  });
+}
+
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [isAdminFlag, setIsAdminFlag] = useState(localStorage.getItem("is_admin") === "1");
+
+  useEffect(() => {
+    console.log("Token:", token);
+    console.log("Is Admin:", isAdminFlag);
+  }, [token, isAdminFlag]);
 
   // Hintergrundrotation mit Bildern "l-*" aus src/images
   useEffect(() => {
@@ -207,7 +224,7 @@ function App() {
 
           {/* User Profil (öffentliches Profil) */}
           <Route
-            path="/user/:userId"
+            path="/user/:id" // Stelle sicher, dass ":id" korrekt definiert ist
             element={
               <ProtectedRoute token={token} setToken={setToken}>
                 <UserDetailPage />
@@ -248,6 +265,20 @@ function App() {
                   <AdminPage />
                 ) : (
                   <div style={{ padding: 16 }}>403 – Nur für Admins</div>
+                )}
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Profil (nur Admin) */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                {isAdminFlag ? (
+                  <UserDetailPage />
+                ) : (
+                  <div style={{ padding: 16 }}>403 – Zugriff verweigert. Nur für Admins.</div>
                 )}
               </ProtectedRoute>
             }

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { API_BASE } from "../config";
 
 export default function SportsDetailPage() {
   const { id } = useParams();
@@ -12,17 +13,27 @@ export default function SportsDetailPage() {
     let mounted = true;
     setLoading(true);
     setErr("");
+
+    const normalize = (l) => ({
+      id: l.id,
+      name: l.name,
+      cityId: l.cityId ?? l.city_id ?? l.cityID,
+      sportId: l.sportId ?? l.sport_id ?? l.sportID,
+      city: l.city ?? l.city_name ?? l.cityName ?? "",
+    });
+
     Promise.all([
-      fetch(`http://localhost:5001/sports/${id}`).then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))),
-      fetch(`http://localhost:5001/sports/${id}/leagues`).then(r => (r.ok ? r.json() : []))
+      fetch(`${API_BASE}/sports/${id}`).then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`)))),
+      fetch(`${API_BASE}/sports/${id}/leagues`).then(r => (r.ok ? r.json() : []))
     ])
       .then(([s, ls]) => {
         if (!mounted) return;
         setSport(s);
-        setLeagues(Array.isArray(ls) ? ls : []);
+        setLeagues(Array.isArray(ls) ? ls.map(normalize) : []);
       })
       .catch(e => mounted && setErr(e.message || "Fehler"))
       .finally(() => mounted && setLoading(false));
+
     return () => { mounted = false; };
   }, [id]);
 

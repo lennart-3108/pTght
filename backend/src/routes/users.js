@@ -43,7 +43,7 @@ module.exports = function usersRoutes(ctx) {
         c.id AS cityId, c.name AS city,
         s.id AS sportId, s.name AS sport,
         lm.joined_at
-      FROM league_members lm
+      FROM user_leagues lm
       JOIN leagues l ON l.id = lm.league_id
       JOIN cities c ON c.id = l.city_id
       JOIN sports s ON s.id = l.sport_id
@@ -74,7 +74,7 @@ module.exports = function usersRoutes(ctx) {
       JOIN leagues l ON l.id = g.league_id
       JOIN cities c ON c.id = l.city_id
       JOIN sports s ON s.id = l.sport_id
-      WHERE g.league_id IN (SELECT league_id FROM league_members WHERE user_id = ?)
+      WHERE g.league_id IN (SELECT league_id FROM user_leagues WHERE user_id = ?)
       ORDER BY g.kickoff_at DESC
     `;
     db.all(sql, [id], (err, rows) => {

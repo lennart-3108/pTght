@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE } from "../config";
 
 export default function RegistrationPage() {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ export default function RegistrationPage() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    fetch("http://localhost:5001/sports")
+    fetch(`${API_BASE}/sports`)
       .then(res => res.json())
       .then(data => setAvailableSports(data || []))
       .catch(() => setAvailableSports([]));
@@ -32,7 +33,7 @@ export default function RegistrationPage() {
       return;
     }
     try {
-      const res = await fetch("http://localhost:5001/register", {
+      const res = await fetch(`${API_BASE}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

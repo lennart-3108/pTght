@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { API_BASE } from "../config";
 
 export default function CityDetailPage() {
   const { cityId } = useParams();
@@ -11,7 +12,7 @@ export default function CityDetailPage() {
     let isMounted = true;
     setLoading(true);
     setErr("");
-    fetch(`http://localhost:5001/cities/${cityId}`)
+    fetch(`${API_BASE}/cities/${cityId}`)
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
         return r.json();
