@@ -49,17 +49,17 @@ Nichtfunktionale Anforderungen
 - Leistung: SQLite für MVP, leicht migrierbar auf RDBMS.
 
 Erfolgskriterien (KPIs)
-- Registrierungsabschlussquote (% mit bestätigter E-Mail).
-- Anzahl aktiver Nutzer pro Woche/Monat.
-- Zeit bis zur E-Mail-Zustellung/Bestätigung (Median).
-- Anzahl gelisteter Ligen/Städte/Sportarten.
-- Fehlerraten: 5xx auf API, Bounce auf E-Mails.
+- Registrierungsabschlussquote: Ziel >80% (gemessen via Tracking-Pixel in Bestätigungs-E-Mail; Tool: Google Analytics oder eigenes Logging).
+- Anzahl aktiver Nutzer: Ziel 500+ pro Monat (gemessen via tägliche Login-Events in DB; Tool: SQL-Queries).
+- Zeit bis zur E-Mail-Zustellung/Bestätigung: Median <5 Minuten (gemessen via Mailer-Logs; Tool: Log-Analyse).
+- Anzahl gelisteter Ligen/Städte/Sportarten: Ziel 100+ Ligen, 50+ Städte, 20+ Sportarten (gemessen via DB-Counts; Tool: Admin-Dashboard).
+- Fehlerraten: <5% 5xx auf API, <2% Bounce auf E-Mails (gemessen via Server-Logs und SMTP-Reports; Tool: Monitoring wie Prometheus).
 
 Risiken
-- E-Mail-Zustellbarkeit (Spam, Konfiguration).
-- Datenwachstum > SQLite-Grenzen.
-- Sicherheit bei falscher JWT_SECRET-Konfiguration.
-- Abhängigkeit von externer SMTP-Infrastruktur.
+- E-Mail-Zustellbarkeit (Spam, Konfiguration): Mitigation – Fallback auf alternative SMTP-Provider (z. B. SendGrid); regelmäßige SPF/DKIM-Checks; Test-E-Mails vor Launch.
+- Datenwachstum > SQLite-Grenzen: Mitigation – Monitoring von DB-Größe; Plan für Migration zu PostgreSQL bei >1GB Daten; Backup-Strategie.
+- Sicherheit bei falscher JWT_SECRET-Konfiguration: Mitigation – ENV-Validierung beim Start; Warnungen in Logs; regelmäßige Security-Audits.
+- Abhängigkeit von externer SMTP-Infrastruktur: Mitigation – Lokaler Mail-Queue als Buffer; Multi-Provider-Support; Offline-Modus für kritische Funktionen.
 
 Architektur (High-Level)
 - Frontend: React-Router, geschützte Routen, einfache Banner für Systemereignisse.
@@ -72,11 +72,22 @@ Architektur (High-Level)
 - Deployment: Lokale Entwicklung, später Containerisierung möglich.
 
 Datenmodell (Kurz)
-- users(id, firstname, lastname, birthday, email[unique], password_hash, is_admin, is_confirmed, confirmation_token?)
-- sports(id, name)
-- user_sports(user_id FK, sport_id FK)
-- cities(id, name)
-- leagues(id, name, city_id FK, sport_id FK)
+- users(id PRIMARY KEY, firstname TEXT NOT NULL, lastname TEXT NOT NULL, birthday DATE, email TEXT UNIQUE NOT NULL, password_hash TEXT NOT NULL, is_admin BOOLEAN DEFAULT FALSE, is_confirmed BOOLEAN DEFAULT FALSE, confirmation_token TEXT, created_at DATETIME DEFAULT CURRENT_TIMESTAMP)
+- sports(id PRIMARY KEY, name TEXT UNIQUE NOT NULL)
+- user_sports(user_id INTEGER FK users(id), sport_id INTEGER FK sports(id), PRIMARY KEY(user_id, sport_id))
+- cities(id PRIMARY KEY, name TEXT UNIQUE NOT NULL)
+- leagues(id PRIMARY KEY, name TEXT NOT NULL, city_id INTEGER FK cities(id), sport_id INTEGER FK sports(id), created_at DATETIME DEFAULT CURRENT_TIMESTAMP)
+- league_members(league_id INTEGER FK leagues(id), user_id INTEGER FK users(id), joined_at DATETIME DEFAULT CURRENT_TIMESTAMP, PRIMARY KEY(league_id, user_id))
+
+Marktanalyse
+- Zielmarkt: Sportbegeisterte in Deutschland/Österreich (geschätzt 10M+ aktive Sportler; Quelle: DOSB-Statistiken).
+- Wettbewerb: Lokale Vereinsseiten (z. B. myVerein), globale Plattformen (z. B. Meetup), aber keine spezifische Liga-Finder-App; Differenzierung durch Fokus auf Ligen/Städte.
+- Marktgröße: Potenziell 1-5% Marktanteil in ersten 2 Jahren (ca. 100K-500K Nutzer); Wachstum durch virale Effekte in Communities.
+
+Kosten-Nutzen-Analyse
+- Entwicklungskosten (MVP): €50K-100K (Schätzung: 6 Monate Entwicklungszeit, 2-3 Entwickler; inkl. Tools wie Mailtrap).
+- Betriebskosten (jährlich): €10K-20K (Hosting, SMTP, Monitoring; skalierbar mit Nutzerwachstum).
+- Erwarteter Nutzen/ROI: Break-even nach 1 Jahr bei 10K aktiven Nutzern (Monetarisierung via Premium-Features €5/Monat/Nutzer); ROI >200% in 2 Jahren durch Effizienzgewinne und Skalierung.
 
 Roadmap (Phasen)
 1. MVP (heute): Registrierung/Login, E-Mail-Bestätigung, Kataloge, Admin-Bootstrap.

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import { routes } from "./helpers/autoRoutes";
 import ProtectedRoute from "./helpers/ProtectedRoute";
@@ -11,6 +11,7 @@ import CreatePage from "./pages/CreatePage"; // neu
 import UserDetailPage from "./pages/UserDetailPage"; // neu
 import GameDetailPage from "./pages/GameDetailPage"; // neu
 import AdminPage from "./pages/AdminPage"; // neu
+import "./styles.css"; // neu
 
 // Simpler Adminerkennung (z.B. im Token, sonst im localStorage)
 function isAdmin() {
@@ -20,6 +21,26 @@ function isAdmin() {
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [isAdminFlag, setIsAdminFlag] = useState(localStorage.getItem("is_admin") === "1");
+
+  // Hintergrundrotation mit Bildern "l-*" aus src/images
+  useEffect(() => {
+    let images = [];
+    try {
+      const ctx = require.context("./images", false, /^\.\/l-.*\.(png|jpe?g|webp|gif)$/i);
+      images = ctx.keys().map(ctx);
+    } catch {
+      images = [];
+    }
+    if (!images.length) return;
+    let i = Math.floor(Math.random() * images.length);
+    const apply = () => {
+      document.documentElement.style.setProperty("--bg-url", `url(${images[i]})`);
+      i = (i + 1) % images.length;
+    };
+    apply();
+    const t = setInterval(apply, 20000);
+    return () => clearInterval(t);
+  }, []);
 
   // Nur Hauptseiten ohne Login/Register/Logout und ohne Parameter
   const navPages = routes
@@ -37,14 +58,14 @@ function App() {
     <Router>
       {/* --- Header --- */}
       <nav
+        className="site"
         style={{
           padding: "10px 20px",
-          backgroundColor: "#00748F",
           color: "#fff",
           display: "flex",
           gap: "15px",
           alignItems: "center",
-          borderBottom: "4px solid rgb(141, 195, 131)"
+          // Hintergrund via CSS-Klasse, Rest bleibt
         }}
       >
         <Link style={{ color: "#d3d3d3", fontWeight: "bold" }} to="/">
@@ -94,145 +115,147 @@ function App() {
       </nav>
 
       {/* --- Routen --- */}
-      <Routes>
-        {/* Login & Register immer erreichbar */}
-        {routes
-          .filter(r => r.path === "/login" || r.path === "/register")
-          .map(r => (
-            <Route
-              key={r.path}
-              path={r.path}
-              element={React.cloneElement(r.element, {
-                ...(r.path === "/login" ? { setToken, setIsAdminFlag } : {})
-              })}
-            />
-          ))}
+      <div className="app-content">
+        <Routes>
+          {/* Login & Register immer erreichbar */}
+          {routes
+            .filter(r => r.path === "/login" || r.path === "/register")
+            .map(r => (
+              <Route
+                key={r.path}
+                path={r.path}
+                element={React.cloneElement(r.element, {
+                  ...(r.path === "/login" ? { setToken, setIsAdminFlag } : {})
+                })}
+              />
+            ))}
 
-        {/* Geschützte Seiten (ohne /leagues und ohne /create, eigene Routen unten) */}
-        {routes
-          .filter(r => r.path !== "/login" && r.path !== "/register")
-          .filter(r => r.path !== "/leagues")
-          .filter(r => r.path !== "/create") // neu: /create separat unten
-          .map(r => (
-            <Route
-              key={r.path}
-              path={r.path}
-              element={
-                <ProtectedRoute token={token} setToken={setToken}>
-                  {React.cloneElement(r.element, {
-                    ...(r.path === "/logout" ? { setToken, setIsAdminFlag } : {}),
-                    ...(r.path === "/create" ? { isAdmin: isAdminFlag } : {})
-                  })}
-                </ProtectedRoute>
-              }
-            />
-          ))}
+          {/* Geschützte Seiten (ohne /leagues und ohne /create, eigene Routen unten) */}
+          {routes
+            .filter(r => r.path !== "/login" && r.path !== "/register")
+            .filter(r => r.path !== "/leagues")
+            .filter(r => r.path !== "/create") // neu: /create separat unten
+            .map(r => (
+              <Route
+                key={r.path}
+                path={r.path}
+                element={
+                  <ProtectedRoute token={token} setToken={setToken}>
+                    {React.cloneElement(r.element, {
+                      ...(r.path === "/logout" ? { setToken, setIsAdminFlag } : {}),
+                      ...(r.path === "/create" ? { isAdmin: isAdminFlag } : {})
+                    })}
+                  </ProtectedRoute>
+                }
+              />
+            ))}
 
-        {/* Leagues-Übersicht */}
-        <Route
-          path="/leagues"
-          element={
-            <ProtectedRoute token={token} setToken={setToken}>
-              <LeaguesPage />
-            </ProtectedRoute>
-          }
-        />
-        {/* League-Detail */}
-        <Route
-          path="/league/:leagueId"
-          element={
-            <ProtectedRoute token={token} setToken={setToken}>
-              <LeagueDetailPage />
-            </ProtectedRoute>
-          }
-        />
+          {/* Leagues-Übersicht */}
+          <Route
+            path="/leagues"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <LeaguesPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* League-Detail */}
+          <Route
+            path="/league/:leagueId"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <LeagueDetailPage />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Städte */}
-        <Route
-          path="/cities"
-          element={
-            <ProtectedRoute token={token} setToken={setToken}>
-              <CitiesPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cities/:cityId"
-          element={
-            <ProtectedRoute token={token} setToken={setToken}>
-              <CitiesPage />
-            </ProtectedRoute>
-          }
-        />
+          {/* Städte */}
+          <Route
+            path="/cities"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <CitiesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/cities/:cityId"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <CitiesPage />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Sport Detail */}
-        <Route
-          path="/sports/:id"
-          element={
-            <ProtectedRoute token={token} setToken={setToken}>
-              <SportsDetailPage />
-            </ProtectedRoute>
-          }
-        />
+          {/* Sport Detail */}
+          <Route
+            path="/sports/:id"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <SportsDetailPage />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* User Profil (öffentliches Profil) */}
-        <Route
-          path="/user/:userId"
-          element={
-            <ProtectedRoute token={token} setToken={setToken}>
-              <UserDetailPage />
-            </ProtectedRoute>
-          }
-        />
+          {/* User Profil (öffentliches Profil) */}
+          <Route
+            path="/user/:userId"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <UserDetailPage />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Spiel-Detail */}
-        <Route
-          path="/game/:gameId"
-          element={
-            <ProtectedRoute token={token} setToken={setToken}>
-              <GameDetailPage />
-            </ProtectedRoute>
-          }
-        />
+          {/* Spiel-Detail */}
+          <Route
+            path="/game/:gameId"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <GameDetailPage />
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Create (nur Admin) */}
-        <Route
-          path="/create"
-          element={
-            <ProtectedRoute token={token} setToken={setToken}>
-              {isAdminFlag ? (
-                <CreatePage />
-              ) : (
-                <div style={{ padding: 16 }}>403 – Nur für Admins</div>
-              )}
-            </ProtectedRoute>
-          }
-        />
+          {/* Create (nur Admin) */}
+          <Route
+            path="/create"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                {isAdminFlag ? (
+                  <CreatePage />
+                ) : (
+                  <div style={{ padding: 16 }}>403 – Nur für Admins</div>
+                )}
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Admin (nur Admin) */}
-        <Route
-          path="/admin"
-          element={
-            <ProtectedRoute token={token} setToken={setToken}>
-              {isAdminFlag ? (
-                <AdminPage />
-              ) : (
-                <div style={{ padding: 16 }}>403 – Nur für Admins</div>
-              )}
-            </ProtectedRoute>
-          }
-        />
+          {/* Admin (nur Admin) */}
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                {isAdminFlag ? (
+                  <AdminPage />
+                ) : (
+                  <div style={{ padding: 16 }}>403 – Nur für Admins</div>
+                )}
+              </ProtectedRoute>
+            }
+          />
 
-        {/* Startseite geschützt */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute token={token} setToken={setToken}>
-              <StartPage />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+          {/* Startseite geschützt */}
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <StartPage />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </div>
     </Router>
   );
 }

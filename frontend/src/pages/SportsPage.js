@@ -12,7 +12,8 @@ export default function SportsPage() {
     let mounted = true;
     setLoading(true);
     setErr("");
-    const url = id ? `http://localhost:5001/sports/${id}` : "http://localhost:5001/sports/list";
+    const apiBase = process.env.REACT_APP_API_BASE || "http://localhost:5001";
+    const url = id ? `${apiBase}/sports/${id}` : `${apiBase}/sports/list`;
     fetch(url)
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -30,7 +31,8 @@ export default function SportsPage() {
   useEffect(() => {
     if (!id) { setLeagues([]); return; }
     let mounted = true;
-    fetch("http://localhost:5001/leagues")
+    const apiBase = process.env.REACT_APP_API_BASE || "http://localhost:5001";
+    fetch(`${apiBase}/leagues`)
       .then((r) => r.ok ? r.json() : [])
       .then((rows) => {
         if (!mounted) return;
