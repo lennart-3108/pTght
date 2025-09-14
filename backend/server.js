@@ -10,6 +10,7 @@ const { registerRoutes } = require("./src/routes/index");
 
 const app = express();
 const cfg = loadConfig();
+const PORT = process.env.PORT || 5002;
 
 app.use(cors(cfg.cors));
 app.options("*", cors());
@@ -18,7 +19,7 @@ app.use(express.json());
 const db = initDb(cfg.DB_PATH);
 
 // Mailer
-const { transporter, state: mailerState } = createMailer(cfg.mailer);
+const { transporter, state: mailerState, sendMail } = createMailer(cfg.mailer);
 verifyAndSendAcceptance(transporter, mailerState);
 
 // Shared context (kept small and explicit)
@@ -28,6 +29,7 @@ const ctx = {
   SECRET: cfg.JWT_SECRET,
   transporter,
   mailerState,
+  sendMail,
   getDbSchema: () => getDbSchema(db),
   schemaToHtml,
   lastStartupAdmin
@@ -42,7 +44,7 @@ createIncrementalAdmin(db, (info) => {
 registerRoutes(app, ctx);
 
 // Start server
-app.listen(5001, () => {
-  console.log("🚀 Backend läuft auf Port 5001 mit E-Mail-Bestätigung, Admin-Check und sauberem CORS!");
+app.listen(PORT, () => {
+  console.log(`Server läuft auf http://localhost:${PORT}`);
 });
 

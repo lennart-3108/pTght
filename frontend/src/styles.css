@@ -1,7 +1,7 @@
 :root {
-  --primary: #2563eb;
-  --primary-600: #1d4ed8;
-  --bg: #0f172a;
+  --primary: #cccccc;
+  --primary-600: #00781a;
+  --bg: #092320;
   --surface: #111827;
   --text: #e5e7eb;
   --muted: #9ca3af;
@@ -32,8 +32,10 @@ a:hover {
 }
 
 button, .btn {
-  background: var(--primary);
-  color: #fff;
+  background: #2e8e27;
+  color: #f5fafa;
+  font-weight: bold;
+
   border: 0;
   padding: 0.6rem 1rem;
   border-radius: 0.5rem;
@@ -49,4 +51,12 @@ button:hover, .btn:hover {
   border-radius: 0.75rem;
   padding: 1rem;
   box-shadow: 0 2px 10px rgb(0 0 0 / 0.2);
+}
+
+.hero-logo {
+  display: block;
+  width: 100%;
+  height: 200px; /* Fixed height */
+  object-fit: cover; /* Scales and zooms the image to fill width while maintaining aspect ratio */
+  margin: 0 auto; /* Centers horizontally */
 }

@@ -2,14 +2,13 @@
   "dependencies": {
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "nodemailer": "^7.0.5",
-    "sqlite3": "^5.1.7",
-    "dotenv": "^16.4.5"
+    "sqlite3": "^5.1.7"
   },
   "scripts": {
     "mail:who": "node scripts/print-mail-config.js"
   }
 }
-

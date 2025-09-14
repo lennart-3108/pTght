@@ -1,82 +1,70 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { API_BASE } from "../config";
 
 export default function ProfilePage() {
-  const [me, setMe] = useState(null);
+  const [data, setData] = useState(null);
   const [leagues, setLeagues] = useState([]);
   const [games, setGames] = useState({ upcoming: [], completed: [] });
   const [err, setErr] = useState("");
-  const token = localStorage.getItem("token");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
     setErr("");
-    // Profil
-    fetch("http://localhost:5001/me", { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-      .then(j => mounted && setMe(j))
-      .catch(e => mounted && setErr(e.message || "Fehler"));
-    // Meine Ligen
-    fetch("http://localhost:5001/me/leagues", { headers: { Authorization: `Bearer ${token}` } })
+    setLoading(true);
+    const token = localStorage.getItem("token");
+
+    fetch(`${API_BASE}/me`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(async (r) => {
+        const j = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
+        return j;
+      })
+      .then(j => mounted && setData(j))
+      .catch(e => mounted && setErr(e.message || "Fehler"))
+      .finally(() => mounted && setLoading(false));
+
+    fetch(`${API_BASE}/me/leagues`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => (r.ok ? r.json() : []))
       .then(j => mounted && setLeagues(Array.isArray(j) ? j : []))
       .catch(() => {});
-    // Meine Spiele
-    fetch("http://localhost:5001/me/games", { headers: { Authorization: `Bearer ${token}` } })
+
+    fetch(`${API_BASE}/me/games`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => (r.ok ? r.json() : { upcoming: [], completed: [] }))
-      .then(j => mounted && setGames({ upcoming: j.upcoming || [], completed: j.completed || [] }))
+      .then(j => mounted && setGames({
+        upcoming: Array.isArray(j.upcoming) ? j.upcoming : [],
+        completed: Array.isArray(j.completed) ? j.completed : []
+      }))
       .catch(() => {});
+
     return () => { mounted = false; };
-  }, [token]);
+  }, []);
+
+  if (loading) return <div style={{ padding: 16 }}>Lade Profil ...</div>;
+  if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+  if (!data) return <div style={{ padding: 16 }}>Keine Daten.</div>;
 
   return (
     <div style={{ padding: 16 }}>
       <h2>Profil</h2>
-      {err && (
-        <div style={{ color: "crimson" }}>
-          Fehler: {err}
-          {(err.includes("401") || err.includes("403")) && (
-            <span> – Bitte <Link to="/login">neu einloggen</Link>.</span>
-          )}
-        </div>
-      )}
-      {!me ? (
-        <div>Lade Profil ...</div>
-      ) : (
-        <div style={{ marginBottom: 16 }}>
-          <div><b>Name:</b> {me.firstname} {me.lastname}</div>
-          <div><b>E-Mail:</b> {me.email}</div>
-          <div><b>Rolle:</b> {me.is_admin ? "Admin" : "User"}</div>
-        </div>
-      )}
+      <div><b>Name:</b> {data.firstname} {data.lastname}</div>
+      <div><b>E-Mail:</b> {data.email}</div>
 
-      <h3>Meine Ligen</h3>
+      <h3 style={{ marginTop: 16 }}>Meine Ligen</h3>
       {leagues.length === 0 ? (
-        <div>Keine Ligen beigetreten.</div>
+        <div>Keine Ligen.</div>
       ) : (
-        <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>Stadt</th>
-              <th>Sportart</th>
-              <th>Liga</th>
-              <th>Seit</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leagues.map(l => (
-              <tr key={l.id}>
-                <td>{l.city}</td>
-                <td>{l.sport}</td>
-                <td><Link to={`/league/${l.id}`}>{l.name}</Link></td>
-                <td>{l.joined_at ? new Date(l.joined_at).toLocaleString() : "-"}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <ul>
+          {leagues.map(l => (
+            <li key={l.id}>
+              <Link to={`/league/${l.id}`}>{l.name}</Link> – <Link to={`/cities/${l.cityId}`}>{l.city}</Link>
+            </li>
+          ))}
+        </ul>
       )}
 
-      <h3 style={{ marginTop: 18 }}>Kommende Spiele</h3>
+      <h3 style={{ marginTop: 16 }}>Kommende Spiele</h3>
       {games.upcoming.length === 0 ? (
         <div>Keine kommenden Spiele.</div>
       ) : (
@@ -84,8 +72,6 @@ export default function ProfilePage() {
           <thead>
             <tr>
               <th>Datum</th>
-              <th>Stadt</th>
-              <th>Sport</th>
               <th>Liga</th>
               <th>Spiel</th>
             </tr>
@@ -94,17 +80,15 @@ export default function ProfilePage() {
             {games.upcoming.map(g => (
               <tr key={g.id}>
                 <td>{new Date(g.kickoff_at).toLocaleString()}</td>
-                <td>{g.city}</td>
-                <td>{g.sport}</td>
                 <td><Link to={`/league/${g.leagueId}`}>{g.league}</Link></td>
-                <td>{g.home} – {g.away}</td>
+                <td><Link to={`/game/${g.id}`}>{g.home} – {g.away}</Link></td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
 
-      <h3 style={{ marginTop: 18 }}>Abgeschlossene Spiele</h3>
+      <h3 style={{ marginTop: 16 }}>Abgeschlossene Spiele</h3>
       {games.completed.length === 0 ? (
         <div>Keine abgeschlossenen Spiele.</div>
       ) : (
@@ -112,8 +96,6 @@ export default function ProfilePage() {
           <thead>
             <tr>
               <th>Datum</th>
-              <th>Stadt</th>
-              <th>Sport</th>
               <th>Liga</th>
               <th>Ergebnis</th>
             </tr>
@@ -122,13 +104,8 @@ export default function ProfilePage() {
             {games.completed.map(g => (
               <tr key={g.id}>
                 <td>{new Date(g.kickoff_at).toLocaleString()}</td>
-                <td>{g.city}</td>
-                <td>{g.sport}</td>
                 <td><Link to={`/league/${g.leagueId}`}>{g.league}</Link></td>
-                <td>
-                  {g.home} – {g.away}
-                  {(g.home_score != null && g.away_score != null) && ` (${g.home_score}:${g.away_score})`}
-                </td>
+                <td><Link to={`/game/${g.id}`}>{g.home} {g.home_score}:{g.away_score} {g.away}</Link></td>
               </tr>
             ))}
           </tbody>

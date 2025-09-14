@@ -1,32 +1,49 @@
 # Node
 node_modules/
 npm-debug.log*
-yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# Builds
+# Build artefacts
 frontend/build/
-backend/dist/
+frontend/.cache/
+dist/
+coverage/
 
-# Env and secrets
-.env
+# Env/Secrets
 *.env
-.env.local
-backend/.env
+*.env.local
 frontend/.env
+frontend/.env.local
 
-# SQLite/DB
-*.sqlite
-*.sqlite3
-*.db
-backend/**/data/*.db
-
-# Logs
-logs/
-*.log
-backend/logs/
-
-# OS/editor
+# Editor/OS
 .DS_Store
-Thumbs.db
 .vscode/
+.idea/
+
+# Misc
+*.local
+
+# SQLite DB and backups
+backend/sportplattform.db
+backend/*.sqlite
+backend/*.db
+backend/*.db-*
+
+# Mailer artifacts
+*.eml
+
+# Python backend
+backend/__pycache__/
+backend/*.py[cod]
+backend/.venv/
+backend/venv/
+backend/.pytest_cache/
+backend/.mypy_cache/
+backend/.ruff_cache/
+backend/.coverage*
+backend/.tox/
+
+# Logs and temp
+logs/
+tmp/

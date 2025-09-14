@@ -1,4 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
+import axios from "axios";
+import { API_BASE } from "../config";
 
 export default function AdminPage() {
   const [stats, setStats] = useState(null);
@@ -10,6 +12,10 @@ export default function AdminPage() {
   const [cols, setCols] = useState([]);
   const [rowsErr, setRowsErr] = useState("");
   const [loadingRows, setLoadingRows] = useState(false);
+  const [emailStatus, setEmailStatus] = useState(null);
+  const [testMessage, setTestMessage] = useState("");
+  const [deletingId, setDeletingId] = useState(null);
+  const [editingRow, setEditingRow] = useState(null); // State für den zu bearbeitenden Datensatz
 
   const token = localStorage.getItem("token");
 
@@ -17,7 +23,7 @@ export default function AdminPage() {
   useEffect(() => {
     let mounted = true;
     setStatsErr("");
-    fetch("http://localhost:5001/admin/stats", { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE}/admin/stats`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then(j => mounted && setStats(j))
       .catch(e => mounted && setStatsErr(e.message || "Fehler"))
@@ -28,11 +34,26 @@ export default function AdminPage() {
   useEffect(() => {
     let mounted = true;
     setSchemaErr("");
-    fetch("http://localhost:5001/admin/schema", { headers: { Authorization: `Bearer ${token}` } })
+    fetch(`${API_BASE}/admin/schema`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
       .then(j => mounted && setSchema(j))
       .catch(e => mounted && setSchemaErr(e.message || "Fehler"));
     return () => { mounted = false; };
+  }, [token]);
+
+  // Check email connection status
+  useEffect(() => {
+    const checkEmailStatus = async () => {
+      try {
+        const response = await axios.get(`${API_BASE}/admin/email-status`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setEmailStatus(response.data); // store full payload
+      } catch {
+        setEmailStatus({ connected: false });
+      }
+    };
+    checkEmailStatus();
   }, [token]);
 
   const tableNames = useMemo(() => (schema?.tables || []).map(t => t.name), [schema]);
@@ -49,7 +70,7 @@ export default function AdminPage() {
     let mounted = true;
     setLoadingRows(true);
     setRowsErr("");
-    fetch(`http://localhost:5001/admin/table/${encodeURIComponent(table)}?limit=200`, {
+    fetch(`${API_BASE}/admin/table/${encodeURIComponent(table)}?limit=200`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(async (r) => {
@@ -74,6 +95,53 @@ export default function AdminPage() {
       .finally(() => mounted && setLoadingRows(false));
     return () => { mounted = false; };
   }, [table, token, selectedMeta]);
+
+  const sendTestEmail = async () => {
+    setTestMessage("");
+    try {
+      const response = await axios.post(
+        `${API_BASE}/admin/test-email`,
+        { to: "info@matchleague.org" },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setTestMessage(`Test email sent! id: ${response.data?.messageId || "n/a"}`);
+    } catch (e) {
+      setTestMessage(`Failed to send test email: ${e?.message || "unknown error"}`);
+    }
+  };
+
+  const handleDelete = async (rowId) => {
+    if (!table || rowId == null) return;
+    if (!window.confirm(`Diesen Datensatz (id=${rowId}) aus "${table}" löschen?`)) return;
+    setDeletingId(rowId);
+    try {
+      await axios.delete(`${API_BASE}/admin/table/${encodeURIComponent(table)}/${rowId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRows(prev => prev.filter(r => r.id !== rowId));
+    } catch (e) {
+      alert(`Löschen fehlgeschlagen: ${e?.response?.data?.error || e.message}`);
+    } finally {
+      setDeletingId(null);
+    }
+  };
+
+  const handleEdit = (row) => {
+    setEditingRow(row); // Öffne das Formular mit den Daten des ausgewählten Datensatzes
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingRow || !table) return;
+    try {
+      await axios.put(`${API_BASE}/admin/table/${encodeURIComponent(table)}/${editingRow.id}`, editingRow, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      setRows(prev => prev.map(r => (r.id === editingRow.id ? editingRow : r)));
+      setEditingRow(null); // Schließe das Formular nach dem Speichern
+    } catch (e) {
+      alert(`Speichern fehlgeschlagen: ${e?.response?.data?.error || e.message}`);
+    }
+  };
 
   return (
     <div style={{ padding: 16 }}>
@@ -132,6 +200,7 @@ export default function AdminPage() {
                     {cols.map((c) => (
                       <th key={c}>{c}</th>
                     ))}
+                    <th>Aktion</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -146,22 +215,72 @@ export default function AdminPage() {
                               : String(r[c])}
                         </td>
                       ))}
-                  </tr>
+                      <td>
+                        <button onClick={() => handleEdit(r)} style={{ marginRight: 8 }}>
+                          Bearbeiten
+                        </button>
+                        <button onClick={() => handleDelete(r.id)} disabled={deletingId === r.id}>
+                          {deletingId === r.id ? "Lösche..." : "Löschen"}
+                        </button>
+                      </td>
+                    </tr>
                   ))}
                 </tbody>
               </table>
-              <div style={{ color: "#666", marginTop: 6 }}>Max. 200 Zeilen angezeigt.</div>
             </div>
           )}
         </div>
       )}
 
-         {/* Email-server */}
-         <div style={{ margin: "8px 0" }}>
-        <label>
-        Email-server: https://mailtrap.io/inboxes/4000257/messages
-        </label>
+      {/* Bearbeitungsformular */}
+      {editingRow && (
+        <div style={{ marginTop: 16, padding: 16, border: "1px solid #ccc", borderRadius: 8 }}>
+          <h3>Datensatz bearbeiten</h3>
+          {cols.map((col) => (
+            <div key={col} style={{ marginBottom: 8 }}>
+              <label>
+                {col}:&nbsp;
+                <input
+                  type="text"
+                  value={editingRow[col] || ""}
+                  onChange={(e) =>
+                    setEditingRow((prev) => ({ ...prev, [col]: e.target.value }))
+                  }
+                />
+              </label>
+            </div>
+          ))}
+          <button onClick={handleSaveEdit} style={{ marginRight: 8 }}>
+            Speichern
+          </button>
+          <button onClick={() => setEditingRow(null)}>Abbrechen</button>
+        </div>
+      )}
+
+      {/* Email Test */}
+      <h3>Email Test</h3>
+      <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <span>Email Connection:</span>
+        <div
+          style={{
+            width: "20px",
+            height: "20px",
+            borderRadius: "50%",
+            backgroundColor: emailStatus?.connected ? "green" : "red"
+          }}
+        ></div>
+        <span>{emailStatus?.connected ? "Connected" : "Disconnected"}</span>
       </div>
+      <div style={{ marginTop: 6, color: "#aaa" }}>
+        SMTP: {emailStatus?.host || "-"}:{emailStatus?.port ?? "-"} {emailStatus?.secure ? "(SSL)" : "(TLS/STARTTLS)"}
+        {emailStatus?.lastError && (
+          <div style={{ color: "crimson", marginTop: 4 }}>Letzter Fehler: {emailStatus.lastError}</div>
+        )}
+      </div>
+      <button onClick={sendTestEmail} style={{ marginTop: "10px" }}>
+        Send Test Email
+      </button>
+      {testMessage && <p>{testMessage}</p>}
     </div>
   );
 }

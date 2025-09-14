@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { API_BASE } from "../config";
 
 export default function SportsPage() {
   const { id } = useParams();
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
   const [data, setData] = useState(null);
-  const [leagues, setLeagues] = useState([]); // neu
+  const [leagues, setLeagues] = useState([]);
 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
     setErr("");
-    const apiBase = process.env.REACT_APP_API_BASE || "http://localhost:5001";
-    const url = id ? `${apiBase}/sports/${id}` : `${apiBase}/sports/list`;
+    const url = id ? `${API_BASE}/sports/${id}` : `${API_BASE}/sports/list`;
     fetch(url)
       .then(async (r) => {
         if (!r.ok) throw new Error(`HTTP ${r.status}`);
@@ -27,12 +27,10 @@ export default function SportsPage() {
     return () => { mounted = false; };
   }, [id]);
 
-  // Ligen zur Sportart laden und nach sportId filtern
   useEffect(() => {
     if (!id) { setLeagues([]); return; }
     let mounted = true;
-    const apiBase = process.env.REACT_APP_API_BASE || "http://localhost:5001";
-    fetch(`${apiBase}/leagues`)
+    fetch(`${API_BASE}/leagues`)
       .then((r) => r.ok ? r.json() : [])
       .then((rows) => {
         if (!mounted) return;
@@ -47,7 +45,6 @@ export default function SportsPage() {
   if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
 
   if (id) {
-    // Detailansicht
     if (!data) return <div style={{ padding: 16 }}>Nicht gefunden.</div>;
     return (
       <div style={{ padding: 16 }}>
@@ -76,7 +73,6 @@ export default function SportsPage() {
     );
   }
 
-  // Liste
   const list = Array.isArray(data) ? data : [];
   return (
     <div style={{ padding: 16 }}>

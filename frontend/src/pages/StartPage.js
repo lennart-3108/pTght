@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import matchLeagueLogo from "../images/MatchLeague2.png"; // Pfad relativ zu pages/
+
+import { API_BASE } from "../config";
 
 export default function StartPage() {
   const [loading, setLoading] = useState(true);
@@ -11,7 +14,12 @@ export default function StartPage() {
     setLoading(true);
     setErr("");
     const token = localStorage.getItem("token");
-    fetch("http://localhost:5001/me/games", { headers: { Authorization: `Bearer ${token}` } })
+    
+    fetch(`${API_BASE}/me/games`, { 
+      headers: { 
+      Authorization: `Bearer ${token}` 
+      } 
+    })
       .then(async (r) => {
         const j = await r.json().catch(() => ({}));
         if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
@@ -33,6 +41,11 @@ export default function StartPage() {
 
   return (
     <div style={{ padding: 16 }}>
+    <img
+  src={matchLeagueLogo}
+  alt="MatchLeague"
+  className="hero-logo"
+/>
       <h2>Meine nächsten Spiele</h2>
       {err && (
         <div style={{ color: "crimson" }}>

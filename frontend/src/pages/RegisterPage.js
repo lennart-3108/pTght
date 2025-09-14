@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
+import { API_BASE } from "../config";
 
 const SPORT_OPTIONS = [
   "Fußball",
@@ -47,10 +48,10 @@ export default function RegisterPage() {
     setMessage("");
     console.log("Formulardaten:", form);
     try {
-      const response = await axios.post("http://localhost:5001/register", form);
+      const response = await axios.post(`${API_BASE}/register`, form);
       console.log("Backend-Antwort /register:", response.data);
       setMessage(
-        "Registrierung erfolgreich! Bitte prüfe deine E-Mail (Mailtrap: https://mailtrap.io/inboxes/4000257/messages) und bestätige den Link."
+        "Registrierung erfolgreich! Bitte prüfe dein E-Mail-Postfach und bestätige den Link."
       );
       setForm({
         firstname: "",
@@ -92,7 +93,7 @@ export default function RegisterPage() {
         </label>
         <br />
         <label>Passwort:
-          <input required name="password" type="password" value={form.password} onChange={handleChange} minLength={6} />
+          <input required name="password" type="password" value={form.password} onChange={handleChange} minLength={6} autoComplete="new-password" />
         </label>
         <br />
         <label>Sportarten:

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useParams } from "react-router-dom";
+import { API_BASE } from "../config";
 
 export default function LeagueDetailPage() {
   const { leagueId } = useParams();
@@ -11,6 +12,7 @@ export default function LeagueDetailPage() {
   const [standings, setStandings] = useState([]);
   const [games, setGames] = useState({ upcoming: [], completed: [] });
   const [loadingExtras, setLoadingExtras] = useState(true);
+  const [joining, setJoining] = useState(false);
   const token = localStorage.getItem("token");
 
   const myId = useMemo(() => {
@@ -23,66 +25,168 @@ export default function LeagueDetailPage() {
     }
   }, [token]);
 
-  const amMember = useMemo(
-    () => members.some(m => String(m.user_id ?? m.id) === String(myId)),
-    [members, myId]
-  );
+  // helper to derive a user id from various API shapes
+  function getMemberUserId(m) {
+    const userId = (
+      m.user_id ??
+      m.userId ??
+      m.uid ??
+      (m.user && m.user.id) ??
+      // if member row looks like a user (has firstname/lastname), m.id is likely the user id
+      ((m.firstname || m.lastname) ? m.id : undefined) ??
+      m.id
+    );
+    console.log("getMemberUserId:", userId, "from member:", m); // Debug log
+    return userId;
+  }
+
+  const amMember = useMemo(() => {
+    // Überprüfe, ob der Benutzer in der Mitgliederliste enthalten ist
+    const isMember = myId ? members.some(m => {
+      const memberId = String(getMemberUserId(m));
+      console.log("Überprüfe Mitglied:", memberId, "gegen", myId);
+      return memberId === String(myId);
+    }) : false;
+
+    console.log("Debugging amMember:");
+    console.log("myId:", myId);
+    console.log("members:", members);
+    console.log("isMember:", isMember);
+
+    return isMember;
+  }, [members, myId]);
+
+  const isOpenLeague = useMemo(() => {
+    const l = league || {};
+    // explicit boolean-ish flags
+    const openFlags = [l.is_open, l.isOpen, l.open];
+    for (const f of openFlags) {
+      if (f === true || f === 1 || f === "1") return true;
+      if (f === false || f === 0 || f === "0") return false;
+    }
+    const privFlags = [l.is_private, l.isPrivate, l.private];
+    for (const f of privFlags) {
+      if (f === true || f === 1 || f === "1") return false;
+      if (f === false || f === 0 || f === "0") return true;
+    }
+    // textual fields
+    const txt = (l.type || l.privacy || l.access || l.visibility || "").toString().toLowerCase();
+    if (txt.includes("priv")) return false; // private
+    if (txt.includes("closed") || txt.includes("invite")) return false;
+    if (txt.includes("open") || txt.includes("offen") || txt.includes("öffentlich") || txt.includes("public")) return true;
+    // default: treat as open if unknown
+    return true;
+  }, [league]);
+
+  const isPublicLeague = useMemo(() => {
+    const isPublic = league?.publicState === "public";
+    console.log("Debugging isPublicLeague:");
+    console.log("league:", league); // Logge die gesamten Liga-Daten
+    console.log("publicState:", league?.publicState);
+    console.log("isPublicLeague:", isPublic);
+    return isPublic;
+  }, [league]);
+
+  const isOwner = useMemo(() => {
+    return String(league?.ownerId) === String(myId);
+  }, [league, myId]);
+
+  function formatDate(input) {
+    if (!input) return "-";
+    const d = new Date(input);
+    if (!Number.isNaN(d.getTime())) return d.toLocaleString();
+    const num = Number(input);
+    if (Number.isFinite(num)) {
+      const d2 = new Date(num);
+      return Number.isNaN(d2.getTime()) ? "-" : d2.toLocaleString();
+    }
+    return "-";
+  }
+
+  function formatScore(g) {
+    if (g?.score != null && g.score !== "") return g.score;
+    if (g?.home_score != null && g?.away_score != null) return `${g.home_score}:${g.away_score}`;
+    if (g?.result) return g.result;
+    return "-";
+  }
 
   useEffect(() => {
     let mounted = true;
     setLoading(true);
     setErr("");
-    fetch(`http://localhost:5001/leagues/${leagueId}`)
+    fetch(`${API_BASE}/leagues/${leagueId}`)
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-      .then(j => mounted && setLeague(j))
+      .then(j => {
+        if (mounted) setLeague(j);
+      })
       .catch(e => mounted && setErr(e.message || "Fehler"))
       .finally(() => mounted && setLoading(false));
     return () => { mounted = false; };
   }, [leagueId]);
 
-  useEffect(() => {
-    let mounted = true;
+  async function reloadExtras() {
     setLoadingExtras(true);
-    Promise.all([
-      fetch(`http://localhost:5001/leagues/${leagueId}/members`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => (r.ok ? r.json() : []))
-        .catch(() => []),
-      fetch(`http://localhost:5001/leagues/${leagueId}/standings`)
-        .then(r => (r.ok ? r.json() : []))
-        .catch(() => []),
-      fetch(`http://localhost:5001/leagues/${leagueId}/games`)
-        .then(r => (r.ok ? r.json() : { upcoming: [], completed: [] }))
-        .catch(() => ({ upcoming: [], completed: [] }))
-    ])
-      .then(([m, s, g]) => {
-        if (!mounted) return;
-        setMembers(Array.isArray(m) ? m : []);
-        setStandings(Array.isArray(s) ? s : []);
-        setGames({ upcoming: g.upcoming || [], completed: g.completed || [] });
-      })
-      .finally(() => mounted && setLoadingExtras(false));
-    return () => { mounted = false; };
+    try {
+      const [m, s, g] = await Promise.all([
+        fetch(`${API_BASE}/leagues/${leagueId}/members`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => (r.ok ? r.json() : []))
+          .catch(() => []),
+        fetch(`${API_BASE}/leagues/${leagueId}/standings`)
+          .then(r => (r.ok ? r.json() : []))
+          .catch(() => []),
+        fetch(`${API_BASE}/leagues/${leagueId}/games`)
+          .then(r => (r.ok ? r.json() : { upcoming: [], completed: [] }))
+          .catch(() => ({ upcoming: [], completed: [] }))
+      ]);
+      setMembers(Array.isArray(m) ? m : []);
+      setStandings(Array.isArray(s) ? s : []);
+      setGames({ upcoming: g.upcoming || [], completed: g.completed || [] });
+    } finally {
+      setLoadingExtras(false);
+    }
+  }
+
+  useEffect(() => {
+    reloadExtras();
   }, [leagueId, token]);
 
-  async function joinLeague() {
-    setJoinMsg("");
+  async function handleJoin() {
     try {
+      setJoining(true);
       const token = localStorage.getItem("token");
-      const r = await fetch(`http://localhost:5001/leagues/${leagueId}/join`, {
+      const r = await fetch(`${API_BASE}/leagues/${leagueId}/join`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` }
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
-      setJoinMsg(j.joined ? "Beitritt erfolgreich." : "Bereits Mitglied.");
-      // nach Beitritt Mitglieder neu laden
-      try {
-        const mRes = await fetch(`http://localhost:5001/leagues/${leagueId}/members`, { headers: { Authorization: `Bearer ${token}` } });
-        const m = mRes.ok ? await mRes.json() : [];
-        setMembers(Array.isArray(m) ? m : []);
-      } catch {}
+      setJoinMsg(j.joined ? "Beigetreten" : (j.message || "Bereits Mitglied"));
+      await reloadExtras();
     } catch (e) {
       setJoinMsg(`Beitritt fehlgeschlagen: ${e.message || e}`);
+      alert(`Beitritt fehlgeschlagen: ${e.message || e}`);
+    } finally {
+      setJoining(false);
+    }
+  }
+
+  async function handleLeave() {
+    try {
+      setJoining(true);
+      const token = localStorage.getItem("token");
+      const r = await fetch(`${API_BASE}/leagues/${leagueId}/leave`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
+      setJoinMsg(j.left ? "Ausgetreten" : (j.message || "Nicht Mitglied"));
+      await reloadExtras();
+    } catch (e) {
+      setJoinMsg(`Austritt fehlgeschlagen: ${e.message || e}`);
+      alert(`Austritt fehlgeschlagen: ${e.message || e}`);
+    } finally {
+      setJoining(false);
     }
   }
 
@@ -99,134 +203,98 @@ export default function LeagueDetailPage() {
         Sportart: <Link to={`/sports/${league.sportId}`}>{league.sport}</Link>
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        {!amMember && <button onClick={joinLeague}>Beitreten</button>}
+        {!amMember && isPublicLeague && (
+          <button onClick={handleJoin} disabled={!token || joining}>
+            {joining ? "Beitritt..." : "Beitreten"}
+          </button>
+        )}
+        {amMember && (
+          <button onClick={handleLeave} disabled={!token || joining}>
+            {joining ? "Austritt..." : "Austreten"}
+          </button>
+        )}
         {joinMsg && <span style={{ color: joinMsg.includes("fehl") ? "crimson" : "green" }}>{joinMsg}</span>}
       </div>
 
-      {/* Teilnehmer */}
-      <h3 style={{ marginTop: 16 }}>Teilnehmer</h3>
       {loadingExtras ? (
-        <div>Lade Teilnehmer ...</div>
-      ) : members.length === 0 ? (
-        <div>Noch keine Teilnehmer.</div>
+        <div>Lade zusätzliche Daten...</div>
       ) : (
-        <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Beigetreten</th>
-            </tr>
-          </thead>
-          <tbody>
-            {members.map(m => {
-              const memberUserId = m.user_id ?? m.id;
-              return (
-                <tr key={m.id}>
-                  <td>
-                    <Link to={`/user/${memberUserId}`}>{m.firstname} {m.lastname}</Link>
-                  </td>
-                  <td>{m.joined_at ? new Date(m.joined_at).toLocaleString() : "-"}</td>
+        <>
+          <h3 style={{ marginTop: 16 }}>Mitglieder</h3>
+          {members.length === 0 ? (
+            <div>Keine Mitglieder.</div>
+          ) : (
+            <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Beigetreten</th>
                 </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      )}
+              </thead>
+              <tbody>
+                {members.map(m => {
+                  const userId = getMemberUserId(m);
+                  console.log("Mitglied in Tabelle:", m); // Debug log
+                  const name = (m.firstname && m.lastname)
+                    ? `${m.firstname} ${m.lastname}`
+                    : (m.name || m.username || `User ${userId}`);
+                  return (
+                    <tr key={userId}>
+                      <td><Link to={`/user/${userId}`}>{name}</Link></td>
+                      <td>{formatDate(m.joined_at)}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
 
-      {/* Tabelle (Standings) */}
-      <h3 style={{ marginTop: 16 }}>Tabelle</h3>
-      {loadingExtras ? (
-        <div>Lade Tabelle ...</div>
-      ) : standings.length === 0 ? (
-        <div>Noch keine Ergebnisse.</div>
-      ) : (
-        <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Mannschaft</th>
-              <th>Sp</th>
-              <th>S</th>
-              <th>U</th>
-              <th>N</th>
-              <th>Tore</th>
-              <th>Diff</th>
-              <th>Pkt</th>
-            </tr>
-          </thead>
-          <tbody>
-            {standings.map((r, idx) => (
-              <tr key={r.team}>
-                <td>{idx + 1}</td>
-                <td>{r.team}</td>
-                <td>{r.played}</td>
-                <td>{r.wins}</td>
-                <td>{r.draws}</td>
-                <td>{r.losses}</td>
-                <td>{r.gf}:{r.ga}</td>
-                <td>{r.gd}</td>
-                <td>{r.pts}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+          <h3 style={{ marginTop: 16 }}>Bevorstehende Spiele</h3>
+          {games.upcoming.length === 0 ? (
+            <div>Keine kommenden Spiele.</div>
+          ) : (
+            <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
+              <thead>
+                <tr>
+                  <th>Datum</th>
+                  <th>Spiel</th>
+                </tr>
+              </thead>
+              <tbody>
+                {games.upcoming.map(g => (
+                  <tr key={g.id}>
+                    <td><Link to={`/game/${g.id}`}>{formatDate(g.kickoff_at || g.date)}</Link></td>
+                    <td>{g.home} – {g.away}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
 
-      {/* Kommende Spiele */}
-      <h3 style={{ marginTop: 16 }}>Kommende Spiele</h3>
-      {loadingExtras ? (
-        <div>Lade Spiele ...</div>
-      ) : games.upcoming.length === 0 ? (
-        <div>Keine kommenden Spiele.</div>
-      ) : (
-        <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>Datum</th>
-              <th>Spiel</th>
-            </tr>
-          </thead>
-          <tbody>
-            {games.upcoming.map(g => (
-              <tr key={g.id}>
-                <td>
-                  <Link to={`/game/${g.id}`}>{new Date(g.kickoff_at).toLocaleString()}</Link>
-                </td>
-                <td>{g.home} – {g.away}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-
-      {/* Abgeschlossene Spiele */}
-      <h3 style={{ marginTop: 16 }}>Abgeschlossene Spiele</h3>
-      {loadingExtras ? (
-        <div>Lade Spiele ...</div>
-      ) : games.completed.length === 0 ? (
-        <div>Keine abgeschlossenen Spiele.</div>
-      ) : (
-        <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>Datum</th>
-              <th>Ergebnis</th>
-            </tr>
-          </thead>
-          <tbody>
-            {games.completed.map(g => (
-              <tr key={g.id}>
-                <td>
-                  <Link to={`/game/${g.id}`}>{new Date(g.kickoff_at).toLocaleString()}</Link>
-                </td>
-                <td>
-                  {g.home} – {g.away}
-                  {(g.home_score != null && g.away_score != null) && ` (${g.home_score}:${g.away_score})`}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+          <h3 style={{ marginTop: 16 }}>Abgeschlossene Spiele</h3>
+          {games.completed.length === 0 ? (
+            <div>Keine abgeschlossenen Spiele.</div>
+          ) : (
+            <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
+              <thead>
+                <tr>
+                  <th>Datum</th>
+                  <th>Spiel</th>
+                  <th>Ergebnis</th>
+                </tr>
+              </thead>
+              <tbody>
+                {games.completed.map(g => (
+                  <tr key={g.id}>
+                    <td><Link to={`/game/${g.id}`}>{formatDate(g.kickoff_at || g.date)}</Link></td>
+                    <td>{g.home} – {g.away}</td>
+                    <td>{formatScore(g)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </>
       )}
 
       <div style={{ marginTop: 12 }}>
