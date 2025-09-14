@@ -50,7 +50,7 @@ export default function RegisterPage() {
       const response = await axios.post("http://localhost:5001/register", form);
       console.log("Backend-Antwort /register:", response.data);
       setMessage(
-        "Registrierung erfolgreich! Bitte prüfe deine Mailbox und bestätige deinen Account über den Link."
+        "Registrierung erfolgreich! Bitte prüfe deine E-Mail (Mailtrap: https://mailtrap.io/inboxes/4000257/messages) und bestätige den Link."
       );
       setForm({
         firstname: "",

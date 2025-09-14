@@ -1,9 +1,11 @@
 const path = require("path");
 
 function loadConfig() {
-  const MAILTRAP_HOST = process.env.MAILTRAP_HOST || "sandbox.smtp.mailtrap.io";
-  const MAILTRAP_PORT = Number(process.env.MAILTRAP_PORT || 2525);
-  const MAILTRAP_SECURE = process.env.MAILTRAP_SECURE === "1" || MAILTRAP_PORT === 465;
+  const MAIL_HOST = process.env.MAIL_HOST || "smtps.udag.de";  // Neu: UDAG SMTP
+  const MAIL_PORT = Number(process.env.MAIL_PORT || 465);  // Neu: UDAG Port (465 für SSL/TLS)
+  const MAIL_SECURE = process.env.MAIL_SECURE !== "false";  // Neu: Standard true für SSL/TLS
+  const MAIL_USER = process.env.MAIL_USER;  // Neu: UDAG-Benutzername (z.B. info@matchleague.org)
+  const MAIL_PASS = process.env.MAIL_PASS;  // Neu: UDAG-Passwort
   const MAIL_DEBUG = process.env.MAIL_DEBUG === "1";
 
   const JWT_SECRET = process.env.JWT_SECRET || "geheimes_schluesselwort";
@@ -15,16 +17,16 @@ function loadConfig() {
     JWT_SECRET,
     DB_PATH: path.resolve(__dirname, "..", process.env.DB_PATH || "sportplattform.db"),
     cors: {
-      origin: process.env.CORS_ORIGIN || "http://localhost:3000",
+      origin: process.env.CORS_ORIGIN || "http://localhost:3000",  // Für Prod: "https://matchleague.org" oder "https://matchleague.de"
       methods: ["GET", "POST", "OPTIONS"],
       credentials: true
     },
     mailer: {
-      host: MAILTRAP_HOST,
-      port: MAILTRAP_PORT,
-      user: process.env.MAILTRAP_USER,
-      pass: process.env.MAILTRAP_PASS,
-      secure: MAILTRAP_SECURE,
+      host: MAIL_HOST,
+      port: MAIL_PORT,
+      user: MAIL_USER,
+      pass: MAIL_PASS,
+      secure: MAIL_SECURE,
       debug: MAIL_DEBUG
     }
   };

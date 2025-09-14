@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { API_BASE } from "../config";
 
 export default function LoginPage({ setToken, setIsAdminFlag }) {
   const navigate = useNavigate();
@@ -19,7 +20,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
     e.preventDefault();
     setLoginMsg("");
     try {
-      const res = await fetch("http://localhost:5001/login", {
+      const res = await fetch(`${API_BASE}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -49,7 +50,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
     e.preventDefault();
     setResetMsg("");
     try {
-      const response = await fetch("http://localhost:5001/reset-password", {
+      const response = await fetch(`${API_BASE}/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -137,3 +138,5 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
     </div>
   );
 }
+
+

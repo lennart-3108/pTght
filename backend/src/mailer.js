@@ -20,6 +20,7 @@ function createMailer(cfg) {
     return { transporter: null, state };
   }
 
+  // Hinweis: Konfiguriert für UDAG-Server (SMTP) in Prod; Mailtrap als Dev-Fallback
   const transporter = nodemailer.createTransport({
     host: cfg.host,
     port: cfg.port,
