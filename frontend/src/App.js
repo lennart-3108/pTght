@@ -11,7 +11,9 @@ import CreatePage from "./pages/CreatePage"; // neu
 import UserDetailPage from "./pages/UserDetailPage"; // neu
 import GameDetailPage from "./pages/GameDetailPage"; // neu
 import AdminPage from "./pages/AdminPage"; // neu
+import matchLeagueLogo from "./images/matchleague_logo_long.png"; // Import the logo
 import "./styles.css"; // neu
+import WelcomePage from "./pages/WelcomePage"; // <-- add this import
 
 // Simpler Adminerkennung (z.B. im Token, sonst im localStorage)
 function isAdmin() {
@@ -60,16 +62,18 @@ function App() {
       <nav
         className="site"
         style={{
-          padding: "10px 20px",
+          padding: 0, // Remove all padding
+          color: "#fff",
           color: "#fff",
           display: "flex",
           gap: "15px",
           alignItems: "center",
-          // Hintergrund via CSS-Klasse, Rest bleibt
+          background: "rgba(0,0,0,0.5)", // Add semi-transparent background for visibility
+          height: "50px", // Set fixed height
         }}
       >
-        <Link style={{ color: "#d3d3d3", fontWeight: "bold" }} to="/">
-          Start
+        <Link style={{ color: "#d3d3d3", fontWeight: "bold", height: "100%" }} to="/">
+          <img src={matchLeagueLogo} alt="MatchLeague" style={{ height: "100%", width: "auto", margin: 0 }} />
         </Link>
 
         {!token ? (
@@ -115,8 +119,12 @@ function App() {
       </nav>
 
       {/* --- Routen --- */}
-      <div className="app-content">
+      <div className="app-content" >
         <Routes>
+          {/* public routes */}
+          <Route path="/welcome" element={<WelcomePage />} />
+          <Route path="/registration-success" element={<WelcomePage />} />
+
           {/* Login & Register immer erreichbar */}
           {routes
             .filter(r => r.path === "/login" || r.path === "/register")

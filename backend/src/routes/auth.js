@@ -33,7 +33,8 @@ module.exports = function authRoutes(ctx) {
           });
         });
 
-        const confirmUrl = `http://localhost:5001/confirm/${confirmationToken}`;
+        const backendBase = process.env.BACKEND_PUBLIC_URL || "http://localhost:5002";
+        const confirmUrl = `${backendBase}/confirm/${confirmationToken}`;
 
         const sendSuccess = () =>
           res.status(201).json({
@@ -43,29 +44,24 @@ module.exports = function authRoutes(ctx) {
 
         if (mailerState?.enabled && transporter) {
           console.log("Mailer aktiviert, versende E-Mail an:", email);
-          transporter.sendMail(
-            {
-              from: process.env.MAIL_FROM || "no-reply@example.com",
-              to: email,
-              subject: "E-Mail bestätigen",
-              html: `
-                <p>Hallo ${firstname},</p>
-                <p>bitte bestätige deine E-Mail-Adresse, indem du auf den folgenden Link klickst:</p>
-                <p><a href="${confirmUrl}">${confirmUrl}</a></p>
-              `,
-            },
-            (mailErr) => {
-              if (mailErr) {
-                console.error("E-Mail-Versand fehlgeschlagen an:", email, "Fehler:", mailErr.message);
-                return res.status(201).json({
-                  message: "Registrierung erfolgreich, aber E-Mail-Versand fehlgeschlagen.",
-                  ...(process.env.NODE_ENV === "development" ? { confirmUrl } : {})
-                });
-              }
-              console.log("E-Mail erfolgreich versendet an:", email);
-              return sendSuccess();
-            }
-          );
+          ctx.sendMail(
+            email,
+            "E-Mail bestätigen",
+            `
+              <p>Hallo ${firstname},</p>
+              <p>bitte bestätige deine E-Mail-Adresse, indem du auf den folgenden Link klickst:</p>
+              <p><a href="${confirmUrl}">${confirmUrl}</a></p>
+            `
+          ).then(() => {
+            console.log("E-Mail erfolgreich versendet an:", email);
+            return sendSuccess();
+          }).catch((mailErr) => {
+            console.error("E-Mail-Versand fehlgeschlagen an:", email, "Fehler:", mailErr?.message || mailErr);
+            return res.status(201).json({
+              message: "Registrierung erfolgreich, aber E-Mail-Versand fehlgeschlagen.",
+              ...(process.env.NODE_ENV === "development" ? { confirmUrl } : {})
+            });
+          });
         } else {
           console.log("Mailer nicht aktiviert, E-Mail nicht versendet an:", email, "enabled:", mailerState?.enabled, "transporter:", !!transporter);
           sendSuccess();
@@ -97,6 +93,39 @@ module.exports = function authRoutes(ctx) {
           { expiresIn: "7d" }
         );
         return res.json({ token, is_admin: !!user.is_admin });
+      }
+    );
+  });
+
+  router.get("/confirm/:token", (req, res) => {
+    const { token } = req.params;
+    let email = null;
+    try {
+      const payload = jwt.verify(token, SECRET);
+      email = payload?.email;
+      if (!email) throw new Error("Kein E-Mail-Feld im Token");
+    } catch {
+      return res
+        .status(400)
+        .send(`<!doctype html><meta charset="utf-8"><title>Fehler</title><p>❌ Token ungültig oder abgelaufen.</p><p><a href="http://localhost:3000/login">Zurück zum Login</a></p>`);
+    }
+
+    db.run(
+      `UPDATE users SET is_confirmed=1, confirmation_token=NULL WHERE email=? AND confirmation_token=?`,
+      [email, token],
+      function (err) {
+        if (err) {
+          return res
+            .status(500)
+            .send(`<!doctype html><meta charset="utf-8"><title>Fehler</title><p>❌ Datenbankfehler bei der Bestätigung.</p>`);
+        }
+        if (this.changes === 0) {
+          return res
+            .status(400)
+            .send(`<!doctype html><meta charset="utf-8"><title>Fehler</title><p>❌ Token ungültig oder bereits verwendet.</p><p><a href="http://localhost:3000/login">Zum Login</a></p>`);
+        }
+        const frontendBase = process.env.FRONTEND_PUBLIC_URL || "http://localhost:3000";
+        return res.redirect(`${frontendBase}/registration-success?confirmed=1`);
       }
     );
   });

@@ -1,16 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { API_BASE } from "../config";
 
 export default function LeaguesPage() {
   const [leagues, setLeagues] = useState([]);
   const [myLeagues, setMyLeagues] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState("");
 
   async function joinLeague(leagueId, leagueName) {
     try {
       const token = localStorage.getItem("token");
-      const r = await fetch(`http://localhost:5001/leagues/${leagueId}/join`, {
+      const r = await fetch(`${API_BASE}/leagues/${leagueId}/join`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
@@ -21,28 +24,40 @@ export default function LeaguesPage() {
   }
 
   useEffect(() => {
-    fetch("http://localhost:5001/leagues", {
-      headers: { Authorization: "Bearer " + localStorage.getItem("token") }
+    setLoading(true);
+    setErr("");
+
+    // Alle Ligen abrufen
+    fetch(`${API_BASE}/leagues`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     })
-      .then(res => res.json())
-      .then(data => setLeagues(Array.isArray(data) ? data : []))
+      .then((res) => res.json())
+      .then((data) => setLeagues(Array.isArray(data) ? data : []))
       .catch(() => setLeagues([]));
 
-    fetch("http://localhost:5001/me/leagues", {
-      headers: { Authorization: "Bearer " + localStorage.getItem("token") }
+    // Eigene Ligen abrufen
+    fetch(`${API_BASE}/me/leagues`, {
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
     })
-      .then(res => res.json())
-      .then(data => setMyLeagues(Array.isArray(data) ? data : []))
-      .catch(() => setMyLeagues([]));
+      .then((res) => res.json())
+      .then((data) => setMyLeagues(Array.isArray(data) ? data : []))
+      .catch(() => setMyLeagues([]))
+      .finally(() => setLoading(false));
   }, []);
+
+  if (loading) return <div style={{ padding: 16 }}>Lade Ligen...</div>;
+  if (err) return <div style={{ color: "crimson" }}>Fehler: {err}</div>;
 
   return (
     <div style={{ padding: 40 }}>
       <h2>Alle Ligen</h2>
       <ul>
-        {leagues.map(l => (
+        {leagues.map((l) => (
           <li key={l.id}>
-            <b><Link to={`/league/${l.id}`}>{l.name}</Link></b> ({l.city}) [{l.sport}]
+            <b>
+              <Link to={`/league/${l.id}`}>{l.name}</Link>
+            </b>{" "}
+            ({l.city}) [{l.sport}]
           </li>
         ))}
       </ul>
@@ -54,9 +69,12 @@ export default function LeaguesPage() {
         {myLeagues.length === 0 ? (
           <i>Noch nicht angemeldet.</i>
         ) : (
-          myLeagues.map(l => (
+          myLeagues.map((l) => (
             <li key={l.id}>
-              <b><Link to={`/league/${l.id}`}>{l.name}</Link></b> ({l.city}) [{l.sport}]
+              <b>
+                <Link to={`/league/${l.id}`}>{l.name}</Link>
+              </b>{" "}
+              ({l.city}) [{l.sport}]
             </li>
           ))
         )}
@@ -72,7 +90,6 @@ export default function LeaguesPage() {
               <th>Stadt</th>
               <th>Sportart</th>
               <th>Liganame</th>
-              <th>Aktion</th>
             </tr>
           </thead>
           <tbody>
@@ -86,9 +103,6 @@ export default function LeaguesPage() {
                 </td>
                 <td>
                   <Link to={`/league/${league.id}`}>{league.name}</Link>
-                </td>
-                <td>
-                  <button onClick={() => joinLeague(league.id, league.name)}>Beitreten</button>
                 </td>
               </tr>
             ))}

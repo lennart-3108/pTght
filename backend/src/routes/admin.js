@@ -42,34 +42,33 @@ module.exports = function adminRoutes(ctx) {
     });
   });
 
-  // Tabelleninhalt lesen
-  router.get("/table/:name", requireAdmin, (req, res) => {
-    const name = String(req.params.name || "");
-    const limitRaw = Number(req.query.limit);
-    const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(1000, limitRaw)) : 200;
+  // Tabelle abrufen
+  router.get("/table/:table", (req, res) => {
+    const table = req.params.table;
+    const limit = Number(req.query.limit) || 200;
 
-    db.get(
-      `SELECT name FROM sqlite_master WHERE type='table' AND name = ?`,
-      [name],
-      (err, row) => {
-        if (err) return res.status(500).json({ error: "DB error", details: err.message });
-        if (!row) return res.status(404).json({ error: "Unknown table" });
-
-        db.all(`PRAGMA table_info(${name})`, [], (e2, cols) => {
-          if (e2) return res.status(500).json({ error: "DB error", details: e2.message });
-          const colNames = (cols || []).map(c => c.name);
-
-          // Optional: nach id sortieren, wenn vorhanden
-          const orderBy = colNames.includes("id") ? ` ORDER BY id DESC` : "";
-          const sql = `SELECT * FROM ${name}${orderBy} LIMIT ?`;
-
-          db.all(sql, [limit], (e3, rows) => {
-            if (e3) return res.status(500).json({ error: "DB error", details: e3.message });
-            res.json({ columns: colNames, rows: rows || [] });
-          });
-        });
+    // Spalten abrufen
+    const columnsSql = `PRAGMA table_info(${table})`;
+    db.all(columnsSql, [], (err, columns) => {
+      if (err) {
+        console.error(`Fehler beim Abrufen der Spalten für Tabelle ${table}:`, err);
+        return res.status(500).json({ error: "Fehler beim Abrufen der Tabellenspalten." });
       }
-    );
+
+      // Daten abrufen
+      const dataSql = `SELECT * FROM ${table} LIMIT ?`;
+      db.all(dataSql, [limit], (err, rows) => {
+        if (err) {
+          console.error(`Fehler beim Abrufen der Daten für Tabelle ${table}:`, err);
+          return res.status(500).json({ error: "Fehler beim Abrufen der Tabellendaten." });
+        }
+
+        res.json({
+          columns: columns.map((col) => col.name), // Alle Spaltennamen
+          rows, // Alle Zeilen
+        });
+      });
+    });
   });
 
   // Schema liefern für Create-Form
@@ -108,6 +107,19 @@ module.exports = function adminRoutes(ctx) {
     );
   });
 
+  // Schema einer Tabelle abrufen
+  router.get("/schema/:table", (req, res) => {
+    const table = req.params.table;
+    const sql = `PRAGMA table_info(${table})`;
+    db.all(sql, [], (err, rows) => {
+      if (err) {
+        console.error(`Fehler beim Abrufen des Schemas für Tabelle ${table}:`, err);
+        return res.status(500).json({ error: "Fehler beim Abrufen des Tabellenschemas." });
+      }
+      res.json(rows);
+    });
+  });
+
   // Generisches Insert
   router.post("/create", requireAdmin, express.json(), (req, res) => {
     const { table, data } = req.body || {};
@@ -134,6 +146,33 @@ module.exports = function adminRoutes(ctx) {
         });
       }
     );
+  });
+
+  // Generisches Update
+  router.put("/table/:table/:id", requireAdmin, express.json(), (req, res) => {
+    const { table, id } = req.params;
+    const data = req.body || {};
+    const keys = Object.keys(data).filter(k => k !== "id");
+    if (keys.length === 0) return res.status(400).json({ error: "No data" });
+    const setClause = keys.map(k => `${k} = ?`).join(", ");
+    const values = keys.map(k => data[k]);
+    const sql = `UPDATE ${table} SET ${setClause} WHERE id = ?`;
+    db.run(sql, [...values, id], function (err) {
+      if (err) return res.status(400).json({ error: "Update failed", details: err.message });
+      if (this.changes === 0) return res.status(404).json({ error: "Not found" });
+      res.json({ updated: true });
+    });
+  });
+
+  // Generisches Delete
+  router.delete("/table/:table/:id", requireAdmin, (req, res) => {
+    const { table, id } = req.params;
+    const sql = `DELETE FROM ${table} WHERE id = ?`;
+    db.run(sql, [id], function (err) {
+      if (err) return res.status(400).json({ error: "Delete failed", details: err.message });
+      if (this.changes === 0) return res.status(404).json({ error: "Not found" });
+      res.json({ deleted: true });
+    });
   });
 
   return router;

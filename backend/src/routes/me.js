@@ -6,36 +6,33 @@ module.exports = function meRoutes(ctx) {
   const { db } = ctx;
   const { requireAuth, ensureTables } = createMiddleware(ctx);
 
-  router.get("/me", requireAuth, (req, res) => {
-    db.get(
-      `SELECT id, firstname, lastname, birthday, email, is_admin, is_confirmed
-       FROM users WHERE id = ?`,
-      [req.user.id],
-      (err, user) => {
-        if (err) return res.status(500).json({ error: "Datenbankfehler" });
-        if (!user) return res.status(404).json({ error: "User nicht gefunden" });
-        db.all(
-          `SELECT sports.name FROM user_sports
-           JOIN sports ON user_sports.sport_id = sports.id
-           WHERE user_sports.user_id = ?`,
-          [req.user.id],
-          (e2, sports) => {
-            if (e2) return res.status(500).json({ error: "Fehler beim Laden der Sportarten" });
-            res.json({ ...user, sports: sports.map(s => s.name) });
-          }
-        );
-      }
-    );
+  // Profil des eingeloggten Nutzers
+  router.get("/", requireAuth, (req, res) => {
+    const userId = req.user.id;
+    const sql = `
+      SELECT id, firstname, lastname, birthday, email,
+             is_confirmed AS isConfirmed, is_admin AS isAdmin
+      FROM users WHERE id = ? LIMIT 1
+    `;
+    db.get(sql, [userId], (err, row) => {
+      if (err) return res.status(500).json({ error: "Datenbankfehler" });
+      if (!row) return res.status(404).json({ error: "User nicht gefunden" });
+      res.json(row);
+    });
   });
 
-  router.get("/me/leagues", requireAuth, async (req, res) => {
+  // Eigene Ligen
+  router.get("/leagues", requireAuth, async (req, res) => {
     await ensureTables();
     const sql = `
-      SELECT l.id, l.name, c.name AS city, s.name AS sport, ul.joined_at
+      SELECT l.id, l.name,
+             c.id AS cityId, c.name AS city,
+             s.id AS sportId, s.name AS sport,
+             l.publicState
       FROM user_leagues ul
-      JOIN leagues l ON ul.league_id = l.id
-      JOIN cities c  ON l.city_id = c.id
-      JOIN sports s  ON l.sport_id = s.id
+      JOIN leagues l ON l.id = ul.league_id
+      JOIN cities  c ON l.city_id = c.id
+      JOIN sports  s ON l.sport_id = s.id
       WHERE ul.user_id = ?
       ORDER BY c.name, l.name
     `;
@@ -44,7 +41,8 @@ module.exports = function meRoutes(ctx) {
     );
   });
 
-  router.get("/me/games", requireAuth, async (req, res) => {
+  // Eigene Spiele (über Ligen-Mitgliedschaft) – liefert upcoming/completed und League-Infos
+  router.get("/games", requireAuth, async (req, res) => {
     await ensureTables();
     const sql = `
       SELECT g.id, g.kickoff_at, g.home, g.away, g.home_score, g.away_score,
@@ -67,5 +65,6 @@ module.exports = function meRoutes(ctx) {
     });
   });
 
+  // Entfernte Duplikate: zuvor fälschlich "/me", "/me/leagues", "/me/games" sowie zweite "/games"-Implementierung
   return router;
 };
