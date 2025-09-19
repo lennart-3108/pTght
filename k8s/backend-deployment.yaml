@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: matchleague-backend
+  labels:
+    app: matchleague-backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: matchleague-backend
+  template:
+    metadata:
+      labels:
+        app: matchleague-backend
+    spec:
+      containers:
+        - name: backend
+          image: ghcr.io/your-org/matchleague-backend:latest
+          ports:
+            - containerPort: 5002
+          env:
+            - name: NODE_ENV
+              value: "production"
+            - name: PORT
+              value: "5002"
+            - name: DB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: matchleague-secrets
+                  key: DB_URL
+            - name: PGSSL
+              value: "true"
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: matchleague-secrets
+                  key: JWT_SECRET
+          resources:
+            requests:
+              cpu: "200m"
+              memory: "256Mi"
+            limits:
+              cpu: "1"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /sports/list
+              port: 5002
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /sports/list
+              port: 5002
+            initialDelaySeconds: 30
+            periodSeconds: 30

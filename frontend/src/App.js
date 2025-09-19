@@ -234,7 +234,7 @@ function App() {
 
           {/* Spiel-Detail */}
           <Route
-            path="/game/:gameId"
+            path="/matches/:gameId"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
                 <GameDetailPage />
