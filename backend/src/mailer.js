@@ -65,8 +65,8 @@ function verifyAndSendAcceptance(transporter, state) {
 
     transporter.sendMail(
       {
-        from: "test@example.com",
-        to: "test@example.com",
+        from: "info@matchleague.org",
+        to: "info@matchleague.org",
         subject: "Mailer verified",
         text: `Mailtrap connection accepted at ${new Date().toISOString()}`,
         html: `<p>Mailtrap connection accepted at <b>${new Date().toISOString()}</b></p>`
