@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useMemo } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 
 export default function LeagueDetailPage() {
   const { leagueId } = useParams();
+  const navigate = useNavigate();
   const [league, setLeague] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
@@ -13,6 +14,11 @@ export default function LeagueDetailPage() {
   const [games, setGames] = useState({ upcoming: [], completed: [] });
   const [loadingExtras, setLoadingExtras] = useState(true);
   const [joining, setJoining] = useState(false);
+  const [isMemberByMe, setIsMemberByMe] = useState(null); // null = unknown, true/false = known
+  // Match-Formular
+  const [opponentId, setOpponentId] = useState("");
+  const [kickoffLocal, setKickoffLocal] = useState("");
+
   const token = localStorage.getItem("token");
 
   const myId = useMemo(() => {
@@ -41,6 +47,8 @@ export default function LeagueDetailPage() {
   }
 
   const amMember = useMemo(() => {
+    // Prefer /me/leagues result when available (more reliable)
+    if (isMemberByMe !== null) return !!isMemberByMe;
     // Überprüfe, ob der Benutzer in der Mitgliederliste enthalten ist
     const isMember = myId ? members.some(m => {
       const memberId = String(getMemberUserId(m));
@@ -54,7 +62,7 @@ export default function LeagueDetailPage() {
     console.log("isMember:", isMember);
 
     return isMember;
-  }, [members, myId]);
+  }, [members, myId, isMemberByMe]);
 
   const isOpenLeague = useMemo(() => {
     const l = league || {};
@@ -116,8 +124,25 @@ export default function LeagueDetailPage() {
     setErr("");
     fetch(`${API_BASE}/leagues/${leagueId}`)
       .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-      .then(j => {
+      .then(async j => {
         if (mounted) setLeague(j);
+        // After league loads, check membership via /me/leagues if we have a token
+        if (mounted) {
+          try {
+            const t = localStorage.getItem("token");
+            if (t) {
+              const ml = await fetch(`${API_BASE}/me/leagues`, { headers: { Authorization: `Bearer ${t}` } })
+                .then(r => (r.ok ? r.json() : []))
+                .catch(() => []);
+              const found = Array.isArray(ml) && ml.some(l => String(l.id || l.leagueId) === String(leagueId));
+              setIsMemberByMe(!!found);
+            } else {
+              setIsMemberByMe(false);
+            }
+          } catch {
+            if (mounted) setIsMemberByMe(false);
+          }
+        }
       })
       .catch(e => mounted && setErr(e.message || "Fehler"))
       .finally(() => mounted && setLoading(false));
@@ -147,8 +172,9 @@ export default function LeagueDetailPage() {
   }
 
   useEffect(() => {
-    reloadExtras();
-  }, [leagueId, token]);
+    // Lade Extras erst, wenn die Liga erfolgreich geladen wurde.
+    if (league) reloadExtras();
+  }, [league, token]); // <-- abhängig von 'league' statt nur leagueId
 
   async function handleJoin() {
     try {
@@ -190,6 +216,47 @@ export default function LeagueDetailPage() {
     }
   }
 
+  // Liste der möglichen Gegner aus den Mitgliedern (ohne mich)
+  const opponents = useMemo(() => {
+    return (members || [])
+      .map((m) => {
+        const uid = getMemberUserId(m);
+        const name = (m.firstname && m.lastname)
+          ? `${m.firstname} ${m.lastname}`
+          : (m.name || m.username || `User ${uid}`);
+        return { id: uid, name };
+      })
+      .filter((o) => String(o.id) !== String(myId));
+  }, [members, myId]);
+
+  async function createMatch(e) {
+    e && e.preventDefault();
+    try {
+      if (!opponentId) throw new Error("Bitte einen Gegner wählen.");
+      if (!kickoffLocal) throw new Error("Bitte Datum/Zeit wählen.");
+      const token = localStorage.getItem("token");
+      const iso = new Date(kickoffLocal).toISOString();
+      const r = await fetch(`${API_BASE}/leagues/${leagueId}/matches`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ opponent_user_id: Number(opponentId), kickoff_at: iso }),
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
+      // optional: Reload Extras oder navigieren
+      await reloadExtras();
+      setOpponentId("");
+      setKickoffLocal("");
+      // Wenn ID geliefert wird, navigieren
+      if (j && j.id) navigate(`/game/${j.id}`);
+    } catch (e) {
+      alert(`Match erstellen fehlgeschlagen: ${e.message || e}`);
+    }
+  }
+
   if (loading) return <div style={{ padding: 16 }}>Lade Liga ...</div>;
   if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
   if (!league) return <div style={{ padding: 16 }}>Keine Daten.</div>;
@@ -203,7 +270,7 @@ export default function LeagueDetailPage() {
         Sportart: <Link to={`/sports/${league.sportId}`}>{league.sport}</Link>
       </div>
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        {!amMember && isPublicLeague && (
+        {!amMember && (isOpenLeague || isPublicLeague) && (
           <button onClick={handleJoin} disabled={!token || joining}>
             {joining ? "Beitritt..." : "Beitreten"}
           </button>
@@ -215,6 +282,23 @@ export default function LeagueDetailPage() {
         )}
         {joinMsg && <span style={{ color: joinMsg.includes("fehl") ? "crimson" : "green" }}>{joinMsg}</span>}
       </div>
+
+      {amMember && (
+        <form onSubmit={createMatch} style={{ margin: "12px 0", display: "flex", gap: 12, alignItems: "end", flexWrap: "wrap" }}>
+          <label style={{ display: "grid", gap: 4 }}>
+            Gegner
+            <select value={opponentId} onChange={(e) => setOpponentId(e.target.value)}>
+              <option value="">– wählen –</option>
+              {opponents.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+            </select>
+          </label>
+          <label style={{ display: "grid", gap: 4 }}>
+            Datum/Zeit
+            <input type="datetime-local" value={kickoffLocal} onChange={(e) => setKickoffLocal(e.target.value)} />
+          </label>
+          <button type="submit">Match erstellen</button>
+        </form>
+      )}
 
       {loadingExtras ? (
         <div>Lade zusätzliche Daten...</div>
@@ -263,7 +347,7 @@ export default function LeagueDetailPage() {
               <tbody>
                 {games.upcoming.map(g => (
                   <tr key={g.id}>
-                    <td><Link to={`/game/${g.id}`}>{formatDate(g.kickoff_at || g.date)}</Link></td>
+                    <td><Link to={`/matches/${g.id}`}>{formatDate(g.kickoff_at || g.date)}</Link></td>
                     <td>{g.home} – {g.away}</td>
                   </tr>
                 ))}
@@ -286,7 +370,7 @@ export default function LeagueDetailPage() {
               <tbody>
                 {games.completed.map(g => (
                   <tr key={g.id}>
-                    <td><Link to={`/game/${g.id}`}>{formatDate(g.kickoff_at || g.date)}</Link></td>
+                    <td><Link to={`/matches/${g.id}`}>{formatDate(g.kickoff_at || g.date)}</Link></td>
                     <td>{g.home} – {g.away}</td>
                     <td>{formatScore(g)}</td>
                   </tr>
