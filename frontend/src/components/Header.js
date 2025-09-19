@@ -1,9 +1,10 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import matchLeagueLogo from "../images/matchleague_logo.png";
 
-const Header = () => {
-  const mainColor = "rgb(11, 43, 33)";  // Hauptfarbe
-  const contrastColor = "rgb(128, 54, 13)";  // Kontrastfarbe
+export default function Header() {
+  const mainColor = "rgb(11, 43, 33)";
+  const contrastColor = "rgb(255,255,255)";
 
   return (
     <header style={{
@@ -18,16 +19,9 @@ const Header = () => {
       zIndex: 1000
     }}>
       <Link to="/" style={{ display: "flex", alignItems: "center", textDecoration: "none" }}>
-        <img 
-          src="/images/matchleague_logo.png" 
-          alt="MatchLeague Logo" 
-          style={{ height: "40px", marginRight: "10px" }} 
-        />
-        <span style={{ fontSize: "24px", fontWeight: "bold", color: contrastColor }}>MatchLeague</span>
+        <img src={matchLeagueLogo} alt="MatchLeague Logo" style={{ height: "36px", marginRight: "10px" }} />
+        <span style={{ fontSize: "20px", fontWeight: "bold", color: contrastColor }}>MatchLeague</span>
       </Link>
-      {/* Weitere Header-Elemente können hier hinzugefügt werden, z.B. Navigation */}
     </header>
   );
-};
-
-export default Header;
+}

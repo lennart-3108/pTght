@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { API_BASE } from "../config";
 
 export default function SportDetailPage() {
   const { id } = useParams();
@@ -7,16 +8,19 @@ export default function SportDetailPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`http://localhost:5001/sports/${id}`, {
+    const controller = new AbortController();
+    setLoading(true);
+    fetch(`${API_BASE}/sports/${id}`, {
       headers: {
-        Authorization: "Bearer " + localStorage.getItem("token")
-      }
+        Authorization: "Bearer " + (localStorage.getItem("token") || ""),
+      },
+      signal: controller.signal,
     })
-      .then(res => res.json())
-      .then(data => {
-        setSport(data);
-        setLoading(false);
-      });
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((data) => setSport(data))
+      .catch(() => setSport(null))
+      .finally(() => setLoading(false));
+    return () => controller.abort();
   }, [id]);
 
   if (loading) return <p style={{ padding: 20 }}>Lädt...</p>;

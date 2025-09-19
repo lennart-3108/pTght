@@ -1,34 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { API_BASE } from "../config"; // fix: import API_BASE
 
 export default function CitiesPage() {
   const { cityId } = useParams();
   const [leagues, setLeagues] = useState([]);
   const [city, setCity] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [citiesAll, setCitiesAll] = useState([]); // neu
-
-  async function joinLeague(leagueId, leagueName) {
-    try {
-      const token = localStorage.getItem("token");
-      const r = await fetch(`http://localhost:5001/leagues/${leagueId}/join`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
-      alert(j.joined ? `Beigetreten: ${leagueName}` : `Bereits Mitglied: ${leagueName}`);
-    } catch (e) {
-      alert(`Beitritt fehlgeschlagen: ${e.message || e}`);
-    }
-  }
+  const [citiesAll, setCitiesAll] = useState([]);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
         if (cityId) {
-          const res = await fetch(`http://localhost:5001/cities/${cityId}`);
+          const res = await fetch(`${API_BASE}/cities/${cityId}`); // fix: use API_BASE
           if (!res.ok) throw new Error("Fehler beim Laden der Stadt");
           const data = await res.json();
           setCity(data.city);
@@ -36,8 +22,8 @@ export default function CitiesPage() {
         } else {
           // Alle Städte und Ligen laden
           const [resCities, resLeagues] = await Promise.all([
-            fetch("http://localhost:5001/cities/list"),
-            fetch("http://localhost:5001/leagues"),
+            fetch(`${API_BASE}/cities/list`),  // fix: API_BASE is defined
+            fetch(`${API_BASE}/leagues`),      // fix: API_BASE is defined
           ]);
           if (!resCities.ok) throw new Error("Fehler beim Laden der Städte");
           if (!resLeagues.ok) throw new Error("Fehler beim Laden der Ligen");
@@ -114,7 +100,6 @@ export default function CitiesPage() {
               <th>Stadt</th>
               <th>Sportart</th>
               <th>Liganame</th>
-              <th>Aktion</th>
             </tr>
           </thead>
           <tbody>
@@ -128,9 +113,6 @@ export default function CitiesPage() {
                 </td>
                 <td>
                   <Link to={`/league/${league.id}`}>{league.name}</Link>
-                </td>
-                <td>
-                  <button onClick={() => joinLeague(league.id, league.name)}>Beitreten</button>
                 </td>
               </tr>
             ))}

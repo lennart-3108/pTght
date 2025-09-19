@@ -11,16 +11,35 @@ import CreatePage from "./pages/CreatePage"; // neu
 import UserDetailPage from "./pages/UserDetailPage"; // neu
 import GameDetailPage from "./pages/GameDetailPage"; // neu
 import AdminPage from "./pages/AdminPage"; // neu
+import matchLeagueLogo from "./images/matchleague_logo_long.png"; // Import the logo
 import "./styles.css"; // neu
+import WelcomePage from "./pages/WelcomePage"; // <-- add this import
 
 // Simpler Adminerkennung (z.B. im Token, sonst im localStorage)
 function isAdmin() {
   return localStorage.getItem("is_admin") === "1";
 }
 
+// Globale Fehlerbehandlung für API-Aufrufe
+function fetchWithErrorLogging(url, options) {
+  return fetch(url, options).then(async (response) => {
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Error fetching ${url} (HTTP ${response.status}): ${errorText}`);
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
+    }
+    return response.json();
+  });
+}
+
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [isAdminFlag, setIsAdminFlag] = useState(localStorage.getItem("is_admin") === "1");
+
+  useEffect(() => {
+    console.log("Token:", token);
+    console.log("Is Admin:", isAdminFlag);
+  }, [token, isAdminFlag]);
 
   // Hintergrundrotation mit Bildern "l-*" aus src/images
   useEffect(() => {
@@ -60,16 +79,18 @@ function App() {
       <nav
         className="site"
         style={{
-          padding: "10px 20px",
+          padding: 0, // Remove all padding
+          color: "#fff",
           color: "#fff",
           display: "flex",
           gap: "15px",
           alignItems: "center",
-          // Hintergrund via CSS-Klasse, Rest bleibt
+          background: "rgba(0,0,0,0.5)", // Add semi-transparent background for visibility
+          height: "50px", // Set fixed height
         }}
       >
-        <Link style={{ color: "#d3d3d3", fontWeight: "bold" }} to="/">
-          Start
+        <Link style={{ color: "#d3d3d3", fontWeight: "bold", height: "100%" }} to="/">
+          <img src={matchLeagueLogo} alt="MatchLeague" style={{ height: "100%", width: "auto", margin: 0 }} />
         </Link>
 
         {!token ? (
@@ -115,8 +136,12 @@ function App() {
       </nav>
 
       {/* --- Routen --- */}
-      <div className="app-content">
+      <div className="app-content" >
         <Routes>
+          {/* public routes */}
+          <Route path="/welcome" element={<WelcomePage />} />
+          <Route path="/registration-success" element={<WelcomePage />} />
+
           {/* Login & Register immer erreichbar */}
           {routes
             .filter(r => r.path === "/login" || r.path === "/register")
@@ -199,7 +224,7 @@ function App() {
 
           {/* User Profil (öffentliches Profil) */}
           <Route
-            path="/user/:userId"
+            path="/user/:id" // Stelle sicher, dass ":id" korrekt definiert ist
             element={
               <ProtectedRoute token={token} setToken={setToken}>
                 <UserDetailPage />
@@ -209,7 +234,7 @@ function App() {
 
           {/* Spiel-Detail */}
           <Route
-            path="/game/:gameId"
+            path="/matches/:gameId"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
                 <GameDetailPage />
@@ -240,6 +265,20 @@ function App() {
                   <AdminPage />
                 ) : (
                   <div style={{ padding: 16 }}>403 – Nur für Admins</div>
+                )}
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Profil (nur Admin) */}
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                {isAdminFlag ? (
+                  <UserDetailPage />
+                ) : (
+                  <div style={{ padding: 16 }}>403 – Zugriff verweigert. Nur für Admins.</div>
                 )}
               </ProtectedRoute>
             }

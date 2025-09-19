@@ -45,7 +45,7 @@ function registerUserDetailRoutes(app, ctx) {
       if (err) return res.status(500).json({ error: "Datenbankfehler" });
 
       const leaguesTable = ["leagues"].find(t => tableExists(tables, t));
-      const linkTable = ["league_members", "user_leagues", "league_users", "leagues_users", "user_league"]
+      const linkTable = [ "user_leagues", "league_users", "leagues_users", "user_league"]
         .find(t => tableExists(tables, t));
 
       if (!leaguesTable || !linkTable) return res.json([]);
