@@ -15,6 +15,8 @@ coverage/
 *.env.local
 frontend/.env
 frontend/.env.local
+backend/.env
+backend/.env.local
 
 # Editor/OS
 .DS_Store
@@ -29,6 +31,9 @@ backend/sportplattform.db
 backend/*.sqlite
 backend/*.db
 backend/*.db-*
+
+# Local backup folder (moved pTght-1 to Desktop previously)
+/pTght-1/
 
 # Mailer artifacts
 *.eml
@@ -47,3 +52,4 @@ backend/.tox/
 # Logs and temp
 logs/
 tmp/
+backend/.env.prod
