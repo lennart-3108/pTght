@@ -1,0 +1,4 @@
+bash: line 1: 10667 Terminated: 15          nohup npm run start > ../backend-start.log 2>&1
+bash: line 1: 19260 Terminated: 15          nohup npm run start > ../backend-start.log 2>&1
+bash: line 1: 13820 Terminated: 15          nohup npm run start > ../backend-start.log 2>&1
+bash: line 1: 18806 Terminated: 15          nohup npm run start > ../backend-start.log 2>&1
