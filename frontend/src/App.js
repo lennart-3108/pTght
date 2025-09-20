@@ -139,8 +139,8 @@ function App() {
       <div className="app-content" >
         <Routes>
           {/* public routes */}
-          <Route path="/welcome" element={<WelcomePage />} />
-          <Route path="/registration-success" element={<WelcomePage />} />
+          <Route path="/welcome" element={<WelcomePage setToken={setToken} setIsAdminFlag={setIsAdminFlag} />} />
+          <Route path="/registration-success" element={<WelcomePage setToken={setToken} setIsAdminFlag={setIsAdminFlag} />} />
 
           {/* Login & Register immer erreichbar */}
           {routes
