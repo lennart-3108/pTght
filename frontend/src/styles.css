@@ -1,7 +1,7 @@
 :root {
   --primary: #cccccc;
-  --primary-600: #00781a;
-  --bg: #092320;
+  --primary-600: #0a2221; /* primary button color (RGB 10,34,33) */
+  --bg: #081c19; /* darker green background (matches design sample) */
   --surface: #111827;
   --text: #e5e7eb;
   --muted: #9ca3af;
@@ -32,7 +32,7 @@ a:hover {
 }
 
 button, .btn {
-  background: #2e8e27;
+  background: var(--primary-600);
   color: #f5fafa;
   font-weight: bold;
 
@@ -41,8 +41,33 @@ button, .btn {
   border-radius: 0.5rem;
   cursor: pointer;
 }
+
 button:hover, .btn:hover {
+  background: #0e2f2d; /* slightly lighter hover */
+}
+
+/* Primary button variant used across auth pages */
+.btn-primary {
   background: var(--primary-600);
+  color: #f5fafa;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  box-shadow: 0 6px 12px rgba(4, 20, 19, 0.28);
+}
+.btn-primary:hover {
+  background: #0e2f2d;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(4, 20, 19, 0.36);
+}
+.btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 8px rgba(4, 20, 19, 0.22);
+}
+.btn-primary:focus {
+  outline: 3px solid rgba(10,34,33,0.18);
+  outline-offset: 2px;
 }
 
 /* Karten-/Panel-Style */
@@ -60,3 +85,45 @@ button:hover, .btn:hover {
   object-fit: cover; /* Scales and zooms the image to fill width while maintaining aspect ratio */
   margin: 0 auto; /* Centers horizontally */
 }
+
+/* Hero carousel */
+.hero-carousel {
+  position: relative;
+  width: 100%;
+  height: 360px;
+  overflow: hidden;
+}
+.hero-slide {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center center;
+  transform: scale(1.05);
+  opacity: 0;
+  transition: opacity 900ms ease, transform 12s ease;
+}
+.hero-slide.active {
+  opacity: 1;
+  transform: scale(1);
+}
+.hero-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 32px;
+  pointer-events: none;
+}
+.hero-stripe {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(8,28,25,0.85);
+  padding: 12px 20px;
+  transform: skewX(-12deg);
+}
+.hero-stripe .hero-small-logo { width: 48px; height: 48px; transform: skewX(12deg); }
+.hero-title { font-size: 32px; margin: 0; color: #e6efe6; transform: skewX(12deg); }
+.hero-sub { color: rgba(230,239,230,0.9); margin-top: 12px; pointer-events: none; }

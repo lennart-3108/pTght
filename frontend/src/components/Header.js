@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import matchLeagueLogo from "../images/matchleague_logo.png"; // Adjust path if needed
+import matchLeagueLogo from "../images/matchleague_logo_long.png"; // use long branded logo
 
 export default function Header() {
   return (
