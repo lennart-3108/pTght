@@ -117,6 +117,57 @@ const ctx = {
   lastStartupAdmin
 };
 
+// ephemeral one-time auth token store (in-memory). Keys: token -> { userId, expiresAt }
+// NOTE: in production you may want a persistent/cluster-safe store (Redis) instead.
+ctx.oneTimeAuthTokens = new Map();
+
+// Resend confirmation cooldown tracker (in-memory). Keys: email -> timestamp(ms)
+// Configurable via RESEND_COOLDOWN_SECONDS env (defaults to 300 = 5 minutes)
+ctx.resendCooldowns = new Map();
+ctx.resendCooldownSeconds = Number(process.env.RESEND_COOLDOWN_SECONDS) || 300;
+
+// expose ctx to express routes via app.locals so handlers can read/write one-time tokens
+app.locals.ctx = ctx;
+// also expose on global for scripts/tests that might not have access to app instance
+global._app_ctx = ctx;
+
+// Periodic cleanup for expired one-time tokens (runs every 60s)
+setInterval(() => {
+  try {
+    const now = Date.now();
+    const store = ctx.oneTimeAuthTokens;
+    const removed = [];
+    for (const [k, v] of store.entries()) {
+      if (!v || (v.expiresAt && v.expiresAt < now)) {
+        store.delete(k);
+        removed.push(k);
+      }
+    }
+    if (removed.length) console.log(`[oneTimeCleanup] removed ${removed.length} expired tokens`);
+  } catch (e) {
+    console.error('[oneTimeCleanup] error', e && (e.stack || e.message || e));
+  }
+}, 60 * 1000);
+
+// cleanup resend cooldown entries alongside one-time tokens
+setInterval(() => {
+  try {
+    const now = Date.now();
+    const cooldowns = ctx.resendCooldowns;
+    const ttl = (ctx.resendCooldownSeconds || 300) * 1000;
+    const removed = [];
+    for (const [email, ts] of cooldowns.entries()) {
+      if (!ts || (now - ts) > ttl) {
+        cooldowns.delete(email);
+        removed.push(email);
+      }
+    }
+    if (removed.length) console.log(`[resendCooldownCleanup] removed ${removed.length} expired cooldown entries`);
+  } catch (e) {
+    console.error('[resendCooldownCleanup] error', e && (e.stack || e.message || e));
+  }
+}, 60 * 1000);
+
 // Create a startup admin and expose banner info
 createIncrementalAdmin(db, (info) => {
   lastStartupAdmin.value = info;
@@ -491,6 +542,34 @@ app.get("/cities/list", async (req, res) => {
   } catch (e) {
     console.error("GET /cities/list failed:", e && (e.stack || e.message || e));
     return res.status(500).json({ error: "Datenbankfehler", details: (e && e.message) || String(e) });
+  }
+});
+
+// --- TEMP DEBUG: lookup user by email (only for local debugging) ---
+app.get('/debug/user', async (req, res) => {
+  try {
+    const email = String(req.query.email || '').trim();
+    if (!email) return res.status(400).json({ error: 'email query required' });
+    // use adapter/db directly (ctx.db is not in scope here but 'db' is)
+  db.get(`SELECT id, email, firstname, lastname FROM users WHERE email = ?`, [email], (err, row) => {
+      if (err) return res.status(500).json({ error: 'db error', details: err.message });
+      if (!row) return res.status(404).json({ error: 'not found' });
+      return res.json({ user: row });
+    });
+  } catch (e) {
+    return res.status(500).json({ error: 'internal', details: String(e) });
+  }
+});
+
+// TEMP: list a few users (debug only)
+app.get('/debug/users', async (req, res) => {
+  try {
+    db.all('SELECT id, email, firstname, lastname FROM users LIMIT 20', [], (err, rows) => {
+      if (err) return res.status(500).json({ error: 'db error', details: err.message });
+      return res.json({ count: (rows || []).length, users: rows || [] });
+    });
+  } catch (e) {
+    return res.status(500).json({ error: 'internal', details: String(e) });
   }
 });
 
