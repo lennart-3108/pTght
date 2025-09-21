@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import axios from "axios";
+// use native fetch instead of axios to avoid axios vulnerability
 import { API_BASE } from "../config";
 
 export default function AdminPage() {
@@ -31,13 +31,24 @@ export default function AdminPage() {
   }, [token]);
 
   // Schema laden
+  // Schema laden (extracted to function so it can be refreshed on demand)
+  const loadSchema = async () => {
+    setSchemaErr("");
+    try {
+      const r = await fetch(`${API_BASE}/admin/schema`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const j = await r.json();
+      setSchema(j);
+    } catch (e) {
+      setSchemaErr(e.message || "Fehler");
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
-    setSchemaErr("");
-    fetch(`${API_BASE}/admin/schema`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
-      .then(j => mounted && setSchema(j))
-      .catch(e => mounted && setSchemaErr(e.message || "Fehler"));
+    // small guard: only run on mount (token might change rarely)
+    if (!mounted) return;
+    loadSchema();
     return () => { mounted = false; };
   }, [token]);
 
@@ -45,10 +56,9 @@ export default function AdminPage() {
   useEffect(() => {
     const checkEmailStatus = async () => {
       try {
-        const response = await axios.get(`${API_BASE}/admin/email-status`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setEmailStatus(response.data); // store full payload
+        const r = await fetch(`${API_BASE}/admin/email-status`, { headers: { Authorization: `Bearer ${token}` } });
+        const j = r.ok ? await r.json().catch(() => null) : null;
+        setEmailStatus(j || { connected: false });
       } catch {
         setEmailStatus({ connected: false });
       }
@@ -99,12 +109,14 @@ export default function AdminPage() {
   const sendTestEmail = async () => {
     setTestMessage("");
     try {
-      const response = await axios.post(
-        `${API_BASE}/admin/test-email`,
-        { to: "info@matchleague.org" },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setTestMessage(`Test email sent! id: ${response.data?.messageId || "n/a"}`);
+      const r = await fetch(`${API_BASE}/admin/test-email`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to: 'info@matchleague.org' }),
+      });
+      const j = await (async () => { const t = await r.text(); try { return JSON.parse(t); } catch { return null; } })();
+      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
+      setTestMessage(`Test email sent! id: ${j?.messageId || "n/a"}`);
     } catch (e) {
       setTestMessage(`Failed to send test email: ${e?.message || "unknown error"}`);
     }
@@ -115,12 +127,19 @@ export default function AdminPage() {
     if (!window.confirm(`Diesen Datensatz (id=${rowId}) aus "${table}" löschen?`)) return;
     setDeletingId(rowId);
     try {
-      await axios.delete(`${API_BASE}/admin/table/${encodeURIComponent(table)}/${rowId}`, {
+      const r = await fetch(`${API_BASE}/admin/table/${encodeURIComponent(table)}/${rowId}`, {
+        method: 'DELETE',
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (!r.ok) {
+        const t = await r.text();
+        let json;
+        try { json = JSON.parse(t); } catch { json = null; }
+        throw new Error(json?.error || `HTTP ${r.status}`);
+      }
       setRows(prev => prev.filter(r => r.id !== rowId));
     } catch (e) {
-      alert(`Löschen fehlgeschlagen: ${e?.response?.data?.error || e.message}`);
+      alert(`Löschen fehlgeschlagen: ${e?.message || 'unknown error'}`);
     } finally {
       setDeletingId(null);
     }
@@ -133,13 +152,21 @@ export default function AdminPage() {
   const handleSaveEdit = async () => {
     if (!editingRow || !table) return;
     try {
-      await axios.put(`${API_BASE}/admin/table/${encodeURIComponent(table)}/${editingRow.id}`, editingRow, {
-        headers: { Authorization: `Bearer ${token}` }
+      const r = await fetch(`${API_BASE}/admin/table/${encodeURIComponent(table)}/${editingRow.id}`, {
+        method: 'PUT',
+        headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify(editingRow),
       });
+      if (!r.ok) {
+        const t = await r.text();
+        let json;
+        try { json = JSON.parse(t); } catch { json = null; }
+        throw new Error(json?.error || `HTTP ${r.status}`);
+      }
       setRows(prev => prev.map(r => (r.id === editingRow.id ? editingRow : r)));
       setEditingRow(null); // Schließe das Formular nach dem Speichern
     } catch (e) {
-      alert(`Speichern fehlgeschlagen: ${e?.response?.data?.error || e.message}`);
+      alert(`Speichern fehlgeschlagen: ${e?.message || 'unknown error'}`);
     }
   };
 
@@ -173,12 +200,16 @@ export default function AdminPage() {
           ) : !schema ? (
             <span>Lade Schema ...</span>
           ) : (
-            <select value={table} onChange={(e) => setTable(e.target.value)}>
-              <option value="">– bitte wählen –</option>
-              {tableNames.map((t) => (
-                <option key={t} value={t}>{t}</option>
-              ))}
-            </select>
+            <>
+              <select value={table} onChange={(e) => setTable(e.target.value)}>
+                <option value="">– bitte wählen –</option>
+                {tableNames.map((t) => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+              &nbsp;
+              <button onClick={() => loadSchema()} title="Schema neu laden">Refresh</button>
+            </>
           )}
         </label>
       </div>

@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: backend
-          image: ghcr.io/your-org/matchleague-backend:latest
+          image: ghcr.io/lennart-3108/matchleague-backend:latest
           ports:
             - containerPort: 5002
           env:

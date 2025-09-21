@@ -56,6 +56,21 @@ module.exports = function usersRoutes(ctx) {
     });
   });
 
+  // Simple search/autocomplete for users: GET /users?search=term
+  router.get('/users', (req, res) => {
+    const q = (req.query.search || '').trim();
+    if (!q) return res.json([]);
+
+    // basic tokenization: match against email, firstname, lastname
+    const like = `%${q.replace(/%/g, '')}%`;
+    const sql = `SELECT id, firstname, lastname, email FROM users WHERE email LIKE ? OR firstname LIKE ? OR lastname LIKE ? ORDER BY firstname, lastname LIMIT 20`;
+    db.all(sql, [like, like, like], (err, rows) => {
+      if (err) return res.status(500).json({ error: 'Datenbankfehler', details: err.message });
+      const out = (rows || []).map(r => ({ id: r.id, firstname: r.firstname, lastname: r.lastname, email: r.email, displayName: (r.firstname || r.lastname) ? `${(r.firstname||'').trim()} ${(r.lastname||'').trim()}`.trim() : r.email }));
+      res.json(out);
+    });
+  });
+
   // Spiele eines Users (über seine Ligen)
   router.get("/users/:id/games", (req, res) => {
     const id = Number(req.params.id);

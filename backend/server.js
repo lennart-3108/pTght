@@ -168,10 +168,21 @@ setInterval(() => {
   }
 }, 60 * 1000);
 
-// Create a startup admin and expose banner info
-createIncrementalAdmin(db, (info) => {
-  lastStartupAdmin.value = info;
-});
+// Create a startup test user (developer convenience) and expose banner info
+try {
+  const { createStartupTestUser } = require("./src/db");
+  if (typeof createStartupTestUser === 'function') {
+    createStartupTestUser(db, (info) => {
+      lastStartupAdmin.value = info;
+    });
+  } else {
+    // fallback to legacy admin creation
+    createIncrementalAdmin(db, (info) => { lastStartupAdmin.value = info; });
+  }
+} catch (e) {
+  // if the new helper is not present for any reason, keep legacy behavior
+  createIncrementalAdmin(db, (info) => { lastStartupAdmin.value = info; });
+}
 
 // Verwende für den Job die direkte Knex-Instanz
 // ensureCommunityLeagues(knexDirect, () => console.log("Community-Ligen synchronisiert."));
@@ -504,7 +515,18 @@ const matchesRoutes = require("./routes/matches");
 
 // Mount routes BEFORE any 404 handler
 app.use("/sports", sportsRoutes({ db }));
-app.use("/matches", matchesRoutes({ db })); // pass db here
+// Ensure we pass a usable knex instance into routes that expect it.
+// Prefer knexDirect (legacy), then adapter's knex, then the adapter object as last resort.
+const resolvedKnexForRoutes = (knexDirect && knexDirect.client)
+  ? knexDirect
+  : (db && db.knex && db.knex.client) ? db.knex : (db || null);
+console.log('[DEBUG] resolvedKnexForRoutes summary:', {
+  hasResolved: !!resolvedKnexForRoutes,
+  isFunction: typeof resolvedKnexForRoutes === 'function',
+  hasClient: !!(resolvedKnexForRoutes && resolvedKnexForRoutes.client),
+  source: knexDirect && knexDirect.client ? 'knexDirect' : (db && db.knex && db.knex.client) ? 'adapter.knex' : (db ? 'adapter' : 'none')
+});
+app.use("/matches", matchesRoutes({ db: resolvedKnexForRoutes }));
 
 // --- ensure root /sports exists (some setups expose only /sports/:id/... but not GET /sports) ---
 app.get("/sports", async (req, res) => {

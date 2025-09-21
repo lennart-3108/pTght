@@ -1,0 +1,1439 @@
+
+> frontend@0.1.0 start
+> react-scripts start
+
+(node:30619) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+(node:30619) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+Starting the development server...
+
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:   'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:   'navPages' is assigned a value but never used  no-unused-vars
+  Line 36:12:  'handleLogout' is defined but never used       no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:   'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:   'navPages' is assigned a value but never used  no-unused-vars
+  Line 36:12:  'handleLogout' is defined but never used       no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Failed to compile.
+
+[eslint] 
+src/pages/StartPage.js
+Syntax error: Unterminated JSX contents. (117:10) (117:10)
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+ERROR in ./src/pages/StartPage.js
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: /Users/A105227786/Documents/projects/sL/pTght/frontend/src/pages/StartPage.js: Unterminated JSX contents. (117:10)
+
+  115 |         </ul>
+  116 |       )}
+> 117 |     </div>
+      |           ^
+  118 |   );
+  119 | }
+  120 |
+    at constructor (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:367:19)
+    at FlowParserMixin.raise (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6627:19)
+    at FlowParserMixin.jsxReadToken (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4478:20)
+    at FlowParserMixin.getTokenFromCode (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4804:12)
+    at FlowParserMixin.getTokenFromCode (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3225:13)
+    at FlowParserMixin.nextToken (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:5810:10)
+    at FlowParserMixin.next (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:5720:10)
+    at FlowParserMixin.eat (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:5724:12)
+    at FlowParserMixin.expect (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6926:15)
+    at FlowParserMixin.jsxParseClosingElementAt (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4710:10)
+    at FlowParserMixin.jsxParseElementAt (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4725:37)
+    at FlowParserMixin.jsxParseElementAt (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4728:32)
+    at FlowParserMixin.jsxParseElement (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4779:17)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4789:19)
+    at FlowParserMixin.parseExprSubscripts (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11076:23)
+    at FlowParserMixin.parseUpdate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11061:21)
+    at FlowParserMixin.parseMaybeUnary (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11041:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10894:61)
+    at FlowParserMixin.parseExprOps (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10899:23)
+    at FlowParserMixin.parseMaybeConditional (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10876:23)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10826:21)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3528:39
+    at FlowParserMixin.tryParse (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6935:20)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3528:18)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10795:39
+    at FlowParserMixin.allowInAnd (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12427:12)
+    at FlowParserMixin.parseMaybeAssignAllowIn (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10795:17)
+    at FlowParserMixin.parseMaybeAssignAllowInOrVoidPattern (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12494:17)
+    at FlowParserMixin.parseParenAndDistinguishExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11674:28)
+    at FlowParserMixin.parseParenAndDistinguishExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3621:18)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11326:23)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4794:20)
+    at FlowParserMixin.parseExprSubscripts (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11076:23)
+    at FlowParserMixin.parseUpdate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11061:21)
+    at FlowParserMixin.parseMaybeUnary (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11041:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10894:61)
+    at FlowParserMixin.parseExprOps (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10899:23)
+    at FlowParserMixin.parseMaybeConditional (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10876:23)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10826:21)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3579:18)
+    at FlowParserMixin.parseExpressionBase (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10779:23)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:39
+    at FlowParserMixin.allowInAnd (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12422:16)
+    at FlowParserMixin.parseExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:17)
+    at FlowParserMixin.parseReturnStatement (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13142:28)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12798:21)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+
+ERROR in [eslint] 
+src/pages/StartPage.js
+  Line 117:10:  Parsing error: Unterminated JSX contents. (117:10)
+
+webpack compiled with 2 errors and 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Failed to compile.
+
+[eslint] 
+src/pages/LoginPage.js
+  Line 131:10:  'Link' is not defined  react/jsx-no-undef
+  Line 131:49:  'Link' is not defined  react/jsx-no-undef
+
+Search for the keywords to learn more about each error.
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+ERROR in [eslint] 
+src/pages/LoginPage.js
+  Line 131:10:  'Link' is not defined  react/jsx-no-undef
+  Line 131:49:  'Link' is not defined  react/jsx-no-undef
+
+Search for the keywords to learn more about each error.
+
+webpack compiled with 1 error and 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 14:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 20:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 25:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 66:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/Header.js
+  Line 7:10:  'titleForPath' is defined but never used       no-unused-vars
+  Line 32:9:  'navPages' is assigned a value but never used  no-unused-vars
+
+src/pages/LoginPage.js
+  Line 99:9:   'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 100:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning

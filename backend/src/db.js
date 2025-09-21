@@ -119,4 +119,101 @@ function createIncrementalAdmin(db, setBanner) {
   );
 }
 
+function createStartupTestUser(db, setBanner) {
+  // Create a test user (testuserN@example.com) and try to auto-join a league
+  try {
+    db.get(`SELECT id FROM leagues ORDER BY id LIMIT 1`, (leagueErr, leagueRow) => {
+      const leagueId = leagueRow && leagueRow.id ? leagueRow.id : null;
+
+      db.get(`SELECT COUNT(*) AS cnt FROM users WHERE email LIKE 'testuser%@example.com'`, (countErr, row) => {
+        if (countErr) {
+          console.error('TestUser count error:', countErr.message);
+          setBanner({ error: 'testuser_count_failed' });
+          return;
+        }
+        const nextNum = (row && row.cnt ? row.cnt : 0) + 1;
+        const userName = `testuser${nextNum}`;
+        const userEmail = `${userName}@example.com`;
+        const hashed = bcrypt.hashSync('test1234', 10);
+
+        db.run(
+          `INSERT INTO users (firstname, lastname, birthday, email, password, is_confirmed)
+           VALUES (?, ?, ?, ?, ?, 1)`,
+          [userName, '', '1970-01-01', userEmail, hashed],
+          function (insErr) {
+            if (insErr) {
+              console.error('TestUser create error:', insErr.message);
+              setBanner({ error: 'testuser_create_failed', details: insErr.message });
+              return;
+            }
+            const createdId = this && this.lastID ? this.lastID : null;
+            const info = { name: userName, email: userEmail, id: createdId, createdAt: new Date().toISOString() };
+            setBanner(info);
+            console.log(`🧪 Test user created: ${userName} (${userEmail}) / Password: test1234`);
+
+            // Try to auto-join user to league (if table exists and league found)
+            if (leagueId) {
+              db.run(`INSERT OR IGNORE INTO user_leagues (user_id, league_id) VALUES (?, ?)`, [createdId, leagueId], (ulErr) => {
+                if (ulErr) console.warn('Failed to join user to league:', ulErr.message);
+                else console.log(`Test user ${userName} joined league ${leagueId} (if not already).`);
+
+                // After joining, try to find a match for that league or any match as a sample
+                tryFindSampleMatch(db, createdId, leagueId, (matchInfo) => {
+                  if (matchInfo) console.log('Sample match found for startup user:', matchInfo);
+                });
+              });
+            } else {
+              // No league to join; still try to find any match
+              tryFindSampleMatch(db, createdId, null, (matchInfo) => {
+                if (matchInfo) console.log('Sample match found for startup user (no league):', matchInfo);
+              });
+            }
+          }
+        );
+      });
+    });
+  } catch (e) {
+    console.error('createStartupTestUser failed:', e && (e.stack || e.message || e));
+    setBanner({ error: 'testuser_failed', details: String(e) });
+  }
+}
+
+function tryFindSampleMatch(db, userId, leagueId, cb) {
+  // Prefer 'matches' table, then 'games'. Try to find a match in the same league if possible.
+  try {
+    db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='matches'`, (mErr, mRow) => {
+      const table = mRow ? 'matches' : null;
+      if (table) {
+        const where = leagueId ? ` WHERE league_id = ${leagueId}` : '';
+        db.get(`SELECT id, league_id FROM ${table}${where} ORDER BY id LIMIT 1`, (err, row) => {
+          if (err) return cb(null);
+          if (row) return cb({ table, id: row.id, league_id: row.league_id });
+          // fallback to any match in table
+          db.get(`SELECT id, league_id FROM ${table} ORDER BY id LIMIT 1`, (err2, row2) => {
+            if (err2 || !row2) return cb(null);
+            return cb({ table, id: row2.id, league_id: row2.league_id });
+          });
+        });
+      } else {
+        // try games table
+        db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='games'`, (gErr, gRow) => {
+          const gtable = gRow ? 'games' : null;
+          if (!gtable) return cb(null);
+          const where2 = leagueId ? ` WHERE league_id = ${leagueId}` : '';
+          db.get(`SELECT id, league_id FROM ${gtable}${where2} ORDER BY id LIMIT 1`, (e, r) => {
+            if (e || !r) {
+              db.get(`SELECT id, league_id FROM ${gtable} ORDER BY id LIMIT 1`, (e2, r2) => {
+                if (e2 || !r2) return cb(null);
+                return cb({ table: gtable, id: r2.id, league_id: r2.league_id });
+              });
+            } else return cb({ table: gtable, id: r.id, league_id: r.league_id });
+          });
+        });
+      }
+    });
+  } catch (e) {
+    return cb(null);
+  }
+}
+
 module.exports = { initDb, getDbSchema, schemaToHtml, createIncrementalAdmin };
