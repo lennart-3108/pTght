@@ -5,6 +5,9 @@ import ProtectedRoute from "./helpers/ProtectedRoute";
 import StartPage from "./pages/StartPage"; // neu
 import LeaguesPage from "./pages/LeaguesPage";
 import LeagueDetailPage from "./pages/LeagueDetailPage";
+import TeamsPage from "./pages/TeamsPage";
+import CreateTeamPage from "./pages/CreateTeamPage";
+import TeamDetailPage from "./pages/TeamDetailPage";
 import CitiesPage from "./pages/CitiesPage"; // neu
 import SportsDetailPage from "./pages/SportsDetailPage"; // neu
 import CreatePage from "./pages/CreatePage"; // neu
@@ -13,6 +16,7 @@ import GameDetailPage from "./pages/GameDetailPage"; // neu
 import AdminPage from "./pages/AdminPage"; // neu
 import matchLeagueLogo from "./images/matchleague_logo_long.png"; // Import the logo
 import "./styles.css"; // neu
+import Header from "./components/Header";
 import WelcomePage from "./pages/WelcomePage"; // <-- add this import
 
 // Simpler Adminerkennung (z.B. im Token, sonst im localStorage)
@@ -76,64 +80,7 @@ function App() {
   return (
     <Router>
       {/* --- Header --- */}
-      <nav
-        className="site"
-        style={{
-          padding: 0, // Remove all padding
-          color: "#fff",
-          color: "#fff",
-          display: "flex",
-          gap: "15px",
-          alignItems: "center",
-          background: "rgba(0,0,0,0.5)", // Add semi-transparent background for visibility
-          height: "50px", // Set fixed height
-        }}
-      >
-        <Link style={{ color: "#d3d3d3", fontWeight: "bold", height: "100%" }} to="/">
-          <img src={matchLeagueLogo} alt="MatchLeague" style={{ height: "100%", width: "auto", margin: 0 }} />
-        </Link>
-
-        {!token ? (
-          <>
-            <Link style={{ color: "#d3d3d3", fontWeight: "bold" }} to="/login">
-              Login
-            </Link>
-            <Link style={{ color: "#d3d3d3", fontWeight: "bold" }} to="/register">
-              Registrieren
-            </Link>
-          </>
-        ) : (
-          <>
-            <Link style={{ color: "#d3d3d3", fontWeight: "bold" }} to="/profile">
-              Profil
-            </Link>
-            <Link style={{ color: "#d3d3d3", fontWeight: "bold" }} to="/sports">
-              Sportarten
-            </Link>
-            <Link style={{ color: "#d3d3d3", fontWeight: "bold" }} to="/cities">
-              Städte
-            </Link>
-            <Link style={{ color: "#d3d3d3", fontWeight: "bold" }} to="/leagues">
-              Leagues
-            </Link>
-            {/* Create nur für Admin */}
-            {isAdminFlag && (
-              <>
-                <Link style={{ color: "#d3d3d3", fontWeight: "bold" }} to="/create">
-                  Create
-                </Link>
-                <Link style={{ color: "#d3d3d3", fontWeight: "bold" }} to="/admin">
-                  Admin
-                </Link>
-              </>
-            )}
-            {/* Nur EIN Logout-Link und Button auf der Logout-Page */}
-            <Link style={{ color: "#d3d3d3", fontWeight: "bold" }} to="/logout">
-              Logout
-            </Link>
-          </>
-        )}
-      </nav>
+      <Header />
 
       {/* --- Routen --- */}
       <div className="app-content" >
@@ -175,24 +122,16 @@ function App() {
               />
             ))}
 
-          {/* Leagues-Übersicht */}
-          <Route
-            path="/leagues"
-            element={
-              <ProtectedRoute token={token} setToken={setToken}>
-                <LeaguesPage />
-              </ProtectedRoute>
-            }
-          />
-          {/* League-Detail */}
-          <Route
-            path="/league/:leagueId"
-            element={
-              <ProtectedRoute token={token} setToken={setToken}>
-                <LeagueDetailPage />
-              </ProtectedRoute>
-            }
-          />
+          {/* Leagues-Übersicht (public) */}
+          <Route path="/leagues" element={<LeaguesPage />} />
+
+          {/* Teams */}
+
+          {/* League-Detail (public) */}
+          <Route path="/league/:leagueId" element={<LeagueDetailPage />} />
+          <Route path="/teams" element={<TeamsPage />} />
+          <Route path="/teams/create" element={<CreateTeamPage />} />
+          <Route path="/teams/:id" element={<TeamDetailPage />} />
 
           {/* Städte */}
           <Route

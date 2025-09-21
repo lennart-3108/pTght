@@ -15,6 +15,8 @@ export default function LeagueDetailPage() {
   const [loadingExtras, setLoadingExtras] = useState(true);
   const [joining, setJoining] = useState(false);
   const [isMemberByMe, setIsMemberByMe] = useState(null); // null = unknown, true/false = known
+  const [myOpenMatch, setMyOpenMatch] = useState(null);
+  const [matchSearching, setMatchSearching] = useState(false);
   // Match-Formular
   const [opponentId, setOpponentId] = useState("");
   const [kickoffLocal, setKickoffLocal] = useState("");
@@ -149,6 +151,20 @@ export default function LeagueDetailPage() {
     return () => { mounted = false; };
   }, [leagueId]);
 
+  // fetch my open match for this league
+  async function fetchMyOpenMatch() {
+    try {
+      const t = localStorage.getItem('token');
+      if (!t) { setMyOpenMatch(null); return; }
+      const r = await fetch(`${API_BASE}/leagues/${leagueId}/my-open-match`, { headers: { Authorization: `Bearer ${t}` } });
+      if (!r.ok) { setMyOpenMatch(null); return; }
+      const j = await r.json().catch(() => null);
+      setMyOpenMatch(j || null);
+    } catch (e) {
+      setMyOpenMatch(null);
+    }
+  }
+
   async function reloadExtras() {
     setLoadingExtras(true);
     try {
@@ -175,6 +191,11 @@ export default function LeagueDetailPage() {
     // Lade Extras erst, wenn die Liga erfolgreich geladen wurde.
     if (league) reloadExtras();
   }, [league, token]); // <-- abhängig von 'league' statt nur leagueId
+
+  useEffect(() => {
+    // whenever league or membership changes, refresh my open match
+    fetchMyOpenMatch();
+  }, [leagueId, isMemberByMe]);
 
   async function handleJoin() {
     try {
@@ -298,6 +319,48 @@ export default function LeagueDetailPage() {
           </label>
           <button type="submit">Match erstellen</button>
         </form>
+      )}
+
+      {/* Match suchen (join-or-create) */}
+      {amMember && (
+        <div style={{ marginTop: 12 }}>
+          <button
+            onClick={async () => {
+              try {
+                setMatchSearching(true);
+                setErr('');
+                const t = localStorage.getItem('token');
+                if (!t) throw new Error('Bitte einloggen');
+                // captain-only rule: check membership row if captain flag present
+                const memberRow = members.find(m => String(getMemberUserId(m)) === String(myId));
+                if (league && (league.sportType === 'team' || league.sport_type === 'team')) {
+                  // check memberRow.captain or user_leagues.captain via backend; fallback to memberRow.captain
+                  if (!(memberRow && memberRow.captain)) {
+                    alert('Nur Captains können für Team-Sportarten die Match-Suche starten.');
+                    return;
+                  }
+                }
+                const r = await fetch(`${API_BASE}/leagues/${leagueId}/match-search`, { method: 'POST', headers: { Authorization: `Bearer ${t}` } });
+                const j = await r.json().catch(() => ({}));
+                if (!r.ok) throw new Error(j.error || j.message || `HTTP ${r.status}`);
+                if (j.action === 'joined') {
+                  alert('Match gefunden und beigetreten');
+                } else if (j.action === 'created') {
+                  alert('Offenes Match erstellt');
+                }
+                await reloadExtras();
+                await fetchMyOpenMatch();
+              } catch (e) {
+                alert(`Match-Suche fehlgeschlagen: ${e.message || e}`);
+              } finally {
+                setMatchSearching(false);
+              }
+            }}
+            disabled={!token || !!myOpenMatch || matchSearching}
+          >
+            {matchSearching ? 'Suchen...' : (myOpenMatch ? 'Offenes Match vorhanden' : 'Match suchen')}
+          </button>
+        </div>
       )}
 
       {loadingExtras ? (

@@ -1,0 +1,59 @@
+/* Split header: left = nav, right = slanted logo box */
+.ml-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  /* remove top/left/bottom padding so logo sits flush in the left corner */
+  padding: 0 12px 0 0; /* top-right-bottom-left */
+  background: linear-gradient(90deg, #0f2b27 0%, #0b2420 100%);
+  color: #e6efe9;
+  /* remove visual borders so the logo appears flush against header edges */
+  box-shadow: none;
+  border: 0;
+  height: 64px; /* fixed header height */
+  box-sizing: border-box;
+}
+
+.ml-header__logo {
+  flex: 0 0 auto;
+  height: 100%;
+  display: flex;
+  align-items: stretch; /* stretch so the img can occupy full height */
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* hide any image rounding/gaps */
+}
+
+.ml-logo-link { display: block; height: 100%; margin: 0; padding: 0; }
+.ml-logo-full { height: 100%; width: auto; display: block; margin: 0; padding: 0; object-fit: cover; object-position: left center; border: 0; outline: none; }
+
+.ml-header__menu {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.ml-nav { display: flex; gap: 18px; align-items: center; }
+.ml-nav__item {
+  color: #d3d3d3;
+  font-weight: 600;
+  text-decoration: none;
+  padding: 6px 8px;
+  transition: color 160ms ease, transform 160ms ease;
+}
+.ml-nav__item:hover { color: #ffffff; transform: translateY(-1px); }
+
+/* Logout container aligned to the far right of the header */
+.ml-logout {
+  margin-left: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 720px) {
+  .ml-header { height: 54px; padding: 0; }
+  .ml-nav { gap: 10px; }
+  .ml-logo-full { height: 100%; }
+}

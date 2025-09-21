@@ -1,13 +1,23 @@
+
+> start
+> PORT=5001 node server.js
+
 [DB] SQLite file: ./sportplattform.db
 [DB] Migrations dir: /Users/A105227786/Documents/projects/sL/pTght/backend/migrations
 [DB] Adapter knex not available, using ./db fallback
 [DB] knexfile instance created, filename: ./sportplattform.db
 [Mailer] Transport konfiguriert smtps.udag.de:465 secure=true
 [Mailer] Verifiziere SMTP-Verbindung ...
-[INFO] 2025-09-19T23:00:18.762Z [Server] Listening on http://localhost:5001 {}
+[DEBUG] resolvedKnexForRoutes summary: {
+  hasResolved: true,
+  isFunction: true,
+  hasClient: true,
+  source: 'knexDirect'
+}
+[INFO] 2025-09-21T21:44:09.691Z [Server] Listening on http://localhost:5001 {}
 [Server] Logs directory: /Users/A105227786/Documents/projects/sL/pTght/backend/logs (error.log, info.log, link-tests.log)
-🛠️ Admin erstellt: admin244 (admin244@example.com) / Passwort: test1234
-[INFO] 2025-09-19T23:00:18.861Z Starting automated link tests {
+🛠️ Admin erstellt: admin287 (admin287@example.com) / Passwort: test1234
+[INFO] 2025-09-21T21:44:09.814Z Starting automated link tests {
   endpoints: [
     '/',
     '/leagues',
@@ -22,22 +32,21 @@
     '/me/games'
   ]
 }
-[INFO] 2025-09-19T23:00:18.891Z Link test result { endpoint: '/', ok: true, status: 200 }
+[INFO] 2025-09-21T21:44:09.846Z Link test result { endpoint: '/', ok: true, status: 200 }
 [GET /leagues] source[0] dbFile=./sportplattform.db rows=35
 [GET /leagues] source[1] dbFile=./sportplattform.db rows=35
 [GET /leagues] returning merged rows=35 (sources=2)
-[INFO] 2025-09-19T23:00:18.896Z Link test result { endpoint: '/leagues', ok: true, status: 200 }
-[INFO] 2025-09-19T23:00:18.899Z Link test result { endpoint: '/leagues/1', ok: true, status: 200 }
-[INFO] 2025-09-19T23:00:18.902Z Link test result { endpoint: '/leagues/1/games', ok: true, status: 200 }
-[INFO] 2025-09-19T23:00:18.904Z Link test result { endpoint: '/leagues/1/members', ok: true, status: 200 }
-[INFO] 2025-09-19T23:00:18.909Z Link test result { endpoint: '/leagues/1/standings', ok: true, status: 200 }
-[INFO] 2025-09-19T23:00:18.911Z Link test result { endpoint: '/sports', ok: true, status: 200 }
-[INFO] 2025-09-19T23:00:18.913Z Link test result { endpoint: '/sports/7/leagues', ok: true, status: 200 }
-[INFO] 2025-09-19T23:00:18.916Z Link test result { endpoint: '/me', ok: false, status: 401 }
-[INFO] 2025-09-19T23:00:18.918Z Link test result { endpoint: '/me/leagues', ok: false, status: 401 }
-Community-Ligen synchronisiert.
-[INFO] 2025-09-19T23:00:18.919Z Link test result { endpoint: '/me/games', ok: false, status: 401 }
-[INFO] 2025-09-19T23:00:18.920Z Automated link tests finished {
+[INFO] 2025-09-21T21:44:09.853Z Link test result { endpoint: '/leagues', ok: true, status: 200 }
+[INFO] 2025-09-21T21:44:09.856Z Link test result { endpoint: '/leagues/1', ok: true, status: 200 }
+[INFO] 2025-09-21T21:44:09.864Z Link test result { endpoint: '/leagues/1/games', ok: true, status: 200 }
+[INFO] 2025-09-21T21:44:09.867Z Link test result { endpoint: '/leagues/1/members', ok: true, status: 200 }
+[INFO] 2025-09-21T21:44:09.871Z Link test result { endpoint: '/leagues/1/standings', ok: true, status: 200 }
+[INFO] 2025-09-21T21:44:09.873Z Link test result { endpoint: '/sports', ok: true, status: 200 }
+[INFO] 2025-09-21T21:44:09.875Z Link test result { endpoint: '/sports/7/leagues', ok: true, status: 200 }
+[INFO] 2025-09-21T21:44:09.880Z Link test result { endpoint: '/me', ok: false, status: 401 }
+[INFO] 2025-09-21T21:44:09.883Z Link test result { endpoint: '/me/leagues', ok: false, status: 401 }
+[INFO] 2025-09-21T21:44:09.884Z Link test result { endpoint: '/me/games', ok: false, status: 401 }
+[INFO] 2025-09-21T21:44:09.887Z Automated link tests finished {
   summary: [
     { ep: '/', ok: true, status: 200 },
     { ep: '/leagues', ok: true, status: 200 },
@@ -53,20 +62,11 @@ Community-Ligen synchronisiert.
   ]
 }
 [LINK-TEST] All tested endpoints responded OK (or expected non-OK like 401/404).
-[Mailer] Verify OK in 460ms. Sende Acceptance-Mail ...
-📧 Acceptance-Mail gesendet: <6145e374-c3f7-065c-633d-3854e2b31066@matchleague.org>
-📧 E-Mail gesendet: 1758322819589-225c94cc22c68@matchleague.org
-[reset-password] confirmation email sent to lennart.allenstein+matchleaguetest15@gmail.com
-📧 E-Mail gesendet: 1758322827620-281f16eb40bbe@matchleague.org
-[reset-password] confirmation email sent to lennart.allenstein+matchleaguetest15@gmail.com
-Mailer aktiviert, versende E-Mail an: lennart.allenstein+matchleaguetest30@gmail.com
-📧 E-Mail gesendet: 1758322933094-a746213b6d861@matchleague.org
-E-Mail erfolgreich versendet an: lennart.allenstein+matchleaguetest30@gmail.com
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-📧 E-Mail gesendet: 1758322997536-6453d9da9594@matchleague.org
-📧 E-Mail gesendet: 1758322998768-d135548660cbb@matchleague.org
+Community-Ligen synchronisiert.
+[Mailer] Verify OK in 453ms. Sende Acceptance-Mail ...
+📧 Acceptance-Mail gesendet: <a77a33cd-8ab5-8bc4-ccc0-2ab6b6eaf1ac@matchleague.org>
+Add member failed Error: insert into `team_members` (`is_captain`, `team_id`, `user_id`) values (false, 17, 1) - SQLITE_CONSTRAINT: UNIQUE constraint failed: team_members.team_id, team_members.user_id
+Add member failed Error: insert into `team_members` (`is_captain`, `team_id`, `user_id`) values (false, 17, 1) - SQLITE_CONSTRAINT: UNIQUE constraint failed: team_members.team_id, team_members.user_id
+Add member failed Error: insert into `team_members` (`is_captain`, `team_id`, `user_id`) values (false, 17, 1) - SQLITE_CONSTRAINT: UNIQUE constraint failed: team_members.team_id, team_members.user_id
+Add member failed Error: insert into `team_members` (`is_captain`, `team_id`, `user_id`) values (false, 17, 1) - SQLITE_CONSTRAINT: UNIQUE constraint failed: team_members.team_id, team_members.user_id
+Add member failed Error: insert into `team_members` (`is_captain`, `team_id`, `user_id`) values (false, 17, 1) - SQLITE_CONSTRAINT: UNIQUE constraint failed: team_members.team_id, team_members.user_id

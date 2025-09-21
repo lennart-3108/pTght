@@ -11,6 +11,8 @@ const mailerRoutes = require("./mailer");
 const healthRoutes = require("./health");
 const users = require("./users");
 const games = require("./games");
+const teamsRoutes = require("./teams");
+const matchesRoutes = require("./matches");
 
 function registerRoutes(app, ctx) {
   const { ensureTables } = createMiddleware(ctx);
@@ -29,6 +31,8 @@ function registerRoutes(app, ctx) {
   app.use(healthRoutes(ctx));
   app.use(users(ctx));
   app.use(games(ctx));
+  app.use('/teams', teamsRoutes(ctx));
+  app.use('/matches', matchesRoutes(ctx));
 
   // --- Email status + test routes ---
   app.get("/admin/email-status", async (req, res) => {
