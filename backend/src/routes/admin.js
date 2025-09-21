@@ -42,33 +42,46 @@ module.exports = function adminRoutes(ctx) {
     });
   });
 
-  // Tabelle abrufen
-  router.get("/table/:table", (req, res) => {
+  // Tabelle abrufen (Admin-only, validiert Tabelle vor Ausführung)
+  router.get("/table/:table", requireAdmin, (req, res) => {
     const table = req.params.table;
     const limit = Number(req.query.limit) || 200;
 
-    // Spalten abrufen
-    const columnsSql = `PRAGMA table_info(${table})`;
-    db.all(columnsSql, [], (err, columns) => {
-      if (err) {
-        console.error(`Fehler beim Abrufen der Spalten für Tabelle ${table}:`, err);
-        return res.status(500).json({ error: "Fehler beim Abrufen der Tabellenspalten." });
-      }
-
-      // Daten abrufen
-      const dataSql = `SELECT * FROM ${table} LIMIT ?`;
-      db.all(dataSql, [limit], (err, rows) => {
-        if (err) {
-          console.error(`Fehler beim Abrufen der Daten für Tabelle ${table}:`, err);
-          return res.status(500).json({ error: "Fehler beim Abrufen der Tabellendaten." });
+    // Validate table exists to avoid unsafe interpolation
+    db.get(
+      `SELECT name FROM sqlite_master WHERE type='table' AND name = ? AND name NOT LIKE 'sqlite_%'`,
+      [table],
+      (tgErr, tgRow) => {
+        if (tgErr) {
+          console.error(`Fehler beim Prüfen der Tabelle ${table}:`, tgErr);
+          return res.status(500).json({ error: "DB error" });
         }
+        if (!tgRow) return res.status(404).json({ error: "Unknown table" });
 
-        res.json({
-          columns: columns.map((col) => col.name), // Alle Spaltennamen
-          rows, // Alle Zeilen
+        // Spalten abrufen (safe because table existence validated)
+        const columnsSql = `PRAGMA table_info(${table})`;
+        db.all(columnsSql, [], (err, columns) => {
+          if (err) {
+            console.error(`Fehler beim Abrufen der Spalten für Tabelle ${table}:`, err);
+            return res.status(500).json({ error: "Fehler beim Abrufen der Tabellenspalten." });
+          }
+
+          // Daten abrufen
+          const dataSql = `SELECT * FROM ${table} LIMIT ?`;
+          db.all(dataSql, [limit], (err2, rows) => {
+            if (err2) {
+              console.error(`Fehler beim Abrufen der Daten für Tabelle ${table}:`, err2);
+              return res.status(500).json({ error: "Fehler beim Abrufen der Tabellendaten." });
+            }
+
+            res.json({
+              columns: columns.map((col) => col.name), // Alle Spaltennamen
+              rows, // Alle Zeilen
+            });
+          });
         });
-      });
-    });
+      }
+    );
   });
 
   // Schema liefern für Create-Form

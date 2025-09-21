@@ -266,6 +266,57 @@ module.exports = function leaguesRoutes(ctx) {
     }
   });
 
+  // GET /:id/teams - Teams and their members for a league
+  router.get("/:id/teams", async (req, res) => {
+    try {
+      const k = resolveKnex(db);
+      if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
+
+      const leagueId = Number(req.params.id);
+      if (!leagueId || isNaN(leagueId)) return res.status(400).json({ error: "INVALID_LEAGUE_ID" });
+
+      const hasTeams = await k.schema.hasTable("teams");
+      if (!hasTeams) return res.json({ teams: [] });
+
+      // load teams for league
+      const teams = await k("teams").where({ league_id: leagueId }).select("id", "name", "sport_id");
+
+      if (!teams || teams.length === 0) return res.json({ teams: [] });
+
+      // load all members for these teams in one query
+      const teamIds = teams.map(t => t.id);
+      const hasTeamMembers = await k.schema.hasTable("team_members");
+      let members = [];
+      if (hasTeamMembers) {
+        // detect which user columns exist and only select those
+        const usersInfo = await k("users").columnInfo().catch(() => ({}));
+        const selectCols = ["tm.team_id", "tm.user_id"];
+        if (Object.prototype.hasOwnProperty.call(usersInfo, "firstname")) selectCols.push("u.firstname");
+        if (Object.prototype.hasOwnProperty.call(usersInfo, "lastname")) selectCols.push("u.lastname");
+        if (Object.prototype.hasOwnProperty.call(usersInfo, "name")) selectCols.push("u.name");
+        if (Object.prototype.hasOwnProperty.call(usersInfo, "email")) selectCols.push("u.email");
+        members = await k("team_members as tm").leftJoin("users as u", "u.id", "tm.user_id").whereIn("tm.team_id", teamIds).select(selectCols);
+      }
+
+      // map members to teams (defensive: ensure members is an array)
+      const byTeam = {};
+      const membersArr = Array.isArray(members) ? members : [];
+      membersArr.forEach(m => {
+        const display = (m.firstname || m.lastname)
+          ? `${m.firstname || ''} ${m.lastname || ''}`.trim()
+          : (m.name || m.email || `user:${m.user_id}`);
+        byTeam[m.team_id] = byTeam[m.team_id] || [];
+        byTeam[m.team_id].push({ user_id: m.user_id, display_name: display });
+      });
+
+      const out = teams.map(t => ({ id: t.id, name: t.name, sport_id: t.sport_id, members: byTeam[t.id] || [] }));
+      res.json({ teams: out });
+    } catch (err) {
+      console.error("Fehler beim Abrufen der Teams:", err && (err.stack || err.message || err));
+      return res.status(500).json({ error: "Datenbankfehler", details: (err && err.message) || String(err) });
+    }
+  });
+
   // POST /:id/join - Liga beitreten
   router.post("/:id/join", requireAuth, async (req, res) => {
     try {

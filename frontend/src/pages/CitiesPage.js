@@ -20,16 +20,11 @@ export default function CitiesPage() {
           setCity(data.city);
           setLeagues(data.leagues || []);
         } else {
-          // Alle Städte und Ligen laden
-          const [resCities, resLeagues] = await Promise.all([
-            fetch(`${API_BASE}/cities/list`),  // fix: API_BASE is defined
-            fetch(`${API_BASE}/leagues`),      // fix: API_BASE is defined
-          ]);
-          if (!resCities.ok) throw new Error("Fehler beim Laden der Städte");
-          if (!resLeagues.ok) throw new Error("Fehler beim Laden der Ligen");
-          const [citiesData, leaguesData] = await Promise.all([resCities.json(), resLeagues.json()]);
-          setCitiesAll(Array.isArray(citiesData) ? citiesData : []);
-          setLeagues(Array.isArray(leaguesData) ? leaguesData : []);
+            // Nur Städte laden (keine Ligen-Übersicht hier)
+            const resCities = await fetch(`${API_BASE}/cities/list`);
+            if (!resCities.ok) throw new Error("Fehler beim Laden der Städte");
+            const citiesData = await resCities.json();
+            setCitiesAll(Array.isArray(citiesData) ? citiesData : []);
         }
       } catch (error) {
         console.error(error);
@@ -90,35 +85,7 @@ export default function CitiesPage() {
         </ul>
       )}
 
-      <h2 style={{ marginTop: 16 }}>Ligen nach Städten</h2>
-      {leagues.length === 0 ? (
-        <p>Keine Ligen gefunden.</p>
-      ) : (
-        <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>Stadt</th>
-              <th>Sportart</th>
-              <th>Liganame</th>
-            </tr>
-          </thead>
-          <tbody>
-            {leagues.map((league) => (
-              <tr key={league.id}>
-                <td>
-                  <Link to={`/cities/${league.cityId}`}>{league.city}</Link>
-                </td>
-                <td>
-                  <Link to={`/sports/${league.sportId}`}>{league.sport}</Link>
-                </td>
-                <td>
-                  <Link to={`/league/${league.id}`}>{league.name}</Link>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      {/* Ligen nach Städten entfernt per Anforderung */}
     </div>
   );
 }

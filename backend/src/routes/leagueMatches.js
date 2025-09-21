@@ -299,6 +299,224 @@ module.exports = function leagueMatchesRoutes({ db }) {
     }
   });
 
+  // GET /:id/my-open-match - returns any open match for current user in this league
+  router.get("/:leagueId/my-open-match", isAuthenticated, async (req, res) => {
+    const k = resolveKnex(db);
+    if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
+    try {
+      const leagueId = Number(req.params.leagueId);
+      const me = req.user.id;
+      if (!leagueId) return res.status(400).json({ error: "INVALID_LEAGUE_ID" });
+
+      const info = await k('matches').columnInfo().catch(() => ({}));
+      const hasHomeUserId = !!info.home_user_id;
+
+      // look for open matches (status = 'open' OR null scores)
+      const q = k('matches').where({ league_id: leagueId })
+        .where(function () {
+          if (hasHomeUserId) {
+            this.where('home_user_id', me).orWhere('away_user_id', me);
+          } else {
+            this.where('home', String(me)).orWhere('away', String(me));
+          }
+        })
+        .where(function () {
+          if (Object.prototype.hasOwnProperty.call(info, 'status')) {
+            this.where('status', 'open');
+          } else {
+            this.whereNull('home_score').andWhereNull('away_score');
+          }
+        })
+        .first();
+
+      const row = await q;
+      if (!row) return res.json(null);
+      return res.json(row);
+    } catch (e) {
+      console.error('GET my-open-match failed:', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'Datenbankfehler' });
+    }
+  });
+
+  // POST /:leagueId/match-search - try to find an open match to join or create one
+  router.post('/:leagueId/match-search', isAuthenticated, async (req, res) => {
+    const k = resolveKnex(db);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+
+    const leagueId = Number(req.params.leagueId);
+    const me = req.user.id;
+    if (!leagueId) return res.status(400).json({ error: 'INVALID_LEAGUE_ID' });
+
+    // transactionally join-or-create
+    try {
+      await k.transaction(async (trx) => {
+        // basic checks: matches table exists
+        const hasMatches = await trx.schema.hasTable('matches');
+        if (!hasMatches) throw Object.assign(new Error('NO_MATCHES_TABLE'), { code: 'NO_MATCHES_TABLE' });
+
+        const info = await trx('matches').columnInfo().catch(() => ({}));
+        const hasHomeUserId = !!info.home_user_id;
+
+        // ensure requestor is member of league
+        const memberCount = await trx('user_leagues')
+          .where({ league_id: leagueId, user_id: me })
+          .count({ c: '*' });
+        const cnt = Array.isArray(memberCount) ? (memberCount[0].c || 0) : (memberCount.c || 0);
+        if (Number(cnt) < 1) throw Object.assign(new Error('Not a member'), { status: 403 });
+
+        // load league + sport to inspect team/single
+        const leagueRow = await trx('leagues').where('id', leagueId).first();
+        if (!leagueRow) throw Object.assign(new Error('League not found'), { status: 404 });
+
+        // detect sport team_size or sport_type
+        let sportType = null; // 'team'|'single'|null
+        try {
+          const sport = await trx('sports').where('id', leagueRow.sport_id).first();
+          if (sport) {
+            if (sport.sport_type) sportType = sport.sport_type;
+            else if (Number(sport.team_size) && Number(sport.team_size) > 1) sportType = 'team';
+            else sportType = 'single';
+          }
+        } catch (e) { /* ignore */ }
+
+        // If team sport, require that the requesting user is a captain (user_leagues.captain true)
+        if (sportType === 'team') {
+          const ul = await trx('user_leagues').where({ league_id: leagueId, user_id: me }).first();
+          if (!ul || !ul.captain) throw Object.assign(new Error('Only captains can start match-search in team sports'), { status: 403 });
+        }
+
+        // Enforce weekly limit for community leagues: count matches in current week
+        // Determine week start (Monday) and end (Sunday)
+        const now = new Date();
+        const day = (now.getDay() + 6) % 7; // 0=Mon..6=Sun
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - day);
+        monday.setHours(0,0,0,0);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23,59,59,999);
+
+        // community league detection: simple heuristic - league.publicState === 'community' or league.is_community
+        const isCommunity = !!(leagueRow.publicState === 'community' || leagueRow.is_community || leagueRow.isCommunity);
+        if (isCommunity) {
+          // count matches for this user in this league between monday..sunday
+          const weekCountQ = trx('matches')
+            .where({ league_id: leagueId })
+            .where(function () {
+              if (hasHomeUserId) this.where('home_user_id', me).orWhere('away_user_id', me);
+              else this.where('home', String(me)).orWhere('away', String(me));
+            })
+            .where(function () {
+              // completed_at within week OR kickoff_at within week OR created_at within week
+              const possibleTs = [];
+              if (Object.prototype.hasOwnProperty.call(info, 'completed_at')) possibleTs.push('completed_at');
+              if (Object.prototype.hasOwnProperty.call(info, 'kickoff_at')) possibleTs.push('kickoff_at');
+              if (Object.prototype.hasOwnProperty.call(info, 'created_at')) possibleTs.push('created_at');
+              if (possibleTs.length === 0) {
+                // fallback: count any matches (conservative)
+                this.whereNotNull('id');
+              } else {
+                // build or chain to match any timestamp falling in window
+                this.where(function () {
+                  for (const c of possibleTs) {
+                    this.orWhereBetween(c, [monday.toISOString(), sunday.toISOString()]);
+                  }
+                });
+              }
+            })
+            .count({ c: '*' });
+
+          const weekCountRow = await weekCountQ;
+          const weekCount = Array.isArray(weekCountRow) ? (weekCountRow[0].c || 0) : (weekCountRow.c || 0);
+          if (Number(weekCount) >= 1) throw Object.assign(new Error('Weekly match limit reached for community league'), { status: 429 });
+        }
+
+        // Check if the user already has an open match in this league
+        const openMatchQ = trx('matches').where({ league_id: leagueId })
+          .where(function () {
+            if (hasHomeUserId) this.where('home_user_id', me).orWhere('away_user_id', me);
+            else this.where('home', String(me)).orWhere('away', String(me));
+          })
+          .where(function () {
+            if (Object.prototype.hasOwnProperty.call(info, 'status')) this.where('status', 'open');
+            else this.whereNull('home_score').andWhereNull('away_score');
+          })
+          .first();
+
+        const openMatch = await openMatchQ;
+        if (openMatch) throw Object.assign(new Error('User already has an open match in this league'), { status: 409, match: openMatch });
+
+        // Try to find any other open match in this league to join (excluding matches by me)
+        const candidateQ = trx('matches')
+          .where({ league_id: leagueId })
+          .where(function () {
+            if (hasHomeUserId) this.whereNot('home_user_id', me).andWhereNot('away_user_id', me);
+            else this.whereNot('home', String(me)).andWhereNot('away', String(me));
+          })
+          .where(function () {
+            if (Object.prototype.hasOwnProperty.call(info, 'status')) this.where('status', 'open');
+            else this.whereNull('home_score').andWhereNull('away_score');
+          })
+          .orderBy('id', 'asc')
+          .forUpdate();
+
+        const candidate = await candidateQ.first();
+        if (candidate) {
+          // join this candidate: set away/home accordingly and update status to scheduled (or keep open per spec)
+          const rec = {};
+          if (hasHomeUserId) {
+            // candidate may have only home_user_id set
+            if (candidate.home_user_id && !candidate.away_user_id) {
+              rec.away_user_id = me;
+            } else if (!candidate.home_user_id && candidate.away_user_id) {
+              rec.home_user_id = me;
+            } else {
+              // fallback: try to set away_user_id
+              rec.away_user_id = me;
+            }
+          } else {
+            if (candidate.home && !candidate.away) rec.away = String(me);
+            else if (!candidate.home && candidate.away) rec.home = String(me);
+            else rec.away = String(me);
+          }
+
+          // optionally update status to 'scheduled' if status column exists
+          if (Object.prototype.hasOwnProperty.call(info, 'status')) rec.status = 'scheduled';
+
+          await trx('matches').where('id', candidate.id).update(rec);
+
+          // return updated match
+          const updated = await trx('matches').where('id', candidate.id).first();
+          res.status(200).json({ action: 'joined', match: updated });
+          return;
+        }
+
+        // No candidate -> create a new open match with me as home
+        const insertRec = { league_id: leagueId };
+        if (hasHomeUserId) {
+          insertRec.home_user_id = me;
+        } else {
+          insertRec.home = String(me);
+        }
+        if (Object.prototype.hasOwnProperty.call(info, 'status')) insertRec.status = 'open';
+        if (Object.prototype.hasOwnProperty.call(info, 'created_at')) insertRec.created_at = new Date().toISOString();
+
+        const ins = await trx('matches').insert(insertRec);
+        const newId = Array.isArray(ins) ? ins[0] : ins;
+        const newRow = await trx('matches').where('id', newId).first();
+        res.status(201).json({ action: 'created', match: newRow });
+        return;
+      }); // end transaction
+    } catch (err) {
+      console.error('POST match-search failed:', err && (err.stack || err.message || err));
+      if (err && err.code === 'NO_MATCHES_TABLE') return res.status(500).json({ error: 'NO_MATCHES_TABLE' });
+      const status = (err && err.status) ? err.status : 500;
+      const body = { error: err && err.message ? err.message : 'Datenbankfehler' };
+      if (err && err.match) body.match = err.match;
+      return res.status(status).json(body);
+    }
+  });
+
   // GET /:id/standings
   router.get("/:id/standings", async (req, res) => {
     const k = resolveKnex(db);

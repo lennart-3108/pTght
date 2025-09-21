@@ -126,9 +126,13 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
 
       <div style={{ textAlign: 'center', margin: '20px 0' }}>
         <h2 style={{ color: '#e6efe6' }}>Willkommen bei Match League</h2>
+        <p>
+        <b>MatchLeague</b> ist deine Plattform für Ligen, Sportarten und Community-Wettbewerbe.<br />
+      </p>
+      <p>     </p>
       </div>
 
-      <div style={{ maxWidth: 350, margin: "-40px auto 40px", padding: 20, borderRadius: 8, background: panelBg, border: panelBorder, boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
+      <div style={{ maxWidth: 350, margin: "20px auto 40px", padding: 20, borderRadius: 8, background: panelBg, border: panelBorder, boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
         <h2>Login</h2>
         {/* Login-Formular */}
         <form onSubmit={handleLogin}>
