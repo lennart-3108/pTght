@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+// using native fetch instead of axios for smaller dependency surface
 import { API_BASE } from "../config";
 
 const SPORT_OPTIONS = [
@@ -48,8 +48,20 @@ export default function RegisterPage() {
     setMessage("");
     console.log("Formulardaten:", form);
     try {
-      const response = await axios.post(`${API_BASE}/register`, form);
-      console.log("Backend-Antwort /register:", response.data);
+      const res = await fetch(`${API_BASE}/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const responseData = await (async () => {
+        const t = await res.text();
+        try { return JSON.parse(t); } catch { return null; }
+      })();
+      if (!res.ok) {
+        const errMsg = responseData?.error || `HTTP ${res.status}`;
+        throw new Error(errMsg);
+      }
+      console.log("Backend-Antwort /register:", responseData || "(no json)");
       setMessage(
         "Registrierung erfolgreich! Bitte prüfe dein E-Mail-Postfach und bestätige den Link."
       );
@@ -62,10 +74,9 @@ export default function RegisterPage() {
         sports: [],
       });
     } catch (err) {
-      console.error("Fehler bei Registrierung:", err?.response?.data || err.message);
+      console.error("Fehler bei Registrierung:", err?.message || err);
       setMessage(
-        err?.response?.data?.error ||
-        "Registrierung fehlgeschlagen. Bitte überprüfe deine Daten."
+        err?.message || "Registrierung fehlgeschlagen. Bitte überprüfe deine Daten."
       );
     } finally {
       setLoading(false);

@@ -1,6 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { API_BASE } from "../config";
+import smallLogo from "../images/matchleague_logo_4x4.png";
+
+// load background images same as LoginPage
+function importAllBackgrounds(r) {
+  return r.keys().map((k) => ({ key: k.replace(/^\.\//, ''), src: r(k) }));
+}
+const backgrounds = importAllBackgrounds(require.context("../images/background", false, /\.(png|jpe?g|svg)$/));
+backgrounds.sort((a, b) => {
+  const re = /^(\d+)-/;
+  const ma = a.key.match(re);
+  const mb = b.key.match(re);
+  if (ma && mb) return Number(ma[1]) - Number(mb[1]);
+  if (ma) return -1;
+  if (mb) return 1;
+  return a.key.localeCompare(b.key);
+});
 
 export default function StartPage() {
   const [leagues, setLeagues] = useState([]);
@@ -33,12 +49,23 @@ export default function StartPage() {
   if (err) return <div style={{ padding: 24, color: "crimson" }}>Fehler: {err}</div>;
 
   return (
-    <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
-      <h1>Willkommen bei MatchLeague</h1>
-      <p>
-        <b>MatchLeague</b> ist deine Plattform für Ligen, Sportarten und Community-Wettbewerbe.<br />
-        <Link to="/login">Anmelden</Link> oder <Link to="/register">Registrieren</Link>
-      </p>
+    <div>
+      <section className="hero-carousel">
+        {backgrounds.map((b, i) => (
+          <div key={i} className={`hero-slide ${i === 0 ? 'active' : ''}`} style={{ backgroundImage: `url(${b.src})` }} />
+        ))}
+
+        <div className="hero-overlay">
+          <div className="hero-stripe">
+            <img src={smallLogo} alt="ML" className="hero-small-logo" />
+            <h1 className="hero-title">Match League</h1>
+          </div>
+          <p className="hero-sub"><b>Willkommen bei MatchLeague. Verbinde dich mit Spielern. Tritt Ligen bei. Verfolge Spiele.</b></p>
+        </div>
+      </section>
+
+  <div style={{ padding: 24, maxWidth: 900, margin: "0 auto" }}>
+      
 
       <h2>Ligen</h2>
       {leagues.length === 0 ? (
@@ -83,6 +110,7 @@ export default function StartPage() {
           ))}
         </ul>
       )}
+      </div>
     </div>
   );
 }
