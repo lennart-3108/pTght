@@ -54,6 +54,7 @@ jobs:
 
   deploy:
     needs: build-and-push
+    if: ${{ secrets.KUBECONFIG != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
