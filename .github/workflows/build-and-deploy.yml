@@ -54,7 +54,9 @@ jobs:
 
   deploy:
     needs: build-and-push
-    if: ${{ secrets.KUBECONFIG != '' }}
+    # Only run deploy when a KUBECONFIG secret is present AND deployment is explicitly enabled.
+    # This prevents CI from attempting to talk to a local kube-apiserver (e.g. minikube) by accident.
+    if: ${{ secrets.DEPLOY_ENABLED == 'true' && secrets.KUBECONFIG != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
