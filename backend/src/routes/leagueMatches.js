@@ -324,7 +324,7 @@ module.exports = function leagueMatchesRoutes({ db }) {
           if (Object.prototype.hasOwnProperty.call(info, 'status')) {
             this.where('status', 'open');
           } else {
-            this.whereNull('home_score').andWhereNull('away_score');
+            this.whereNull('home_score').whereNull('away_score');
           }
         })
         .first();
@@ -439,7 +439,7 @@ module.exports = function leagueMatchesRoutes({ db }) {
           })
           .where(function () {
             if (Object.prototype.hasOwnProperty.call(info, 'status')) this.where('status', 'open');
-            else this.whereNull('home_score').andWhereNull('away_score');
+            else this.whereNull('home_score').whereNull('away_score');
           })
           .first();
 
@@ -455,7 +455,7 @@ module.exports = function leagueMatchesRoutes({ db }) {
           })
           .where(function () {
             if (Object.prototype.hasOwnProperty.call(info, 'status')) this.where('status', 'open');
-            else this.whereNull('home_score').andWhereNull('away_score');
+            else this.whereNull('home_score').whereNull('away_score');
           })
           .orderBy('id', 'asc')
           .forUpdate();
