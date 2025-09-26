@@ -23,6 +23,7 @@
     "schema": "node scripts/print-schema.js",
     "db:dump-seeds": "node scripts/dump-to-seeds.js",
     "db:load-seeds": "node scripts/load-seeds.js",
-    "db:seed": "knex seed:run --knexfile knexfile.js"
+    "db:seed": "knex seed:run --knexfile knexfile.js",
+    "test:integration:join": "node scripts/integration/join-league-test.js"
   }
 }
