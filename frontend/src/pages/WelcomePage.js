@@ -81,7 +81,7 @@ export default function WelcomePage({ setToken, setIsAdminFlag }) {
   };
 
   // Use a more visibly green (darker) panel so it doesn't read as white
-  const panelBg = '#c8e0c8'; // slightly darker soft green
+  const panelBg = '#0f2a20ff'; // slightly darker soft green
   const panelBorder = '1px solid rgba(0,0,0,0.08)';
   const btnGreen = '#0a2221';
   const btnGreenHover = '#0e2f2d';
@@ -92,14 +92,14 @@ export default function WelcomePage({ setToken, setIsAdminFlag }) {
         <img src={matchLeagueLogo} alt="MatchLeague" style={{ width: 160, height: 'auto' }} />
         <div>
           <h1 style={{ margin: 0 }}>Willkommen bei Match League</h1>
-          <p style={{ marginTop: 6, color: '#bfcfc4' }}>Verbinde dich mit Spielern, tritt Ligen bei und verfolge Spiele.</p>
+          <p style={{ marginTop: 6, color: '#555' }}>Verbinde dich mit Spielern, tritt Ligen bei und verfolge Spiele.</p>
         </div>
       </div>
 
   <div style={{ marginTop: 20, padding: 20, borderRadius: 8, background: panelBg, border: panelBorder, boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
         {confirmed ? (
           <div>
-            <h2 style={{ color: 'green' }}>✅ Registrierung bestätigt</h2>
+            <h2 style={{ color: '#555' }}>✅ Registrierung bestätigt</h2>
             <p>Dein Konto wurde erfolgreich bestätigt. Schön, dass du dabei bist!</p>
             <p style={{ color: '#555' }}>Du wirst jetzt eingeloggt und weitergeleitet — drücke "Los geht's", um zur Startseite zu gelangen.</p>
             <div style={{ marginTop: 12 }}>
@@ -128,7 +128,7 @@ export default function WelcomePage({ setToken, setIsAdminFlag }) {
             <div style={{ color: '#888' }}>Überprüfe deine Mitgliedschaften…</div>
           ) : joinedAnyLeague === false ? (
             // CTA box: use a slightly darker green-tinted surface instead of pure white
-            <div style={{ padding: 12, background: '#bfe1bf', borderRadius: 6, border: '1px solid rgba(0,0,0,0.04)' }}>
+            <div style={{ padding: 12, background: '#0d270dff', borderRadius: 6, border: '1px solid rgba(0,0,0,0.04)' }}>
               <strong style={{ color: '#1f4a1f' }}>Du bist noch in keiner Liga angemeldet.</strong>
               <div style={{ marginTop: 8 }}>
                 <Link to="/leagues"><button style={{ background: btnGreen, color: '#fff', padding: '10px 18px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>Alle Ligen ansehen und beitreten</button></Link>

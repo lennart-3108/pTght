@@ -329,7 +329,13 @@ module.exports = function leaguesRoutes(ctx) {
       const existing = await k("user_leagues").where({ user_id: userId, league_id: leagueId }).first();
       if (existing) return res.json({ joined: false, message: "Bereits Mitglied" });
 
-      await k("user_leagues").insert({ user_id: userId, league_id: leagueId, joined_at: new Date().toISOString() });
+      // Detect if user_leagues has a joined_at column before inserting it
+      const ulCols = await k("user_leagues").columnInfo().catch(() => ({}));
+      const hasJoinedAt = Object.prototype.hasOwnProperty.call(ulCols, "joined_at");
+      const insertRec = { user_id: userId, league_id: leagueId };
+      if (hasJoinedAt) insertRec.joined_at = new Date().toISOString();
+
+      await k("user_leagues").insert(insertRec);
       res.json({ joined: true });
     } catch (err) {
       console.error("Fehler beim Beitreten zur Liga:", err);
