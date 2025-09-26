@@ -53,3 +53,4 @@ backend/.tox/
 logs/
 tmp/
 backend/.env.prod
+/backend/.env
