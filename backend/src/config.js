@@ -1,5 +1,14 @@
 const path = require("path");
 
+// Load .env from the backend folder during development so developers can
+// put MAIL_*, JWT_SECRET, DB_PATH etc. into backend/.env. We use an explicit
+// path so loading is local to the backend package.
+try {
+  require("dotenv").config({ path: path.resolve(__dirname, "..", ".env") });
+} catch (e) {
+  // If dotenv isn't available for some reason, continue without failing.
+}
+
 function loadConfig() {
   const MAIL_HOST = process.env.MAIL_HOST || "smtps.udag.de";  // Neu: UDAG SMTP
   const MAIL_PORT = Number(process.env.MAIL_PORT || 465);  // Neu: UDAG Port (465 für SSL/TLS)

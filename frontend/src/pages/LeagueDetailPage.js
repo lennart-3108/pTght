@@ -209,6 +209,10 @@ export default function LeagueDetailPage() {
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
       setJoinMsg(j.joined ? "Beigetreten" : (j.message || "Bereits Mitglied"));
       await reloadExtras();
+      // Ensure membership flag used by amMember is updated immediately so the UI
+      // can re-evaluate (otherwise isMemberByMe may still be false and override
+      // the members list check, leaving the "Beitreten" button visible).
+      if (j && j.joined) setIsMemberByMe(true);
     } catch (e) {
       setJoinMsg(`Beitritt fehlgeschlagen: ${e.message || e}`);
       alert(`Beitritt fehlgeschlagen: ${e.message || e}`);
@@ -229,6 +233,8 @@ export default function LeagueDetailPage() {
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
       setJoinMsg(j.left ? "Ausgetreten" : (j.message || "Nicht Mitglied"));
       await reloadExtras();
+      // Update membership flag so UI toggles the buttons correctly
+      if (j && j.left) setIsMemberByMe(false);
     } catch (e) {
       setJoinMsg(`Austritt fehlgeschlagen: ${e.message || e}`);
       alert(`Austritt fehlgeschlagen: ${e.message || e}`);
@@ -272,7 +278,7 @@ export default function LeagueDetailPage() {
       setOpponentId("");
       setKickoffLocal("");
       // Wenn ID geliefert wird, navigieren
-      if (j && j.id) navigate(`/game/${j.id}`);
+      if (j && j.id) navigate(`/matches/${j.id}`);
     } catch (e) {
       alert(`Match erstellen fehlgeschlagen: ${e.message || e}`);
     }
