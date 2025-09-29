@@ -30,11 +30,11 @@ server {
 }
 EOF
 
-# Standardseite deaktivieren und unsere aktivieren
 rm -f /etc/nginx/sites-enabled/default || true
 ln -sf "$SITE" "/etc/nginx/sites-enabled/${DOMAIN}"
 nginx -t
 systemctl reload nginx
 
 echo "Nginx ready: http://${DOMAIN} -> 127.0.0.1:${PORT}"
+echo "Optional SSL: apt-get install -y certbot python3-certbot-nginx && certbot --nginx -d ${DOMAIN}"
 echo "Optional SSL: apt-get install -y certbot python3-certbot-nginx && certbot --nginx -d ${DOMAIN}"
