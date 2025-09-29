@@ -55,24 +55,27 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
+    env:
+      DEPLOY_ENABLED: ${{ secrets.DEPLOY_ENABLED || 'false' }}
+      KUBECONFIG_B64: ${{ secrets.KUBECONFIG || '' }}
     steps:
       - name: Checkout
-        if: ${{ secrets.DEPLOY_ENABLED == 'true' && secrets.KUBECONFIG != '' }}
+        if: ${{ env.DEPLOY_ENABLED == 'true' && env.KUBECONFIG_B64 != '' }}
         uses: actions/checkout@v4
 
       - name: Setup kubectl
-        if: ${{ secrets.DEPLOY_ENABLED == 'true' && secrets.KUBECONFIG != '' }}
+        if: ${{ env.DEPLOY_ENABLED == 'true' && env.KUBECONFIG_B64 != '' }}
         uses: azure/setup-kubectl@v3
 
       - name: Decode kubeconfig
-        if: ${{ secrets.DEPLOY_ENABLED == 'true' && secrets.KUBECONFIG != '' }}
+        if: ${{ env.DEPLOY_ENABLED == 'true' && env.KUBECONFIG_B64 != '' }}
         run: |
           mkdir -p ~/.kube
-          echo "${{ secrets.KUBECONFIG }}" | base64 -d > /tmp/kubeconfig
+          echo "$KUBECONFIG_B64" | base64 -d > /tmp/kubeconfig
           chmod 600 /tmp/kubeconfig
 
       - name: Apply k8s manifests (create resources if absent)
-        if: ${{ secrets.DEPLOY_ENABLED == 'true' && secrets.KUBECONFIG != '' }}
+        if: ${{ env.DEPLOY_ENABLED == 'true' && env.KUBECONFIG_B64 != '' }}
         env:
           KUBECONFIG: /tmp/kubeconfig
         run: |
@@ -84,13 +87,13 @@ jobs:
           kubectl apply -f k8s/ingress.yaml
 
       - name: Update deployment images (safe, no repo edits)
-        if: ${{ secrets.DEPLOY_ENABLED == 'true' && secrets.KUBECONFIG != '' }}
+        if: ${{ env.DEPLOY_ENABLED == 'true' && env.KUBECONFIG_B64 != '' }}
         env:
           KUBECONFIG: /tmp/kubeconfig
         run: |
           IMAGE_PREFIX=${{ secrets.IMAGE_PREFIX || 'ghcr.io/lennart-3108' }}
           TAG=${{ github.event.inputs.image_tag }}
-          echo "Updating backend image to ${IMAGE_PREFIX}/matchleague-backend:${TAG}"
           kubectl set image deployment/matchleague-backend backend=${IMAGE_PREFIX}/matchleague-backend:${TAG} --record
+          kubectl set image deployment/matchleague-frontend frontend=${IMAGE_PREFIX}/matchleague-frontend:${TAG} --record
           echo "Updating frontend image to ${IMAGE_PREFIX}/matchleague-frontend:${TAG}"
           kubectl set image deployment/matchleague-frontend frontend=${IMAGE_PREFIX}/matchleague-frontend:${TAG} --record
