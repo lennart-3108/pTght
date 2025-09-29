@@ -7,6 +7,7 @@ PORT="${2:?Usage: nginx-dev.sh <domain> <upstream_port>}"
 export DEBIAN_FRONTEND=noninteractive
 apt-get update -y
 apt-get install -y nginx
+systemctl enable --now nginx
 
 ufw allow 'Nginx Full' >/dev/null 2>&1 || true
 
@@ -29,9 +30,11 @@ server {
 }
 EOF
 
+rm -f /etc/nginx/sites-enabled/default || true
 ln -sf "$SITE" "/etc/nginx/sites-enabled/${DOMAIN}"
 nginx -t
 systemctl reload nginx
 
 echo "Nginx ready: http://${DOMAIN} -> 127.0.0.1:${PORT}"
+echo "Optional SSL: apt-get install -y certbot python3-certbot-nginx && certbot --nginx -d ${DOMAIN}"
 echo "Optional SSL: apt-get install -y certbot python3-certbot-nginx && certbot --nginx -d ${DOMAIN}"
