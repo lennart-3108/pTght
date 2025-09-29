@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   backend:
     build: ./backend
@@ -44,5 +42,7 @@ services:
       - db
 
 volumes:
+  backend-data:
+  pg-data:
   backend-data:
   pg-data:
