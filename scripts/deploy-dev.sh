@@ -12,20 +12,10 @@ git fetch --all --prune
 git checkout "$BRANCH" || git checkout -b "$BRANCH" "origin/$BRANCH" || true
 git pull --ff-only origin "$BRANCH" || true
 
-# Eigene Dev-Umgebung/DB
-mkdir -p "$APP_PATH/data"
-if [ ! -f .env.dev ]; then
-  cat > .env.dev <<'EOF'
-NODE_ENV=development
-# Eigene SQLite-DB für dev:
-SQLITE_DB_PATH=/opt/matchleague/data/dev.sqlite
-# Beispiel-Port:
-PORT=5000
-EOF
-fi
-# Env exportieren, damit Kinder (pm2/npm) sie erben
+# Entfernt: automatische .env.dev/SQLITE-DB-Erstellung
+# Optional: vorhandene .env laden (wenn deine App sie nutzt)
 set -a
-[ -f .env.dev ] && . ./.env.dev
+[ -f .env ] && . ./.env || true
 set +a
 
 # 1) Docker Compose bevorzugt
@@ -54,6 +44,16 @@ if [ -d backend ] && [ -f backend/package.json ]; then
 fi
 
 if [ -d frontend ] && [ -f frontend/package.json ]; then
+  (cd frontend && npm ci && (pm2 start npm --name "ptght-frontend" -- start || pm2 restart "ptght-frontend"))
+fi
+
+if [ -f package.json ]; then
+  npm ci || true
+  (pm2 start npm --name "ptght" -- start || pm2 restart "ptght") || true
+fi
+
+pm2 save || true
+echo "Deploy finished."
   (cd frontend && npm ci && (pm2 start npm --name "ptght-frontend" -- start || pm2 restart "ptght-frontend"))
 fi
 
