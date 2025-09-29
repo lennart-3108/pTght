@@ -7,6 +7,13 @@ APP_PATH="${2:-/opt/matchleague}"
 export DEBIAN_FRONTEND=noninteractive
 command -v git >/dev/null 2>&1 || { apt-get update -y && apt-get install -y git; }
 
+# Neu: Node.js + pm2 Fallback
+if ! command -v npm >/dev/null 2>&1; then
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  apt-get install -y nodejs
+fi
+command -v pm2 >/dev/null 2>&1 || npm i -g pm2
+
 cd "$APP_PATH"
 git fetch --all --prune
 git checkout "$BRANCH" || git checkout -b "$BRANCH" "origin/$BRANCH" || true
@@ -44,16 +51,6 @@ if [ -d backend ] && [ -f backend/package.json ]; then
 fi
 
 if [ -d frontend ] && [ -f frontend/package.json ]; then
-  (cd frontend && npm ci && (pm2 start npm --name "ptght-frontend" -- start || pm2 restart "ptght-frontend"))
-fi
-
-if [ -f package.json ]; then
-  npm ci || true
-  (pm2 start npm --name "ptght" -- start || pm2 restart "ptght") || true
-fi
-
-pm2 save || true
-echo "Deploy finished."
   (cd frontend && npm ci && (pm2 start npm --name "ptght-frontend" -- start || pm2 restart "ptght-frontend"))
 fi
 
