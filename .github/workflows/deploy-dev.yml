@@ -10,9 +10,13 @@ permissions:
 
 jobs:
   deploy:
-    if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/dev' }}
+    if: ${{ secrets.DEV_HOST != '' && secrets.DEV_USER != '' && secrets.DEV_SSH_KEY != '' }}
     runs-on: ubuntu-latest
     steps:
+      - name: Validate deploy secrets
+        run: |
+          : "${{ secrets.DEV_HOST }}" "${{ secrets.DEV_USER }}" "${{ secrets.DEV_SSH_KEY }}"
+          echo "Secrets present. Proceeding with SSH deploy."
       - name: SSH deploy to dev
         uses: appleboy/ssh-action@v1.0.3
         with:
@@ -30,4 +34,8 @@ jobs:
               mkdir -p "$APP_PATH"
               git clone https://github.com/${{ github.repository }} "$APP_PATH"
             fi
+            cd "$APP_PATH"
+            git fetch --all --prune
+            git checkout dev || git checkout -b dev origin/dev
+            git pull --ff-only origin dev
             bash "$APP_PATH/scripts/deploy-dev.sh" dev "$APP_PATH"
