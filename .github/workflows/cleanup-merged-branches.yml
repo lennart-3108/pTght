@@ -1,0 +1,42 @@
+name: Cleanup merged branches
+
+on:
+  schedule:
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Fetch all
+        run: |
+          git fetch --all --prune
+      - name: Delete merged branches on origin (except main/dev)
+        shell: bash
+        run: |
+          set -euo pipefail
+          DEFAULT=origin/main
+          EXCLUDE_REGEX='^(HEAD|main|dev)$'
+          # List remote branches merged into main
+          MERGED=$(git branch -r --merged "$DEFAULT" | sed 's#^\s*origin/##' | grep -Ev "$EXCLUDE_REGEX" || true)
+          if [ -z "$MERGED" ]; then
+            echo "No merged branches to delete."
+            exit 0
+          fi
+          echo "Deleting merged branches:"
+          echo "$MERGED"
+          for b in $MERGED; do
+            git push origin --delete "$b" || true
+          done
+          git remote prune origin || true
