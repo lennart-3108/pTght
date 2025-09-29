@@ -1,0 +1,33 @@
+name: Deploy dev to server
+
+on:
+  push:
+    branches: [ "dev" ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/dev' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH deploy to dev
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.DEV_HOST }}
+          username: ${{ secrets.DEV_USER }}
+          key: ${{ secrets.DEV_SSH_KEY }}
+          script_stop: true
+          command_timeout: 30m
+          script: |
+            set -e
+            APP_PATH="${{ secrets.DEV_PATH }}"
+            [ -z "$APP_PATH" ] && APP_PATH="/opt/matchleague"
+            if [ ! -d "$APP_PATH/.git" ]; then
+              command -v git >/dev/null 2>&1 || { apt-get update -y && apt-get install -y git; }
+              mkdir -p "$APP_PATH"
+              git clone https://github.com/${{ github.repository }} "$APP_PATH"
+            fi
+            bash "$APP_PATH/scripts/deploy-dev.sh" dev "$APP_PATH"
