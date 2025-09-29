@@ -30,7 +30,7 @@ jobs:
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GHCR_PAT }}
+          password: ${{ secrets.GHCR_PAT || github.token }}
 
       - name: Build and push backend image
         uses: docker/build-push-action@v4
@@ -54,26 +54,25 @@ jobs:
 
   deploy:
     needs: build-and-push
-    # Only run deploy when a KUBECONFIG secret is present AND deployment is explicitly enabled.
-    # This prevents CI from attempting to talk to a local kube-apiserver (e.g. minikube) by accident.
-    if: ${{ secrets.DEPLOY_ENABLED == 'true' && secrets.KUBECONFIG != '' }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
+        if: ${{ secrets.DEPLOY_ENABLED == 'true' && secrets.KUBECONFIG != '' }}
         uses: actions/checkout@v4
 
       - name: Setup kubectl
+        if: ${{ secrets.DEPLOY_ENABLED == 'true' && secrets.KUBECONFIG != '' }}
         uses: azure/setup-kubectl@v3
 
-      - name: Configure Kubeconfig (from secret)
-        # Writes the KUBECONFIG secret to a temporary file (never printed). Ensure
-        # KUBECONFIG is stored as a repository secret — never commit kubeconfig to the repo.
+      - name: Decode kubeconfig
+        if: ${{ secrets.DEPLOY_ENABLED == 'true' && secrets.KUBECONFIG != '' }}
         run: |
-          echo "${{ secrets.KUBECONFIG }}" > /tmp/kubeconfig
+          mkdir -p ~/.kube
+          echo "${{ secrets.KUBECONFIG }}" | base64 -d > /tmp/kubeconfig
           chmod 600 /tmp/kubeconfig
-          export KUBECONFIG=/tmp/kubeconfig
 
       - name: Apply k8s manifests (create resources if absent)
+        if: ${{ secrets.DEPLOY_ENABLED == 'true' && secrets.KUBECONFIG != '' }}
         env:
           KUBECONFIG: /tmp/kubeconfig
         run: |
@@ -85,6 +84,7 @@ jobs:
           kubectl apply -f k8s/ingress.yaml
 
       - name: Update deployment images (safe, no repo edits)
+        if: ${{ secrets.DEPLOY_ENABLED == 'true' && secrets.KUBECONFIG != '' }}
         env:
           KUBECONFIG: /tmp/kubeconfig
         run: |
