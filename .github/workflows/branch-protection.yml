@@ -1,0 +1,126 @@
+name: Protect main and dev
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply_protection:
+        description: "Apply branch protection to main and dev"
+        type: boolean
+        default: true
+      cleanup_merged:
+        description: "Delete remote branches merged into base (excl. main/dev)"
+        type: boolean
+        default: false
+      base:
+        description: "Base branch used to detect merged branches"
+        type: string
+        default: "main"
+      exclude_regex:
+        description: "Branches to exclude (regex)"
+        type: string
+        default: "^(HEAD|main|dev)$"
+      dry_run:
+        description: "List branches to delete without deleting"
+        type: boolean
+        default: true
+  push:
+    paths:
+      - .github/workflows/branch-protection.yml
+
+permissions:
+  contents: write
+
+jobs:
+  protect:
+    if: ${{ github.event_name == 'push' || github.event.inputs.apply_protection == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate secret
+        run: |
+          if [ -z "${{ secrets.REPO_ADMIN_TOKEN }}" ]; then
+            echo "Repo secret REPO_ADMIN_TOKEN is missing. Create a PAT with 'repo' scope and add it as REPO_ADMIN_TOKEN."
+            exit 1
+          fi
+      - name: Apply protection rules to main and dev
+        env:
+          OWNER: ${{ github.repository_owner }}
+          REPO: ${{ github.event.repository.name }}
+          TOKEN: ${{ secrets.REPO_ADMIN_TOKEN }}
+        run: |
+          set -euo pipefail
+          for BR in main dev; do
+            echo "Protecting branch: $BR"
+            curl -sS -X PUT \
+              -H "Authorization: Bearer $TOKEN" \
+              -H "Accept: application/vnd.github+json" \
+              -H "X-GitHub-Api-Version: 2022-11-28" \
+              https://api.github.com/repos/$OWNER/$REPO/branches/$BR/protection \
+              -d '{
+                "required_status_checks": null,
+                "enforce_admins": true,
+                "required_pull_request_reviews": {
+                  "required_approving_review_count": 1,
+                  "require_code_owner_reviews": false,
+                  "dismiss_stale_reviews": true,
+                  "require_last_push_approval": true
+                },
+                "restrictions": null,
+                "allow_force_pushes": false,
+                "allow_deletions": false,
+                "required_linear_history": true,
+                "block_creations": false,
+                "required_conversation_resolution": true
+              }' >/dev/null
+          done
+          echo "Branch protection applied."
+
+  cleanup:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.cleanup_merged == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch and compute merged branches
+        id: plan
+        shell: bash
+        env:
+          IN_BASE: ${{ github.event.inputs.base }}
+          EXCLUDE_REGEX: ${{ github.event.inputs.exclude_regex }}
+        run: |
+          set -euo pipefail
+          BASE="${IN_BASE:-main}"
+          git fetch --all --prune
+          MERGED=$(git branch -r --merged "origin/$BASE" | sed 's#^\s*origin/##' | grep -Ev "${EXCLUDE_REGEX:-^(HEAD|main|dev)$}" || true)
+          echo "base=$BASE" >> "$GITHUB_OUTPUT"
+          printf '%s\n' "$MERGED" > merged.txt
+          echo "merged<<EOF" >> "$GITHUB_OUTPUT"
+          cat merged.txt >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+          if [ -s merged.txt ]; then
+            echo "Found merged branches:"
+            cat merged.txt
+          else
+            echo "No merged branches found."
+          fi
+      - name: Dry-run - list deletions
+        if: ${{ github.event.inputs.dry_run == 'true' }}
+        run: |
+          echo "Dry-run enabled. The following branches would be deleted:"
+          cat merged.txt || true
+      - name: Delete merged branches
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ ! -s merged.txt ]; then
+            echo "Nothing to delete."
+            exit 0
+          fi
+          echo "Deleting:"
+          cat merged.txt
+          while read -r b; do
+            [ -z "$b" ] && continue
+            git push origin --delete "$b" || true
+          done < merged.txt
+          git remote prune origin || true

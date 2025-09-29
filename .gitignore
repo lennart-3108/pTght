@@ -54,3 +54,8 @@ logs/
 tmp/
 backend/.env.prod
 /backend/.env
+
+# Local runtime artifacts (do not commit)
+backend/backend-run.log
+frontend-run.log
+frontend/frontend.pid
