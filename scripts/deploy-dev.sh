@@ -7,7 +7,7 @@ APP_PATH="${2:-/opt/matchleague}"
 export DEBIAN_FRONTEND=noninteractive
 command -v git >/dev/null 2>&1 || { apt-get update -y && apt-get install -y git; }
 
-# Neu: Node.js + pm2 Fallback
+# Neu: Node.js/pm2 Fallback installieren, falls nötig
 if ! command -v npm >/dev/null 2>&1; then
   curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
   apt-get install -y nodejs
@@ -19,8 +19,7 @@ git fetch --all --prune
 git checkout "$BRANCH" || git checkout -b "$BRANCH" "origin/$BRANCH" || true
 git pull --ff-only origin "$BRANCH" || true
 
-# Entfernt: automatische .env.dev/SQLITE-DB-Erstellung
-# Optional: vorhandene .env laden (wenn deine App sie nutzt)
+# Optional: vorhandene .env laden (keine .env.dev-Erzeugung mehr)
 set -a
 [ -f .env ] && . ./.env || true
 set +a
@@ -60,4 +59,5 @@ if [ -f package.json ]; then
 fi
 
 pm2 save || true
+echo "Deploy finished."
 echo "Deploy finished."
