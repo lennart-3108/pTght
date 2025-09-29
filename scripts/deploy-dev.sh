@@ -12,6 +12,29 @@ git fetch --all --prune
 git checkout "$BRANCH" || git checkout -b "$BRANCH" "origin/$BRANCH" || true
 git pull --ff-only origin "$BRANCH" || true
 
+# Ensure .env exists for docker compose and app defaults
+if [ ! -f .env ]; then
+  cat > .env <<'EOF'
+# Default ports
+BACKEND_PORT=5000
+FRONTEND_PORT=3000
+
+# Backend default PORT (many servers read PORT)
+PORT=5000
+
+# SQLite default (if app supports it)
+SQLITE_DB_PATH=/data/dev.sqlite
+
+# Optional Postgres (uncomment if you use compose profile "db")
+# POSTGRES_DB=matchleague
+# POSTGRES_USER=matchleague
+# POSTGRES_PASSWORD=matchleague
+# POSTGRES_PORT=5432
+# DATABASE_URL=postgres://matchleague:matchleague@postgres:5432/matchleague
+EOF
+  echo "[deploy-dev] Created .env with defaults."
+fi
+
 # Node/PM2 sicherstellen
 if ! command -v npm >/dev/null 2>&1; then
   curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
