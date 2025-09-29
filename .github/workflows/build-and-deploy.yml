@@ -90,7 +90,7 @@ jobs:
         run: |
           IMAGE_PREFIX=${{ secrets.IMAGE_PREFIX || 'ghcr.io/lennart-3108' }}
           TAG=${{ github.event.inputs.image_tag }}
-          echo "Updating backend image to ${IMAGE_PREFIX}/matchleague-backend:${TAG}"
           kubectl set image deployment/matchleague-backend backend=${IMAGE_PREFIX}/matchleague-backend:${TAG} --record
+          kubectl set image deployment/matchleague-frontend frontend=${IMAGE_PREFIX}/matchleague-frontend:${TAG} --record
           echo "Updating frontend image to ${IMAGE_PREFIX}/matchleague-frontend:${TAG}"
           kubectl set image deployment/matchleague-frontend frontend=${IMAGE_PREFIX}/matchleague-frontend:${TAG} --record
