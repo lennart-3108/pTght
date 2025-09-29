@@ -19,11 +19,11 @@ if [ ! -f .env.dev ]; then
 NODE_ENV=development
 # Eigene SQLite-DB für dev:
 SQLITE_DB_PATH=/opt/matchleague/data/dev.sqlite
-# Beispiel-Port (falls App diesen nutzt):
+# Beispiel-Port:
 PORT=5000
 EOF
 fi
-# Env laden, damit PM2 Procs sie erben
+# Env exportieren, damit Kinder (pm2/npm) sie erben
 set -a
 [ -f .env.dev ] && . ./.env.dev
 set +a
