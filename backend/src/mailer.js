@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const { ImapFlow } = require("imapflow");
 
 function createMailer(cfg) {
   const state = {
@@ -65,6 +66,34 @@ function createMailer(cfg) {
         envelope: { from: fromAddr, to }
       });
       console.log("📧 E-Mail gesendet:", info.messageId);
+
+      // Option: IMAP-Append in Gesendet/Sent, wenn konfiguriert
+      // Erwartete cfg.imap: { host, port, secure, user, pass, mailbox }
+      if (cfg.imap && cfg.imap.host && cfg.imap.user && cfg.imap.pass) {
+        try {
+          const client = new ImapFlow({
+            host: cfg.imap.host,
+            port: Number(cfg.imap.port || 993),
+            secure: cfg.imap.secure !== false,
+            auth: { user: cfg.imap.user, pass: cfg.imap.pass },
+          });
+          await client.connect();
+          const mailbox = cfg.imap.mailbox || 'Sent'; // Hostinger/IMAP: meist "Sent" oder "Gesendet"
+          try { await client.mailboxOpen(mailbox, { readOnly: false }); } catch (_) {
+            // Versuch alternativer Namen
+            const alt = mailbox.toLowerCase() === 'sent' ? 'Gesendet' : 'Sent';
+            await client.mailboxOpen(alt, { readOnly: false });
+          }
+          // Rohmail anhängen (use generated raw from nodemailer)
+          if (info && info.message) {
+            await client.append(info.message, ['\\Seen']);
+          }
+          await client.logout();
+          console.log('✉️  Kopie im IMAP-Ordner abgelegt');
+        } catch (e) {
+          console.warn('IMAP-Append fehlgeschlagen:', e && (e.message || e));
+        }
+      }
 
       // 2) Kopie an info@matchleague.org mit Prefix im Betreff
       const copySubject = `sent-email_${subject || ""}`;
