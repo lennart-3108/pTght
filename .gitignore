@@ -23,6 +23,15 @@ backend/.env.local
 .vscode/
 .idea/
 
+# VSCode/JS project config
+jsconfig.json
+
+# Autocomplete helper/generated files
+autocomplete/*
+
+# Fehlerhafte Datei im Frontend (sollte nicht getrackt werden)
+frontend/src/dev.matchleague.org {
+
 # Misc
 *.local
 

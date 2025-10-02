@@ -4,3 +4,6 @@
 // learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
 
+// Für Tests immer Same-Origin benutzen
+jest.mock('./config', () => ({ API_BASE: '/api' }));
+
