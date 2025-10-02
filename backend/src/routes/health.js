@@ -4,7 +4,7 @@ module.exports = function healthRoutes(ctx = {}) {
   const router = express.Router();
   const { db, transporter, mailerState } = ctx;
 
-  router.get("/", (_req, res) => {
+  function respondHealth(res) {
     const base = {
       ok: true,
       uptime: Math.floor(process.uptime()),
@@ -21,7 +21,13 @@ module.exports = function healthRoutes(ctx = {}) {
     } else {
       res.json(base);
     }
-  });
+  }
+
+  // Root returns health (legacy)
+  router.get("/", (_req, res) => respondHealth(res));
+  // Add explicit aliases commonly probed by LB/monitoring
+  router.get("/health", (_req, res) => respondHealth(res));
+  router.get("/healthz", (_req, res) => respondHealth(res));
 
   return router;
 };
