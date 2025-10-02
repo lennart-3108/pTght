@@ -16,6 +16,16 @@ function loadConfig() {
   const MAIL_USER = process.env.MAIL_USER;  // Neu: UDAG-Benutzername (z.B. info@matchleague.org)
   const MAIL_PASS = process.env.MAIL_PASS;  // Neu: UDAG-Passwort
   const MAIL_DEBUG = process.env.MAIL_DEBUG === "1";
+  // Optional forwarding/copy target for sent emails (used by mailer)
+  // Prefer explicit FORWARD_TO, then MAIL_FROM, then MAIL_USER; fallback to an org default
+  const FORWARD_TO = process.env.FORWARD_TO || process.env.MAIL_FROM || MAIL_USER || "info@matchleague.org";
+  // Optional IMAP settings for appending sent mails to "Sent"/"Gesendet" folder
+  const IMAP_HOST = process.env.IMAP_HOST || process.env.MAIL_HOST; // often same provider
+  const IMAP_PORT = Number(process.env.IMAP_PORT || 993);
+  const IMAP_SECURE = process.env.IMAP_SECURE !== "false"; // default true
+  const IMAP_USER = process.env.IMAP_USER || MAIL_USER;
+  const IMAP_PASS = process.env.IMAP_PASS || process.env.MAIL_PASS;
+  const IMAP_MAILBOX = process.env.IMAP_MAILBOX || "Sent"; // could be "Gesendet"
 
   const JWT_SECRET = process.env.JWT_SECRET || "geheimes_schluesselwort";
   if (!process.env.JWT_SECRET) {
@@ -36,7 +46,16 @@ function loadConfig() {
       user: MAIL_USER,
       pass: MAIL_PASS,
       secure: MAIL_SECURE,
-      debug: MAIL_DEBUG
+      debug: MAIL_DEBUG,
+      forwardTo: FORWARD_TO,
+      imap: (IMAP_HOST && IMAP_USER && IMAP_PASS) ? {
+        host: IMAP_HOST,
+        port: IMAP_PORT,
+        secure: IMAP_SECURE,
+        user: IMAP_USER,
+        pass: IMAP_PASS,
+        mailbox: IMAP_MAILBOX,
+      } : null
     }
   };
 }
