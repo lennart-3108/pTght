@@ -112,7 +112,7 @@ export default function AdminPage() {
       const r = await fetch(`${API_BASE}/admin/test-email`, {
         method: 'POST',
         headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to: 'info@matchleague.org' }),
+        body: JSON.stringify({ to: 'info@dev.matchleague.org' }),
       });
       const j = await (async () => { const t = await r.text(); try { return JSON.parse(t); } catch { return null; } })();
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
