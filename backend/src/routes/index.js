@@ -27,7 +27,8 @@ function registerRoutes(app, ctx) {
   app.use("/sports", sportsRoutes(ctx));
   app.use(citiesRoutes(ctx));
   app.use("/admin", adminRoutes(ctx));
-  app.use(mailerRoutes(ctx));
+  // Mount mailer under explicit prefix so endpoints are /mailer/*
+  app.use("/mailer", mailerRoutes(ctx));
   app.use(healthRoutes(ctx));
   app.use(users(ctx));
   app.use(games(ctx));
