@@ -60,7 +60,7 @@ export default function StartPage() {
             <img src={smallLogo} alt="ML" className="hero-small-logo" />
             <h1 className="hero-title">Match League</h1>
           </div>
-          <p className="hero-sub"><b>Willkommen bei MatchLeague. Verbinde dich mit Spielern. Tritt Ligen bei. Verfolge Spiele.</b></p>
+          <p className="hero-sub"><b>Willkommen bei MatchLeague. Dein Sport. Dein Match. Deine Community.</b></p>
         </div>
       </section>
 

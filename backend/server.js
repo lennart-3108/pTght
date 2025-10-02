@@ -22,11 +22,16 @@ const { registerRoutes } = require("./src/routes/index");
 
 const app = express();
 const cfg = loadConfig();
-const PORT = Number(process.env.PORT) || 5002;
+// Aktiviert korrekte IP/Proto-Erkennung hinter Caddy/Reverse Proxy
+app.set('trust proxy', 1);
+const PORT = Number(process.env.PORT) || 5001;
 
 app.use(cors(cfg.cors));
 app.options("*", cors());
 app.use(express.json());
+
+// Healthcheck für Caddy/Monitoring
+app.get("/healthz", (req, res) => res.json({ ok: true }));
 
 // simple file logger (appends)
 function ensureLogsDir() {
@@ -45,6 +50,12 @@ function logToFile(filename, msg) {
 function formatNow() {
   return new Date().toISOString();
 }
+// Log-Level Steuerung
+const LOG_LEVEL = (process.env.LOG_LEVEL || 'info').toLowerCase();
+const levelRank = { silent: 0, error: 1, warn: 2, info: 3, debug: 4 };
+const canLog = (lvl) => (levelRank[lvl] <= (levelRank[LOG_LEVEL] || 3));
+
+// Error logging (for uncaught exceptions, promise rejections, etc.)
 function logError(err, meta = {}) {
   const entry = {
     time: formatNow(),
@@ -54,10 +65,17 @@ function logError(err, meta = {}) {
   console.error("[ERROR]", entry.time, entry.message, meta || "");
   logToFile("error.log", JSON.stringify(entry));
 }
+
+// Informational logging (e.g. startup, config, etc.)
 function logInfo(msg, meta = {}) {
   const entry = { time: formatNow(), msg, meta };
-  console.log("[INFO]", entry.time, entry.msg, meta || "");
+  if (canLog('info')) console.log("[INFO]", entry.time, entry.msg, meta || "");
   logToFile("info.log", JSON.stringify(entry));
+}
+
+// Debug-level logging (detailed internal state, request/response, etc.)
+function logDebug(msg, meta = {}) {
+  if (canLog('debug')) console.log("[DEBUG]", formatNow(), msg, meta || "");
 }
 
 // --- Database and Mailer setup ---
@@ -70,11 +88,11 @@ const db = createDb();
 let knexDirect = null;
 if (db && db.knex && db.knex.client) {
   knexDirect = db.knex;
-  console.log("[DB] Using adapter knex instance as primary");
+  if (canLog('debug')) console.log("[DB] Using adapter knex instance as primary");
 } else {
   try {
     knexDirect = require("./db");
-    console.log("[DB] Adapter knex not available, using ./db fallback");
+    if (canLog('debug')) console.log("[DB] Adapter knex not available, using ./db fallback");
   } catch (e) {
     knexDirect = null;
     console.warn("[DB] No knex instance available from adapter or ./db");
@@ -91,7 +109,7 @@ try {
     // instantiate a separate knex only if a config exists
     knexFileInstance = makeKnex(knexCfg);
     const kfFile = (knexFileInstance && knexFileInstance.client && knexFileInstance.client.config && knexFileInstance.client.config.connection && knexFileInstance.client.config.connection.filename) || null;
-    console.log("[DB] knexfile instance created, filename:", kfFile);
+    if (canLog('debug')) console.log("[DB] knexfile instance created, filename:", kfFile);
   }
 } catch (e) {
   // ignore if knex not available
@@ -102,7 +120,12 @@ const { ensureCommunityLeagues } = require("./src/jobs/ensureCommunityLeagues");
 
 // Mailer
 const { transporter, state: mailerState, sendMail } = createMailer(cfg.mailer);
-verifyAndSendAcceptance(transporter, mailerState);
+// verify nur optional, um SMTP-Logs beim Start zu vermeiden
+if (process.env.MAILER_VERIFY === '1') {
+  verifyAndSendAcceptance(transporter, mailerState);
+} else {
+  logDebug("Mailer verify disabled (set MAILER_VERIFY=1 to enable).");
+}
 
 // Shared context (kept small and explicit)
 const lastStartupAdmin = { value: null };
@@ -143,7 +166,7 @@ setInterval(() => {
         removed.push(k);
       }
     }
-    if (removed.length) console.log(`[oneTimeCleanup] removed ${removed.length} expired tokens`);
+    if (removed.length && canLog('debug')) console.log(`[oneTimeCleanup] removed ${removed.length} expired tokens`);
   } catch (e) {
     console.error('[oneTimeCleanup] error', e && (e.stack || e.message || e));
   }
@@ -162,7 +185,7 @@ setInterval(() => {
         removed.push(email);
       }
     }
-    if (removed.length) console.log(`[resendCooldownCleanup] removed ${removed.length} expired cooldown entries`);
+    if (removed.length && canLog('debug')) console.log(`[resendCooldownCleanup] removed ${removed.length} expired cooldown entries`);
   } catch (e) {
     console.error('[resendCooldownCleanup] error', e && (e.stack || e.message || e));
   }
@@ -189,9 +212,11 @@ try {
 // setInterval(() => ensureCommunityLeagues(knexDirect, () => {}), 60 * 1000); // alle 60s prüfen
 // Use the same primary knex instance for background jobs (prefer adapter)
 const jobKnex = (db && db.knex && db.knex.client) ? db.knex : knexDirect;
+// optional verbose job logger
+const jobLog = (process.env.JOBS_VERBOSE === '1') ? (...a) => console.log(...a) : () => {};
 if (jobKnex) {
-  ensureCommunityLeagues(jobKnex, () => console.log("Community-Ligen synchronisiert."));
-  setInterval(() => ensureCommunityLeagues(jobKnex, () => {}), 60 * 1000); // alle 60s prüfen
+  ensureCommunityLeagues(jobKnex, () => jobLog("Community-Ligen synchronisiert."));
+  setInterval(() => ensureCommunityLeagues(jobKnex, () => jobLog("Community-Ligen synchronisiert.")), 60 * 1000); // alle 60s prüfen
 } else {
   console.warn("[ensureCommunityLeagues] no knex available for job");
 }
@@ -246,14 +271,13 @@ app.get("/leagues", async (req, res) => {
     if (kAdapter) {
       const adapterRes = await readFrom(kAdapter);
       if (!adapterRes.error && Array.isArray(adapterRes.rows) && adapterRes.rows.length > 0) {
-        console.log(`[GET /leagues] using adapter dbFile=${adapterRes.dbFile || "<unknown>"} rows=${adapterRes.rows.length}`);
+        logDebug(`[GET /leagues] using adapter dbFile=${adapterRes.dbFile || "<unknown>"} rows=${adapterRes.rows.length}`);
         return res.json(adapterRes.rows);
       }
-      // if adapter returned empty but others might have data, continue to collect from all sources
       if (adapterRes.error) {
         console.warn("[GET /leagues] adapter read error:", adapterRes.error && (adapterRes.error.stack || adapterRes.error.message || adapterRes.error));
       } else {
-        console.log("[GET /leagues] adapter returned 0 rows, falling back to other sources");
+        logDebug("[GET /leagues] adapter returned 0 rows, falling back to other sources");
       }
     }
 
@@ -269,11 +293,11 @@ app.get("/leagues", async (req, res) => {
     // log brief info for debugging (will appear in server console)
     results.forEach((r, idx) => {
       if (r && r.skippedReason) {
-        console.log(`[GET /leagues] source[${idx}] dbFile=${r.dbFile || "<unknown>"} skipped: ${r.skippedReason}`);
+        logDebug(`[GET /leagues] source[${idx}] dbFile=${r.dbFile || "<unknown>"} skipped: ${r.skippedReason}`);
       } else if (r && r.error) {
         console.warn(`[GET /leagues] source[${idx}] read error:`, r.error && (r.error.stack || r.error.message || r.error));
       } else {
-        console.log(`[GET /leagues] source[${idx}] dbFile=${r.dbFile || "<unknown>"} rows=${(r.rows || []).length}`);
+        logDebug(`[GET /leagues] source[${idx}] dbFile=${r.dbFile || "<unknown>"} rows=${(r.rows || []).length}`);
       }
     });
 
@@ -289,7 +313,7 @@ app.get("/leagues", async (req, res) => {
     const merged = Array.from(mergedMap.values()).sort((a, b) => Number(a.id) - Number(b.id));
 
     // Debug info if counts differ from what admin shows
-    console.log(`[GET /leagues] returning merged rows=${merged.length} (sources=${results.length})`);
+    //logDebug(`[GET /leagues] returning merged rows=${merged.length} (sources=${results.length})`);
 
     return res.json(merged);
   } catch (e) {
@@ -302,7 +326,7 @@ app.get("/leagues", async (req, res) => {
 // Note: no auth added here; enable in your setup if needed.
 app.get("/admin/db-info", async (req, res) => {
   try {
-    const kAdapter = (db && db.knex && db.knex.client) ? db.knex : null;
+    const kAdapter = (db && db.knex && db.client) ? db.knex : null;
     const kDirect = (knexDirect && knexDirect.client) ? knexDirect : null;
     const kKnexfile = (knexFileInstance && knexFileInstance.client) ? knexFileInstance : null;
     const sources = [
@@ -520,12 +544,14 @@ app.use("/sports", sportsRoutes({ db }));
 const resolvedKnexForRoutes = (knexDirect && knexDirect.client)
   ? knexDirect
   : (db && db.knex && db.knex.client) ? db.knex : (db || null);
-console.log('[DEBUG] resolvedKnexForRoutes summary:', {
-  hasResolved: !!resolvedKnexForRoutes,
-  isFunction: typeof resolvedKnexForRoutes === 'function',
-  hasClient: !!(resolvedKnexForRoutes && resolvedKnexForRoutes.client),
-  source: knexDirect && knexDirect.client ? 'knexDirect' : (db && db.knex && db.knex.client) ? 'adapter.knex' : (db ? 'adapter' : 'none')
-});
+if (process.env.DEBUG_BOOT === '1' || canLog('debug')) {
+  console.log('[DEBUG] resolvedKnexForRoutes summary:', {
+    hasResolved: !!resolvedKnexForRoutes,
+    isFunction: typeof resolvedKnexForRoutes === 'function',
+    hasClient: !!(resolvedKnexForRoutes && resolvedKnexForRoutes.client),
+    source: knexDirect && knexDirect.client ? 'knexDirect' : (db && db.knex && db.knex.client) ? 'adapter.knex' : (db ? 'adapter' : 'none')
+  });
+}
 app.use("/matches", matchesRoutes({ db: resolvedKnexForRoutes }));
 
 // --- ensure root /sports exists (some setups expose only /sports/:id/... but not GET /sports) ---
@@ -639,83 +665,86 @@ if (String(process.env.SQL_DEBUG).toLowerCase() === "true" || process.env.SQL_DE
 
 const server = app.listen(PORT, () => {
   logInfo(`[Server] Listening on http://localhost:${PORT}`);
-  // show logs dir for convenience
   const logsDir = ensureLogsDir();
-  console.log(`[Server] Logs directory: ${logsDir} (error.log, info.log, link-tests.log)`);
+  logInfo(`[Server] Logs directory: ${logsDir} (error.log, info.log, link-tests.log)`);
 
-  // after server started: run link tests
-  (async function runLinkTests() {
-    try {
-      const k = knexDirect; // use direct knex for sampling ids
-      // sample ids (may be undefined)
-      const firstLeague = await k("leagues").select("id").first().catch(() => null);
-      const firstCity = await k("cities").select("id").first().catch(() => null);
-      const firstSport = await k("sports").select("id").first().catch(() => null);
-      const leagueId = firstLeague && firstLeague.id ? firstLeague.id : null;
-      const cityId = firstCity && firstCity.id ? firstCity.id : null;
-      const sportId = firstSport && firstSport.id ? firstSport.id : null;
+  // Link-Tests nur bei ENABLE_LINK_TESTS=1
+  if (process.env.ENABLE_LINK_TESTS === '1') {
+    (async function runLinkTests() {
+      try {
+        const k = knexDirect; // use direct knex for sampling ids
+        // sample ids (may be undefined)
+        const firstLeague = await k("leagues").select("id").first().catch(() => null);
+        const firstCity = await k("cities").select("id").first().catch(() => null);
+        const firstSport = await k("sports").select("id").first().catch(() => null);
+        const leagueId = firstLeague && firstLeague.id ? firstLeague.id : null;
+        const cityId = firstCity && firstCity.id ? firstCity.id : null;
+        const sportId = firstSport && firstSport.id ? firstSport.id : null;
 
-      const BASE = `http://localhost:${PORT}`;
-      const endpoints = [
-        "/",
-        "/leagues",
-        leagueId ? `/leagues/${leagueId}` : null,
-        leagueId ? `/leagues/${leagueId}/games` : null,
-        leagueId ? `/leagues/${leagueId}/members` : null,
-        leagueId ? `/leagues/${leagueId}/standings` : null,
-        "/sports",
-        sportId ? `/sports/${sportId}/leagues` : null,
-        "/me", // requires auth; will likely 401 but is tested to surface issues
-        "/me/leagues",
-        "/me/games",
-      ].filter(Boolean);
+        const BASE = `http://localhost:${PORT}`;
+        const endpoints = [
+          "/",
+          "/leagues",
+          leagueId ? `/leagues/${leagueId}` : null,
+          leagueId ? `/leagues/${leagueId}/games` : null,
+          leagueId ? `/leagues/${leagueId}/members` : null,
+          leagueId ? `/leagues/${leagueId}/standings` : null,
+          "/sports",
+          sportId ? `/sports/${sportId}/leagues` : null,
+          "/me", // requires auth; will likely 401 but is tested to surface issues
+          "/me/leagues",
+          "/me/games",
+        ].filter(Boolean);
 
-      logInfo("Starting automated link tests", { endpoints });
+        logInfo("Starting automated link tests", { endpoints });
 
-      const results = [];
-      for (const ep of endpoints) {
-        try {
-          // use fetch with timeout
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 5000);
-          // No auth token by default; some endpoints will return 401 which is a valid response
-          const res = await fetch(BASE + ep, { signal: controller.signal });
-          clearTimeout(timeout);
-          const status = res.status;
-          let bodyText = "";
-          try { bodyText = await res.text(); } catch {}
-          results.push({ endpoint: ep, ok: res.ok, status, snippet: bodyText?.slice(0, 500) });
-          logInfo("Link test result", { endpoint: ep, ok: res.ok, status });
-        } catch (err) {
-          logError(err, { endpoint: ep, note: "fetch failed" });
-          results.push({ endpoint: ep, ok: false, error: err && err.message });
+        const results = [];
+        for (const ep of endpoints) {
+          try {
+            // use fetch with timeout
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 5000);
+            // No auth token by default; some endpoints will return 401 which is a valid response
+            const res = await fetch(BASE + ep, { signal: controller.signal });
+            clearTimeout(timeout);
+            const status = res.status;
+            let bodyText = "";
+            try { bodyText = await res.text(); } catch {}
+            results.push({ endpoint: ep, ok: res.ok, status, snippet: bodyText?.slice(0, 500) });
+            logInfo("Link test result", { endpoint: ep, ok: res.ok, status });
+          } catch (err) {
+            logError(err, { endpoint: ep, note: "fetch failed" });
+            results.push({ endpoint: ep, ok: false, error: err && err.message });
+          }
         }
+
+        // write full results
+        logToFile("link-tests.log", JSON.stringify({ time: formatNow(), results }, null, 2));
+        logInfo("Automated link tests finished", { summary: results.map(r => ({ ep: r.endpoint, ok: r.ok, status: r.status || null })) });
+
+        // If there are server errors (5xx) or fetch failures, write a summary to error.log and print to console
+        // Treat only fetch failures or 5xx as failures. 401/404 are acceptable for unauthenticated tests.
+        const failures = results.filter(r => (r.error) || (r.status && r.status >= 500));
+
+        if (failures.length > 0) {
+          const summary = {
+            time: formatNow(),
+            message: "Automated link tests detected failures",
+            failures,
+          };
+          logToFile("link-tests.log", JSON.stringify({ alert: summary }, null, 2));
+          logError(new Error("Link tests found failures"), { failures });
+          console.warn("[LINK-TEST] Failures detected. See logs/link-tests.log and logs/error.log for details.");
+        } else {
+          console.log("[LINK-TEST] All tested endpoints responded OK (or expected non-OK like 401/404).");
+        }
+      } catch (e) {
+        logError(e, { origin: "runLinkTests" });
       }
-
-      // write full results
-      logToFile("link-tests.log", JSON.stringify({ time: formatNow(), results }, null, 2));
-      logInfo("Automated link tests finished", { summary: results.map(r => ({ ep: r.endpoint, ok: r.ok, status: r.status || null })) });
-
-      // If there are server errors (5xx) or fetch failures, write a summary to error.log and print to console
-      // Treat only fetch failures or 5xx as failures. 401/404 are acceptable for unauthenticated tests.
-      const failures = results.filter(r => (r.error) || (r.status && r.status >= 500));
-
-      if (failures.length > 0) {
-        const summary = {
-          time: formatNow(),
-          message: "Automated link tests detected failures",
-          failures,
-        };
-        logToFile("link-tests.log", JSON.stringify({ alert: summary }, null, 2));
-        logError(new Error("Link tests found failures"), { failures });
-        console.warn("[LINK-TEST] Failures detected. See logs/link-tests.log and logs/error.log for details.");
-      } else {
-        console.log("[LINK-TEST] All tested endpoints responded OK (or expected non-OK like 401/404).");
-      }
-    } catch (e) {
-      logError(e, { origin: "runLinkTests" });
-    }
-  })();
+    })();
+  } else {
+    logDebug("Link tests are disabled (set ENABLE_LINK_TESTS=1 to enable).");
+  }
 });
 
 // export for tests

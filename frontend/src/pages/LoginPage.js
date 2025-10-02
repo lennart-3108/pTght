@@ -39,12 +39,14 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
   const [resendEmail, setResendEmail] = useState("");
   const [resendMsg, setResendMsg] = useState("");
 
+  const API = (typeof API_BASE === 'string' && API_BASE.trim()) ? API_BASE : '/api';
+
   // Login-Handler (hier an dein Backend anpassen!)
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoginMsg("");
     try {
-      const res = await fetch(`${API_BASE}/login`, {
+      const res = await fetch(`${API}/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -74,7 +76,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
     e.preventDefault();
     setResetMsg("");
     try {
-      const response = await fetch(`${API_BASE}/reset-password`, {
+      const response = await fetch(`${API}/reset-password`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -120,7 +122,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
             <img src={smallLogo} alt="ML" className="hero-small-logo" />
             <h1 className="hero-title">Match League</h1>
           </div>
-          <p className="hero-sub">Verbinde dich mit Spielern. Tritt Ligen bei. Verfolge Spiele.</p>
+          <p className="hero-sub">Dein Sport. Dein Match. Deine Community.</p>
         </div>
       </section>
 
@@ -216,7 +218,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
               e.preventDefault();
               setResendMsg("");
               try {
-                const resp = await fetch(`${API_BASE}/resend-confirmation`, {
+                const resp = await fetch(`${API}/resend-confirmation`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ email: resendEmail }),
