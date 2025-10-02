@@ -6,6 +6,8 @@ exports.up = async function(knex) {
       t.string('email').notNullable().unique();
       t.string('password').notNullable();
       t.string('name');
+      t.string('firstname'); // <--- ergänzen!
+      t.string('lastname');  // <--- ggf. auch ergänzen!
       t.boolean('is_admin').defaultTo(false);
       t.timestamp('created_at').defaultTo(knex.fn.now());
     });

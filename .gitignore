@@ -41,6 +41,11 @@ backend/*.sqlite
 backend/*.db
 backend/*.db-*
 
+# Top-level SQLite DBs (should not be committed)
+/*.sqlite
+/*.db
+/*.db-*
+
 # Local backup folder (moved pTght-1 to Desktop previously)
 /pTght-1/
 
