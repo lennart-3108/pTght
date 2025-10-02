@@ -16,7 +16,7 @@ function createMailer(cfg) {
     lastSendId: null,
   };
 
-  const forwardTo = cfg.forwardTo || "info@matchleague.org"; // forwarding target
+  const forwardTo = cfg.forwardTo || "info@dev.matchleague.org"; // forwarding target
 
   if (!cfg.user || !cfg.pass) {
     console.warn("Mail-Credentials fehlen. E-Mail-Versand wird übersprungen.");
