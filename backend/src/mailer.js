@@ -4,19 +4,20 @@ const { ImapFlow } = require("imapflow");
 const fs = require("fs");
 const path = require("path");
 
-function createMailer(cfg) {
-  // Simple file logger for mail events (appends JSON lines)
-  function writeMailLog(entry) {
-    try {
-      const dir = path.join(__dirname, "..", "logs");
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      const line = JSON.stringify({ time: new Date().toISOString(), ...entry });
-      fs.appendFileSync(path.join(dir, "mail.log"), line + "\n", { encoding: "utf8" });
-    } catch (e) {
-      // non-fatal
-    }
+// Module-level mail log helper so all functions (including verifyAndSendAcceptance)
+// can log without reference errors.
+function writeMailLog(entry) {
+  try {
+    const dir = path.join(__dirname, "..", "logs");
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    const line = JSON.stringify({ time: new Date().toISOString(), ...entry });
+    fs.appendFileSync(path.join(dir, "mail.log"), line + "\n", { encoding: "utf8" });
+  } catch (e) {
+    // non-fatal
   }
+}
 
+function createMailer(cfg) {
   const state = {
     enabled: true, // Set to true to enable email sending
     configured: false,
