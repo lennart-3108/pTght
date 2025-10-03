@@ -25,21 +25,42 @@ module.exports = function adminRoutes(ctx) {
     res.json({ status: "ok" });
   });
 
-  // Admin-Statistiken
+  // Admin-Statistiken (robust gegen fehlende Tabellen)
   router.get("/stats", requireAdmin, (_req, res) => {
-    const sql = `
-      SELECT
-        (SELECT COUNT(*) FROM users) AS users,
-        (SELECT COUNT(*) FROM users WHERE is_confirmed = 1) AS confirmedUsers,
-        (SELECT COUNT(*) FROM users WHERE is_admin = 1) AS admins,
-        (SELECT COUNT(*) FROM sports) AS sports,
-        (SELECT COUNT(*) FROM cities) AS cities,
-        (SELECT COUNT(*) FROM leagues) AS leagues
-    `;
-    db.get(sql, [], (err, row) => {
-      if (err) return res.status(500).json({ error: "DB error", details: err.message });
-      res.json(row || {});
-    });
+    try {
+      db.all(`SELECT name FROM sqlite_master WHERE type='table'`, [], (e, rows) => {
+        if (e) return res.status(500).json({ error: "DB error", details: e.message });
+        const names = new Set((rows || []).map(r => r.name));
+
+        const has = (t) => names.has(t);
+        const out = { users: 0, confirmedUsers: 0, admins: 0, sports: 0, cities: 0, leagues: 0 };
+
+        const tasks = [];
+        // users count
+        if (has('users')) {
+          tasks.push((cb) => db.get(`SELECT COUNT(*) AS c FROM users`, [], (err, r) => { out.users = Number((r && r.c) || 0); cb(); }));
+          tasks.push((cb) => db.get(`SELECT COUNT(*) AS c FROM users WHERE is_confirmed = 1`, [], (err, r) => { out.confirmedUsers = Number((r && r.c) || 0); cb(); }));
+          tasks.push((cb) => db.get(`SELECT COUNT(*) AS c FROM users WHERE is_admin = 1`, [], (err, r) => { out.admins = Number((r && r.c) || 0); cb(); }));
+        }
+        if (has('sports')) tasks.push((cb) => db.get(`SELECT COUNT(*) AS c FROM sports`, [], (err, r) => { out.sports = Number((r && r.c) || 0); cb(); }));
+        if (has('cities')) tasks.push((cb) => db.get(`SELECT COUNT(*) AS c FROM cities`, [], (err, r) => { out.cities = Number((r && r.c) || 0); cb(); }));
+        if (has('leagues')) tasks.push((cb) => db.get(`SELECT COUNT(*) AS c FROM leagues`, [], (err, r) => { out.leagues = Number((r && r.c) || 0); cb(); }));
+
+        // run tasks sequentially to keep it simple
+        let i = 0;
+        (function next() {
+          if (i >= tasks.length) return res.json(out);
+          try {
+            tasks[i++](next);
+          } catch (err) {
+            // ignore individual errors and continue; keep partial stats
+            next();
+          }
+        })();
+      });
+    } catch (err) {
+      return res.status(500).json({ error: "Unexpected", details: err && (err.message || String(err)) });
+    }
   });
 
   // Tabelle abrufen (Admin-only, validiert Tabelle vor Ausführung)

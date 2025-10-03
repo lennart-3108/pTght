@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../config';
 // ...existing code... (TeamForm removed from this page; creation is done via /teams/create)
 import { Link } from 'react-router-dom';
 
@@ -10,7 +11,6 @@ function SmallSelect({ label, value, onChange, children }) {
 }
 
 function TeamsPage() {
-  const API_BASE = (process.env.REACT_APP_API_BASE || 'http://localhost:5001');
   const [teams, setTeams] = useState([]);
   const [sportFilter, setSportFilter] = useState('');
   const [cityFilter, setCityFilter] = useState('');
