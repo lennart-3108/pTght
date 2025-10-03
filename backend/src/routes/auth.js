@@ -203,7 +203,10 @@ module.exports = function authRoutes(ctx) {
                     return res.json({ success: true, message: 'Confirmation email sent' , ...(process.env.NODE_ENV === 'development' ? { confirmUrl } : {}) });
                   }).catch((mailErr) => {
                     console.error('[resend-confirmation] sendMail error', mailErr && (mailErr.stack || mailErr.message || mailErr));
-                    return res.status(500).json({ success: false, error: 'E-Mail-Versand fehlgeschlagen', ...(process.env.NODE_ENV === 'development' ? { confirmUrl } : {}) });
+                    // Fallback: gib trotzdem 200 zurück und zeige den Bestätigungslink
+                    // So blockiert ein Mailer-Fehler den Nutzerfluss nicht.
+                    try { if (cooldowns) cooldowns.set(email, Date.now()); } catch (e) { /* non-fatal */ }
+                    return res.status(200).json({ success: true, message: 'Mailer-Fehler – Link wird angezeigt', confirmUrl });
                   });
                 } else {
                   console.log('[resend-confirmation] mailer not enabled; confirmUrl:', confirmUrl);
