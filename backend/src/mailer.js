@@ -1,8 +1,22 @@
 const nodemailer = require("nodemailer");
 const MailComposer = require("nodemailer/lib/mail-composer");
 const { ImapFlow } = require("imapflow");
+const fs = require("fs");
+const path = require("path");
 
 function createMailer(cfg) {
+  // Simple file logger for mail events (appends JSON lines)
+  function writeMailLog(entry) {
+    try {
+      const dir = path.join(__dirname, "..", "logs");
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      const line = JSON.stringify({ time: new Date().toISOString(), ...entry });
+      fs.appendFileSync(path.join(dir, "mail.log"), line + "\n", { encoding: "utf8" });
+    } catch (e) {
+      // non-fatal
+    }
+  }
+
   const state = {
     enabled: true, // Set to true to enable email sending
     configured: false,
@@ -21,7 +35,9 @@ function createMailer(cfg) {
   const forwardTo = cfg.forwardTo || "info@dev.matchleague.org"; // forwarding target
 
   if (!cfg.user || !cfg.pass) {
-    console.warn("Mail-Credentials fehlen. E-Mail-Versand wird übersprungen.");
+    const msg = "Mail-Credentials fehlen. E-Mail-Versand wird übersprungen.";
+    console.warn(msg);
+    writeMailLog({ level: "warn", event: "mailer_disabled", msg });
     return { transporter: null, state, sendMail: async () => {} };
   }
 
@@ -40,11 +56,13 @@ function createMailer(cfg) {
     socketTimeout: 15000,
   });
   console.log(`[Mailer] Transport konfiguriert ${cfg.host}:${cfg.port} secure=${cfg.secure ? "true" : "false"}`);
+  writeMailLog({ level: "info", event: "transport_configured", host: cfg.host, port: cfg.port, secure: !!cfg.secure });
   state.configured = true;
 
   const sendMail = async (to, subject, html) => {
     if (!state.enabled) {
       console.log("Mailer nicht aktiviert, E-Mail nicht versendet an:", to);
+      writeMailLog({ level: "info", event: "send_skipped", reason: "disabled", to, subject });
       return;
     }
     try {
@@ -67,8 +85,10 @@ function createMailer(cfg) {
         envelope: { from: fromAddr, to }
       };
       const rawPrimary = await new MailComposer(primaryMail).compile().build();
-      const info = await transporter.sendMail(primaryMail);
-  console.log("📧 E-Mail gesendet:", info.messageId);
+    writeMailLog({ level: "info", event: "send_attempt", to, subject, msgId });
+    const info = await transporter.sendMail(primaryMail);
+    console.log("📧 E-Mail gesendet:", info.messageId);
+    writeMailLog({ level: "info", event: "send_success", to, subject, messageId: info.messageId || null });
 
       // Option: IMAP-Append in Gesendet/Sent, wenn konfiguriert
       // Erwartete cfg.imap: { host, port, secure, user, pass, mailbox }
@@ -129,6 +149,7 @@ function createMailer(cfg) {
           console.log(`✉️  Kopie im IMAP-Ordner abgelegt (${opened})`);
         } catch (e) {
           console.warn('IMAP-Append fehlgeschlagen:', e && (e.message || e));
+          writeMailLog({ level: "warn", event: "imap_append_failed", error: e && (e.message || String(e)) });
         }
       }
 
@@ -154,6 +175,7 @@ function createMailer(cfg) {
       return info?.messageId || null;
     } catch (error) {
       console.error("E-Mail-Versand fehlgeschlagen an:", to, "Fehler:", error.message);
+      writeMailLog({ level: "error", event: "send_failed", to, subject, error: error && (error.stack || error.message || String(error)) });
       throw error;
     }
   };
@@ -179,11 +201,13 @@ function verifyAndSendAcceptance(transporter, state, sendMailCb) {
       state.verified = false;
       state.lastError = err?.message || String(err);
       console.error("Mailer Verify Fehler:", err?.message || err, err?.response || "");
+      writeMailLog({ level: "error", event: "verify_failed", error: err && (err.message || String(err)) });
       return;
     }
     state.verified = true;
     state.lastError = null;
     console.log(`[Mailer] Verify OK in ${Date.now() - started}ms. Sende Acceptance-Mail ...`);
+    writeMailLog({ level: "info", event: "verify_ok" });
 
     const fromAddr = transporter?.options?.auth?.user;
     const to = fromAddr;
@@ -194,10 +218,12 @@ function verifyAndSendAcceptance(transporter, state, sendMailCb) {
           state.lastSendAt = new Date().toISOString();
           state.lastSendId = id || null;
           console.log(`📧 Acceptance-Mail gesendet (sendMail): ${id || "(ohne ID)"}`);
+          writeMailLog({ level: "info", event: "acceptance_sent", messageId: id || null });
         })
         .catch((sendErr) => {
           state.lastError = sendErr?.message || String(sendErr);
           console.error("Acceptance-Mail Fehler (sendMail):", sendErr?.message || sendErr);
+          writeMailLog({ level: "error", event: "acceptance_failed", error: sendErr && (sendErr.message || String(sendErr)) });
         });
     } else {
       // Fallback direct send
