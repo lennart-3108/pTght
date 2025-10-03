@@ -24,6 +24,15 @@ export default function StartPage() {
   const [cities, setCities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  // simple carousel state for backgrounds
+  const [index, setIndex] = useState(0);
+
+  // rotate backgrounds every 5s
+  useEffect(() => {
+    if (!backgrounds.length) return;
+    const t = setInterval(() => setIndex((i) => (i + 1) % backgrounds.length), 5000);
+    return () => clearInterval(t);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -52,7 +61,7 @@ export default function StartPage() {
     <div>
       <section className="hero-carousel">
         {backgrounds.map((b, i) => (
-          <div key={i} className={`hero-slide ${i === 0 ? 'active' : ''}`} style={{ backgroundImage: `url(${b.src})` }} />
+          <div key={i} className={`hero-slide ${i === index ? 'active' : ''}`} style={{ backgroundImage: `url(${b.src})` }} />
         ))}
 
         <div className="hero-overlay">
