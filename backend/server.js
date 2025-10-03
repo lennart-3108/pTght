@@ -81,6 +81,16 @@ function logDebug(msg, meta = {}) {
 // --- Database and Mailer setup ---
 const { createDb } = require("./src/db/adapter");
 const db = createDb();
+// If we're using the sqlite adapter, ensure base tables exist on startup
+try {
+  if (db && (db.__driver === 'sqlite' || (db.constructor && db.constructor.name === 'Database'))) {
+    const setupTables = require("./db-setup");
+    setupTables(db);
+    logInfo("[DB] SQLite detected – ensured base tables via db-setup.js");
+  }
+} catch (e) {
+  console.warn("[DB] setupTables failed or unavailable:", e && (e.message || e));
+}
 
 // additionally: direct Knex instance (legacy)
 // const knexDirect = require("./db");
