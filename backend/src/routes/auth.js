@@ -193,7 +193,7 @@ module.exports = function authRoutes(ctx) {
                   }
                 }
 
-                if (ctx && ctx.mailerState && ctx.mailerState.enabled && ctx.sendMail) {
+                if (ctx && ctx.mailerState && ctx.mailerState.enabled && ctx.transporter && ctx.sendMail) {
                   const subject = 'E-Mail bestätigen';
                   const html = `<p>Hallo ${user.firstname || ''},</p><p>bitte bestätige deine E-Mail-Adresse, indem du auf den folgenden Link klickst:</p><p><a href="${confirmUrl}">${confirmUrl}</a></p>`;
                   ctx.sendMail(email, subject, html).then(() => {
