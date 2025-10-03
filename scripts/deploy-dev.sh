@@ -19,8 +19,9 @@ if [ ! -f .env ]; then
 BACKEND_PORT=5000
 FRONTEND_PORT=3000
 
-# Backend default PORT (many servers read PORT)
-PORT=5000
+# Backend internal PORT (must match container internal port)
+# Do not set this to BACKEND_PORT; compose maps host BACKEND_PORT -> container 5001
+PORT=5001
 
 # SQLite default (if app supports it)
 SQLITE_DB_PATH=/data/dev.sqlite
