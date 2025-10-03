@@ -122,7 +122,7 @@ const { ensureCommunityLeagues } = require("./src/jobs/ensureCommunityLeagues");
 const { transporter, state: mailerState, sendMail } = createMailer(cfg.mailer);
 // verify nur optional, um SMTP-Logs beim Start zu vermeiden
 if (process.env.MAILER_VERIFY === '1') {
-  verifyAndSendAcceptance(transporter, mailerState);
+  verifyAndSendAcceptance(transporter, mailerState, sendMail);
 } else {
   logDebug("Mailer verify disabled (set MAILER_VERIFY=1 to enable).");
 }

@@ -1,4 +1,5 @@
 const nodemailer = require("nodemailer");
+const MailComposer = require("nodemailer/lib/mail-composer");
 const { ImapFlow } = require("imapflow");
 
 function createMailer(cfg) {
@@ -51,7 +52,7 @@ function createMailer(cfg) {
       const plain = (html || "").replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
       const msgId = `${Date.now()}-${Math.random().toString(16).slice(2)}@matchleague.org`;
 
-      const info = await transporter.sendMail({
+      const primaryMail = {
         from: `"MatchLeague" <${fromAddr}>`,
         to,
         subject,
@@ -64,8 +65,10 @@ function createMailer(cfg) {
           "Auto-Submitted": "auto-generated"
         },
         envelope: { from: fromAddr, to }
-      });
-      console.log("📧 E-Mail gesendet:", info.messageId);
+      };
+      const rawPrimary = await new MailComposer(primaryMail).compile().build();
+      const info = await transporter.sendMail(primaryMail);
+  console.log("📧 E-Mail gesendet:", info.messageId);
 
       // Option: IMAP-Append in Gesendet/Sent, wenn konfiguriert
       // Erwartete cfg.imap: { host, port, secure, user, pass, mailbox }
@@ -78,49 +81,87 @@ function createMailer(cfg) {
             auth: { user: cfg.imap.user, pass: cfg.imap.pass },
           });
           await client.connect();
-          const mailbox = cfg.imap.mailbox || 'Sent'; // Hostinger/IMAP: meist "Sent" oder "Gesendet"
-          try { await client.mailboxOpen(mailbox, { readOnly: false }); } catch (_) {
-            // Versuch alternativer Namen
-            const alt = mailbox.toLowerCase() === 'sent' ? 'Gesendet' : 'Sent';
-            await client.mailboxOpen(alt, { readOnly: false });
+
+          // Robust: versuche mehrere uebliche Ordnernamen (Hostinger nutzt oft Namespace "INBOX.")
+          const wanted = String(cfg.imap.mailbox || 'Sent');
+          const candidates = [
+            wanted,
+            wanted.toLowerCase() === 'sent' ? 'Gesendet' : 'Sent',
+            // mit Namespace-Prefix
+            `INBOX.${wanted}`,
+            'INBOX.Sent',
+            'INBOX.Gesendet',
+            // weitere haeufige Varianten
+            '[Gmail]/Sent Mail',
+            'Sent Messages',
+            'Sent Items',
+          ].filter(Boolean);
+
+          let opened = null;
+          for (const name of candidates) {
+            try {
+              if (typeof name !== 'string' || !name.trim()) continue;
+              await client.mailboxOpen(name, { readOnly: false });
+              opened = name;
+              break;
+            } catch (_) {
+              // ignore and try next
+            }
           }
-          // Rohmail anhängen (use generated raw from nodemailer)
-          if (info && info.message) {
-            await client.append(info.message, ['\\Seen']);
+
+          if (!opened) {
+            throw new Error(`Kein IMAP-Ordner fuer Gesendet gefunden (versucht: ${candidates.join(', ')})`);
+          }
+
+          // Rohmail anhängen (komponierte RFC822-Nachricht)
+          if (rawPrimary && rawPrimary.length) {
+            // Einige Server sind empfindlich bei Flags – wir lassen sie weg (default: ungelesen)
+            // und schreiben nur den Roh-Content in den gewählten Ordner.
+            try {
+              await client.append(opened, rawPrimary);
+            } catch (appendErr) {
+              console.warn('IMAP-Append (ohne Flags) fehlgeschlagen, versuche Fallback auf expliziten Pfad:', appendErr?.message || appendErr);
+              // Fallback: explizit mit Pfad noch einmal probieren
+              await client.append(opened || 'INBOX.Sent', rawPrimary);
+            }
           }
           await client.logout();
-          console.log('✉️  Kopie im IMAP-Ordner abgelegt');
+          console.log(`✉️  Kopie im IMAP-Ordner abgelegt (${opened})`);
         } catch (e) {
           console.warn('IMAP-Append fehlgeschlagen:', e && (e.message || e));
         }
       }
 
-      // 2) Kopie an info@matchleague.org mit Prefix im Betreff
-      const copySubject = `sent-email_${subject || ""}`;
-      const copyHtml = `<p>Forwarded copy (original to: ${Array.isArray(to) ? to.join(", ") : to})</p><hr/>${html || ""}`;
-      await transporter.sendMail({
-        from: `"MatchLeague" <${fromAddr}>`,
-        to: forwardTo,
-        subject: copySubject,
-        html: copyHtml,
-        text: (copyHtml || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
-        replyTo: fromAddr,
-        messageId: `${Date.now()}-${Math.random().toString(16).slice(2)}@matchleague.org`,
-        headers: {
-          "X-Mailer": "MatchLeague",
-          "Auto-Submitted": "auto-generated"
-        },
-        envelope: { from: fromAddr, to: forwardTo }
-      });
+      // 2) Optionale Kopie: nur senden, wenn Ziel != Original-Empfänger und definiert
+      if (forwardTo && String(forwardTo).toLowerCase() !== String(to).toLowerCase()) {
+        const copySubject = `sent-email_${subject || ""}`;
+        const copyHtml = `<p>Forwarded copy (original to: ${Array.isArray(to) ? to.join(", ") : to})</p><hr/>${html || ""}`;
+        await transporter.sendMail({
+          from: `"MatchLeague" <${fromAddr}>`,
+          to: forwardTo,
+          subject: copySubject,
+          html: copyHtml,
+          text: (copyHtml || "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(),
+          replyTo: fromAddr,
+          messageId: `${Date.now()}-${Math.random().toString(16).slice(2)}@matchleague.org`,
+          headers: {
+            "X-Mailer": "MatchLeague",
+            "Auto-Submitted": "auto-generated"
+          },
+          envelope: { from: fromAddr, to: forwardTo }
+        });
+      }
+      return info?.messageId || null;
     } catch (error) {
       console.error("E-Mail-Versand fehlgeschlagen an:", to, "Fehler:", error.message);
+      throw error;
     }
   };
 
   return { transporter, state, sendMail };
 }
 
-function verifyAndSendAcceptance(transporter, state) {
+function verifyAndSendAcceptance(transporter, state, sendMailCb) {
   if (!transporter) return;
   console.log("[Mailer] Verifiziere SMTP-Verbindung ...");
   const started = Date.now();
@@ -146,26 +187,41 @@ function verifyAndSendAcceptance(transporter, state) {
 
     const fromAddr = transporter?.options?.auth?.user;
     const to = fromAddr;
-    transporter.sendMail(
-      {
-        from: `"MatchLeague" <${fromAddr}>`,
-        to,
-        subject: "Mailer verified",
-        text: `SMTP connection accepted at ${new Date().toISOString()}`,
-        html: `<p>SMTP connection accepted at <b>${new Date().toISOString()}</b></p>`,
-        envelope: { from: fromAddr, to }
-      },
-      (sendErr, info) => {
-        if (sendErr) {
-          state.lastError = sendErr?.message || String(sendErr);
-          console.error("Acceptance-Mail Fehler:", sendErr?.message || sendErr, sendErr?.response || "");
-        } else {
+    if (typeof sendMailCb === 'function') {
+      // Use unified send path (handles IMAP append + forwarding)
+      Promise.resolve(sendMailCb(to, "Mailer verified", `<p>SMTP connection accepted at <b>${new Date().toISOString()}</b></p>`))
+        .then((id) => {
           state.lastSendAt = new Date().toISOString();
-          state.lastSendId = info?.messageId || null;
-          console.log(`📧 Acceptance-Mail gesendet: ${info?.messageId || "(ohne ID)"}`);
+          state.lastSendId = id || null;
+          console.log(`📧 Acceptance-Mail gesendet (sendMail): ${id || "(ohne ID)"}`);
+        })
+        .catch((sendErr) => {
+          state.lastError = sendErr?.message || String(sendErr);
+          console.error("Acceptance-Mail Fehler (sendMail):", sendErr?.message || sendErr);
+        });
+    } else {
+      // Fallback direct send
+      transporter.sendMail(
+        {
+          from: `"MatchLeague" <${fromAddr}>`,
+          to,
+          subject: "Mailer verified",
+          text: `SMTP connection accepted at ${new Date().toISOString()}`,
+          html: `<p>SMTP connection accepted at <b>${new Date().toISOString()}</b></p>`,
+          envelope: { from: fromAddr, to }
+        },
+        (sendErr, info) => {
+          if (sendErr) {
+            state.lastError = sendErr?.message || String(sendErr);
+            console.error("Acceptance-Mail Fehler:", sendErr?.message || sendErr, sendErr?.response || "");
+          } else {
+            state.lastSendAt = new Date().toISOString();
+            state.lastSendId = info?.messageId || null;
+            console.log(`📧 Acceptance-Mail gesendet: ${info?.messageId || "(ohne ID)"}`);
+          }
         }
-      }
-    );
+      );
+    }
   });
 }
 
