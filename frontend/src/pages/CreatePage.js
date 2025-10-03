@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { API_BASE } from "../config";
 
 export default function CreatePage() {
   const [schema, setSchema] = useState(null);
@@ -21,7 +22,7 @@ export default function CreatePage() {
     let mounted = true;
     setLoading(true);
     setErr("");
-    fetch("http://localhost:5001/admin/schema", {
+    fetch(`${API_BASE}/admin/schema`, {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(async (r) => {
@@ -39,8 +40,8 @@ export default function CreatePage() {
     if (table !== "leagues" && table !== "games") return;
     let mounted = true;
     Promise.all([
-      fetch("http://localhost:5001/cities/list").then(r => (table === "leagues" ? (r.ok ? r.json() : []) : [])),
-      fetch("http://localhost:5001/sports/list").then(r => (r.ok ? r.json() : [])),
+      fetch(`${API_BASE}/cities/list`).then(r => (table === "leagues" ? (r.ok ? r.json() : []) : [])),
+      fetch(`${API_BASE}/sports/list`).then(r => (r.ok ? r.json() : [])),
     ])
       .then(([cs, ss]) => {
         if (!mounted) return;
@@ -64,7 +65,7 @@ export default function CreatePage() {
     // beim Sportwechsel gewählte Liga im Formular zurücksetzen
     setForm((f) => (f.league_id ? { ...f, league_id: null, home: "", away: "" } : f));
     if (!gameSportId) return;
-    fetch(`http://localhost:5001/sports/${gameSportId}/leagues`)
+  fetch(`${API_BASE}/sports/${gameSportId}/leagues`)
       .then(r => (r.ok ? r.json() : []))
       .then(ls => { if (mounted) setLeaguesForSport(Array.isArray(ls) ? ls : []); })
       .catch(() => { if (mounted) setLeaguesForSport([]); });
@@ -78,7 +79,7 @@ export default function CreatePage() {
     setLeagueMembers([]);
     const lid = form?.league_id;
     if (!lid) return;
-    fetch(`http://localhost:5001/leagues/${lid}/members`)
+  fetch(`${API_BASE}/leagues/${lid}/members`)
       .then(r => (r.ok ? r.json() : []))
       .then(ms => { if (mounted) setLeagueMembers(Array.isArray(ms) ? ms : []); })
       .catch(() => { if (mounted) setLeagueMembers([]); });
@@ -137,21 +138,21 @@ export default function CreatePage() {
       throw new Error("Name ist erforderlich.");
     }
     if (table === "cities") {
-      const r = await fetch("http://localhost:5001/cities/list");
+  const r = await fetch(`${API_BASE}/cities/list`);
       const rows = r.ok ? await r.json() : [];
       if ((rows || []).some(c => String(c.name).toLowerCase() === name.toLowerCase())) {
         throw new Error("Stadt existiert bereits.");
       }
     }
     if (table === "sports") {
-      const r = await fetch("http://localhost:5001/sports/list");
+  const r = await fetch(`${API_BASE}/sports/list`);
       const rows = r.ok ? await r.json() : [];
       if ((rows || []).some(s => String(s.name).toLowerCase() === name.toLowerCase())) {
         throw new Error("Sportart existiert bereits.");
       }
     }
     if (table === "leagues") {
-      const r = await fetch("http://localhost:5001/leagues");
+  const r = await fetch(`${API_BASE}/leagues`);
       const rows = r.ok ? await r.json() : [];
       const dup = (rows || []).some(l =>
         String(l.name).toLowerCase() === String(form.name || "").toLowerCase() &&
@@ -169,7 +170,7 @@ export default function CreatePage() {
     try {
       await preflightDuplicateCheck();
       const payload = { table, data: form };
-      const r = await fetch("http://localhost:5001/admin/create", {
+      const r = await fetch(`${API_BASE}/admin/create`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
