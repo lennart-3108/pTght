@@ -52,12 +52,11 @@ export default function Header() {
 
       <div className="ml-header__menu">
         <nav className="ml-nav">
-          {/* When not logged in: Login, Ligen, Städte, Registrieren */}
+          {/* When not logged in: Login, Ligen, Städte, Registrieren (Teams ausgeblendet) */}
           {!token && (
             <>
               <Link to="/login" className="ml-nav__item">Login</Link>
               <Link to="/leagues" className="ml-nav__item">Ligen</Link>
-              <Link to="/teams" className="ml-nav__item">Teams</Link>
               <Link to="/cities" className="ml-nav__item">Städte</Link>
               <Link to="/register" className="ml-nav__item">Registrieren</Link>
             </>
