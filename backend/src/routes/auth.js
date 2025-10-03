@@ -37,7 +37,9 @@ module.exports = function authRoutes(ctx) {
   const fallbackPort = process.env.PORT || 5001;
   const inferredHost = req && req.get && req.get('host') ? req.get('host') : `localhost:${fallbackPort}`;
   const inferredProto = req && req.protocol ? req.protocol : (process.env.BACKEND_PROTO || 'http');
-  const backendBase = process.env.BACKEND_PUBLIC_URL || `${inferredProto}://${inferredHost}`;
+  // if the router is mounted under /api, include it in public URL unless BACKEND_PUBLIC_URL is set
+  const publicPrefix = (req && typeof req.baseUrl === 'string') ? req.baseUrl : '';
+  const backendBase = process.env.BACKEND_PUBLIC_URL || `${inferredProto}://${inferredHost}${publicPrefix}`;
   const confirmUrl = `${backendBase}/confirm/${confirmationToken}`;
 
         const sendSuccess = () =>
@@ -176,7 +178,8 @@ module.exports = function authRoutes(ctx) {
               const fallbackPort = process.env.PORT || 5001;
               const inferredHost = req && req.get && req.get('host') ? req.get('host') : `localhost:${fallbackPort}`;
               const inferredProto = req && req.protocol ? req.protocol : (process.env.BACKEND_PROTO || 'http');
-              const backendBase = process.env.BACKEND_PUBLIC_URL || `${inferredProto}://${inferredHost}`;
+              const publicPrefix = (req && typeof req.baseUrl === 'string') ? req.baseUrl : '';
+              const backendBase = process.env.BACKEND_PUBLIC_URL || `${inferredProto}://${inferredHost}${publicPrefix}`;
               const confirmUrl = `${backendBase}/confirm/${tkn}`;
               try {
                 // Enforce resend cooldown if ctx provides a resendCooldowns map
