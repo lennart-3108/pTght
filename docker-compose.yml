@@ -18,7 +18,7 @@ services:
   frontend:
     build: ./frontend
     working_dir: /app
-    command: sh -c "npm ci && npm run start"
+    # nginx-based image from Dockerfile serves build on port 80
     env_file:
       - ./.env
     environment:
@@ -26,7 +26,7 @@ services:
     volumes:
       - ./frontend:/app
     ports:
-      - "${FRONTEND_PORT:-3000}:3000"
+      - "${FRONTEND_PORT:-3000}:80"
 
   postgres:
     image: postgres:16
