@@ -135,14 +135,14 @@ export default function GameDetailPage() {
   const histB = filterHistoryForPlayer(playerB);
 
   // layout styles
-  const containerStyle = { padding: 20, maxWidth: 1100, margin: '12px auto', fontFamily: 'Inter, Roboto, Arial, sans-serif', color: '#e8efe8' };
-  const cardStyle = { background: '#0f2a20', borderRadius: 12, padding: 18, boxShadow: '0 10px 30px rgba(0,0,0,0.6)' };
-  const leftStyle = { flex: '1 1 280px' };
-  const rightStyle = { flex: '1 1 280px' };
+  const containerStyle = { padding: 16, maxWidth: 1100, margin: '12px auto', fontFamily: 'Inter, Roboto, Arial, sans-serif', color: '#e8efe8' };
+  const cardStyle = { background: '#0f2a20', borderRadius: 12, padding: 16, boxShadow: '0 10px 30px rgba(0,0,0,0.6)' };
+  const leftStyle = { flex: '1 1 280px', minWidth: 0 };
+  const rightStyle = { flex: '1 1 280px', minWidth: 0 };
 
   return (
     <div style={containerStyle}>
-      <div style={{ display: 'flex', gap: 20, alignItems: 'flex-start' }}>
+  <div style={{ display: 'flex', gap: 12, alignItems: 'stretch', flexWrap: 'wrap' }}>
         {/* Left player */}
         <div style={{ ...leftStyle }}>
           <div style={cardStyle}>
@@ -159,15 +159,15 @@ export default function GameDetailPage() {
         </div>
 
         {/* Center result & meta */}
-        <div style={{ flex: '0 0 360px', textAlign: 'center' }}>
+        <div style={{ flex: '1 1 320px', minWidth: 260, textAlign: 'center' }}>
           <div style={{ ...cardStyle, background: 'linear-gradient(135deg,#163a2f,#0f2a20)' }}>
-            <div style={{ fontSize: 14, color: '#9db' }}>{formatDate(game.kickoff_at)}{game.location ? ` · ${game.location}` : ''}</div>
+            <div style={{ fontSize: 13, color: '#9db' }}>{formatDate(game.kickoff_at)}{game.location ? ` · ${game.location}` : ''}</div>
             { (game.home_score != null && game.away_score != null) ? (
-              <div style={{ marginTop: 12, fontSize: 36, fontWeight: 700 }}>{playerA.name} <span style={{ color: '#ffd' }}>{`${game.home_score}:${game.away_score}`}</span> {playerB.name}</div>
+              <div style={{ marginTop: 12, fontSize: 'clamp(20px, 6vw, 36px)', fontWeight: 700 }}>{playerA.name} <span style={{ color: '#ffd' }}>{`${game.home_score}:${game.away_score}`}</span> {playerB.name}</div>
             ) : (
-              <div style={{ marginTop: 12, fontSize: 36, fontWeight: 700, color: '#ffd' }}>Ausstehend</div>
+              <div style={{ marginTop: 12, fontSize: 'clamp(22px, 7vw, 36px)', fontWeight: 700, color: '#ffd' }}>Ausstehend</div>
             ) }
-            <div style={{ marginTop: 8, color: '#9db' }}>{game.league || ''}</div>
+            <div style={{ marginTop: 6, color: '#9db' }}>{game.league || ''}</div>
           </div>
         </div>
 
@@ -187,9 +187,9 @@ export default function GameDetailPage() {
       </div>
 
       {/* Past games table */}
-      <div style={{ marginTop: 20 }}>
-        <div style={{ display: 'flex', gap: 20 }}>
-          <div style={{ flex: 1 }}>
+      <div style={{ marginTop: 16 }}>
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 320px', minWidth: 260 }}>
             <h4>Vergangene Spiele – {playerA.name}</h4>
             {histA.length === 0 ? <div>Keine vorherigen Spiele in dieser Liga.</div> : (
               <table style={{ width: '100%', borderCollapse: 'collapse', background: '#071511' }}>
@@ -211,7 +211,7 @@ export default function GameDetailPage() {
             )}
           </div>
 
-          <div style={{ flex: 1 }}>
+          <div style={{ flex: '1 1 320px', minWidth: 260 }}>
             <h4>Vergangene Spiele – {playerB.name}</h4>
             {histB.length === 0 ? <div>Keine vorherigen Spiele in dieser Liga.</div> : (
               <table style={{ width: '100%', borderCollapse: 'collapse', background: '#071511' }}>
