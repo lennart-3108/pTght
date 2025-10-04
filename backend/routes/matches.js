@@ -57,6 +57,10 @@ module.exports = function matchesRoutes({ db }) {
     try {
       const k = getKnex();
       if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+      // inspect matches table to avoid selecting non-existent columns
+      const info = await k('matches').columnInfo().catch(() => ({}));
+      const hasHomeText = Object.prototype.hasOwnProperty.call(info, 'home');
+      const hasAwayText = Object.prototype.hasOwnProperty.call(info, 'away');
       // build safe display-name expressions depending on users table columns
       const usersInfo = await k('users').columnInfo().catch(() => ({}));
       const hasFirst = Object.prototype.hasOwnProperty.call(usersInfo, 'firstname');
@@ -89,8 +93,9 @@ module.exports = function matchesRoutes({ db }) {
           'm.kickoff_at',
           'm.home_user_id',
           'm.away_user_id',
-          'm.home',
-          'm.away',
+          // include home/away text only if columns exist to avoid errors
+          ...(hasHomeText ? ['m.home as home'] : [k.raw('NULL as home')]),
+          ...(hasAwayText ? ['m.away as away'] : [k.raw('NULL as away')]),
           'm.home_score',
           'm.away_score',
           { leagueId: 'm.league_id' },
