@@ -125,6 +125,82 @@ try {
   // ignore if knex not available
 }
 
+// Ensure critical tables exist on the primary Knex connection as well
+(async () => {
+  try {
+    const k = (db && db.knex && db.knex.client) ? db.knex : knexDirect;
+    if (!k || !k.schema) return;
+
+    // matches
+    if (!(await k.schema.hasTable("matches"))) {
+      await k.schema.createTable("matches", (t) => {
+        t.increments("id").primary();
+        t.integer("league_id").notNullable();
+        t.text("kickoff_at");
+        t.text("status");
+        t.integer("home_user_id");
+        t.integer("away_user_id");
+        t.integer("home_team_id");
+        t.integer("away_team_id");
+        t.integer("home_score");
+        t.integer("away_score");
+        t.text("created_at").defaultTo(k.raw("CURRENT_TIMESTAMP"));
+      });
+      logInfo("[DB] Created table matches via Knex");
+    }
+
+    // teams
+    if (!(await k.schema.hasTable("teams"))) {
+      await k.schema.createTable("teams", (t) => {
+        t.increments("id").primary();
+        t.string("name").notNullable();
+        t.integer("league_id").notNullable();
+        t.integer("sport_id");
+        t.integer("city_id");
+        t.integer("captain_user_id");
+      });
+      logInfo("[DB] Created table teams via Knex");
+    }
+
+    // team_members
+    if (!(await k.schema.hasTable("team_members"))) {
+      await k.schema.createTable("team_members", (t) => {
+        t.integer("team_id").notNullable();
+        t.integer("user_id").notNullable();
+        t.boolean("is_captain").defaultTo(false);
+        t.primary(["team_id", "user_id"]);
+      });
+      logInfo("[DB] Created table team_members via Knex");
+    }
+
+    // team_match_rosters
+    if (!(await k.schema.hasTable("team_match_rosters"))) {
+      await k.schema.createTable("team_match_rosters", (t) => {
+        t.increments("id").primary();
+        t.integer("team_id").notNullable();
+        t.integer("match_id").notNullable();
+        t.integer("created_by");
+        t.text("created_at").defaultTo(k.raw("CURRENT_TIMESTAMP"));
+      });
+      logInfo("[DB] Created table team_match_rosters via Knex");
+    }
+
+    // team_roster_players
+    if (!(await k.schema.hasTable("team_roster_players"))) {
+      await k.schema.createTable("team_roster_players", (t) => {
+        t.increments("id").primary();
+        t.integer("roster_id").notNullable();
+        t.integer("user_id").notNullable();
+        t.string("role").defaultTo("sub");
+        t.string("shirt_number");
+      });
+      logInfo("[DB] Created table team_roster_players via Knex");
+    }
+  } catch (e) {
+    console.warn("[DB] ensureKnexTables failed:", e && (e.message || e));
+  }
+})();
+
 // Community-Ligen
 const { ensureCommunityLeagues } = require("./src/jobs/ensureCommunityLeagues");
 
