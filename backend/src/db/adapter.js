@@ -74,7 +74,9 @@ function createSqliteDb(file) {
 function createDb() {
   const url = process.env.DB_URL || process.env.DATABASE_URL;
   if (url) return createPgDb(url);
-  return createSqliteDb(process.env.DB_FILE);
+  // Prefer SQLITE_FILE for consistency with knex (see backend/db.js)
+  const sqliteFile = process.env.SQLITE_FILE || process.env.DB_FILE;
+  return createSqliteDb(sqliteFile);
 }
 
 module.exports = { createDb };
