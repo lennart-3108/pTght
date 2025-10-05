@@ -12,6 +12,14 @@ export default function GameDetailPage() {
   const [hScore, setHScore] = useState('');
   const [aScore, setAScore] = useState('');
   const [submitMsg, setSubmitMsg] = useState('');
+  // permission to submit result (must be declared before any early return)
+  const [canSubmit, setCanSubmit] = useState(false);
+  const [cannotReason, setCannotReason] = useState('');
+  // weekly status for league (to disable join when already has a weekly match)
+  const [hasWeeklyMatch, setHasWeeklyMatch] = useState(false);
+  const [joinMsg, setJoinMsg] = useState('');
+  const [scheduleMsg, setScheduleMsg] = useState('');
+  const [scheduleAt, setScheduleAt] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -64,6 +72,21 @@ export default function GameDetailPage() {
     return () => { mounted = false; };
   }, [leagueId]);
 
+  // fetch my weekly status for this league (if logged in)
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        if (!token || !leagueId) { if (mounted) setHasWeeklyMatch(false); return; }
+        const r = await fetch(`${API_BASE}/leagues/${leagueId}/my-weekly-status`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!r.ok) { if (mounted) setHasWeeklyMatch(false); return; }
+        const j = await r.json().catch(() => ({ hasWeeklyMatch: false }));
+        if (mounted) setHasWeeklyMatch(!!j.hasWeeklyMatch);
+      } catch { if (mounted) setHasWeeklyMatch(false); }
+    })();
+    return () => { mounted = false; };
+  }, [token, leagueId]);
+
   // fetch standings (completed matches) to compute simple table positions
   const [standings, setStandings] = useState([]);
   useEffect(() => {
@@ -85,6 +108,24 @@ export default function GameDetailPage() {
     })();
     return () => { mounted = false; };
   }, [leagueId]);
+
+  // fetch permission for submitting result
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        if (!token || !gameId) { if (mounted){ setCanSubmit(false); setCannotReason(''); } return; }
+        const r = await fetch(`${API_BASE}/matches/${gameId}/can-submit`, { headers: { Authorization: `Bearer ${token}` } });
+        const j = await r.json().catch(() => ({ canSubmit: false }));
+        if (!mounted) return;
+        setCanSubmit(!!j.canSubmit);
+        setCannotReason(j.reason || '');
+      } catch {
+        if (mounted) { setCanSubmit(false); setCannotReason(''); }
+      }
+    })();
+    return () => { mounted = false; };
+  }, [token, gameId]);
 
   if (loading) return <div style={{ padding: 16 }}>Lade Spiel ...</div>;
   if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
@@ -118,6 +159,7 @@ export default function GameDetailPage() {
     return pos;
   }
   const tablePositions = computeTablePositions(standings);
+
 
   function filterHistoryForPlayer(player) {
     if (!player) return [];
@@ -177,8 +219,47 @@ export default function GameDetailPage() {
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
       setSubmitMsg('Ergebnis gespeichert.');
       setGame(j);
+      // Redirect to league after confirmation
+      setTimeout(() => { window.location.href = `/league/${leagueId || ''}`; }, 800);
     } catch (e) {
       setSubmitMsg(e.message || 'Fehler beim Speichern.');
+    }
+  }
+
+  async function joinMatch() {
+    setJoinMsg('');
+    if (!token) { setJoinMsg('Bitte einloggen.'); return; }
+    try {
+      const r = await fetch(`${API_BASE}/matches/${gameId}/join`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
+      setJoinMsg('Beigetreten.');
+      setGame(j);
+    } catch (e) {
+      setJoinMsg(e.message || 'Beitreten fehlgeschlagen.');
+    }
+  }
+
+  async function scheduleMatch(e) {
+    e.preventDefault();
+    setScheduleMsg('');
+    if (!token) { setScheduleMsg('Bitte einloggen.'); return; }
+    if (!scheduleAt) { setScheduleMsg('Bitte Datum/Uhrzeit wählen.'); return; }
+    try {
+      const r = await fetch(`${API_BASE}/matches/${gameId}/schedule`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ kickoff_at: scheduleAt })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
+      setScheduleMsg('Termin gespeichert.');
+      setGame(j);
+    } catch (e) {
+      setScheduleMsg(e.message || 'Termin setzen fehlgeschlagen.');
     }
   }
 
@@ -214,11 +295,32 @@ export default function GameDetailPage() {
             {/* Result submission (visible for logged-in users; server enforces permission) */}
             {(token && (game.home_score == null && game.away_score == null)) && (
               <form onSubmit={submitResult} style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <input type="number" inputMode="numeric" pattern="[0-9]*" min={0} value={hScore} onChange={e => setHScore(e.target.value)} placeholder={`${playerA.name} Punkte`} style={{ width: 90, padding: '6px 8px', borderRadius: 8, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }} />
+                <input disabled={!canSubmit} type="number" inputMode="numeric" pattern="[0-9]*" min={0} value={hScore} onChange={e => setHScore(e.target.value)} placeholder={`${playerA.name} Punkte`} style={{ width: 90, padding: '6px 8px', borderRadius: 8, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }} />
                 <span style={{ color: '#9db', fontWeight: 700 }}>:</span>
-                <input type="number" inputMode="numeric" pattern="[0-9]*" min={0} value={aScore} onChange={e => setAScore(e.target.value)} placeholder={`${playerB.name} Punkte`} style={{ width: 90, padding: '6px 8px', borderRadius: 8, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }} />
-                <button type="submit" style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #2f6b57', background: '#1b4b3d', color: '#fff', cursor: 'pointer' }}>Ergebnis eintragen</button>
+                <input disabled={!canSubmit} type="number" inputMode="numeric" pattern="[0-9]*" min={0} value={aScore} onChange={e => setAScore(e.target.value)} placeholder={`${playerB.name} Punkte`} style={{ width: 90, padding: '6px 8px', borderRadius: 8, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }} />
+                <button disabled={!canSubmit} type="submit" style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #2f6b57', background: canSubmit ? '#1b4b3d' : '#24463c', color: '#fff', cursor: canSubmit ? 'pointer' : 'not-allowed' }}>Ergebnis eintragen</button>
+                {(!canSubmit && cannotReason) && <div style={{ width: '100%', marginTop: 6, color: '#ccc' }}>Kein Schreibrecht: {cannotReason}</div>}
                 {submitMsg && <div style={{ width: '100%', marginTop: 6, color: submitMsg.includes('gespeichert') ? '#9f9' : '#fcc' }}>{submitMsg}</div>}
+              </form>
+            )}
+
+            {/* Join match when opponent not yet assigned */}
+            {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away)) && (
+              <div style={{ marginTop: 12 }}>
+                <button onClick={joinMatch} disabled={hasWeeklyMatch} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #2f6b57', background: hasWeeklyMatch ? '#24463c' : '#1b4b3d', color: '#fff', cursor: hasWeeklyMatch ? 'not-allowed' : 'pointer' }}>
+                  Diesem Match beitreten
+                </button>
+                {hasWeeklyMatch && <div style={{ marginTop: 6, color: '#ccc' }}>Du hast diese Woche bereits ein Match in dieser Liga.</div>}
+                {joinMsg && <div style={{ marginTop: 6, color: joinMsg.includes('Beigetreten') ? '#9f9' : '#fcc' }}>{joinMsg}</div>}
+              </div>
+            )}
+
+            {/* Schedule once both players are assigned and no score yet */}
+            {(token && game && game.home_score == null && game.away_score == null && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
+              <form onSubmit={scheduleMatch} style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input type="datetime-local" value={scheduleAt} onChange={e => setScheduleAt(e.target.value)} style={{ padding: '6px 8px', borderRadius: 8, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }} />
+                <button type="submit" style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #2f6b57', background: '#1b4b3d', color: '#fff' }}>Termin festlegen</button>
+                {scheduleMsg && <div style={{ width: '100%', marginTop: 6, color: scheduleMsg.includes('gespeichert') ? '#9f9' : '#fcc' }}>{scheduleMsg}</div>}
               </form>
             )}
           </div>
