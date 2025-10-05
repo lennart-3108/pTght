@@ -31,28 +31,35 @@ module.exports = function usersRoutes(ctx) {
     );
   });
 
-  // Ligen eines Users
+  // Ligen eines Users (tolerant gegenüber fehlender joined_at-Spalte)
   router.get("/users/:id/leagues", (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isFinite(id)) return res.status(400).json({ error: "Ungültige ID" });
 
-    const sql = `
-      SELECT
-        l.id,
-        l.name,
-        c.id AS cityId, c.name AS city,
-        s.id AS sportId, s.name AS sport,
-        lm.joined_at
-      FROM user_leagues lm
-      JOIN leagues l ON l.id = lm.league_id
-      JOIN cities c ON c.id = l.city_id
-      JOIN sports s ON s.id = l.sport_id
-      WHERE lm.user_id = ?
-      ORDER BY c.name, l.name
-    `;
-    db.all(sql, [id], (err, rows) => {
-      if (err) return res.status(500).json({ error: "Datenbankfehler", details: err.message });
-      res.json(rows || []);
+    // Prüfe, ob user_leagues.joined_at existiert
+    db.all(`PRAGMA table_info(user_leagues)`, [], (pe, cols) => {
+      if (pe) return res.status(500).json({ error: "Datenbankfehler", details: pe.message });
+      const hasJoinedAt = Array.isArray(cols) && cols.some(c => String(c.name || c.cid || '').toLowerCase() === 'joined_at');
+      const joinedSelect = hasJoinedAt ? 'lm.joined_at as joined_at' : 'NULL as joined_at';
+
+      const sql = `
+        SELECT
+          l.id,
+          l.name,
+          c.id AS cityId, c.name AS city,
+          s.id AS sportId, s.name AS sport,
+          ${joinedSelect}
+        FROM user_leagues lm
+        JOIN leagues l ON l.id = lm.league_id
+        JOIN cities c ON c.id = l.city_id
+        JOIN sports s ON s.id = l.sport_id
+        WHERE lm.user_id = ?
+        ORDER BY c.name, l.name
+      `;
+      db.all(sql, [id], (err, rows) => {
+        if (err) return res.status(500).json({ error: "Datenbankfehler", details: err.message });
+        res.json(rows || []);
+      });
     });
   });
 
