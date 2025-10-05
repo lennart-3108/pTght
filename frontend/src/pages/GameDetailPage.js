@@ -7,6 +7,11 @@ export default function GameDetailPage() {
   const [game, setGame] = useState(null);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
+  // auth token for optional result submission
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const [hScore, setHScore] = useState('');
+  const [aScore, setAScore] = useState('');
+  const [submitMsg, setSubmitMsg] = useState('');
 
   useEffect(() => {
     let mounted = true;
@@ -137,12 +142,49 @@ export default function GameDetailPage() {
   // layout styles
   const containerStyle = { padding: 16, maxWidth: 1100, margin: '12px auto', fontFamily: 'Inter, Roboto, Arial, sans-serif', color: '#e8efe8' };
   const cardStyle = { background: '#0f2a20', borderRadius: 12, padding: 16, boxShadow: '0 10px 30px rgba(0,0,0,0.6)' };
-  const leftStyle = { flex: '1 1 280px', minWidth: 0 };
-  const rightStyle = { flex: '1 1 280px', minWidth: 0 };
+  // keep three columns always side-by-side; allow horizontal scroll on small screens
+  const rowScrollStyle = {
+    display: 'flex',
+    gap: 12,
+    alignItems: 'stretch',
+    flexWrap: 'nowrap',
+    overflowX: 'auto',
+    WebkitOverflowScrolling: 'touch',
+    scrollbarWidth: 'thin',
+    paddingBottom: 6,
+  };
+  const leftStyle = { flex: '0 0 300px', minWidth: 300 };
+  const centerStyle = { flex: '0 0 340px', minWidth: 340, textAlign: 'center' };
+  const rightStyle = { flex: '0 0 300px', minWidth: 300 };
+
+  async function submitResult(e) {
+    e.preventDefault();
+    setSubmitMsg('');
+    if (!token) { setSubmitMsg('Bitte einloggen.'); return; }
+    const hs = String(hScore).trim();
+    const as = String(aScore).trim();
+    if (hs === '' || as === '' || Number.isNaN(Number(hs)) || Number.isNaN(Number(as))) {
+      setSubmitMsg('Bitte gültige Zahlen eingeben.');
+      return;
+    }
+    try {
+      const r = await fetch(`${API_BASE}/matches/${gameId}/result`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ home_score: Number(hs), away_score: Number(as) })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
+      setSubmitMsg('Ergebnis gespeichert.');
+      setGame(j);
+    } catch (e) {
+      setSubmitMsg(e.message || 'Fehler beim Speichern.');
+    }
+  }
 
   return (
     <div style={containerStyle}>
-  <div style={{ display: 'flex', gap: 12, alignItems: 'stretch', flexWrap: 'wrap' }}>
+      <div style={rowScrollStyle}>
         {/* Left player */}
         <div style={{ ...leftStyle }}>
           <div style={cardStyle}>
@@ -159,7 +201,7 @@ export default function GameDetailPage() {
         </div>
 
         {/* Center result & meta */}
-        <div style={{ flex: '1 1 320px', minWidth: 260, textAlign: 'center' }}>
+        <div style={centerStyle}>
           <div style={{ ...cardStyle, background: 'linear-gradient(135deg,#163a2f,#0f2a20)' }}>
             <div style={{ fontSize: 13, color: '#9db' }}>{formatDate(game.kickoff_at)}{game.location ? ` · ${game.location}` : ''}</div>
             { (game.home_score != null && game.away_score != null) ? (
@@ -168,6 +210,17 @@ export default function GameDetailPage() {
               <div style={{ marginTop: 12, fontSize: 'clamp(22px, 7vw, 36px)', fontWeight: 700, color: '#ffd' }}>Ausstehend</div>
             ) }
             <div style={{ marginTop: 6, color: '#9db' }}>{game.league || ''}</div>
+
+            {/* Result submission (visible for logged-in users; server enforces permission) */}
+            {(token && (game.home_score == null && game.away_score == null)) && (
+              <form onSubmit={submitResult} style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input type="number" inputMode="numeric" pattern="[0-9]*" min={0} value={hScore} onChange={e => setHScore(e.target.value)} placeholder={`${playerA.name} Punkte`} style={{ width: 90, padding: '6px 8px', borderRadius: 8, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }} />
+                <span style={{ color: '#9db', fontWeight: 700 }}>:</span>
+                <input type="number" inputMode="numeric" pattern="[0-9]*" min={0} value={aScore} onChange={e => setAScore(e.target.value)} placeholder={`${playerB.name} Punkte`} style={{ width: 90, padding: '6px 8px', borderRadius: 8, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }} />
+                <button type="submit" style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #2f6b57', background: '#1b4b3d', color: '#fff', cursor: 'pointer' }}>Ergebnis eintragen</button>
+                {submitMsg && <div style={{ width: '100%', marginTop: 6, color: submitMsg.includes('gespeichert') ? '#9f9' : '#fcc' }}>{submitMsg}</div>}
+              </form>
+            )}
           </div>
         </div>
 
