@@ -263,7 +263,9 @@ module.exports = function leagueMatchesRoutes({ db }) {
           selectHome,
           selectAway,
           "g.home_score",
-          "g.away_score"
+          "g.away_score",
+          ...(homeCol === 'home_user_id' ? [ 'g.home_user_id' ] : []),
+          ...(awayCol === 'away_user_id' ? [ 'g.away_user_id' ] : [])
         )
         .where(`g.${leagueCol}`, leagueId)
         .orderBy(tsCol ? `g.${tsCol}` : "g.id", "asc");
@@ -338,6 +340,91 @@ module.exports = function leagueMatchesRoutes({ db }) {
     }
   });
 
+  // GET /:leagueId/my-weekly-status - whether current user already has a match in this ISO week
+  router.get('/:leagueId/my-weekly-status', isAuthenticated, async (req, res) => {
+    const k = resolveKnex(db);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+    try {
+      const leagueId = Number(req.params.leagueId);
+      const me = req.user.id;
+      if (!leagueId) return res.status(400).json({ error: 'INVALID_LEAGUE_ID' });
+      const hasMatches = await k.schema.hasTable('matches');
+      if (!hasMatches) return res.json({ hasWeeklyMatch: false });
+      const info = await k('matches').columnInfo().catch(() => ({}));
+      const hasHomeUserId = !!info.home_user_id;
+      const now = new Date();
+      const day = (now.getDay() + 6) % 7;
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - day);
+      monday.setHours(0,0,0,0);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      sunday.setHours(23,59,59,999);
+      const start = monday.toISOString();
+      const end = sunday.toISOString();
+
+      const q = k('matches')
+        .where({ league_id: leagueId })
+        .where(function () {
+          if (hasHomeUserId) this.where('home_user_id', me).orWhere('away_user_id', me);
+          else this.where('home', String(me)).orWhere('away', String(me));
+        })
+        .where(function () {
+          const ts = [];
+          if (Object.prototype.hasOwnProperty.call(info, 'completed_at')) ts.push('completed_at');
+          if (Object.prototype.hasOwnProperty.call(info, 'kickoff_at')) ts.push('kickoff_at');
+          if (Object.prototype.hasOwnProperty.call(info, 'created_at')) ts.push('created_at');
+          if (ts.length === 0) this.whereNotNull('id');
+          else this.where(function () { for (const c of ts) this.orWhereBetween(c, [start, end]); });
+        })
+        .count({ c: '*' });
+
+      const row = await q;
+      const cnt = Array.isArray(row) ? (row[0].c || 0) : (row.c || 0);
+      return res.json({ hasWeeklyMatch: Number(cnt) >= 1 });
+    } catch (e) {
+      console.error('GET /:leagueId/my-weekly-status failed:', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'Datenbankfehler' });
+    }
+  });
+
+  // POST /:leagueId/propose - propose a match against a specific opponent (creates match with status=proposed)
+  router.post('/:leagueId/propose', isAuthenticated, async (req, res) => {
+    const k = resolveKnex(db);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+    try {
+      const leagueId = Number(req.params.leagueId);
+      const me = req.user.id;
+      const { opponent_user_id } = req.body || {};
+      if (!leagueId || !opponent_user_id) return res.status(400).json({ error: 'INVALID_INPUT' });
+      const hasMatches = await k.schema.hasTable('matches');
+      if (!hasMatches) return res.status(500).json({ error: 'NO_MATCHES_TABLE' });
+      const info = await k('matches').columnInfo().catch(() => ({}));
+      const hasHomeUserId = !!info.home_user_id;
+
+      // require both to be members
+      const cntRow = await k('user_leagues')
+        .whereIn('user_id', [me, opponent_user_id])
+        .andWhere('league_id', leagueId)
+        .count({ c: '*' });
+      const cnt = Array.isArray(cntRow) ? (cntRow[0].c || 0) : (cntRow.c || 0);
+      if (Number(cnt) < 2) return res.status(403).json({ error: 'Not both members' });
+
+      const rec = { league_id: leagueId };
+      if (hasHomeUserId) { rec.home_user_id = me; rec.away_user_id = Number(opponent_user_id); }
+      else { rec.home = String(me); rec.away = String(opponent_user_id); }
+      if (Object.prototype.hasOwnProperty.call(info, 'status')) rec.status = 'proposed';
+      if (Object.prototype.hasOwnProperty.call(info, 'created_at')) rec.created_at = new Date().toISOString();
+
+      const ins = await k('matches').insert(rec);
+      const id = Array.isArray(ins) ? ins[0] : ins;
+      const row = await k('matches').where('id', id).first();
+      return res.status(201).json(row);
+    } catch (e) {
+      console.error('POST /:leagueId/propose failed:', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'Datenbankfehler' });
+    }
+  });
   // POST /:leagueId/match-search - try to find an open match to join or create one
   router.post('/:leagueId/match-search', isAuthenticated, async (req, res) => {
     const k = resolveKnex(db);
@@ -533,12 +620,112 @@ module.exports = function leagueMatchesRoutes({ db }) {
       if (info.home_user_id) homeCol = "home_user_id";
       if (info.away_user_id) awayCol = "away_user_id";
 
-      const games = await k(tableName)
+      // season scoping: if matches.season_id exists and no ?scope=overall, limit to current season
+      const scope = String(req.query.scope || '').toLowerCase();
+      let q = k(tableName)
         .select(`${homeCol} as home`, `${awayCol} as away`, "home_score", "away_score")
         .where({ league_id: leagueId })
         .whereNotNull("home_score")
         .whereNotNull("away_score");
 
+      if (tableName === 'matches' && Object.prototype.hasOwnProperty.call(info, 'season_id') && scope !== 'overall') {
+        try {
+          if (await k.schema.hasTable('seasons')) {
+            const year = new Date().getFullYear();
+            const s = await k('seasons').where({ league_id: leagueId, name: String(year) }).first();
+            if (s && s.id) q = q.andWhere('season_id', s.id);
+          }
+        } catch {}
+      }
+
+      const format = String(req.query.format || '').toLowerCase();
+      if (format === 'table') {
+        let winPts = 3, drawPts = 1, lossPts = 0;
+        try {
+          const lrow = await k('leagues').where({ id: leagueId }).first();
+          if (lrow && lrow.sport_id) {
+            const sinfo = await k('sports').columnInfo().catch(() => ({}));
+            const sprow = await k('sports').where({ id: lrow.sport_id }).first();
+            if (sprow) {
+              if (sinfo.win_points && sprow.win_points != null) winPts = Number(sprow.win_points);
+              if (sinfo.draw_points && sprow.draw_points != null) drawPts = Number(sprow.draw_points);
+              if (sinfo.loss_points && sprow.loss_points != null) lossPts = Number(sprow.loss_points);
+            }
+          }
+        } catch {}
+
+        // Build a query that returns identity and scores
+        let q2 = k(`${tableName} as g`)
+          .where({ 'g.league_id': leagueId })
+          .whereNotNull('g.home_score').whereNotNull('g.away_score')
+          .select('g.home_score','g.away_score');
+
+        const hasHTeam = !!info.home_team_id;
+        const hasATeam = !!info.away_team_id;
+        const useTeam = hasHTeam || hasATeam;
+        if (useTeam) {
+          q2 = q2.select({ home_id: hasHTeam ? 'g.home_team_id' : k.raw('NULL') }, { away_id: hasATeam ? 'g.away_team_id' : k.raw('NULL') });
+        } else if (info.home_user_id || info.away_user_id) {
+          q2 = q2.select({ home_id: info.home_user_id ? 'g.home_user_id' : k.raw('NULL') }, { away_id: info.away_user_id ? 'g.away_user_id' : k.raw('NULL') });
+        } else {
+          q2 = q2.select({ home_name: 'g.home' }, { away_name: 'g.away' });
+        }
+
+        if (tableName === 'matches' && Object.prototype.hasOwnProperty.call(info, 'season_id') && scope !== 'overall') {
+          try {
+            if (await k.schema.hasTable('seasons')) {
+              const year = new Date().getFullYear();
+              const s = await k('seasons').where({ league_id: leagueId, name: String(year) }).first();
+              if (s && s.id) q2 = q2.andWhere('g.season_id', s.id);
+            }
+          } catch {}
+        }
+
+        const rows = await q2;
+        const stats = new Map();
+        const nameCache = new Map();
+        async function resolveName(key) {
+          if (nameCache.has(key)) return nameCache.get(key);
+          let nm = String(key);
+          try {
+            if (useTeam && key) {
+              const t = await k('teams').where({ id: key }).first();
+              if (t && t.name) nm = t.name;
+            } else if (key) {
+              const u = await k('users').where({ id: key }).first();
+              if (u) nm = (u.firstname || u.lastname) ? `${u.firstname || ''} ${u.lastname || ''}`.trim() : (u.name || u.email || nm);
+            }
+          } catch {}
+          nameCache.set(key, nm);
+          return nm;
+        }
+        function ensure(key, name) {
+          if (!stats.has(key)) stats.set(key, { key, name: name || String(key), played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, gd: 0, points: 0 });
+          return stats.get(key);
+        }
+        for (const r of rows) {
+          const hs = Number(r.home_score || 0);
+          const as = Number(r.away_score || 0);
+          let hk, ak, hn, an;
+          if ('home_id' in r || 'away_id' in r) {
+            hk = r.home_id; ak = r.away_id; hn = await resolveName(hk); an = await resolveName(ak);
+          } else {
+            hk = r.home_name; ak = r.away_name; hn = String(hk || '-'); an = String(ak || '-');
+          }
+          const H = ensure(hk, hn); const A = ensure(ak, an);
+          H.played++; A.played++;
+          H.gf += hs; H.ga += as; H.gd = H.gf - H.ga;
+          A.gf += as; A.ga += hs; A.gd = A.gf - A.ga;
+          if (hs > as) { H.won++; H.points += winPts; A.lost++; }
+          else if (hs < as) { A.won++; A.points += winPts; H.lost++; }
+          else { H.drawn++; A.drawn++; H.points += drawPts; A.points += drawPts; }
+        }
+        const arr = Array.from(stats.values()).sort((x,y) => (y.points - x.points) || (y.gd - x.gd) || (y.gf - x.gf) || String(x.name).localeCompare(String(y.name)));
+        arr.forEach((row, idx) => { row.rank = idx + 1; });
+        return res.json(arr);
+      }
+
+      const games = await q;
       return res.json(games || []);
     } catch (e) {
       console.error("GET /:id/standings failed:", e && (e.stack || e.message || e));

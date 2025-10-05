@@ -203,6 +203,8 @@ try {
 
 // Community-Ligen
 const { ensureCommunityLeagues } = require("./src/jobs/ensureCommunityLeagues");
+const { autoPairCommunity } = require("./src/jobs/autoPairCommunity");
+const { ensureSeasons } = require("./src/jobs/ensureSeasons");
 
 // Mailer
 const { transporter, state: mailerState, sendMail } = createMailer(cfg.mailer);
@@ -303,6 +305,12 @@ const jobLog = (process.env.JOBS_VERBOSE === '1') ? (...a) => console.log(...a) 
 if (jobKnex) {
   ensureCommunityLeagues(jobKnex, () => jobLog("Community-Ligen synchronisiert."));
   setInterval(() => ensureCommunityLeagues(jobKnex, () => jobLog("Community-Ligen synchronisiert.")), 60 * 1000); // alle 60s prüfen
+  // Auto-pair community leagues every 5 minutes
+  autoPairCommunity(jobKnex, (...a) => jobLog(...a));
+  setInterval(() => autoPairCommunity(jobKnex, (...a) => jobLog(...a)), 5 * 60 * 1000);
+  // Ensure seasons for all leagues at startup and every day
+  ensureSeasons(jobKnex, (...a) => jobLog(...a));
+  setInterval(() => ensureSeasons(jobKnex, (...a) => jobLog(...a)), 24 * 60 * 60 * 1000);
 } else {
   console.warn("[ensureCommunityLeagues] no knex available for job");
 }
