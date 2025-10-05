@@ -32,11 +32,34 @@ function loadConfig() {
     console.warn("WARN: JWT_SECRET not set; using default (dev only).");
   }
 
+  // Build a flexible CORS origin handler that supports a comma-separated list
+  const rawCors = process.env.CORS_ORIGIN || '';
+  const defaultDevOrigins = [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+  ];
+  const allowedOrigins = (rawCors
+    ? rawCors.split(',').map(s => s.trim()).filter(Boolean)
+    : defaultDevOrigins);
+  const isDev = (process.env.NODE_ENV !== 'production');
+  const corsOrigin = function(origin, callback) {
+    // allow non-browser requests (curl, server-to-server) with no Origin header
+    if (!origin) return callback(null, true);
+    // In dev, allow any localhost/127.0.0.1 origin (any port)
+    if (isDev && (/^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i).test(origin)) {
+      return callback(null, true);
+    }
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error(`CORS: Origin ${origin} not allowed`));
+  };
+
   return {
     JWT_SECRET,
     DB_PATH: path.resolve(__dirname, "..", process.env.DB_PATH || "sportplattform.db"),
     cors: {
-      origin: process.env.CORS_ORIGIN || "http://localhost:3000",  // Für Prod: "https://matchleague.org" oder "https://matchleague.de"
+      origin: corsOrigin,  // supports multiple origins, defaults to localhost:3000 and :3001 for dev
       methods: ["GET", "POST", "OPTIONS"],
       credentials: true
     },

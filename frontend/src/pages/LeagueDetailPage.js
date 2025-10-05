@@ -11,6 +11,7 @@ export default function LeagueDetailPage() {
   const [joinMsg, setJoinMsg] = useState("");
   const [members, setMembers] = useState([]);
   const [standings, setStandings] = useState([]);
+  const [standingsOverall, setStandingsOverall] = useState([]);
   const [games, setGames] = useState({ upcoming: [], completed: [] });
   const [loadingExtras, setLoadingExtras] = useState(true);
   const [joining, setJoining] = useState(false);
@@ -168,11 +169,14 @@ export default function LeagueDetailPage() {
   async function reloadExtras() {
     setLoadingExtras(true);
     try {
-      const [m, s, g] = await Promise.all([
+      const [m, s, so, g] = await Promise.all([
         fetch(`${API_BASE}/leagues/${leagueId}/members`, { headers: { Authorization: `Bearer ${token}` } })
           .then(r => (r.ok ? r.json() : []))
           .catch(() => []),
         fetch(`${API_BASE}/leagues/${leagueId}/standings`)
+          .then(r => (r.ok ? r.json() : []))
+          .catch(() => []),
+        fetch(`${API_BASE}/leagues/${leagueId}/standings?scope=overall`)
           .then(r => (r.ok ? r.json() : []))
           .catch(() => []),
         fetch(`${API_BASE}/leagues/${leagueId}/games`)
@@ -181,6 +185,7 @@ export default function LeagueDetailPage() {
       ]);
       setMembers(Array.isArray(m) ? m : []);
       setStandings(Array.isArray(s) ? s : []);
+      setStandingsOverall(Array.isArray(so) ? so : []);
       setGames({ upcoming: g.upcoming || [], completed: g.completed || [] });
     } finally {
       setLoadingExtras(false);
@@ -443,6 +448,44 @@ export default function LeagueDetailPage() {
                     <td>{g.home} – {g.away}</td>
                     <td>{formatScore(g)}</td>
                   </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          <h3 style={{ marginTop: 16 }}>Tabelle (aktuelle Saison)</h3>
+          {standings.length === 0 ? (
+            <div>Keine Einträge.</div>
+          ) : (
+            <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
+              <thead>
+                <tr>
+                  <th>Team/Spieler</th>
+                  <th>Ergebnisse</th>
+                </tr>
+              </thead>
+              <tbody>
+                {standings.map((s, idx) => (
+                  <tr key={idx}><td>{s.home} – {s.away}</td><td>{s.home_score}:{s.away_score}</td></tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+
+          <h3 style={{ marginTop: 16 }}>Tabelle (Overall)</h3>
+          {standingsOverall.length === 0 ? (
+            <div>Keine Einträge.</div>
+          ) : (
+            <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
+              <thead>
+                <tr>
+                  <th>Team/Spieler</th>
+                  <th>Ergebnisse</th>
+                </tr>
+              </thead>
+              <tbody>
+                {standingsOverall.map((s, idx) => (
+                  <tr key={idx}><td>{s.home} – {s.away}</td><td>{s.home_score}:{s.away_score}</td></tr>
                 ))}
               </tbody>
             </table>
