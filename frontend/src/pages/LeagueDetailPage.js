@@ -11,13 +11,15 @@ export default function LeagueDetailPage() {
   const [joinMsg, setJoinMsg] = useState("");
   const [members, setMembers] = useState([]);
   const [standings, setStandings] = useState([]);
-  const [standingsOverall, setStandingsOverall] = useState([]);
+  const [seasons, setSeasons] = useState([]);
+  const [selectedSeasonId, setSelectedSeasonId] = useState('current'); // 'overall' | 'current' | numeric id
   const [games, setGames] = useState({ upcoming: [], completed: [] });
   const [loadingExtras, setLoadingExtras] = useState(true);
   const [joining, setJoining] = useState(false);
   const [isMemberByMe, setIsMemberByMe] = useState(null); // null = unknown, true/false = known
   const [myOpenMatch, setMyOpenMatch] = useState(null);
   const [matchSearching, setMatchSearching] = useState(false);
+  const [hasWeeklyMatch, setHasWeeklyMatch] = useState(false);
   // Match-Formular
   const [opponentId, setOpponentId] = useState("");
   const [kickoffLocal, setKickoffLocal] = useState("");
@@ -98,6 +100,11 @@ export default function LeagueDetailPage() {
     return isPublic;
   }, [league]);
 
+  const isCommunityLeague = useMemo(() => {
+    const ps = String(league?.publicState || '').toLowerCase();
+    return ps === 'community' || league?.isCommunity === true;
+  }, [league]);
+
   const isOwner = useMemo(() => {
     return String(league?.ownerId) === String(myId);
   }, [league, myId]);
@@ -166,17 +173,28 @@ export default function LeagueDetailPage() {
     }
   }
 
+  // fetch my weekly status for this league
+  async function fetchMyWeeklyStatus() {
+    try {
+      const t = localStorage.getItem('token');
+      if (!t) { setHasWeeklyMatch(false); return; }
+      const r = await fetch(`${API_BASE}/leagues/${leagueId}/my-weekly-status`, { headers: { Authorization: `Bearer ${t}` } });
+      if (!r.ok) { setHasWeeklyMatch(false); return; }
+      const j = await r.json().catch(() => ({ hasWeeklyMatch: false }));
+      setHasWeeklyMatch(!!j?.hasWeeklyMatch);
+    } catch (e) {
+      setHasWeeklyMatch(false);
+    }
+  }
+
   async function reloadExtras() {
     setLoadingExtras(true);
     try {
-      const [m, s, so, g] = await Promise.all([
+      const [m, sList, g] = await Promise.all([
         fetch(`${API_BASE}/leagues/${leagueId}/members`, { headers: { Authorization: `Bearer ${token}` } })
           .then(r => (r.ok ? r.json() : []))
           .catch(() => []),
-        fetch(`${API_BASE}/leagues/${leagueId}/standings`)
-          .then(r => (r.ok ? r.json() : []))
-          .catch(() => []),
-        fetch(`${API_BASE}/leagues/${leagueId}/standings?scope=overall`)
+        fetch(`${API_BASE}/leagues/${leagueId}/seasons`)
           .then(r => (r.ok ? r.json() : []))
           .catch(() => []),
         fetch(`${API_BASE}/leagues/${leagueId}/games`)
@@ -184,8 +202,13 @@ export default function LeagueDetailPage() {
           .catch(() => ({ upcoming: [], completed: [] }))
       ]);
       setMembers(Array.isArray(m) ? m : []);
-      setStandings(Array.isArray(s) ? s : []);
-      setStandingsOverall(Array.isArray(so) ? so : []);
+      setSeasons(Array.isArray(sList) ? sList : []);
+      // initial standings load (current season) in classic table format
+      try {
+        const r = await fetch(`${API_BASE}/leagues/${leagueId}/standings?format=table`);
+        const j = await r.json().catch(() => []);
+        setStandings(Array.isArray(j) ? j : []);
+      } catch { setStandings([]); }
       setGames({ upcoming: g.upcoming || [], completed: g.completed || [] });
     } finally {
       setLoadingExtras(false);
@@ -196,10 +219,25 @@ export default function LeagueDetailPage() {
     // Lade Extras erst, wenn die Liga erfolgreich geladen wurde.
     if (league) reloadExtras();
   }, [league, token]); // <-- abhängig von 'league' statt nur leagueId
+  // reload standings on season change (classic table format)
+  useEffect(() => {
+    if (!leagueId) return;
+    (async () => {
+      try {
+        let url = `${API_BASE}/leagues/${leagueId}/standings?format=table`;
+        if (selectedSeasonId === 'overall') url = `${url}&scope=overall`;
+        else if (selectedSeasonId && selectedSeasonId !== 'current') url = `${url}&seasonId=${selectedSeasonId}`;
+        const r = await fetch(url);
+        const j = await r.json().catch(() => []);
+        setStandings(Array.isArray(j) ? j : []);
+      } catch { setStandings([]); }
+    })();
+  }, [leagueId, selectedSeasonId]);
 
   useEffect(() => {
     // whenever league or membership changes, refresh my open match
     fetchMyOpenMatch();
+    fetchMyWeeklyStatus();
   }, [leagueId, isMemberByMe]);
 
   async function handleJoin() {
@@ -315,7 +353,7 @@ export default function LeagueDetailPage() {
         {joinMsg && <span style={{ color: joinMsg.includes("fehl") ? "crimson" : "green" }}>{joinMsg}</span>}
       </div>
 
-      {amMember && (
+      {amMember && !myOpenMatch && !hasWeeklyMatch && (
         <form onSubmit={createMatch} style={{ margin: "12px 0", display: "flex", gap: 12, alignItems: "end", flexWrap: "wrap" }}>
           <label style={{ display: "grid", gap: 4 }}>
             Gegner
@@ -328,12 +366,18 @@ export default function LeagueDetailPage() {
             Datum/Zeit
             <input type="datetime-local" value={kickoffLocal} onChange={(e) => setKickoffLocal(e.target.value)} />
           </label>
-          <button type="submit">Match erstellen</button>
+          <button type="submit" disabled={hasWeeklyMatch || !!myOpenMatch}>Match erstellen</button>
         </form>
       )}
 
+      {amMember && (myOpenMatch || hasWeeklyMatch) && (
+        <div style={{ marginTop: 8, color: '#ccc' }}>
+          Du kannst nur ein offenes Match gleichzeitig haben und nur ein Match pro Woche spielen.
+        </div>
+      )}
+
       {/* Match suchen (join-or-create) */}
-      {amMember && (
+      {amMember && !myOpenMatch && !hasWeeklyMatch && (
         <div style={{ marginTop: 12 }}>
           <button
             onClick={async () => {
@@ -358,19 +402,35 @@ export default function LeagueDetailPage() {
                   alert('Match gefunden und beigetreten');
                 } else if (j.action === 'created') {
                   alert('Offenes Match erstellt');
+                } else if (j.action === 'paired') {
+                  alert('Gegner ohne Wochen-Spiel gefunden. Vorschlag erstellt.');
                 }
                 await reloadExtras();
                 await fetchMyOpenMatch();
+                await fetchMyWeeklyStatus();
               } catch (e) {
                 alert(`Match-Suche fehlgeschlagen: ${e.message || e}`);
               } finally {
                 setMatchSearching(false);
               }
             }}
-            disabled={!token || !!myOpenMatch || matchSearching}
+            disabled={!token || matchSearching}
           >
-            {matchSearching ? 'Suchen...' : (myOpenMatch ? 'Offenes Match vorhanden' : 'Match suchen')}
+            {matchSearching ? 'Suchen...' : 'Match suchen'}
           </button>
+        </div>
+      )}
+
+      {amMember && myOpenMatch && (
+        <div style={{ marginTop: 12 }}>
+          Du hast bereits ein offenes Match.{' '}
+          <Link to={`/matches/${myOpenMatch.id}`}>Zum Match</Link>
+        </div>
+      )}
+
+      {amMember && !myOpenMatch && hasWeeklyMatch && (
+        <div style={{ marginTop: 12 }}>
+          Du hattest diese Woche bereits ein Spiel. Die Matchsuche ist nächste Woche wieder verfügbar.
         </div>
       )}
 
@@ -453,39 +513,47 @@ export default function LeagueDetailPage() {
             </table>
           )}
 
-          <h3 style={{ marginTop: 16 }}>Tabelle (aktuelle Saison)</h3>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}>
+            <h3 style={{ margin: 0 }}>Tabelle</h3>
+            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+              Saison:
+              <select value={selectedSeasonId} onChange={(e) => setSelectedSeasonId(e.target.value)}>
+                <option value="current">Aktuelle Saison</option>
+                {seasons.map(se => <option key={se.id} value={se.id}>{se.name}</option>)}
+                <option value="overall">Overall</option>
+              </select>
+            </label>
+          </div>
           {standings.length === 0 ? (
             <div>Keine Einträge.</div>
           ) : (
             <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
               <thead>
                 <tr>
+                  <th>Platz</th>
                   <th>Team/Spieler</th>
-                  <th>Ergebnisse</th>
+                  <th>Sp</th>
+                  <th>S</th>
+                  <th>U</th>
+                  <th>N</th>
+                  <th>Tore</th>
+                  <th>Diff</th>
+                  <th>Pkt</th>
                 </tr>
               </thead>
               <tbody>
-                {standings.map((s, idx) => (
-                  <tr key={idx}><td>{s.home} – {s.away}</td><td>{s.home_score}:{s.away_score}</td></tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          <h3 style={{ marginTop: 16 }}>Tabelle (Overall)</h3>
-          {standingsOverall.length === 0 ? (
-            <div>Keine Einträge.</div>
-          ) : (
-            <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
-              <thead>
-                <tr>
-                  <th>Team/Spieler</th>
-                  <th>Ergebnisse</th>
-                </tr>
-              </thead>
-              <tbody>
-                {standingsOverall.map((s, idx) => (
-                  <tr key={idx}><td>{s.home} – {s.away}</td><td>{s.home_score}:{s.away_score}</td></tr>
+                {standings.map((row, idx) => (
+                  <tr key={idx}>
+                    <td>{row.rank ?? (idx + 1)}</td>
+                    <td>{row.name || row.key}</td>
+                    <td>{row.played ?? 0}</td>
+                    <td>{row.won ?? 0}</td>
+                    <td>{row.drawn ?? 0}</td>
+                    <td>{row.lost ?? 0}</td>
+                    <td>{(row.gf ?? 0)}:{(row.ga ?? 0)}</td>
+                    <td>{(row.gd ?? ((row.gf||0) - (row.ga||0)))}</td>
+                    <td>{row.points ?? 0}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>

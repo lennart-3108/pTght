@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import matchLeagueLogo from "../images/matchleague_logo_long.png"; // use long branded logo
+import matchLeagueLogo from "../images/matchleague_logo.png"; // use long branded logo
 import "./Header.css";
 import { routes } from "../helpers/autoRoutes";
 

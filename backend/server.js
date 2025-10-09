@@ -6,12 +6,16 @@ require("dotenv").config({ path: path.join(__dirname, ".env") });
 const { isAuthenticated } = require("./middleware/auth");
 
 // Ensure all DB layers point to the same SQLite file.
-// Prefer env SQLITE_FILE; if not set but sportsplatform.db exists, use it.
+// Prefer env SQLITE_FILE; if not set, use common fallback filenames if present.
 if (!process.env.SQLITE_FILE && !process.env.DB_FILE) {
-  const sportsDb = path.join(__dirname, "sportsplatform.db");
-  if (fs.existsSync(sportsDb)) {
-    process.env.SQLITE_FILE = sportsDb;
+  const sportsDb1 = path.join(__dirname, "sportsplatform.db"); // English spelling
+  const sportsDb2 = path.join(__dirname, "sportplattform.db"); // German spelling
+  if (fs.existsSync(sportsDb1)) {
+    process.env.SQLITE_FILE = sportsDb1;
     console.log("[DB] SQLITE_FILE not set; using sportsplatform.db");
+  } else if (fs.existsSync(sportsDb2)) {
+    process.env.SQLITE_FILE = sportsDb2;
+    console.log("[DB] SQLITE_FILE not set; using sportplattform.db");
   }
 }
 
@@ -605,10 +609,13 @@ app.get("/me/games", isAuthenticated, async (req, res) => {
 
     const rows = await q;
     const now = Date.now();
-    const withTs = (rows || []).map(r => ({ ...r, ts: r.kickoff_at ? (Date.parse(r.kickoff_at) || 0) : 0 }));
-    const upcoming = withTs.filter(r => r.ts > now || (r.home_score == null && r.away_score == null));
-    const completed = withTs.filter(r => r.ts <= now || (r.home_score != null || r.away_score != null));
-    return res.json({ upcoming, completed });
+  const withTs = (rows || []).map(r => ({ ...r, ts: r.kickoff_at ? (Date.parse(r.kickoff_at) || 0) : 0 }));
+  // Mutual exclusive buckets:
+  // - completed: both scores present
+  // - upcoming: no scores yet (regardless of time); treat missing/invalid ts as future-friendly
+  const completed = withTs.filter(r => (r.home_score != null && r.away_score != null)).sort((a,b) => (b.ts - a.ts));
+  const upcoming = withTs.filter(r => (r.home_score == null && r.away_score == null)).sort((a,b) => (a.ts - b.ts));
+  return res.json({ upcoming, completed });
   } catch (e) {
     console.error("GET /me/games failed:", e && (e.stack || e.message || e));
     return res.status(500).json({ error: "Datenbankfehler", details: (e && e.message) || String(e) });

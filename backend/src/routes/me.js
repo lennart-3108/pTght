@@ -46,6 +46,7 @@ module.exports = function meRoutes({ db }) {
       // Check if users table exists
       if (!(await tableExists(k, "users"))) {
         return res.json({
+          id: req.user.id,
           firstname: req.user.firstname || "",
           lastname: req.user.lastname || "",
           email: req.user.email || "",
@@ -78,7 +79,7 @@ module.exports = function meRoutes({ db }) {
       }
 
       // Shape: { firstname, lastname, email, isAdmin }
-      let out = { email: row.email, isAdmin: !!row.isAdmin };
+      let out = { id: req.user.id, email: row.email, isAdmin: !!row.isAdmin };
       if (row.firstname || row.lastname) {
         out.firstname = row.firstname || "";
         out.lastname = row.lastname || "";
@@ -97,6 +98,7 @@ module.exports = function meRoutes({ db }) {
       // Wenn Tabelle nicht existiert: antworte mit Token-basiertem Fallback statt 500
       if (msg.includes("no such table") || msg.includes("does not exist")) {
         return res.json({
+          id: req.user.id,
           firstname: req.user.firstname || "",
           lastname: req.user.lastname || "",
           email: req.user.email || "",
@@ -179,20 +181,41 @@ module.exports = function meRoutes({ db }) {
       }
       table = table || (hasMatches ? "matches" : "games");
       const cols = await gameCols(k, table);
+      // Resolve display names safely depending on schema
+      const usersInfo = await k("users").columnInfo().catch(() => ({}));
+      const hasFirst = Object.prototype.hasOwnProperty.call(usersInfo, "firstname");
+      const hasLast = Object.prototype.hasOwnProperty.call(usersInfo, "lastname");
+      const hasName = Object.prototype.hasOwnProperty.call(usersInfo, "name");
+      const hasEmail = Object.prototype.hasOwnProperty.call(usersInfo, "email");
+      const fullNameExpr = (hasFirst || hasLast)
+        ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')), '')"
+        : null;
+      const nameCoalesce = [
+        ...(fullNameExpr ? [fullNameExpr] : []),
+        ...(hasName ? ["u.name"] : []),
+        ...(hasEmail ? ["u.email"] : []),
+      ];
+      const displayName = `COALESCE(${nameCoalesce.length ? nameCoalesce.join(", ") : "'User'"})`;
 
       const selectHome = cols.home === "home_user_id"
-        ? k.raw(`(SELECT ${DISPLAY_NAME_SQL} FROM users u WHERE u.id = g.home_user_id) as home`)
+        ? k.raw(`(SELECT ${displayName} FROM users u WHERE u.id = g.home_user_id) as home`)
         : k.raw("g.home as home");
 
       const selectAway = cols.away === "away_user_id"
-        ? k.raw(`(SELECT ${DISPLAY_NAME_SQL} FROM users u WHERE u.id = g.away_user_id) as away`)
+        ? k.raw(`(SELECT ${displayName} FROM users u WHERE u.id = g.away_user_id) as away`)
         : k.raw("g.away as away");
 
+      // Pick best timestamp column present
+      const ci = await k(table).columnInfo().catch(() => ({}));
+      const tsCandidates = ["kickoff_at", "kickoff", "scheduled_at", "date", "datetime", "start_time"];
+      const tsCol = tsCandidates.find(c => Object.prototype.hasOwnProperty.call(ci, c)) || null;
+      const tsSelect = tsCol ? k.raw(`g.${tsCol} as kickoff_at`) : k.raw("NULL as kickoff_at");
+
       const uid = req.user.id;
-      const all = await k(`${table} as g`)
-        .leftJoin("leagues as l", "l.id", "g.league_id")
-        .leftJoin("sports as s", "s.id", "l.sport_id")
-        .leftJoin("cities as c", "c.id", "l.city_id")
+      const all = await k({ g: table })
+        .leftJoin({ l: "leagues" }, "l.id", "g.league_id")
+        .leftJoin({ s: "sports" }, "s.id", "l.sport_id")
+        .leftJoin({ c: "cities" }, "c.id", "l.city_id")
         .where((qb) => {
           // Wenn weder home noch away-Spalte existiert, keine Filter -> leere Liste
           let hasAny = false;
@@ -200,29 +223,28 @@ module.exports = function meRoutes({ db }) {
           if (cols.away) { qb.orWhere(`g.${cols.away}`, uid); hasAny = true; }
           if (!hasAny) qb.whereRaw("1 = 0");
         })
-        .orderBy("g.kickoff_at", "desc")
+        .modify((qb) => { if (tsCol) qb.orderBy(`g.${tsCol}`, "desc"); else qb.orderBy("g.id", "desc"); })
         .select(
           "g.id",
-          "g.kickoff_at",
+          tsSelect,
           { leagueId: "g.league_id" },
           { league: "l.name" },
           k.raw("COALESCE(c.name, l.city) as city"),
           { sport: "s.name" },
           selectHome,
           selectAway,
+          // include ids when present to allow FE to calculate W/L/D
+          ...(cols.home === "home_user_id" ? [k.raw("g.home_user_id as home_user_id")] : [k.raw("NULL as home_user_id")]),
+          ...(cols.away === "away_user_id" ? [k.raw("g.away_user_id as away_user_id")] : [k.raw("NULL as away_user_id")]),
           "g.home_score",
           "g.away_score"
         );
 
-      const now = Date.now();
-      const split = (all || []).reduce((acc, r) => {
-        const t = Date.parse(r.kickoff_at) || 0;
-        const completed = r.home_score != null && r.away_score != null || t <= now;
-        (completed ? acc.completed : acc.upcoming).push(r);
-        return acc;
-      }, { upcoming: [], completed: [] });
-
-      return res.json(split);
+      // Mutual exclusive bucketing by score presence only
+      const withTs = (all || []).map(r => ({ ...r, ts: r.kickoff_at ? (Date.parse(r.kickoff_at) || 0) : 0 }));
+      const completed = withTs.filter(r => (r.home_score != null && r.away_score != null)).sort((a,b) => (b.ts - a.ts));
+      const upcoming = withTs.filter(r => (r.home_score == null && r.away_score == null)).sort((a,b) => (a.ts - b.ts));
+      return res.json({ upcoming, completed });
     } catch (e) {
       console.error("/me/games failed:", {
         msg: e && (e.message || e.toString()),
