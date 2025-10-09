@@ -123,6 +123,7 @@ module.exports = function matchesRoutes({ db }) {
     try {
       const k = getKnex();
       if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+      const hasSports = await k.schema.hasTable('sports').catch(() => false);
       // inspect matches table to avoid selecting non-existent columns
       const info = await k('matches').columnInfo().catch(() => ({}));
       const hasHomeText = Object.prototype.hasOwnProperty.call(info, 'home');
@@ -151,7 +152,7 @@ module.exports = function matchesRoutes({ db }) {
 
       const match = await k('matches as m')
         .leftJoin('leagues as l', 'l.id', 'm.league_id')
-        .leftJoin('sports as s', 's.id', 'l.sport_id')
+        .modify(qb => { if (hasSports) qb.leftJoin('sports as s', 's.id', 'l.sport_id'); })
         .leftJoin({ uh: 'users' }, 'uh.id', 'm.home_user_id')
         .leftJoin({ ua: 'users' }, 'ua.id', 'm.away_user_id')
         .select(
@@ -166,7 +167,7 @@ module.exports = function matchesRoutes({ db }) {
           'm.away_score',
           { leagueId: 'm.league_id' },
           { league: 'l.name' },
-          { sport: 's.name' },
+          ...(hasSports ? [{ sport: 's.name' }] : [k.raw("'' as sport")]),
           k.raw(`${homeDisplay} as home_user_name`),
           k.raw(`${awayDisplay} as away_user_name`)
         )
@@ -186,12 +187,23 @@ module.exports = function matchesRoutes({ db }) {
     try {
       const k = getKnex();
       if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
-      const g = await k('matches as m')
+      const hasSports = await k.schema.hasTable('sports').catch(() => false);
+      // Robust sport type detection (some schemas have sports.sport_type or sports.team_size, not sports.type)
+      const sInfoJoin = hasSports ? await k('sports').columnInfo().catch(() => ({})) : {};
+      const gRaw = await k('matches as m')
         .leftJoin('leagues as l', 'l.id', 'm.league_id')
-        .leftJoin('sports as s', 's.id', 'l.sport_id')
-        .select(['m.id', 'm.league_id', 'm.home_user_id', 'm.home_team_id', 'm.away_user_id', 'm.away_team_id', k.raw("COALESCE(s.type, 'Single') as sportType")])
+        .modify(qb => { if (hasSports) qb.leftJoin('sports as s', 's.id', 'l.sport_id'); })
+        .select([
+          'm.id', 'm.league_id', 'm.home_user_id', 'm.home_team_id', 'm.away_user_id', 'm.away_team_id',
+          ...(Object.prototype.hasOwnProperty.call(sInfoJoin, 'sport_type') ? [{ sport_type: 's.sport_type' }] : [k.raw('NULL as sport_type')]),
+          ...(Object.prototype.hasOwnProperty.call(sInfoJoin, 'team_size') ? [{ team_size: 's.team_size' }] : [k.raw('NULL as team_size')]),
+          ...(Object.prototype.hasOwnProperty.call(sInfoJoin, 'type') ? [{ type: 's.type' }] : [k.raw('NULL as type')])
+        ])
         .where('m.id', gameId)
         .first();
+      if (!gRaw) return res.status(404).json({ error: 'Match nicht gefunden' });
+      const sportType = (gRaw.sport_type ? String(gRaw.sport_type) : (gRaw.type ? String(gRaw.type) : (Number(gRaw.team_size) > 1 ? 'Team' : 'Single')));
+      const g = { ...gRaw, sportType };
       if (!g) return res.status(404).json({ error: 'Match nicht gefunden' });
       const member = await k('user_leagues').where({ league_id: g.league_id, user_id: userId }).first();
       if (!member) return res.status(403).json({ error: 'Nur Mitglieder der Liga können Matches beitreten' });
@@ -218,7 +230,49 @@ module.exports = function matchesRoutes({ db }) {
         await k('matches').where({ id: gameId }).update({ away_user_id: userId });
       }
       const updated = await k('matches').where({ id: gameId }).first();
-      res.json(updated);
+      // Enrich like GET /:id so client preserves names without reload
+      try {
+        const usersInfo = await k('users').columnInfo().catch(() => ({}));
+        const hasFirst = Object.prototype.hasOwnProperty.call(usersInfo, 'firstname');
+        const hasLast = Object.prototype.hasOwnProperty.call(usersInfo, 'lastname');
+        const hasName = Object.prototype.hasOwnProperty.call(usersInfo, 'name');
+        const hasEmail = Object.prototype.hasOwnProperty.call(usersInfo, 'email');
+        const fullNameExpr = (hasFirst || hasLast)
+          ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')), '')"
+          : null;
+        const makeDisplayForAlias = (alias) => {
+          const parts = [];
+          if (fullNameExpr) parts.push(fullNameExpr.replace(/u\./g, `${alias}.`));
+          if (hasName) parts.push(`${alias}.name`);
+          if (hasEmail) parts.push(`${alias}.email`);
+          if (!parts.length) parts.push("'User'");
+          return `COALESCE(${parts.join(', ')})`;
+        };
+        const homeDisplay = makeDisplayForAlias('uh');
+        const awayDisplay = makeDisplayForAlias('ua');
+        const info = await k('matches').columnInfo().catch(() => ({}));
+        const hasHomeText = Object.prototype.hasOwnProperty.call(info, 'home');
+        const hasAwayText = Object.prototype.hasOwnProperty.call(info, 'away');
+        const matchInfo = await k('matches as m')
+          .leftJoin('leagues as l', 'l.id', 'm.league_id')
+          .modify(qb => { if (hasSports) qb.leftJoin('sports as s', 's.id', 'l.sport_id'); })
+          .leftJoin({ uh: 'users' }, 'uh.id', 'm.home_user_id')
+          .leftJoin({ ua: 'users' }, 'ua.id', 'm.away_user_id')
+          .select(
+            'm.id', 'm.kickoff_at', 'm.home_user_id', 'm.away_user_id',
+            ...(hasHomeText ? ['m.home as home'] : [k.raw('NULL as home')]),
+            ...(hasAwayText ? ['m.away as away'] : [k.raw('NULL as away')]),
+            'm.home_score', 'm.away_score',
+            { leagueId: 'm.league_id' }, { league: 'l.name' }, ...(hasSports ? [{ sport: 's.name' }] : [k.raw("'' as sport")]),
+            k.raw(`${homeDisplay} as home_user_name`),
+            k.raw(`${awayDisplay} as away_user_name`)
+          )
+          .where('m.id', gameId)
+          .first();
+        return res.json(matchInfo || updated);
+      } catch (_) {
+        return res.json(updated);
+      }
     } catch (e) {
       console.error('Join match error:', e);
       res.status(500).json({ error: 'Datenbankfehler', details: e && e.message });
@@ -297,15 +351,22 @@ module.exports = function matchesRoutes({ db }) {
     try {
       const k = getKnex();
       if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
-      const g = await k('matches as m')
+      const hasSports = await k.schema.hasTable('sports').catch(() => false);
+      const sInfoSched = hasSports ? await k('sports').columnInfo().catch(() => ({})) : {};
+      const gRaw = await k('matches as m')
         .leftJoin('leagues as l', 'l.id', 'm.league_id')
-        .leftJoin('sports as s', 's.id', 'l.sport_id')
+        .modify(qb => { if (hasSports) qb.leftJoin('sports as s', 's.id', 'l.sport_id'); })
         .select([
           'm.id', 'm.league_id', 'm.home_user_id', 'm.away_user_id', 'm.home_team_id', 'm.away_team_id',
-          k.raw("COALESCE(s.type, 'Single') as sportType")
+          ...(Object.prototype.hasOwnProperty.call(sInfoSched, 'sport_type') ? [{ sport_type: 's.sport_type' }] : [k.raw('NULL as sport_type')]),
+          ...(Object.prototype.hasOwnProperty.call(sInfoSched, 'team_size') ? [{ team_size: 's.team_size' }] : [k.raw('NULL as team_size')]),
+          ...(Object.prototype.hasOwnProperty.call(sInfoSched, 'type') ? [{ type: 's.type' }] : [k.raw('NULL as type')])
         ])
         .where('m.id', gameId)
         .first();
+      if (!gRaw) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+      const sportType = (gRaw.sport_type ? String(gRaw.sport_type) : (gRaw.type ? String(gRaw.type) : (Number(gRaw.team_size) > 1 ? 'Team' : 'Single')));
+      const g = { ...gRaw, sportType };
       if (!g) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
 
       // permission: participant or captain for team sport
@@ -335,8 +396,8 @@ module.exports = function matchesRoutes({ db }) {
           }
         } catch {}
       }
-      await k('matches').where({ id: gameId }).update(patch);
-      const updated = await k('matches').where({ id: gameId }).first();
+  await k('matches').where({ id: gameId }).update(patch);
+  const updated = await k('matches').where({ id: gameId }).first();
 
       // Send schedule email to both participants if possible
       try {
@@ -357,7 +418,49 @@ module.exports = function matchesRoutes({ db }) {
       } catch (e) {
         console.warn('schedule mail failed:', e && (e.message || e));
       }
-      return res.json(updated);
+      // Return enriched projection like GET /:id so client keeps names without reload
+      try {
+        const usersInfo = await k('users').columnInfo().catch(() => ({}));
+        const hasFirst = Object.prototype.hasOwnProperty.call(usersInfo, 'firstname');
+        const hasLast = Object.prototype.hasOwnProperty.call(usersInfo, 'lastname');
+        const hasName = Object.prototype.hasOwnProperty.call(usersInfo, 'name');
+        const hasEmail = Object.prototype.hasOwnProperty.call(usersInfo, 'email');
+        const fullNameExpr = (hasFirst || hasLast)
+          ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')), '')"
+          : null;
+        const makeDisplayForAlias = (alias) => {
+          const parts = [];
+          if (fullNameExpr) parts.push(fullNameExpr.replace(/u\./g, `${alias}.`));
+          if (hasName) parts.push(`${alias}.name`);
+          if (hasEmail) parts.push(`${alias}.email`);
+          if (!parts.length) parts.push("'User'");
+          return `COALESCE(${parts.join(', ')})`;
+        };
+        const homeDisplay = makeDisplayForAlias('uh');
+        const awayDisplay = makeDisplayForAlias('ua');
+        const info = await k('matches').columnInfo().catch(() => ({}));
+        const hasHomeText = Object.prototype.hasOwnProperty.call(info, 'home');
+        const hasAwayText = Object.prototype.hasOwnProperty.call(info, 'away');
+        const matchInfo = await k('matches as m')
+          .leftJoin('leagues as l', 'l.id', 'm.league_id')
+          .modify(qb => { if (hasSports) qb.leftJoin('sports as s', 's.id', 'l.sport_id'); })
+          .leftJoin({ uh: 'users' }, 'uh.id', 'm.home_user_id')
+          .leftJoin({ ua: 'users' }, 'ua.id', 'm.away_user_id')
+          .select(
+            'm.id', 'm.kickoff_at', 'm.home_user_id', 'm.away_user_id',
+            ...(hasHomeText ? ['m.home as home'] : [k.raw('NULL as home')]),
+            ...(hasAwayText ? ['m.away as away'] : [k.raw('NULL as away')]),
+            'm.home_score', 'm.away_score',
+            { leagueId: 'm.league_id' }, { league: 'l.name' }, ...(hasSports ? [{ sport: 's.name' }] : [k.raw("'' as sport")]),
+            k.raw(`${homeDisplay} as home_user_name`),
+            k.raw(`${awayDisplay} as away_user_name`)
+          )
+          .where('m.id', gameId)
+          .first();
+        return res.json(matchInfo || updated);
+      } catch (_) {
+        return res.json(updated);
+      }
     } catch (e) {
       console.error('Schedule match error:', e);
       return res.status(500).json({ error: 'DB_ERROR', details: e && e.message });
@@ -371,18 +474,25 @@ module.exports = function matchesRoutes({ db }) {
     try {
       const k = getKnex();
       if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
-      const g = await k('matches as m')
+      const hasSports = await k.schema.hasTable('sports').catch(() => false);
+      const sInfoCS = hasSports ? await k('sports').columnInfo().catch(() => ({})) : {};
+      const gRawCS = await k('matches as m')
         .leftJoin('leagues as l', 'l.id', 'm.league_id')
-        .leftJoin('sports as s', 's.id', 'l.sport_id')
+        .modify(qb => { if (hasSports) qb.leftJoin('sports as s', 's.id', 'l.sport_id'); })
         .select([
-          'm.id', 'm.league_id',
+          'm.id', 'm.league_id', 'm.kickoff_at',
           'm.home_user_id', 'm.away_user_id',
           'm.home_team_id', 'm.away_team_id',
           'm.home_score', 'm.away_score',
-          k.raw("COALESCE(s.type, 'Single') as sportType")
+          ...(Object.prototype.hasOwnProperty.call(sInfoCS, 'sport_type') ? [{ sport_type: 's.sport_type' }] : [k.raw('NULL as sport_type')]),
+          ...(Object.prototype.hasOwnProperty.call(sInfoCS, 'team_size') ? [{ team_size: 's.team_size' }] : [k.raw('NULL as team_size')]),
+          ...(Object.prototype.hasOwnProperty.call(sInfoCS, 'type') ? [{ type: 's.type' }] : [k.raw('NULL as type')])
         ])
         .where('m.id', gameId)
         .first();
+      if (!gRawCS) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+      const sportType = (gRawCS.sport_type ? String(gRawCS.sport_type) : (gRawCS.type ? String(gRawCS.type) : (Number(gRawCS.team_size) > 1 ? 'Team' : 'Single')));
+      const g = { ...gRawCS, sportType };
       if (!g) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
 
       const member = await k('user_leagues').where({ league_id: g.league_id, user_id: userId }).first();
@@ -391,6 +501,11 @@ module.exports = function matchesRoutes({ db }) {
       // must be pending
       if (g.home_score != null || g.away_score != null) {
         return res.json({ canSubmit: false, reason: 'ALREADY_RECORDED' });
+      }
+
+      // require that a kickoff date is set before results can be submitted
+      if (!g.kickoff_at) {
+        return res.json({ canSubmit: false, reason: 'KICKOFF_NOT_SET' });
       }
 
       // must have opponent assigned
@@ -443,18 +558,25 @@ module.exports = function matchesRoutes({ db }) {
       const k = getKnex();
       if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
 
-      const g = await k('matches as m')
+      const hasSports = await k.schema.hasTable('sports').catch(() => false);
+      const sInfoRes = hasSports ? await k('sports').columnInfo().catch(() => ({})) : {};
+      const gRawRes = await k('matches as m')
         .leftJoin('leagues as l', 'l.id', 'm.league_id')
-        .leftJoin('sports as s', 's.id', 'l.sport_id')
+        .modify(qb => { if (hasSports) qb.leftJoin('sports as s', 's.id', 'l.sport_id'); })
         .select([
-          'm.id', 'm.league_id',
+          'm.id', 'm.league_id', 'm.kickoff_at',
           'm.home_user_id', 'm.away_user_id',
           'm.home_team_id', 'm.away_team_id',
           'm.home_score', 'm.away_score',
-          k.raw("COALESCE(s.type, 'Single') as sportType")
+          ...(Object.prototype.hasOwnProperty.call(sInfoRes, 'sport_type') ? [{ sport_type: 's.sport_type' }] : [k.raw('NULL as sport_type')]),
+          ...(Object.prototype.hasOwnProperty.call(sInfoRes, 'team_size') ? [{ team_size: 's.team_size' }] : [k.raw('NULL as team_size')]),
+          ...(Object.prototype.hasOwnProperty.call(sInfoRes, 'type') ? [{ type: 's.type' }] : [k.raw('NULL as type')])
         ])
         .where('m.id', gameId)
         .first();
+      if (!gRawRes) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+      const sportType = (gRawRes.sport_type ? String(gRawRes.sport_type) : (gRawRes.type ? String(gRawRes.type) : (Number(gRawRes.team_size) > 1 ? 'Team' : 'Single')));
+      const g = { ...gRawRes, sportType };
       if (!g) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
 
       // must be league member
@@ -464,6 +586,11 @@ module.exports = function matchesRoutes({ db }) {
       // must be pending
       if (g.home_score != null || g.away_score != null) {
         return res.status(409).json({ error: 'ALREADY_RECORDED' });
+      }
+
+      // must have a scheduled kickoff before recording result
+      if (!g.kickoff_at) {
+        return res.status(400).json({ error: 'KICKOFF_REQUIRED_BEFORE_RESULT' });
       }
 
       // permission check + both sides assigned
@@ -510,15 +637,20 @@ module.exports = function matchesRoutes({ db }) {
       };
       const homeDisplay = makeDisplayForAlias('uh');
       const awayDisplay = makeDisplayForAlias('ua');
+      const mInfo = await k('matches').columnInfo().catch(() => ({}));
+      const hasHomeText = Object.prototype.hasOwnProperty.call(mInfo, 'home');
+      const hasAwayText = Object.prototype.hasOwnProperty.call(mInfo, 'away');
       const matchInfo = await k('matches as m')
         .leftJoin('leagues as l', 'l.id', 'm.league_id')
-        .leftJoin('sports as s', 's.id', 'l.sport_id')
+        .modify(qb => { if (hasSports) qb.leftJoin('sports as s', 's.id', 'l.sport_id'); })
         .leftJoin({ uh: 'users' }, 'uh.id', 'm.home_user_id')
         .leftJoin({ ua: 'users' }, 'ua.id', 'm.away_user_id')
         .select(
           'm.id', 'm.kickoff_at', 'm.home_user_id', 'm.away_user_id',
-          'm.home', 'm.away', 'm.home_score', 'm.away_score',
-          { leagueId: 'm.league_id' }, { league: 'l.name' }, { sport: 's.name' },
+          ...(hasHomeText ? ['m.home as home'] : [k.raw('NULL as home')]),
+          ...(hasAwayText ? ['m.away as away'] : [k.raw('NULL as away')]),
+          'm.home_score', 'm.away_score',
+          { leagueId: 'm.league_id' }, { league: 'l.name' }, ...(hasSports ? [{ sport: 's.name' }] : [k.raw("'' as sport")]),
           k.raw(`${homeDisplay} as home_user_name`),
           k.raw(`${awayDisplay} as away_user_name`)
         )

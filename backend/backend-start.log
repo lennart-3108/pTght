@@ -1,274 +1,134 @@
-
-> start
-> PORT=5001 node server.js
-
-[DB] SQLite file: ./sportplattform.db
+[DB] SQLITE_FILE not set; using sportsplatform.db
+[INFO] 2025-10-09T23:28:57.359Z [DB] SQLite detected – ensured base tables via db-setup.js {}
+[DB] SQLite file: /Users/A105227786/Documents/projects/sL/pTght/backend/sportsplatform.db
 [DB] Migrations dir: /Users/A105227786/Documents/projects/sL/pTght/backend/migrations
-[DB] Adapter knex not available, using ./db fallback
-[DB] knexfile instance created, filename: ./sportplattform.db
-[Mailer] Transport konfiguriert smtps.udag.de:465 secure=true
+[2025-10-09 23:28:57] DEBUG Creating transport: nodemailer (7.0.6; +https://nodemailer.com/; SMTP/7.0.6[client:7.0.6])
+[Mailer] Transport konfiguriert smtp.hostinger.com:465 secure=true
 [Mailer] Verifiziere SMTP-Verbindung ...
-[DEBUG] resolvedKnexForRoutes summary: {
-  hasResolved: true,
-  isFunction: true,
-  hasClient: true,
-  source: 'knexDirect'
-}
-[INFO] 2025-09-21T19:11:35.989Z [Server] Listening on http://localhost:5001 {}
-[Server] Logs directory: /Users/A105227786/Documents/projects/sL/pTght/backend/logs (error.log, info.log, link-tests.log)
-🛠️ Admin erstellt: admin267 (admin267@example.com) / Passwort: test1234
-[INFO] 2025-09-21T19:11:36.091Z Starting automated link tests {
-  endpoints: [
-    '/',
-    '/leagues',
-    '/leagues/1',
-    '/leagues/1/games',
-    '/leagues/1/members',
-    '/leagues/1/standings',
-    '/sports',
-    '/sports/7/leagues',
-    '/me',
-    '/me/leagues',
-    '/me/games'
-  ]
-}
-[INFO] 2025-09-21T19:11:36.114Z Link test result { endpoint: '/', ok: true, status: 200 }
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[INFO] 2025-09-21T19:11:36.119Z Link test result { endpoint: '/leagues', ok: true, status: 200 }
-[INFO] 2025-09-21T19:11:36.122Z Link test result { endpoint: '/leagues/1', ok: true, status: 200 }
-[INFO] 2025-09-21T19:11:36.126Z Link test result { endpoint: '/leagues/1/games', ok: true, status: 200 }
-[INFO] 2025-09-21T19:11:36.129Z Link test result { endpoint: '/leagues/1/members', ok: true, status: 200 }
-[INFO] 2025-09-21T19:11:36.133Z Link test result { endpoint: '/leagues/1/standings', ok: true, status: 200 }
-[INFO] 2025-09-21T19:11:36.134Z Link test result { endpoint: '/sports', ok: true, status: 200 }
-[INFO] 2025-09-21T19:11:36.136Z Link test result { endpoint: '/sports/7/leagues', ok: true, status: 200 }
-[INFO] 2025-09-21T19:11:36.139Z Link test result { endpoint: '/me', ok: false, status: 401 }
-[INFO] 2025-09-21T19:11:36.141Z Link test result { endpoint: '/me/leagues', ok: false, status: 401 }
-[INFO] 2025-09-21T19:11:36.142Z Link test result { endpoint: '/me/games', ok: false, status: 401 }
-[INFO] 2025-09-21T19:11:36.143Z Automated link tests finished {
-  summary: [
-    { ep: '/', ok: true, status: 200 },
-    { ep: '/leagues', ok: true, status: 200 },
-    { ep: '/leagues/1', ok: true, status: 200 },
-    { ep: '/leagues/1/games', ok: true, status: 200 },
-    { ep: '/leagues/1/members', ok: true, status: 200 },
-    { ep: '/leagues/1/standings', ok: true, status: 200 },
-    { ep: '/sports', ok: true, status: 200 },
-    { ep: '/sports/7/leagues', ok: true, status: 200 },
-    { ep: '/me', ok: false, status: 401 },
-    { ep: '/me/leagues', ok: false, status: 401 },
-    { ep: '/me/games', ok: false, status: 401 }
-  ]
-}
-[LINK-TEST] All tested endpoints responded OK (or expected non-OK like 401/404).
-Community-Ligen synchronisiert.
-[Mailer] Verify OK in 366ms. Sende Acceptance-Mail ...
-📧 Acceptance-Mail gesendet: <cc828210-d758-cbe2-965c-0e30ad7d2983@matchleague.org>
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
-[GET /leagues] source[0] dbFile=./sportplattform.db rows=35
-[GET /leagues] source[1] dbFile=./sportplattform.db rows=35
-[GET /leagues] returning merged rows=35 (sources=2)
+[INFO] 2025-10-09T23:28:57.566Z [Server] Listening on http://localhost:5001 {}
+[INFO] 2025-10-09T23:28:57.567Z [Server] Logs directory: /Users/A105227786/Documents/projects/sL/pTght/backend/logs (error.log, info.log, link-tests.log) {}
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] Resolved smtp.hostinger.com as 172.65.255.143 [cache miss]
+🛠️ Admin erstellt: admin8 (admin8@example.com) / Passwort: test1234
+[2025-10-09 23:28:57] INFO  [lRUfXuccw4o] Secure connection established to 172.65.255.143:465
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] S: 220 ESMTP smtp.hostinger.com
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] C: EHLO [127.0.0.1]
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] S: 250-smtp.hostinger.com
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] S: 250-PIPELINING
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] S: 250-SIZE 48811212
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] S: 250-ETRN
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] S: 250-AUTH PLAIN LOGIN
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] S: 250-ENHANCEDSTATUSCODES
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] S: 250-8BITMIME
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] S: 250-DSN
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] S: 250 CHUNKING
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] SMTP handshake finished
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] C: AUTH PLAIN AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAvKiBzZWNyZXQgKi8=
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] S: 235 2.7.0 Authentication successful
+[2025-10-09 23:28:57] INFO  [lRUfXuccw4o] User "info@dev.matchleague.org" authenticated
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] C: QUIT
+[Mailer] Verify OK in 290ms. Sende Acceptance-Mail ...
+[2025-10-09 23:28:57] DEBUG Sending mail using SMTP/7.0.6[client:7.0.6]
+[2025-10-09 23:28:57] DEBUG [MOFvBEteio] Resolved smtp.hostinger.com as 172.65.255.143 [cache hit]
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] S: 221 2.0.0 Bye
+[2025-10-09 23:28:57] DEBUG [lRUfXuccw4o] Closing connection to the server using "end"
+[2025-10-09 23:28:57] INFO  [lRUfXuccw4o] Connection closed
+[2025-10-09 23:28:57] INFO  [MOFvBEteio] Secure connection established to 172.65.255.143:465
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 220 ESMTP smtp.hostinger.com
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] C: EHLO [127.0.0.1]
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 250-smtp.hostinger.com
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 250-PIPELINING
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 250-SIZE 48811212
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 250-ETRN
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 250-AUTH PLAIN LOGIN
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 250-ENHANCEDSTATUSCODES
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 250-8BITMIME
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 250-DSN
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 250 CHUNKING
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] SMTP handshake finished
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] C: AUTH PLAIN AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAvKiBzZWNyZXQgKi8=
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 235 2.7.0 Authentication successful
+[2025-10-09 23:28:58] INFO  [MOFvBEteio] User "info@dev.matchleague.org" authenticated
+[2025-10-09 23:28:58] INFO  Sending message 1760052537848-4a50620d96fc8@matchleague.org to <info@dev.matchleague.org>
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] C: MAIL FROM:<info@dev.matchleague.org>
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 250 2.1.0 Ok
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] C: RCPT TO:<info@dev.matchleague.org>
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 250 2.1.5 Ok
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] C: DATA
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 354 End data with <CR><LF>.<CR><LF>
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] X-Mailer: MatchLeague
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] Auto-Submitted: auto-generated
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] From: MatchLeague <info@dev.matchleague.org>
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] To: info@dev.matchleague.org
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] Reply-To: info@dev.matchleague.org
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] Subject: Mailer verified
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] Message-ID: <1760052537848-4a50620d96fc8@matchleague.org>
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] Date: Thu, 09 Oct 2025 23:28:57 +0000
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] MIME-Version: 1.0
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] Content-Type: multipart/alternative;
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio]  boundary="--_NmP-bb526b4bac5c82fc-Part_1"
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] 
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] ----_NmP-bb526b4bac5c82fc-Part_1
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] Content-Type: text/plain; charset=utf-8
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] Content-Transfer-Encoding: 7bit
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] 
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] SMTP connection accepted at 2025-10-09T23:28:57.848Z
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] ----_NmP-bb526b4bac5c82fc-Part_1
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] Content-Type: text/html; charset=utf-8
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] Content-Transfer-Encoding: 7bit
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] 
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] <p>SMTP connection accepted at <b>2025-10-09T23:28:57.848Z</b></p>
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] ----_NmP-bb526b4bac5c82fc-Part_1--
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] .
+[2025-10-09 23:28:58] INFO  [MOFvBEteio] <774 bytes encoded mime message (source size 771 bytes)>
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] S: 250 2.0.0 Ok: queued as 4cjR0B2jYJzyVV
+[2025-10-09 23:28:58] DEBUG [MOFvBEteio] Closing connection to the server using "end"
+📧 E-Mail gesendet: 1760052537848-4a50620d96fc8@matchleague.org
+[2025-10-09 23:28:58] INFO  [MOFvBEteio] Connection closed
+{"level":30,"time":1760052538565,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"connection","msg":"Established secure TCP connection","cid":"1ebtvz0mblp31rqx6sxl","secure":true,"host":"imap.hostinger.com","servername":"imap.hostinger.com","port":993,"address":"2606:4700:90:0:4bc4:2557:ca17:2529","localAddress":"2003:f5:ff4e:3953:31c0:e274:8685:23b0","localPort":55478,"authorized":true,"algo":"TLS_AES_256_GCM_SHA384","version":"TLSv1.3"}
+{"level":20,"time":1760052538584,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Server ready.","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538584,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"c","msg":"1 ID (\"name\" \"imapflow\" \"version\" \"1.0.198\" \"vendor\" \"Postal Systems\" \"support-url\" \"https://github.com/postalsys/imapflow/issues\")","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538600,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* ID (\"name\" \"Dovecot\")","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538600,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"1 OK ID completed.","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538600,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"c","msg":"2 AUTHENTICATE PLAIN","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538616,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"+","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538616,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"c","msg":"AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAoKiB2YWx1ZSBoaWRkZW4gKik=","comment":"Encoded response for AUTH=PLAIN"}
+{"level":20,"time":1760052538671,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"2 OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE SORT SORT=DISPLAY THREAD=REFERENCES THREAD=REFS THREAD=ORDEREDSUBJECT MULTIAPPEND URL-PARTIAL CATENATE UNSELECT CHILDREN NAMESPACE UIDPLUS LIST-EXTENDED I18NLEVEL=1 CONDSTORE QRESYNC ESEARCH ESORT SEARCHRES WITHIN CONTEXT=SEARCH LIST-STATUS BINARY MOVE SNIPPET=FUZZY PREVIEW=FUZZY PREVIEW STATUS=SIZE SAVEDATE LITERAL+ NOTIFY SPECIAL-USE COMPRESS=DEFLATE QUOTA] Logged in","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":30,"time":1760052538671,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"auth","msg":"User authenticated","cid":"1ebtvz0mblp31rqx6sxl","user":"info@dev.matchleague.org"}
+{"level":20,"time":1760052538671,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"c","msg":"3 ID (\"name\" \"imapflow\" \"version\" \"1.0.198\" \"vendor\" \"Postal Systems\" \"support-url\" \"https://github.com/postalsys/imapflow/issues\")","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538687,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* ID (\"name\" \"Dovecot\")","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538687,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"3 OK ID completed (0.001 + 0.000 secs).","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538688,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"c","msg":"4 NAMESPACE","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538703,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* NAMESPACE ((\"INBOX.\" \".\")) NIL NIL","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538703,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"4 OK Namespace completed (0.001 + 0.000 secs).","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538704,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"c","msg":"5 COMPRESS DEFLATE","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538764,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"5 OK Begin compression (0.001 + 0.000 secs).","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538765,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"c","msg":"6 ENABLE CONDSTORE","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538781,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* ENABLED CONDSTORE","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538781,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"6 OK Enabled (0.001 + 0.000 secs).","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538782,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"c","msg":"7 LIST \"INBOX.\" \"INBOX.Sent\"","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538799,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"7 OK List completed (0.003 + 0.000 + 0.002 secs).","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538799,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"c","msg":"8 LIST \"\" \"INBOX\"","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538814,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* LIST (\\HasChildren) \".\" INBOX","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538814,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"8 OK List completed (0.001 + 0.000 secs).","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538814,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"c","msg":"9 LSUB \"INBOX.\" \"INBOX.Sent\"","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538829,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"9 OK Lsub completed (0.001 + 0.000 secs).","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538829,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"c","msg":"A SELECT INBOX.Sent","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538848,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538849,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* OK [PERMANENTFLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft \"\\\\*\")] Flags permitted.","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538849,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* 94 EXISTS","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538849,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* 0 RECENT","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538849,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* OK [UNSEEN 1] First unseen.","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538849,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* OK [UIDVALIDITY 1758917061] UIDs valid","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538849,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* OK [UIDNEXT 95] Predicted next UID","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538849,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* OK [HIGHESTMODSEQ 97] Highest","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538849,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"A OK [READ-WRITE] Select completed (0.003 + 0.000 + 0.002 secs).","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538849,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"c","msg":"B APPEND INBOX.Sent \"(* 771B literal *)\"","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538879,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* 95 EXISTS","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538879,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"* 1 RECENT","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538879,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"s","msg":"B OK [APPENDUID 1758917061 95] Append completed (0.014 + 0.000 + 0.013 secs).","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":20,"time":1760052538880,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","src":"c","msg":"C LOGOUT","cid":"1ebtvz0mblp31rqx6sxl"}
+{"level":10,"time":1760052538896,"pid":1608,"hostname":"T0010cc902","component":"imap-connection","cid":"1ebtvz0mblp31rqx6sxl","msg":"Connection closed","cid":"1ebtvz0mblp31rqx6sxl"}
+✉️  Kopie im IMAP-Ordner abgelegt (Sent)
+📧 Acceptance-Mail gesendet (sendMail): 1760052537848-4a50620d96fc8@matchleague.org
+schedule mail failed: select `id`, `email`, `firstname`, `lastname`, `name` from `users` where `id` in (1, 2) - SQLITE_ERROR: no such column: name
+result mail failed: select `id`, `email`, `firstname`, `lastname`, `name` from `users` where `id` in (1, 2) - SQLITE_ERROR: no such column: name

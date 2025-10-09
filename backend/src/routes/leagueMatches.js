@@ -88,6 +88,7 @@ module.exports = function leagueMatchesRoutes({ db }) {
       const id = Number(req.params.id);
       if (!id || isNaN(id)) return res.status(400).json({ error: "INVALID_LEAGUE_ID" });
 
+      const hasIsCommunityCol = Object.prototype.hasOwnProperty.call(leagueInfo, 'is_community');
       const q = k("leagues as l")
         .leftJoin("cities as c", "l.city_id", "c.id")
         .leftJoin("sports as s", "l.sport_id", "s.id")
@@ -97,14 +98,20 @@ module.exports = function leagueMatchesRoutes({ db }) {
           { cityId: "c.id" },
           (hasLeagueCityCol ? k.raw("COALESCE(c.name, l.city) as city") : k.raw("COALESCE(c.name, '') as city")),
           { sportId: "s.id" },
-          (hasLeagueSportCol ? k.raw("COALESCE(s.name, l.sport) as sport") : k.raw("COALESCE(s.name, '') as sport")),
+            (hasLeagueSportCol ? k.raw("COALESCE(s.name, l.sport) as sport") : k.raw("COALESCE(s.name, '') as sport")),
+            // expose publicState if present (public/community/etc.) with safe fallback
+          k.raw("COALESCE(l.public_state, l.publicState, '') as publicState"),
+          // optionally include is_community if column exists; else 0
+          (hasIsCommunityCol ? { is_community: 'l.is_community' } : k.raw('0 as is_community'))
         )
         .where("l.id", id)
         .first();
 
       const row = await q;
       if (!row) return res.status(404).json({ error: "Liga nicht gefunden" });
-      return res.json(row);
+      // derive isCommunity boolean
+      const isCommunity = (String(row.publicState || '').toLowerCase() === 'community') || (Number(row.is_community) === 1);
+      return res.json({ ...row, isCommunity });
     } catch (e) {
       console.error("GET /leagues/:id failed:", e && (e.stack || e.message || e));
       return res.status(500).json({ error: "Datenbankfehler", details: (e && e.message) || String(e) });
@@ -164,6 +171,9 @@ module.exports = function leagueMatchesRoutes({ db }) {
       if (Number(cnt) < 2) return res.status(403).json({ error: "Not both members of league" });
 
       // Prüfe, ob bereits ein offenes Match zwischen diesen beiden existiert
+        // League row to determine community flag
+        const leagueRow = await k('leagues').where('id', Number(leagueId)).first();
+        const isCommunity = !!(leagueRow && (leagueRow.public_state === 'community' || leagueRow.publicState === 'community' || leagueRow.is_community || leagueRow.isCommunity));
       let existing = null;
       if (hasHomeUserId) {
         existing = await k("matches")
@@ -270,10 +280,10 @@ module.exports = function leagueMatchesRoutes({ db }) {
         .where(`g.${leagueCol}`, leagueId)
         .orderBy(tsCol ? `g.${tsCol}` : "g.id", "asc");
 
-      const now = Date.now();
-      const all = (rows || []).map(r => ({ ...r, ts: r.kickoff_at ? (Date.parse(r.kickoff_at) || 0) : 0 }));
-      const upcoming = all.filter(r => r.ts > now || (r.home_score == null && r.away_score == null));
-      const completed = all.filter(r => r.ts <= now || (r.home_score != null || r.away_score != null));
+  // Upcoming = no result yet; Completed = has result
+  const all = rows || [];
+  const upcoming = all.filter(r => (r.home_score == null && r.away_score == null));
+  const completed = all.filter(r => (r.home_score != null && r.away_score != null));
 
       return res.json({ upcoming, completed });
     } catch (e) {
@@ -313,7 +323,7 @@ module.exports = function leagueMatchesRoutes({ db }) {
       const info = await k('matches').columnInfo().catch(() => ({}));
       const hasHomeUserId = !!info.home_user_id;
 
-      // look for open matches (status = 'open' OR null scores)
+      // offenes Match: genau eine Seite belegt, keine Scores, Status NULL/'open'/'proposed'
       const q = k('matches').where({ league_id: leagueId })
         .where(function () {
           if (hasHomeUserId) {
@@ -323,11 +333,20 @@ module.exports = function leagueMatchesRoutes({ db }) {
           }
         })
         .where(function () {
-          if (Object.prototype.hasOwnProperty.call(info, 'status')) {
-            this.where('status', 'open');
+          if (hasHomeUserId) {
+            this.where(function(){ this.whereNull('away_user_id').whereNotNull('home_user_id'); })
+                .orWhere(function(){ this.whereNull('home_user_id').whereNotNull('away_user_id'); });
           } else {
-            this.whereNull('home_score').whereNull('away_score');
+            // treat empty string as NULL-equivalent for text schemas
+            this.where(function(){ this.whereRaw("(away IS NULL OR TRIM(away) = '')").whereRaw("(home IS NOT NULL AND TRIM(home) <> '')"); })
+                .orWhere(function(){ this.whereRaw("(home IS NULL OR TRIM(home) = '')").whereRaw("(away IS NOT NULL AND TRIM(away) <> '')"); });
           }
+        })
+        .whereNull('home_score')
+        .whereNull('away_score')
+        .where(function () {
+          if (Object.prototype.hasOwnProperty.call(info, 'status')) this.whereNull('status').orWhereIn('status', ['open','proposed']);
+          else this.whereNotNull('id');
         })
         .first();
 
@@ -369,13 +388,26 @@ module.exports = function leagueMatchesRoutes({ db }) {
           if (hasHomeUserId) this.where('home_user_id', me).orWhere('away_user_id', me);
           else this.where('home', String(me)).orWhere('away', String(me));
         })
+        // count only fully paired matches (both participants set)
         .where(function () {
-          const ts = [];
-          if (Object.prototype.hasOwnProperty.call(info, 'completed_at')) ts.push('completed_at');
-          if (Object.prototype.hasOwnProperty.call(info, 'kickoff_at')) ts.push('kickoff_at');
-          if (Object.prototype.hasOwnProperty.call(info, 'created_at')) ts.push('created_at');
-          if (ts.length === 0) this.whereNotNull('id');
-          else this.where(function () { for (const c of ts) this.orWhereBetween(c, [start, end]); });
+          if (hasHomeUserId) this.whereNotNull('home_user_id').whereNotNull('away_user_id');
+          else this.whereNotNull('home').whereNotNull('away');
+        })
+        .where(function () {
+          // Prefer completed_at/kickoff_at; fallback to created_at only if neither exists in schema
+          const hasCompleted = Object.prototype.hasOwnProperty.call(info, 'completed_at');
+          const hasKickoff = Object.prototype.hasOwnProperty.call(info, 'kickoff_at');
+          const hasCreated = Object.prototype.hasOwnProperty.call(info, 'created_at');
+          if (hasCompleted || hasKickoff) {
+            this.where(function () {
+              if (hasCompleted) this.orWhereBetween('completed_at', [start, end]);
+              if (hasKickoff) this.orWhereBetween('kickoff_at', [start, end]);
+            });
+          } else if (hasCreated) {
+            this.whereBetween('created_at', [start, end]);
+          } else {
+            this.whereNotNull('id');
+          }
         })
         .count({ c: '*' });
 
@@ -441,8 +473,11 @@ module.exports = function leagueMatchesRoutes({ db }) {
         const hasMatches = await trx.schema.hasTable('matches');
         if (!hasMatches) throw Object.assign(new Error('NO_MATCHES_TABLE'), { code: 'NO_MATCHES_TABLE' });
 
-        const info = await trx('matches').columnInfo().catch(() => ({}));
-        const hasHomeUserId = !!info.home_user_id;
+  const info = await trx('matches').columnInfo().catch(() => ({}));
+  const hasHomeUserId = !!info.home_user_id;
+  const hasAwayUserId = !!info.away_user_id;
+  const hasHomeText = !!info.home;
+  const hasAwayText = !!info.away;
 
         // ensure requestor is member of league
         const memberCount = await trx('user_leagues')
@@ -472,7 +507,7 @@ module.exports = function leagueMatchesRoutes({ db }) {
           if (!ul || !ul.captain) throw Object.assign(new Error('Only captains can start match-search in team sports'), { status: 403 });
         }
 
-        // Enforce weekly limit for community leagues: count matches in current week
+  // Enforce weekly limit: count matches in current week
         // Determine week start (Monday) and end (Sunday)
         const now = new Date();
         const day = (now.getDay() + 6) % 7; // 0=Mon..6=Sun
@@ -483,92 +518,200 @@ module.exports = function leagueMatchesRoutes({ db }) {
         sunday.setDate(monday.getDate() + 6);
         sunday.setHours(23,59,59,999);
 
-        // community league detection: simple heuristic - league.publicState === 'community' or league.is_community
-        const isCommunity = !!(leagueRow.publicState === 'community' || leagueRow.is_community || leagueRow.isCommunity);
-        if (isCommunity) {
-          // count matches for this user in this league between monday..sunday
-          const weekCountQ = trx('matches')
-            .where({ league_id: leagueId })
-            .where(function () {
-              if (hasHomeUserId) this.where('home_user_id', me).orWhere('away_user_id', me);
-              else this.where('home', String(me)).orWhere('away', String(me));
-            })
-            .where(function () {
-              // completed_at within week OR kickoff_at within week OR created_at within week
-              const possibleTs = [];
-              if (Object.prototype.hasOwnProperty.call(info, 'completed_at')) possibleTs.push('completed_at');
-              if (Object.prototype.hasOwnProperty.call(info, 'kickoff_at')) possibleTs.push('kickoff_at');
-              if (Object.prototype.hasOwnProperty.call(info, 'created_at')) possibleTs.push('created_at');
-              if (possibleTs.length === 0) {
-                // fallback: count any matches (conservative)
-                this.whereNotNull('id');
-              } else {
-                // build or chain to match any timestamp falling in window
-                this.where(function () {
-                  for (const c of possibleTs) {
-                    this.orWhereBetween(c, [monday.toISOString(), sunday.toISOString()]);
-                  }
-                });
-              }
-            })
-            .count({ c: '*' });
-
-          const weekCountRow = await weekCountQ;
-          const weekCount = Array.isArray(weekCountRow) ? (weekCountRow[0].c || 0) : (weekCountRow.c || 0);
-          if (Number(weekCount) >= 1) throw Object.assign(new Error('Weekly match limit reached for community league'), { status: 429 });
-        }
-
-        // Check if the user already has an open match in this league
-        const openMatchQ = trx('matches').where({ league_id: leagueId })
+        // count matches for this user in this league between monday..sunday
+        const weekCountQ = trx('matches')
+          .where({ league_id: leagueId })
           .where(function () {
             if (hasHomeUserId) this.where('home_user_id', me).orWhere('away_user_id', me);
             else this.where('home', String(me)).orWhere('away', String(me));
           })
           .where(function () {
-            if (Object.prototype.hasOwnProperty.call(info, 'status')) this.where('status', 'open');
-            else this.whereNull('home_score').whereNull('away_score');
+            if (hasHomeUserId) this.whereNotNull('home_user_id').whereNotNull('away_user_id');
+            else this.whereNotNull('home').whereNotNull('away');
+          })
+          .where(function () {
+            const hasCompleted = Object.prototype.hasOwnProperty.call(info, 'completed_at');
+            const hasKickoff = Object.prototype.hasOwnProperty.call(info, 'kickoff_at');
+            const hasCreated = Object.prototype.hasOwnProperty.call(info, 'created_at');
+            const startIso = monday.toISOString();
+            const endIso = sunday.toISOString();
+            if (hasCompleted || hasKickoff) {
+              this.where(function () {
+                if (hasCompleted) this.orWhereBetween('completed_at', [startIso, endIso]);
+                if (hasKickoff) this.orWhereBetween('kickoff_at', [startIso, endIso]);
+              });
+            } else if (hasCreated) {
+              this.whereBetween('created_at', [startIso, endIso]);
+            } else {
+              this.whereNotNull('id');
+            }
+          })
+          .count({ c: '*' });
+
+        const weekCountRow = await weekCountQ;
+        const weekCount = Array.isArray(weekCountRow) ? (weekCountRow[0].c || 0) : (weekCountRow.c || 0);
+        if (Number(weekCount) >= 1) throw Object.assign(new Error('Weekly match limit reached'), { status: 429 });
+
+        // Helper: does current user already have ANY pending match in this league? (both-sided or one-sided)
+        async function findAnyPendingForUser(uid) {
+          const q = trx('matches')
+            .where({ league_id: leagueId })
+            .where(function () {
+              if (hasHomeUserId || hasAwayUserId) this.where('home_user_id', uid).orWhere('away_user_id', uid);
+              if (hasHomeText || hasAwayText) this.orWhere('home', String(uid)).orWhere('away', String(uid));
+            })
+            .whereNull('home_score')
+            .whereNull('away_score')
+            .where(function(){
+              if (Object.prototype.hasOwnProperty.call(info, 'status')) this.whereNull('status').orWhereIn('status', ['open','proposed','scheduled']);
+              else this.whereNotNull('id');
+            })
+            .first();
+          return q;
+        }
+
+        const existingPending = await findAnyPendingForUser(me);
+        if (existingPending) {
+          const err = new Error('USER_ALREADY_HAS_PENDING');
+          err.status = 409; err.code = 'USER_ALREADY_HAS_PENDING'; err.match = existingPending;
+          throw err;
+        }
+
+        // Check if the user already has an open match in this league (genau eine Seite belegt)
+        const openMatchQ = trx('matches').where({ league_id: leagueId })
+          .where(function () {
+            // belong to me? match via id or text, depending on available columns
+            if (hasHomeUserId || hasAwayUserId) this.where('home_user_id', me).orWhere('away_user_id', me);
+            if (hasHomeText || hasAwayText) this.orWhere('home', String(me)).orWhere('away', String(me));
+          })
+          .where(function(){
+            // one-sided open match: exactly one participant present; check both id-based and text-based shapes
+            if (hasHomeUserId || hasAwayUserId) {
+              this.orWhere(function(){ this.whereNotNull('home_user_id').whereNull('away_user_id'); })
+                  .orWhere(function(){ this.whereNotNull('away_user_id').whereNull('home_user_id'); });
+            }
+            if (hasHomeText || hasAwayText) {
+              // treat empty string as NULL-equivalent for text schemas
+              this.orWhere(function(){ this.whereRaw("(home IS NOT NULL AND TRIM(home) <> '')").whereRaw("(away IS NULL OR TRIM(away) = '')"); })
+                  .orWhere(function(){ this.whereRaw("(away IS NOT NULL AND TRIM(away) <> '')").whereRaw("(home IS NULL OR TRIM(home) = '')"); });
+            }
+          })
+          .whereNull('home_score')
+          .whereNull('away_score')
+          .where(function(){
+            if (Object.prototype.hasOwnProperty.call(info, 'status')) this.whereNull('status').orWhereIn('status', ['open','proposed']);
+            else this.whereNotNull('id');
           })
           .first();
 
         const openMatch = await openMatchQ;
-        if (openMatch) throw Object.assign(new Error('User already has an open match in this league'), { status: 409, match: openMatch });
+        if (openMatch) {
+          const err = new Error('OPEN_MATCH_EXISTS');
+          err.status = 409;
+          err.match = openMatch;
+          err.code = 'OPEN_MATCH_EXISTS';
+          throw err;
+        }
 
         // Try to find any other open match in this league to join (excluding matches by me)
         const candidateQ = trx('matches')
           .where({ league_id: leagueId })
           .where(function () {
-            if (hasHomeUserId) this.whereNot('home_user_id', me).andWhereNot('away_user_id', me);
-            else this.whereNot('home', String(me)).andWhereNot('away', String(me));
+            // exclude rows that already contain me (grouped OR) – works with NULL values
+            if (hasHomeUserId || hasAwayUserId) {
+              this.whereNot(function(){ this.where('home_user_id', me).orWhere('away_user_id', me); });
+            }
+            if (hasHomeText || hasAwayText) {
+              this.whereNot(function(){ this.where('home', String(me)).orWhere('away', String(me)); });
+            }
           })
+          .where(function(){
+            // any one-sided open match (id- or text-based)
+            if (hasHomeUserId || hasAwayUserId) {
+              this.orWhere(function(){ this.whereNotNull('home_user_id').whereNull('away_user_id'); })
+                  .orWhere(function(){ this.whereNotNull('away_user_id').whereNull('home_user_id'); });
+            }
+            if (hasHomeText || hasAwayText) {
+              // treat empty string as NULL-equivalent for text schemas
+              this.orWhere(function(){ this.whereRaw("(home IS NOT NULL AND TRIM(home) <> '')").whereRaw("(away IS NULL OR TRIM(away) = '')"); })
+                  .orWhere(function(){ this.whereRaw("(away IS NOT NULL AND TRIM(away) <> '')").whereRaw("(home IS NULL OR TRIM(home) = '')"); });
+            }
+          })
+          .whereNull('home_score')
+          .whereNull('away_score')
           .where(function () {
-            if (Object.prototype.hasOwnProperty.call(info, 'status')) this.where('status', 'open');
-            else this.whereNull('home_score').whereNull('away_score');
+            if (Object.prototype.hasOwnProperty.call(info, 'status')) this.whereNull('status').orWhereIn('status', ['open','proposed']);
+            else this.whereNotNull('id');
           })
           .orderBy('id', 'asc')
           .forUpdate();
 
-        const candidate = await candidateQ.first();
+        // helper: does uid have a match in this week?
+        async function hasWeekly(uid) {
+          const hasCompleted = Object.prototype.hasOwnProperty.call(info, 'completed_at');
+          const hasKickoff = Object.prototype.hasOwnProperty.call(info, 'kickoff_at');
+          const hasCreated = Object.prototype.hasOwnProperty.call(info, 'created_at');
+          const startIso = monday.toISOString();
+          const endIso = sunday.toISOString();
+          const q = trx('matches')
+            .where({ league_id: leagueId })
+            .where(function(){
+              if (hasHomeUserId) this.where('home_user_id', uid).orWhere('away_user_id', uid);
+              else this.where('home', String(uid)).orWhere('away', String(uid));
+            })
+            .where(function(){
+              if (hasHomeUserId) this.whereNotNull('home_user_id').whereNotNull('away_user_id');
+              else this.whereNotNull('home').whereNotNull('away');
+            })
+            .where(function(){
+              if (hasCompleted || hasKickoff) {
+                this.where(function(){
+                  if (hasCompleted) this.orWhereBetween('completed_at', [startIso, endIso]);
+                  if (hasKickoff) this.orWhereBetween('kickoff_at', [startIso, endIso]);
+                });
+              } else if (hasCreated) {
+                this.whereBetween('created_at', [startIso, endIso]);
+              } else {
+                this.whereNotNull('id');
+              }
+            })
+            .count({ c: '*' });
+          const r = await q; const c = Array.isArray(r) ? (r[0].c||0) : (r.c||0);
+          return Number(c) >= 1;
+        }
+
+        // Prefer a candidate whose owner has no weekly match; if none, join the earliest candidate anyway.
+        const candidates = await candidateQ.limit(50);
+        let candidate = null;
+        for (const c of candidates) {
+          // Determine owner from whichever side is set (id-based first, then text-based)
+          const owner = (c.home_user_id && !c.away_user_id) ? c.home_user_id
+                       : ((!c.home_user_id && c.away_user_id) ? c.away_user_id
+                          : ((c.home && !c.away) ? c.home
+                             : ((!c.home && c.away) ? c.away : null)));
+          if (!owner) continue;
+          const ownerUid = Number(owner) || null;
+          const ownerHasWeekly = ownerUid ? await hasWeekly(ownerUid) : false;
+          if (!ownerHasWeekly) { candidate = c; break; }
+        }
+        if (!candidate && candidates && candidates.length) {
+          candidate = candidates[0];
+        }
+
         if (candidate) {
-          // join this candidate: set away/home accordingly and update status to scheduled (or keep open per spec)
+          // join this candidate: fehlende Seite setzen; Status nicht zwangsläufig ändern (Planung separat)
           const rec = {};
-          if (hasHomeUserId) {
-            // candidate may have only home_user_id set
-            if (candidate.home_user_id && !candidate.away_user_id) {
-              rec.away_user_id = me;
-            } else if (!candidate.home_user_id && candidate.away_user_id) {
-              rec.home_user_id = me;
-            } else {
-              // fallback: try to set away_user_id
-              rec.away_user_id = me;
-            }
-          } else {
+          // Prefer filling ID columns when available; else fill text columns
+          if (hasHomeUserId || hasAwayUserId) {
+            if (candidate.home_user_id && !candidate.away_user_id) rec.away_user_id = me;
+            else if (!candidate.home_user_id && candidate.away_user_id) rec.home_user_id = me;
+          }
+          if (Object.keys(rec).length === 0 && (hasHomeText || hasAwayText)) {
             if (candidate.home && !candidate.away) rec.away = String(me);
             else if (!candidate.home && candidate.away) rec.home = String(me);
             else rec.away = String(me);
           }
-
-          // optionally update status to 'scheduled' if status column exists
-          if (Object.prototype.hasOwnProperty.call(info, 'status')) rec.status = 'scheduled';
+          // Status hier nicht anfassen; /schedule setzt 'scheduled'
 
           await trx('matches').where('id', candidate.id).update(rec);
 
@@ -578,27 +721,103 @@ module.exports = function leagueMatchesRoutes({ db }) {
           return;
         }
 
-        // No candidate -> create a new open match with me as home
-        const insertRec = { league_id: leagueId };
-        if (hasHomeUserId) {
-          insertRec.home_user_id = me;
-        } else {
-          insertRec.home = String(me);
-        }
-        if (Object.prototype.hasOwnProperty.call(info, 'status')) insertRec.status = 'open';
-        if (Object.prototype.hasOwnProperty.call(info, 'created_at')) insertRec.created_at = new Date().toISOString();
+        // No candidate -> proceed to pairing logic or create
+        // No open candidate -> suche Gegner ohne Wochen-Spiel, ohne 1-seitiges offenes Match und ohne bestehendes Pending gg. mich; paare sofort
+        const memberIds = await trx('user_leagues')
+          .where({ league_id: leagueId })
+          .whereNot('user_id', me)
+          .pluck('user_id')
+          .catch(() => []);
 
+        let opponent = null;
+        for (const uid of memberIds) {
+          const weekly = await hasWeekly(uid);
+          if (weekly) continue;
+          // skip if there is already a pending match between me and uid
+          const alreadyPairPending = await trx('matches')
+            .where({ league_id: leagueId })
+            .whereNull('home_score').whereNull('away_score')
+            .where(function(){ if (Object.prototype.hasOwnProperty.call(info, 'status')) this.whereNull('status').orWhereIn('status',['open','proposed','scheduled']); else this.whereNotNull('id'); })
+            .where(function(){
+              if (hasHomeUserId || hasAwayUserId) {
+                this.where(function(){ this.where('home_user_id', me).andWhere('away_user_id', uid); })
+                    .orWhere(function(){ this.where('home_user_id', uid).andWhere('away_user_id', me); });
+              }
+              if (hasHomeText || hasAwayText) {
+                this.orWhere(function(){ this.where('home', String(me)).andWhere('away', String(uid)); })
+                    .orWhere(function(){ this.where('home', String(uid)).andWhere('away', String(me)); });
+              }
+            })
+            .first();
+          if (alreadyPairPending) continue;
+          const openOneSided = await trx('matches')
+            .where({ league_id: leagueId })
+            .where(function(){
+              if (hasHomeUserId) {
+                this.where(function(){ this.where('home_user_id', uid).whereNull('away_user_id'); })
+                    .orWhere(function(){ this.where('away_user_id', uid).whereNull('home_user_id'); });
+              } else {
+                // treat empty string as NULL-equivalent for text schemas
+                this.where(function(){ this.where('home', String(uid)).whereRaw("(away IS NULL OR TRIM(away) = '')"); })
+                    .orWhere(function(){ this.where('away', String(uid)).whereRaw("(home IS NULL OR TRIM(home) = '')"); });
+              }
+            })
+            .first();
+          if (openOneSided) continue;
+          opponent = uid; break;
+        }
+
+        if (opponent == null) {
+          // Fallback: kein geeigneter Gegner -> erstelle 1-seitiges offenes Match
+          // but still enforce single pending per user
+          const stillPending = await findAnyPendingForUser(me);
+          if (stillPending) {
+            const err2 = new Error('USER_ALREADY_HAS_PENDING');
+            err2.status = 409; err2.code = 'USER_ALREADY_HAS_PENDING'; err2.match = stillPending;
+            throw err2;
+          }
+          const insertRec = { league_id: leagueId };
+          if (hasHomeUserId) insertRec.home_user_id = me; else insertRec.home = String(me);
+          if (Object.prototype.hasOwnProperty.call(info, 'status')) insertRec.status = 'open';
+          if (Object.prototype.hasOwnProperty.call(info, 'created_at')) insertRec.created_at = new Date().toISOString();
+          try {
+            if (Object.prototype.hasOwnProperty.call(info, 'season_id') && await trx.schema.hasTable('seasons')) {
+              const year = new Date().getFullYear();
+              const s = await trx('seasons').where({ league_id: leagueId, name: String(year) }).first();
+              if (s && s.id) insertRec.season_id = s.id;
+            }
+          } catch {}
+          const ins = await trx('matches').insert(insertRec);
+          const newId = Array.isArray(ins) ? ins[0] : ins;
+          const newRow = await trx('matches').where('id', newId).first();
+          res.status(201).json({ action: 'created', match: newRow });
+          return;
+        }
+
+        // Paare direkt: me vs opponent
+        const insertRec = { league_id: leagueId };
+        if (hasHomeUserId) { insertRec.home_user_id = me; insertRec.away_user_id = opponent; }
+        else { insertRec.home = String(me); insertRec.away = String(opponent); }
+        if (Object.prototype.hasOwnProperty.call(info, 'status')) insertRec.status = 'proposed';
+        if (Object.prototype.hasOwnProperty.call(info, 'created_at')) insertRec.created_at = new Date().toISOString();
+        try {
+          if (Object.prototype.hasOwnProperty.call(info, 'season_id') && await trx.schema.hasTable('seasons')) {
+            const year = new Date().getFullYear();
+            const s = await trx('seasons').where({ league_id: leagueId, name: String(year) }).first();
+            if (s && s.id) insertRec.season_id = s.id;
+          }
+        } catch {}
         const ins = await trx('matches').insert(insertRec);
         const newId = Array.isArray(ins) ? ins[0] : ins;
         const newRow = await trx('matches').where('id', newId).first();
-        res.status(201).json({ action: 'created', match: newRow });
+        res.status(201).json({ action: 'paired', match: newRow });
         return;
       }); // end transaction
     } catch (err) {
       console.error('POST match-search failed:', err && (err.stack || err.message || err));
       if (err && err.code === 'NO_MATCHES_TABLE') return res.status(500).json({ error: 'NO_MATCHES_TABLE' });
       const status = (err && err.status) ? err.status : 500;
-      const body = { error: err && err.message ? err.message : 'Datenbankfehler' };
+      const body = { error: (err && (err.code || err.message)) ? (err.code || err.message) : 'Datenbankfehler' };
       if (err && err.match) body.match = err.match;
       return res.status(status).json(body);
     }
@@ -620,8 +839,10 @@ module.exports = function leagueMatchesRoutes({ db }) {
       if (info.home_user_id) homeCol = "home_user_id";
       if (info.away_user_id) awayCol = "away_user_id";
 
-      // season scoping: if matches.season_id exists and no ?scope=overall, limit to current season
-      const scope = String(req.query.scope || '').toLowerCase();
+  // season scoping: if matches.season_id exists and neither ?scope=overall nor explicit seasonId is provided,
+  // default to current-year season. If seasonId provided, filter by that; if scope=overall, do not filter by season.
+  const scope = String(req.query.scope || '').toLowerCase();
+  const seasonId = req.query.seasonId ? Number(req.query.seasonId) : null;
       let q = k(tableName)
         .select(`${homeCol} as home`, `${awayCol} as away`, "home_score", "away_score")
         .where({ league_id: leagueId })
@@ -631,9 +852,13 @@ module.exports = function leagueMatchesRoutes({ db }) {
       if (tableName === 'matches' && Object.prototype.hasOwnProperty.call(info, 'season_id') && scope !== 'overall') {
         try {
           if (await k.schema.hasTable('seasons')) {
-            const year = new Date().getFullYear();
-            const s = await k('seasons').where({ league_id: leagueId, name: String(year) }).first();
-            if (s && s.id) q = q.andWhere('season_id', s.id);
+            if (seasonId) {
+              q = q.andWhere('season_id', seasonId);
+            } else {
+              const year = new Date().getFullYear();
+              const s = await k('seasons').where({ league_id: leagueId, name: String(year) }).first();
+              if (s && s.id) q = q.andWhere('season_id', s.id);
+            }
           }
         } catch {}
       }
@@ -674,9 +899,13 @@ module.exports = function leagueMatchesRoutes({ db }) {
         if (tableName === 'matches' && Object.prototype.hasOwnProperty.call(info, 'season_id') && scope !== 'overall') {
           try {
             if (await k.schema.hasTable('seasons')) {
-              const year = new Date().getFullYear();
-              const s = await k('seasons').where({ league_id: leagueId, name: String(year) }).first();
-              if (s && s.id) q2 = q2.andWhere('g.season_id', s.id);
+              if (seasonId) {
+                q2 = q2.andWhere('g.season_id', seasonId);
+              } else {
+                const year = new Date().getFullYear();
+                const s = await k('seasons').where({ league_id: leagueId, name: String(year) }).first();
+                if (s && s.id) q2 = q2.andWhere('g.season_id', s.id);
+              }
             }
           } catch {}
         }
@@ -730,6 +959,23 @@ module.exports = function leagueMatchesRoutes({ db }) {
     } catch (e) {
       console.error("GET /:id/standings failed:", e && (e.stack || e.message || e));
       return res.status(500).json({ error: "Datenbankfehler" });
+    }
+  });
+
+  // GET /:id/seasons - list seasons for a league (id + name)
+  router.get('/:id/seasons', async (req, res) => {
+    const k = resolveKnex(db);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+    try {
+      const leagueId = Number(req.params.id);
+      if (!leagueId || isNaN(leagueId)) return res.status(400).json({ error: 'INVALID_LEAGUE_ID' });
+      const hasSeasons = await k.schema.hasTable('seasons').catch(() => false);
+      if (!hasSeasons) return res.json([]);
+      const rows = await k('seasons').where({ league_id: leagueId }).select('id', 'name').orderBy('name', 'asc');
+      return res.json(rows || []);
+    } catch (e) {
+      console.error('GET /:id/seasons failed:', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'Datenbankfehler' });
     }
   });
 

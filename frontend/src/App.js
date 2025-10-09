@@ -14,7 +14,7 @@ import CreatePage from "./pages/CreatePage"; // neu
 import UserDetailPage from "./pages/UserDetailPage"; // neu
 import GameDetailPage from "./pages/GameDetailPage"; // neu
 import AdminPage from "./pages/AdminPage"; // neu
-import matchLeagueLogo from "./images/matchleague_logo_long.png"; // Import the logo
+import matchLeagueLogo from "./images/matchleague_logo.png"; // Import the logo
 import "./styles.css"; // neu
 import Header from "./components/Header";
 import WelcomePage from "./pages/WelcomePage"; // <-- add this import

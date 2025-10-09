@@ -60,7 +60,8 @@ function loadConfig() {
     DB_PATH: path.resolve(__dirname, "..", process.env.DB_PATH || "sportplattform.db"),
     cors: {
       origin: corsOrigin,  // supports multiple origins, defaults to localhost:3000 and :3001 for dev
-      methods: ["GET", "POST", "OPTIONS"],
+      methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization"],
       credentials: true
     },
     mailer: {

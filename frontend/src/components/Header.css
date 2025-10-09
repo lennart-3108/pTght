@@ -4,7 +4,7 @@
   align-items: center;
   justify-content: space-between;
   /* respect notches on iOS and avoid being off-screen */
-  padding: max(env(safe-area-inset-top), 0px) 12px 0 0;
+  padding: max(env(safe-area-inset-top), 0px) 8px 0 0; /* smaller right padding so logo can sit closer left */
   background: linear-gradient(90deg, #0f2b27 0%, #0b2420 100%);
   color: #e6efe9;
   box-shadow: none;
@@ -22,7 +22,7 @@
   display: flex;
   align-items: stretch; /* stretch so the img can occupy full height */
   margin: 0;
-  padding: 0;
+  padding: 0; /* 0 left/right padding so logo touches header edge */
   overflow: hidden; /* hide any image rounding/gaps */
 }
 
@@ -55,7 +55,7 @@
 }
 
 @media (max-width: 720px) {
-  .ml-header { height: 54px; padding: max(env(safe-area-inset-top), 0px) 6px 0 0; }
+  .ml-header { height: 54px; padding: max(env(safe-area-inset-top), 0px) 4px 0 0; }
   .ml-header__menu { overflow-x: auto; }
   .ml-nav { gap: 10px; flex-wrap: nowrap; }
   .ml-logo-full { height: 100%; }

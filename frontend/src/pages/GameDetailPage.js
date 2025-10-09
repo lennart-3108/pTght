@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { API_BASE } from "../config";
 
@@ -19,7 +19,11 @@ export default function GameDetailPage() {
   const [hasWeeklyMatch, setHasWeeklyMatch] = useState(false);
   const [joinMsg, setJoinMsg] = useState('');
   const [scheduleMsg, setScheduleMsg] = useState('');
-  const [scheduleAt, setScheduleAt] = useState('');
+  // calendar-friendly date+time fields (pop up native calendar/time pickers)
+  const [dateStr, setDateStr] = useState(""); // yyyy-mm-dd
+  const [timeStr, setTimeStr] = useState(""); // HH:mm
+
+  // Layout policy: keep three cards always side-by-side; enable horizontal scrolling on small screens
 
   useEffect(() => {
     let mounted = true;
@@ -40,14 +44,31 @@ export default function GameDetailPage() {
   function formatDate(input) {
     if (!input) return "-";
     const d = new Date(input);
-    if (!Number.isNaN(d.getTime())) return d.toLocaleString();
-    const num = Number(input);
-    if (Number.isFinite(num)) {
-      const d2 = new Date(num);
-      return Number.isNaN(d2.getTime()) ? "-" : d2.toLocaleString();
-    }
-    return "-";
+    if (Number.isNaN(d.getTime())) return "-";
+    // German long date
+    const opts = { year: 'numeric', month: 'long', day: 'numeric' };
+    return d.toLocaleDateString('de-DE', opts);
   }
+  function formatTime(input) {
+    if (!input) return "";
+    const d = new Date(input);
+    if (Number.isNaN(d.getTime())) return "";
+    return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  }
+  const relativeFromNow = useMemo(() => (when) => {
+    if (!when) return "";
+    const d = new Date(when);
+    if (Number.isNaN(d.getTime())) return "";
+    const now = new Date();
+    const diff = d.getTime() - now.getTime();
+    const abs = Math.abs(diff);
+    const days = Math.round(abs / (24*60*60*1000));
+    if (days >= 2) return diff >= 0 ? `in ${days} Tagen` : `vor ${days} Tagen`;
+    const hours = Math.round(abs / (60*60*1000));
+    if (hours >= 2) return diff >= 0 ? `in ${hours} Stunden` : `vor ${hours} Stunden`;
+    const mins = Math.max(1, Math.round(abs / (60*1000)));
+    return diff >= 0 ? `in ${mins} Minuten` : `vor ${mins} Minuten`;
+  }, []);
   // fetch league games to build player histories
   const [leagueGames, setLeagueGames] = useState([]);
   const leagueId = game?.leagueId || null;
@@ -89,6 +110,8 @@ export default function GameDetailPage() {
 
   // fetch standings (completed matches) to compute simple table positions
   const [standings, setStandings] = useState([]);
+  // control schedule form visibility
+  const [showSchedule, setShowSchedule] = useState(false);
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -125,7 +148,26 @@ export default function GameDetailPage() {
       }
     })();
     return () => { mounted = false; };
-  }, [token, gameId]);
+  }, [token, gameId, game?.kickoff_at]);
+
+  // when game kickoff is present, prefill calendar fields with local date+time
+  useEffect(() => {
+    if (!game?.kickoff_at) return;
+    const d = new Date(game.kickoff_at);
+    if (Number.isNaN(d.getTime())) return;
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    setDateStr(`${yyyy}-${mm}-${dd}`);
+    setTimeStr(`${hh}:${mi}`);
+  }, [game?.kickoff_at]);
+
+  // decide default visibility of schedule form
+  useEffect(() => {
+    setShowSchedule(!game?.kickoff_at);
+  }, [game?.kickoff_at]);
 
   if (loading) return <div style={{ padding: 16 }}>Lade Spiel ...</div>;
   if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
@@ -181,23 +223,9 @@ export default function GameDetailPage() {
   const histA = filterHistoryForPlayer(playerA);
   const histB = filterHistoryForPlayer(playerB);
 
-  // layout styles
-  const containerStyle = { padding: 16, maxWidth: 1100, margin: '12px auto', fontFamily: 'Inter, Roboto, Arial, sans-serif', color: '#e8efe8' };
-  const cardStyle = { background: '#0f2a20', borderRadius: 12, padding: 16, boxShadow: '0 10px 30px rgba(0,0,0,0.6)' };
-  // keep three columns always side-by-side; allow horizontal scroll on small screens
-  const rowScrollStyle = {
-    display: 'flex',
-    gap: 12,
-    alignItems: 'stretch',
-    flexWrap: 'nowrap',
-    overflowX: 'auto',
-    WebkitOverflowScrolling: 'touch',
-    scrollbarWidth: 'thin',
-    paddingBottom: 6,
-  };
-  const leftStyle = { flex: '0 0 300px', minWidth: 300 };
-  const centerStyle = { flex: '0 0 340px', minWidth: 340, textAlign: 'center' };
-  const rightStyle = { flex: '0 0 300px', minWidth: 300 };
+  // layout styles – hero card like in mockup
+  const containerStyle = { padding: 16, width: '100%', maxWidth: '900px', margin: '0 auto', fontFamily: 'Inter, Roboto, Arial, sans-serif', color: '#e8efe8' };
+  const cardStyle = { background: '#0f2a20', borderRadius: 16, padding: 16, boxShadow: '0 16px 40px rgba(0,0,0,0.55)' };
 
   async function submitResult(e) {
     e.preventDefault();
@@ -237,7 +265,10 @@ export default function GameDetailPage() {
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
       setJoinMsg('Beigetreten.');
-      setGame(j);
+      // Re-fetch canonical projection to ensure names and permissions are fresh
+      const fres = await fetch(`${API_BASE}/matches/${gameId}`);
+      const fresh = await fres.json().catch(() => j);
+      setGame(fres.ok ? fresh : j);
     } catch (e) {
       setJoinMsg(e.message || 'Beitreten fehlgeschlagen.');
     }
@@ -247,7 +278,8 @@ export default function GameDetailPage() {
     e.preventDefault();
     setScheduleMsg('');
     if (!token) { setScheduleMsg('Bitte einloggen.'); return; }
-    if (!scheduleAt) { setScheduleMsg('Bitte Datum/Uhrzeit wählen.'); return; }
+    if (!dateStr || !timeStr) { setScheduleMsg('Bitte Datum und Uhrzeit wählen.'); return; }
+    const scheduleAt = `${dateStr}T${timeStr}`; // local time string, backend will parse
     try {
       const r = await fetch(`${API_BASE}/matches/${gameId}/schedule`, {
         method: 'POST',
@@ -257,7 +289,19 @@ export default function GameDetailPage() {
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
       setScheduleMsg('Termin gespeichert.');
-      setGame(j);
+      // reload full match to keep display names and status consistent
+      const fres = await fetch(`${API_BASE}/matches/${gameId}`);
+      const fresh = await fres.json().catch(() => j);
+      setGame(fres.ok ? fresh : j);
+      // re-check permission after scheduling
+      try {
+        if (token) {
+          const cr = await fetch(`${API_BASE}/matches/${gameId}/can-submit`, { headers: { Authorization: `Bearer ${token}` } });
+          const cj = await cr.json().catch(() => ({}));
+          setCanSubmit(!!cj.canSubmit);
+          setCannotReason(cj.reason || '');
+        }
+      } catch {}
     } catch (e) {
       setScheduleMsg(e.message || 'Termin setzen fehlgeschlagen.');
     }
@@ -265,80 +309,111 @@ export default function GameDetailPage() {
 
   return (
     <div style={containerStyle}>
-      <div style={rowScrollStyle}>
-        {/* Left player */}
-        <div style={{ ...leftStyle }}>
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <h3 style={{ margin: 0 }}>{playerA.name}</h3>
-              {tablePositions[playerA.name] ? (
-                <span style={{ background: '#163a2f', color: '#ffd', padding: '4px 8px', borderRadius: 8, fontSize: 12 }}>#{tablePositions[playerA.name].rank}</span>
-              ) : null}
+      {/* Hero match card */}
+      <div style={{ ...cardStyle, padding: 20, background: 'linear-gradient(145deg, #102a22, #0c1f1a)' }}>
+        {/* Header row */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ fontSize: 24, fontWeight: 700 }}>{game.league || 'Liga'}</div>
+          <div style={{ color: '#b9d3c7', fontSize: 14 }}>#{game.id} · {(game.home_score != null && game.away_score != null) ? 'Beendet' : 'Ausstehend'}</div>
+        </div>
+
+        {/* Date + status */}
+        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ fontSize: 20 }}>{formatDate(game.kickoff_at) || 'Termin N.N.'}</div>
+            <div style={{ color: '#9db', fontSize: 14 }}>{game.kickoff_at ? relativeFromNow(game.kickoff_at) : '—'}</div>
+          </div>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ width: 8, height: 8, background: '#ffd35d', borderRadius: 999 }} />
+            <span style={{ color: '#ffd35d' }}>{(game.home_score != null && game.away_score != null) ? 'Beendet' : 'Ausstehend'}</span>
+          </div>
+        </div>
+
+        {/* VS Row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 16, marginTop: 16 }}>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ width: 110, height: 110, borderRadius: 110, background: '#173a30', display: 'grid', placeItems: 'center', color: '#6fc89c', fontWeight: 800, fontSize: 28 }}>
+              {String(playerA.name || '?').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
             </div>
-            <div style={{ marginTop: 10, color: '#bcd' }}>Position: Einzelspieler</div>
-            <div style={{ marginTop: 8 }}>Name: {playerA.name || '-'}</div>
-            {/* additional player info could go here */}
-          </div>
-        </div>
-
-        {/* Center result & meta */}
-        <div style={centerStyle}>
-          <div style={{ ...cardStyle, background: 'linear-gradient(135deg,#163a2f,#0f2a20)' }}>
-            <div style={{ fontSize: 13, color: '#9db' }}>{formatDate(game.kickoff_at)}{game.location ? ` · ${game.location}` : ''}</div>
-            { (game.home_score != null && game.away_score != null) ? (
-              <div style={{ marginTop: 12, fontSize: 'clamp(20px, 6vw, 36px)', fontWeight: 700 }}>{playerA.name} <span style={{ color: '#ffd' }}>{`${game.home_score}:${game.away_score}`}</span> {playerB.name}</div>
-            ) : (
-              <div style={{ marginTop: 12, fontSize: 'clamp(22px, 7vw, 36px)', fontWeight: 700, color: '#ffd' }}>Ausstehend</div>
-            ) }
-            <div style={{ marginTop: 6, color: '#9db' }}>{game.league || ''}</div>
-
-            {/* Result submission (visible for logged-in users; server enforces permission) */}
-            {(token && (game.home_score == null && game.away_score == null)) && (
-              <form onSubmit={submitResult} style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <input disabled={!canSubmit} type="number" inputMode="numeric" pattern="[0-9]*" min={0} value={hScore} onChange={e => setHScore(e.target.value)} placeholder={`${playerA.name} Punkte`} style={{ width: 90, padding: '6px 8px', borderRadius: 8, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }} />
-                <span style={{ color: '#9db', fontWeight: 700 }}>:</span>
-                <input disabled={!canSubmit} type="number" inputMode="numeric" pattern="[0-9]*" min={0} value={aScore} onChange={e => setAScore(e.target.value)} placeholder={`${playerB.name} Punkte`} style={{ width: 90, padding: '6px 8px', borderRadius: 8, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }} />
-                <button disabled={!canSubmit} type="submit" style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #2f6b57', background: canSubmit ? '#1b4b3d' : '#24463c', color: '#fff', cursor: canSubmit ? 'pointer' : 'not-allowed' }}>Ergebnis eintragen</button>
-                {(!canSubmit && cannotReason) && <div style={{ width: '100%', marginTop: 6, color: '#ccc' }}>Kein Schreibrecht: {cannotReason}</div>}
-                {submitMsg && <div style={{ width: '100%', marginTop: 6, color: submitMsg.includes('gespeichert') ? '#9f9' : '#fcc' }}>{submitMsg}</div>}
-              </form>
-            )}
-
-            {/* Join match when opponent not yet assigned */}
-            {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away)) && (
-              <div style={{ marginTop: 12 }}>
-                <button onClick={joinMatch} disabled={hasWeeklyMatch} style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #2f6b57', background: hasWeeklyMatch ? '#24463c' : '#1b4b3d', color: '#fff', cursor: hasWeeklyMatch ? 'not-allowed' : 'pointer' }}>
-                  Diesem Match beitreten
-                </button>
-                {hasWeeklyMatch && <div style={{ marginTop: 6, color: '#ccc' }}>Du hast diese Woche bereits ein Match in dieser Liga.</div>}
-                {joinMsg && <div style={{ marginTop: 6, color: joinMsg.includes('Beigetreten') ? '#9f9' : '#fcc' }}>{joinMsg}</div>}
-              </div>
-            )}
-
-            {/* Schedule once both players are assigned and no score yet */}
-            {(token && game && game.home_score == null && game.away_score == null && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
-              <form onSubmit={scheduleMatch} style={{ marginTop: 12, display: 'flex', justifyContent: 'center', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                <input type="datetime-local" value={scheduleAt} onChange={e => setScheduleAt(e.target.value)} style={{ padding: '6px 8px', borderRadius: 8, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }} />
-                <button type="submit" style={{ padding: '6px 10px', borderRadius: 8, border: '1px solid #2f6b57', background: '#1b4b3d', color: '#fff' }}>Termin festlegen</button>
-                {scheduleMsg && <div style={{ width: '100%', marginTop: 6, color: scheduleMsg.includes('gespeichert') ? '#9f9' : '#fcc' }}>{scheduleMsg}</div>}
-              </form>
-            )}
-          </div>
-        </div>
-
-        {/* Right player */}
-        <div style={{ ...rightStyle }}>
-          <div style={cardStyle}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <h3 style={{ margin: 0 }}>{playerB.name}</h3>
-              {tablePositions[playerB.name] ? (
-                <span style={{ background: '#163a2f', color: '#ffd', padding: '4px 8px', borderRadius: 8, fontSize: 12 }}>#{tablePositions[playerB.name].rank}</span>
-              ) : null}
+            <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerA.name}</div>
+            <div style={{ color: '#9db' }}>{tablePositions[playerA.name] ? `${tablePositions[playerA.name].rank}. Rang` : '—'}</div>
+            <div style={{ marginTop: 10 }}>
+              <Link to={playerA.id ? `/user/${playerA.id}` : '#'} style={{ display: 'inline-block', padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', textDecoration: 'none' }}>Team ansehen</Link>
             </div>
-            <div style={{ marginTop: 10, color: '#bcd' }}>Position: Einzelspieler</div>
-            <div style={{ marginTop: 8 }}>Name: {playerB.name || '-'}</div>
+          </div>
+          <div style={{ fontSize: 40, color: '#cde' }}>VS</div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ width: 110, height: 110, borderRadius: 110, background: '#3a1717', display: 'grid', placeItems: 'center', color: '#f3a1a1', fontWeight: 800, fontSize: 28, marginLeft: 'auto' }}>
+              {String(playerB.name || '?').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
+            </div>
+            <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerB.name}</div>
+            <div style={{ color: '#9db' }}>{tablePositions[playerB.name] ? `${tablePositions[playerB.name].rank}. Rang` : '—'}</div>
+            <div style={{ marginTop: 10 }}>
+              <Link to={playerB.id ? `/user/${playerB.id}` : '#'} style={{ display: 'inline-block', padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', textDecoration: 'none' }}>Team ansehen</Link>
+            </div>
           </div>
         </div>
+
+        {/* Location */}
+        {game.location && (
+          <div style={{ marginTop: 12, color: '#bcd', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 18 }}>📍</span>
+            <span>{game.location}</span>
+          </div>
+        )}
+
+        {/* Action buttons */}
+        <div style={{ marginTop: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          {(token && game && game.home_score == null && game.away_score == null && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
+            <button onClick={() => setShowSchedule(s => !s)} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe' }}>
+              {game.kickoff_at ? 'Termin ändern' : 'Termin festlegen'}
+            </button>
+          )}
+          <Link to={"#"} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', textDecoration: 'none' }}>MATCH-CHAT</Link>
+          <button disabled style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #553f3f', background: '#2a1b1b', color: '#e9d8d8', opacity: 0.8 }}>ABSAGEN</button>
+        </div>
+
+        {/* Schedule form (toggled) */}
+        {(token && game && game.home_score == null && game.away_score == null && showSchedule) && (
+          <ScheduleSection
+            open={showSchedule}
+            setOpen={setShowSchedule}
+            dateStr={dateStr}
+            timeStr={timeStr}
+            setDateStr={setDateStr}
+            setTimeStr={setTimeStr}
+            onSubmit={scheduleMatch}
+            message={scheduleMsg}
+          />
+        )}
+
+        {/* Join match when opponent not yet assigned */}
+        {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away)) && (
+          <div style={{ marginTop: 12 }}>
+            <button onClick={joinMatch} disabled={hasWeeklyMatch} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: hasWeeklyMatch ? '#24463c' : '#1b4b3d', color: '#fff', cursor: hasWeeklyMatch ? 'not-allowed' : 'pointer' }}>
+              Diesem Match beitreten
+            </button>
+            {hasWeeklyMatch && <div style={{ marginTop: 6, color: '#ccc' }}>Du hast diese Woche bereits ein Match in dieser Liga.</div>}
+            {joinMsg && <div style={{ marginTop: 6, color: joinMsg.includes('Beigetreten') ? '#9f9' : '#fcc' }}>{joinMsg}</div>}
+          </div>
+        )}
+
+        {/* Result submission */}
+        {(token && (game.home_score == null && game.away_score == null)) && (
+          <form onSubmit={submitResult} style={{ marginTop: 18 }}>
+            <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Ergebnis eintragen</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <input disabled={!canSubmit} type="number" inputMode="numeric" pattern="[0-9]*" min={0} value={hScore} onChange={e => setHScore(e.target.value)} placeholder="—" style={{ flex: '0 0 120px', padding: '10px 12px', borderRadius: 12, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8', fontSize: 20, textAlign: 'center' }} />
+              <span style={{ fontSize: 28, color: '#9db', fontWeight: 700 }}>:</span>
+              <input disabled={!canSubmit} type="number" inputMode="numeric" pattern="[0-9]*" min={0} value={aScore} onChange={e => setAScore(e.target.value)} placeholder="—" style={{ flex: '0 0 120px', padding: '10px 12px', borderRadius: 12, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8', fontSize: 20, textAlign: 'center' }} />
+              <button disabled={!canSubmit} type="submit" style={{ padding: '10px 14px', borderRadius: 12, border: '1px solid #2f6b57', background: canSubmit ? '#1b4b3d' : '#24463c', color: '#fff', cursor: canSubmit ? 'pointer' : 'not-allowed' }}>Ergebnis speichern</button>
+            </div>
+            {(!canSubmit && cannotReason) && (
+              <div style={{ marginTop: 8, color: '#ccc' }}>Kein Schreibrecht: {cannotReason === 'KICKOFF_NOT_SET' ? 'Termin noch nicht festgelegt' : cannotReason}</div>
+            )}
+            {submitMsg && <div style={{ marginTop: 8, color: submitMsg.includes('gespeichert') ? '#9f9' : '#fcc' }}>{submitMsg}</div>}
+          </form>
+        )}
       </div>
 
       {/* Past games table */}
@@ -356,7 +431,7 @@ export default function GameDetailPage() {
                 <tbody>
                   {histA.map(h => (
                     <tr key={h.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                      <td style={{ padding: 8 }}>{formatDate(h.date)}</td>
+                      <td style={{ padding: 8 }}>{formatDate(h.date)} {formatTime(h.date) && <span style={{ color: '#96a' }}>· {formatTime(h.date)}</span>}</td>
                       <td style={{ padding: 8 }}>{h.home === playerA.name ? h.away : h.home}</td>
                       <td style={{ padding: 8 }}>{h.score || 'Ausstehend'}</td>
                     </tr>
@@ -378,7 +453,7 @@ export default function GameDetailPage() {
                 <tbody>
                   {histB.map(h => (
                     <tr key={h.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                      <td style={{ padding: 8 }}>{formatDate(h.date)}</td>
+                      <td style={{ padding: 8 }}>{formatDate(h.date)} {formatTime(h.date) && <span style={{ color: '#96a' }}>· {formatTime(h.date)}</span>}</td>
                       <td style={{ padding: 8 }}>{h.home === playerB.name ? h.away : h.home}</td>
                       <td style={{ padding: 8 }}>{h.score || 'Ausstehend'}</td>
                     </tr>
@@ -393,6 +468,32 @@ export default function GameDetailPage() {
       <div style={{ marginTop: 18 }}>
         <Link to={`/league/${game.leagueId || ''}`}>← Zurück zur Liga</Link>
       </div>
+    </div>
+  );
+}
+
+// Collapsible schedule section with native calendar and time popups
+function ScheduleSection({ open, setOpen, dateStr, timeStr, setDateStr, setTimeStr, onSubmit, message }) {
+  return (
+    <div style={{ marginTop: 16 }}>
+      {!open && (
+        <button onClick={() => setOpen(true)} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe' }}>
+          Termin bearbeiten
+        </button>
+      )}
+      {open && (
+        <form onSubmit={onSubmit} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+          <label style={{ color: '#9db' }}>Datum
+            <input type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} style={{ marginLeft: 8, padding: '8px 10px', borderRadius: 10, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }} />
+          </label>
+          <label style={{ color: '#9db' }}>Uhrzeit
+            <input type="time" value={timeStr} onChange={(e) => setTimeStr(e.target.value)} style={{ marginLeft: 8, padding: '8px 10px', borderRadius: 10, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }} />
+          </label>
+          <button type="submit" style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#1b4b3d', color: '#fff' }}>Speichern</button>
+          <button type="button" onClick={() => setOpen(false)} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: 'transparent', color: '#dfe' }}>Schließen</button>
+          {message && <div style={{ width: '100%', color: message.includes('gespeichert') ? '#9f9' : '#fcc' }}>{message}</div>}
+        </form>
+      )}
     </div>
   );
 }

@@ -61,109 +61,159 @@ export default function ProfilePage() {
   if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
   if (!data) return <div style={{ padding: 16 }}>Keine Daten.</div>;
 
-  return (
-    <div style={{ padding: 16 }}>
-      <h2>Profil</h2>
-      <div><b>Name:</b> {data.firstname} {data.lastname}</div>
-      <div><b>E-Mail:</b> {data.email}</div>
+  // UI helpers
+  const wrap = { padding: 16, color: '#e8efe8', fontFamily: 'Inter, system-ui, sans-serif' };
+  const card = { background: '#0f2a20', borderRadius: 16, boxShadow: '0 14px 36px rgba(0,0,0,0.5)' };
+  const pad = { padding: 16 };
+  const pill = { display: 'inline-block', padding: '4px 10px', borderRadius: 999, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe' };
+  const small = { fontSize: 12, color: '#a6bfb3' };
+  const hRow = { display: 'flex', alignItems: 'center', gap: 12 };
 
-      <h3 style={{ marginTop: 16 }}>Meine Ligen</h3>
-      {leagues.length === 0 ? (
-        <div>Keine Ligen.</div>
-      ) : (
-        <ul style={{ listStyle: "none", paddingLeft: 0 }}>
-          {leagues.map((l) => {
-            const leagueHref = l.leagueUrl || (l.id ? `/league/${l.id}` : null);
-            const cityHref = l.cityUrl || (l.cityId ? `/cities/${l.cityId}` : null);
-            return (
-              <li key={String(l.id || l.leagueId || Math.random())} style={{ marginBottom: 12 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <div>
-                    {leagueHref ? (
-                      <a href={leagueHref} onClick={(e) => safeNavigateTo(e, leagueHref, `/leagues/${l.id || l.leagueId}`)} style={{ fontWeight: "600", fontSize: 16 }}>
-                        {l.name || l.league || "—"}
-                      </a>
-                    ) : (
-                      <span style={{ fontWeight: "600", fontSize: 16 }}>{l.name || l.league || "—"}</span>
-                    )}
-                    {l.sport ? <span style={{ marginLeft: 10, color: "#666" }}>{l.sport}</span> : null}
-                    {l.city ? <span style={{ marginLeft: 8, color: "#666" }}>· {l.city}</span> : null}
-                    {l.joined_at ? (
-                      <div style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
-                        Beigetreten: {new Date(l.joined_at).toLocaleDateString()}
-                      </div>
-                    ) : null}
-                  </div>
-                  <div style={{ display: "flex", gap: 8 }}>
-                    <button
-                      type="button"
-                      onClick={(e) => leagueHref ? safeNavigateTo(e, leagueHref, `/leagues/${l.id || l.leagueId}`) : alert("Keine Liga-URL verfügbar")}
-                    >
-                      Zur Liga
-                    </button>
-                    {cityHref ? (
-                      <button
-                        type="button"
-                        onClick={(e) => safeNavigateTo(e, cityHref, `/cities/${l.cityId}`)}
-                      >
-                        Zur Stadt
-                      </button>
-                    ) : null}
-                  </div>
+  // Group leagues by sport text
+  const leaguesBySport = leagues.reduce((m, l) => {
+    const key = (l.sport || 'Andere').trim();
+    (m[key] = m[key] || []).push(l);
+    return m;
+  }, {});
+
+  // Compute summary stats for header based on completed games
+  const myId = data?.id;
+  const completed = Array.isArray(games?.completed) ? games.completed : [];
+  const myCompleted = completed.filter(g => (
+    (g.home_user_id && String(g.home_user_id) === String(myId)) ||
+    (g.away_user_id && String(g.away_user_id) === String(myId)) ||
+    (!g.home_user_id && !g.away_user_id) // text-only schemas – include but stats may be ambiguous
+  ));
+  let wins = 0, losses = 0, draws = 0;
+  for (const g of myCompleted) {
+    const hs = Number(g.home_score);
+    const as = Number(g.away_score);
+    if (!Number.isFinite(hs) || !Number.isFinite(as)) continue;
+    if (g.home_user_id && String(g.home_user_id) === String(myId)) {
+      if (hs > as) wins++; else if (hs < as) losses++; else draws++;
+    } else if (g.away_user_id && String(g.away_user_id) === String(myId)) {
+      if (as > hs) wins++; else if (as < hs) losses++; else draws++;
+    } else {
+      // text schema fallback: try by name
+      const meName = `${data?.firstname || ''} ${data?.lastname || ''}`.trim();
+      if (g.home === meName) { if (hs > as) wins++; else if (hs < as) losses++; else draws++; }
+      else if (g.away === meName) { if (as > hs) wins++; else if (as < hs) losses++; else draws++; }
+    }
+  }
+  const matchesCount = myCompleted.length;
+
+  const GameList = ({ title, items, showScore }) => (
+    <div style={{ ...card, marginTop: 16 }}>
+      <div style={{ ...pad, paddingBottom: 8 }}>
+        <div style={{ fontSize: 18, fontWeight: 700 }}>{title}</div>
+      </div>
+      <div style={{ ...pad, paddingTop: 8 }}>
+        {items.length === 0 ? (
+          <div style={small}>Keine {title.toLowerCase()}.</div>
+        ) : (
+          <div style={{ display: 'grid', gap: 10 }}>
+            {items.map(g => (
+              <div key={g.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr auto', alignItems: 'center', gap: 10, background: '#0b1e19', borderRadius: 12, padding: 12 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{g.league}</div>
+                  <div style={small}>{new Date(g.kickoff_at || Date.now()).toLocaleString('de-DE')}</div>
                 </div>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-
-      <h3 style={{ marginTop: 16 }}>Kommende Spiele</h3>
-      {games.upcoming.length === 0 ? (
-        <div>Keine kommenden Spiele.</div>
-      ) : (
-        <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>Datum</th>
-              <th>Liga</th>
-              <th>Spiel</th>
-            </tr>
-          </thead>
-          <tbody>
-            {games.upcoming.map(g => (
-              <tr key={g.id}>
-                <td>{new Date(g.kickoff_at).toLocaleString()}</td>
-                <td><Link to={`/league/${g.leagueId}`}>{g.league}</Link></td>
-                <td><Link to={`/matches/${g.id}`}>{g.home} – {g.away}</Link></td>
-              </tr>
+                <div style={{ textAlign: 'right', color: '#9db' }}>{g.home}</div>
+                <div style={{ textAlign: 'center', fontWeight: 700 }}>
+                  {showScore ? (
+                    <span>{g.home_score != null && g.away_score != null ? `${g.home_score}:${g.away_score}` : '— : —'}</span>
+                  ) : (
+                    <span>VS</span>
+                  )}
+                </div>
+                <div style={{ color: '#9db' }}>{g.away}</div>
+                <div style={{ gridColumn: '1 / -1', display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
+                  <Link to={`/matches/${g.id}`} style={pill}>Details</Link>
+                  <Link to={`/matches/${g.id}`} style={pill}>Match-Chat</Link>
+                  {!showScore && <Link to={`/matches/${g.id}`} style={pill}>Termin ändern</Link>}
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
-      )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
 
-      <h3 style={{ marginTop: 16 }}>Abgeschlossene Spiele</h3>
-      {games.completed.length === 0 ? (
-        <div>Keine abgeschlossenen Spiele.</div>
-      ) : (
-        <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
-          <thead>
-            <tr>
-              <th>Datum</th>
-              <th>Liga</th>
-              <th>Ergebnis</th>
-            </tr>
-          </thead>
-          <tbody>
-            {games.completed.map(g => (
-              <tr key={g.id}>
-                <td>{new Date(g.kickoff_at).toLocaleString()}</td>
-                <td><Link to={`/league/${g.leagueId}`}>{g.league}</Link></td>
-                <td><Link to={`${g.id}`}>{g.home} {g.home_score}:{g.away_score} {g.away}</Link></td>
-              </tr>
+  return (
+    <div style={wrap}>
+      {/* Header with avatar, name, role, sport badges and stats summary */}
+      <div style={{ ...card, paddingBottom: 0 }}>
+        <div style={{ ...pad, display: 'flex', alignItems: 'center', gap: 16 }}>
+          <img alt="avatar" src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent((data.firstname||'')+' '+(data.lastname||''))}&backgroundType=gradientLinear&fontWeight=700`} style={{ width: 80, height: 80, borderRadius: 80, objectFit: 'cover', background: '#1b3a31' }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: 28, fontWeight: 900 }}>{data.firstname} {data.lastname}</div>
+            <div style={small}>Einzelspieler</div>
+          </div>
+          {/* Sport-Badges (Text, komma-getrennt) */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+            {Object.keys(leaguesBySport).map((s) => (
+              <span key={s} style={{ ...pill, background: '#143329' }}>{s}</span>
             ))}
-          </tbody>
-        </table>
-      )}
+          </div>
+        </div>
+        {/* Stats bar */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, padding: 16 }}>
+          <div style={{ textAlign: 'center', padding: '10px 6px' }}>
+            <div style={{ fontSize: 34, fontWeight: 900 }}>{wins}</div>
+            <div style={{ color: '#bcd' }}>Siege</div>
+          </div>
+          <div style={{ textAlign: 'center', padding: '10px 6px' }}>
+            <div style={{ fontSize: 34, fontWeight: 900 }}>{losses}</div>
+            <div style={{ color: '#bcd' }}>Niederlagen</div>
+          </div>
+          <div style={{ textAlign: 'center', padding: '10px 6px' }}>
+            <div style={{ fontSize: 34, fontWeight: 900 }}>{draws}</div>
+            <div style={{ color: '#bcd' }}>Unentschieden</div>
+          </div>
+          <div style={{ textAlign: 'center', padding: '10px 6px' }}>
+            <div style={{ fontSize: 34, fontWeight: 900 }}>{matchesCount}</div>
+            <div style={{ color: '#bcd' }}>Matches</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Meine Ligen – gruppiert nach Sport (ohne Logos, nur Text) */}
+      <div style={{ ...card, marginTop: 16 }}>
+        <div style={{ ...pad, paddingBottom: 8 }}>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>Meine Ligen</div>
+          <div style={small}>Stadt und Sport als Text – mehrere Sportarten werden durch Badges oben angezeigt.</div>
+        </div>
+        <div style={{ ...pad, paddingTop: 8 }}>
+          {leagues.length === 0 ? (
+            <div style={small}>Keine Ligen.</div>
+          ) : (
+            <div style={{ display: 'grid', gap: 10 }}>
+              {leagues.map((l) => {
+                const leagueHref = l.leagueUrl || (l.id ? `/league/${l.id}` : null);
+                const cityHref = l.cityUrl || (l.cityId ? `/cities/${l.cityId}` : null);
+                return (
+                  <div key={String(l.id || l.leagueId || Math.random())} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0b1e19', borderRadius: 12, padding: 12 }}>
+                    <div>
+                      <div style={{ fontWeight: 700 }}>{l.name || l.league || '—'}</div>
+                      <div style={small}>{[l.sport, l.city].filter(Boolean).join(' · ')}</div>
+                      {l.joined_at && <div style={small}>Beigetreten: {new Date(l.joined_at).toLocaleDateString('de-DE')}</div>}
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      {leagueHref && <a href={leagueHref} onClick={(e) => safeNavigateTo(e, leagueHref, `/leagues/${l.id || l.leagueId}`)} style={pill}>Zur Liga</a>}
+                      {cityHref && <a href={cityHref} onClick={(e) => safeNavigateTo(e, cityHref, `/cities/${l.cityId}`)} style={pill}>Zur Stadt</a>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Spiel-Listen (ensure distinct arrays) */}
+      <GameList title="Kommende Spiele" items={(games.upcoming || []).filter(g => g.home_score == null && g.away_score == null)} showScore={false} />
+      <GameList title="Vergangene Spiele" items={(games.completed || []).filter(g => g.home_score != null && g.away_score != null)} showScore={true} />
     </div>
   );
 }
