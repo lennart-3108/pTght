@@ -20,6 +20,20 @@ exports.up = async function (knex) {
 			t.check("home_user_id IS NULL OR home_team_id IS NULL");
 			t.check("away_user_id IS NULL OR away_team_id IS NULL");
 		});
+	} else {
+		// Ensure columns exist if table was created by an older migration without them
+		const mInfo = await knex("matches").columnInfo().catch(() => ({}));
+		const need = (c) => !Object.prototype.hasOwnProperty.call(mInfo || {}, c);
+		// SQLite supports ADD COLUMN; do individual alters when needed
+		if (need("kickoff_at")) await knex.schema.alterTable("matches", (t) => t.text("kickoff_at").nullable());
+		if (need("home_user_id")) await knex.schema.alterTable("matches", (t) => t.integer("home_user_id").nullable());
+		if (need("away_user_id")) await knex.schema.alterTable("matches", (t) => t.integer("away_user_id").nullable());
+		if (need("home_team_id")) await knex.schema.alterTable("matches", (t) => t.integer("home_team_id").nullable());
+		if (need("away_team_id")) await knex.schema.alterTable("matches", (t) => t.integer("away_team_id").nullable());
+		if (need("home")) await knex.schema.alterTable("matches", (t) => t.text("home").nullable());
+		if (need("away")) await knex.schema.alterTable("matches", (t) => t.text("away").nullable());
+		if (need("home_score")) await knex.schema.alterTable("matches", (t) => t.integer("home_score").nullable());
+		if (need("away_score")) await knex.schema.alterTable("matches", (t) => t.integer("away_score").nullable());
 	}
 
 	const hasGames = await knex.schema.hasTable("games");
@@ -30,6 +44,9 @@ exports.up = async function (knex) {
 
 		// Nur Zeilen mit league_id übernehmen, und nur existierende Spalten mappen
 		if (hasLeagueId) {
+			// Filter destination columns by what exists in matches to prevent errors
+			const matchesInfo = await knex("matches").columnInfo().catch(() => ({}));
+			const matchesCols = Object.keys(matchesInfo || {});
 			const colMap = [
 				["id", "id"],
 				["league_id", "league_id"],
@@ -43,16 +60,17 @@ exports.up = async function (knex) {
 				["home_score", "home_score"],
 				["away_score", "away_score"],
 			];
-			const srcCols = colMap.filter(([src]) => cols.includes(src));
-			const destCols = srcCols.map(([_, dest]) => dest);
-			const selectCols = srcCols.map(([src]) => `g.${src}`);
-
-			await knex.raw(
-				`INSERT INTO matches (${destCols.join(", ")})
-				 SELECT ${selectCols.join(", ")}
-				 FROM games g
-				 WHERE g.league_id IS NOT NULL`
-			);
+			const srcCols = colMap.filter(([src, dest]) => cols.includes(src) && matchesCols.includes(dest));
+			if (srcCols.length) {
+				const destCols = srcCols.map(([_, dest]) => dest);
+				const selectCols = srcCols.map(([src]) => `g.${src}`);
+				await knex.raw(
+					`INSERT INTO matches (${destCols.join(", ")})
+					 SELECT ${selectCols.join(", ")}
+					 FROM games g
+					 WHERE g.league_id IS NOT NULL`
+				);
+			}
 		}
 	}
 };

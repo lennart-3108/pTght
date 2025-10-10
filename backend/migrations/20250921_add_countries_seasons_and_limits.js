@@ -38,11 +38,19 @@ exports.up = async function(knex) {
   // Add season_id and status/completed_at to matches (or games) table if matches exists
   const hasMatches = await knex.schema.hasTable('matches');
   if (hasMatches) {
+    const isSqlite = knex && knex.client && knex.client.config && (knex.client.config.client === 'sqlite3' || knex.client.config.client === 'better-sqlite3');
     const hasSeasonId = await knex.schema.hasColumn('matches', 'season_id');
     if (!hasSeasonId) {
-      await knex.schema.table('matches', (t) => {
-        t.integer('season_id').unsigned().nullable().references('id').inTable('seasons').onDelete('SET NULL');
-      });
+      if (isSqlite) {
+        // SQLite cannot add a column with a foreign key constraint via ALTER TABLE
+        await knex.schema.table('matches', (t) => {
+          t.integer('season_id').nullable();
+        });
+      } else {
+        await knex.schema.table('matches', (t) => {
+          t.integer('season_id').unsigned().nullable().references('id').inTable('seasons').onDelete('SET NULL');
+        });
+      }
     }
     const hasStatus = await knex.schema.hasColumn('matches', 'status');
     if (!hasStatus) {
