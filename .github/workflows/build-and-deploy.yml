@@ -51,6 +51,8 @@ jobs:
           tags: |
             ${{ secrets.IMAGE_PREFIX || 'ghcr.io/lennart-3108' }}/matchleague-frontend:${{ github.event.inputs.image_tag }}
             ${{ secrets.IMAGE_PREFIX || 'ghcr.io/lennart-3108' }}/matchleague-frontend:latest
+          build-args: |
+            CI=false
 
   deploy:
     needs: build-and-push
