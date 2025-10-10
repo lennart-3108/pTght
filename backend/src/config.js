@@ -57,7 +57,11 @@ function loadConfig() {
 
   return {
     JWT_SECRET,
-    DB_PATH: path.resolve(__dirname, "..", process.env.DB_PATH || "sportplattform.db"),
+    // Prefer SQLITE_FILE or SQLITE_DB_PATH so scripts and server share the same DB
+    DB_PATH: (function() {
+      const p = process.env.SQLITE_FILE || process.env.SQLITE_DB_PATH || process.env.DB_PATH || "sportplattform.db";
+      return path.resolve(__dirname, "..", p);
+    })(),
     cors: {
       origin: corsOrigin,  // supports multiple origins, defaults to localhost:3000 and :3001 for dev
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],

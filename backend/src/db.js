@@ -87,25 +87,39 @@ function schemaToHtml(schema) {
 }
 
 function createIncrementalAdmin(db, setBanner) {
-  db.get(
-    `SELECT COUNT(*) AS cnt
-     FROM users
-     WHERE is_admin = 1 AND email LIKE 'admin%@example.com'`,
-    (countErr, row) => {
-      if (countErr) {
-        console.error("Admin-Zählfehler:", countErr.message);
-        return;
-      }
-      const nextNum = (row?.cnt || 0) + 1;
-      const adminName = `admin${nextNum}`;
-      const adminEmail = `${adminName}@example.com`;
-      const hashed = bcrypt.hashSync("test1234", 10);
+  // Detect existing columns in users table and insert only those
+  db.all(`PRAGMA table_info(users)`, (piErr, cols) => {
+    if (piErr) {
+      console.error('Admin PRAGMA error:', piErr.message);
+      return;
+    }
+    const colNames = new Set((cols || []).map(c => c.name));
+    const has = (c) => colNames.has(c);
 
-      db.run(
-        `INSERT INTO users (firstname, lastname, birthday, email, password, is_admin, is_confirmed)
-         VALUES (?, ?, ?, ?, ?, 1, 1)`,
-        [adminName, "", "1970-01-01", adminEmail, hashed],
-        function (insErr) {
+    db.get(
+      `SELECT COUNT(*) AS cnt FROM users WHERE is_admin = 1 AND email LIKE 'admin%@example.com'`,
+      (countErr, row) => {
+        if (countErr) {
+          console.error("Admin-Zählfehler:", countErr.message);
+          return;
+        }
+        const nextNum = (row?.cnt || 0) + 1;
+        const adminName = `admin${nextNum}`;
+        const adminEmail = `${adminName}@example.com`;
+        const hashed = bcrypt.hashSync("test1234", 10);
+
+        // Build column/value lists dynamically
+        const columns = ['email', 'password'];
+        const values = [adminEmail, hashed];
+        if (has('firstname')) { columns.push('firstname'); values.push(adminName); }
+        if (has('lastname')) { columns.push('lastname'); values.push(''); }
+        if (has('birthday')) { columns.push('birthday'); values.push('1970-01-01'); }
+        if (has('is_admin')) { columns.push('is_admin'); values.push(1); }
+        if (has('is_confirmed')) { columns.push('is_confirmed'); values.push(1); }
+
+        const placeholders = values.map(() => '?').join(', ');
+        const sql = `INSERT INTO users (${columns.join(', ')}) VALUES (${placeholders})`;
+        db.run(sql, values, function (insErr) {
           if (insErr) {
             console.error("Admin-Anlegefehler:", insErr.message);
             return;
@@ -113,10 +127,10 @@ function createIncrementalAdmin(db, setBanner) {
           const info = { name: adminName, email: adminEmail, createdAt: new Date().toISOString() };
           setBanner(info);
           console.log(`🛠️ Admin erstellt: ${adminName} (${adminEmail}) / Passwort: test1234`);
-        }
-      );
-    }
-  );
+        });
+      }
+    );
+  });
 }
 
 function createStartupTestUser(db, setBanner) {
