@@ -15,7 +15,9 @@
     "nodemon": "^3.1.0"
   },
   "scripts": {
+    "predev": "knex --knexfile knexfile.js migrate:latest",
     "dev": "PORT=5001 nodemon server.js",
+    "prestart": "knex --knexfile knexfile.js migrate:latest",
     "start": "PORT=5001 node server.js",
     "mail:who": "node scripts/print-mail-config.js",
     "migrate": "knex --knexfile knexfile.js migrate:latest",
