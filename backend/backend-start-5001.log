@@ -1,0 +1,402 @@
+[DB] SQLITE_FILE not set; using sportsplatform.db
+[INFO] 2025-10-10T19:33:09.118Z [DB] SQLite detected – ensured base tables via db-setup.js {}
+[DB] SQLite file: /Users/A105227786/Documents/projects/sL/pTght/backend/sportsplatform.db
+[DB] Migrations dir: /Users/A105227786/Documents/projects/sL/pTght/backend/migrations
+[2025-10-10 19:33:09] DEBUG Creating transport: nodemailer (7.0.6; +https://nodemailer.com/; SMTP/7.0.6[client:7.0.6])
+[Mailer] Transport konfiguriert smtp.hostinger.com:465 secure=true
+[Mailer] Verifiziere SMTP-Verbindung ...
+[INFO] 2025-10-10T19:33:09.329Z [Server] Listening on http://localhost:5001 {}
+[INFO] 2025-10-10T19:33:09.329Z [Server] Logs directory: /Users/A105227786/Documents/projects/sL/pTght/backend/logs (error.log, info.log, link-tests.log) {}
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] Resolved smtp.hostinger.com as 172.65.255.143 [cache miss]
+🛠️ Admin erstellt: admin12 (admin12@example.com) / Passwort: test1234
+[2025-10-10 19:33:09] INFO  [LTqhLXMPs0E] Secure connection established to 172.65.255.143:465
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] S: 220 ESMTP smtp.hostinger.com
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] C: EHLO [127.0.0.1]
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] S: 250-smtp.hostinger.com
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] S: 250-PIPELINING
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] S: 250-SIZE 48811212
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] S: 250-ETRN
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] S: 250-AUTH PLAIN LOGIN
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] S: 250-ENHANCEDSTATUSCODES
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] S: 250-8BITMIME
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] S: 250-DSN
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] S: 250 CHUNKING
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] SMTP handshake finished
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] C: AUTH PLAIN AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAvKiBzZWNyZXQgKi8=
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] S: 235 2.7.0 Authentication successful
+[2025-10-10 19:33:09] INFO  [LTqhLXMPs0E] User "info@dev.matchleague.org" authenticated
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] C: QUIT
+[Mailer] Verify OK in 398ms. Sende Acceptance-Mail ...
+[2025-10-10 19:33:09] DEBUG Sending mail using SMTP/7.0.6[client:7.0.6]
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] Resolved smtp.hostinger.com as 172.65.255.143 [cache hit]
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] S: 221 2.0.0 Bye
+[2025-10-10 19:33:09] DEBUG [LTqhLXMPs0E] Closing connection to the server using "end"
+[2025-10-10 19:33:09] INFO  [LTqhLXMPs0E] Connection closed
+[2025-10-10 19:33:09] INFO  [w5XbH38Hd1Q] Secure connection established to 172.65.255.143:465
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] S: 220 ESMTP smtp.hostinger.com
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] C: EHLO [127.0.0.1]
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] S: 250-smtp.hostinger.com
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] S: 250-PIPELINING
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] S: 250-SIZE 48811212
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] S: 250-ETRN
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] S: 250-AUTH PLAIN LOGIN
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] S: 250-ENHANCEDSTATUSCODES
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] S: 250-8BITMIME
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] S: 250-DSN
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] S: 250 CHUNKING
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] SMTP handshake finished
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] C: AUTH PLAIN AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAvKiBzZWNyZXQgKi8=
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] S: 235 2.7.0 Authentication successful
+[2025-10-10 19:33:09] INFO  [w5XbH38Hd1Q] User "info@dev.matchleague.org" authenticated
+[2025-10-10 19:33:09] INFO  Sending message 1760124789720-84caef230c8c3@matchleague.org to <info@dev.matchleague.org>
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] C: MAIL FROM:<info@dev.matchleague.org>
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] S: 250 2.1.0 Ok
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] C: RCPT TO:<info@dev.matchleague.org>
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] S: 250 2.1.5 Ok
+[2025-10-10 19:33:09] DEBUG [w5XbH38Hd1Q] C: DATA
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] S: 354 End data with <CR><LF>.<CR><LF>
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] X-Mailer: MatchLeague
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] Auto-Submitted: auto-generated
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] From: MatchLeague <info@dev.matchleague.org>
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] To: info@dev.matchleague.org
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] Reply-To: info@dev.matchleague.org
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] Subject: Mailer verified
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] Message-ID: <1760124789720-84caef230c8c3@matchleague.org>
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] Date: Fri, 10 Oct 2025 19:33:09 +0000
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] MIME-Version: 1.0
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] Content-Type: multipart/alternative;
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q]  boundary="--_NmP-7d8fa0ebec9ea0f3-Part_1"
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] 
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] ----_NmP-7d8fa0ebec9ea0f3-Part_1
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] Content-Type: text/plain; charset=utf-8
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] Content-Transfer-Encoding: 7bit
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] 
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] SMTP connection accepted at 2025-10-10T19:33:09.720Z
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] ----_NmP-7d8fa0ebec9ea0f3-Part_1
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] Content-Type: text/html; charset=utf-8
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] Content-Transfer-Encoding: 7bit
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] 
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] <p>SMTP connection accepted at <b>2025-10-10T19:33:09.720Z</b></p>
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] ----_NmP-7d8fa0ebec9ea0f3-Part_1--
+[2025-10-10 19:33:10] DEBUG [w5XbH38Hd1Q] .
+[2025-10-10 19:33:10] INFO  [w5XbH38Hd1Q] <774 bytes encoded mime message (source size 771 bytes)>
+[2025-10-10 19:33:14] DEBUG [w5XbH38Hd1Q] S: 250 2.0.0 Ok: queued as 4cjxjd70HPz3wj2
+[2025-10-10 19:33:14] DEBUG [w5XbH38Hd1Q] Closing connection to the server using "end"
+📧 E-Mail gesendet: 1760124789720-84caef230c8c3@matchleague.org
+[2025-10-10 19:33:14] INFO  [w5XbH38Hd1Q] Connection closed
+{"level":30,"time":1760124794272,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"connection","msg":"Established secure TCP connection","cid":"1a1k3zjjfaj2q85wygss","secure":true,"host":"imap.hostinger.com","servername":"imap.hostinger.com","port":993,"address":"2606:4700:90:0:4bc4:2557:ca17:2529","localAddress":"2003:f5:ff4e:3967:e9e1:421d:be5a:1366","localPort":56871,"authorized":true,"algo":"TLS_AES_256_GCM_SHA384","version":"TLSv1.3"}
+{"level":20,"time":1760124794292,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Server ready.","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794292,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"c","msg":"1 ID (\"name\" \"imapflow\" \"version\" \"1.0.198\" \"vendor\" \"Postal Systems\" \"support-url\" \"https://github.com/postalsys/imapflow/issues\")","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794314,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* ID (\"name\" \"Dovecot\")","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794314,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"1 OK ID completed.","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794315,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"c","msg":"2 AUTHENTICATE PLAIN","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794341,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"+","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794341,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"c","msg":"AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAoKiB2YWx1ZSBoaWRkZW4gKik=","comment":"Encoded response for AUTH=PLAIN"}
+{"level":20,"time":1760124794391,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"2 OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE SORT SORT=DISPLAY THREAD=REFERENCES THREAD=REFS THREAD=ORDEREDSUBJECT MULTIAPPEND URL-PARTIAL CATENATE UNSELECT CHILDREN NAMESPACE UIDPLUS LIST-EXTENDED I18NLEVEL=1 CONDSTORE QRESYNC ESEARCH ESORT SEARCHRES WITHIN CONTEXT=SEARCH LIST-STATUS BINARY MOVE SNIPPET=FUZZY PREVIEW=FUZZY PREVIEW STATUS=SIZE SAVEDATE LITERAL+ NOTIFY SPECIAL-USE COMPRESS=DEFLATE QUOTA] Logged in","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":30,"time":1760124794392,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"auth","msg":"User authenticated","cid":"1a1k3zjjfaj2q85wygss","user":"info@dev.matchleague.org"}
+{"level":20,"time":1760124794392,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"c","msg":"3 ID (\"name\" \"imapflow\" \"version\" \"1.0.198\" \"vendor\" \"Postal Systems\" \"support-url\" \"https://github.com/postalsys/imapflow/issues\")","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794408,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* ID (\"name\" \"Dovecot\")","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794408,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"3 OK ID completed (0.001 + 0.000 secs).","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794408,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"c","msg":"4 NAMESPACE","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794423,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* NAMESPACE ((\"INBOX.\" \".\")) NIL NIL","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794424,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"4 OK Namespace completed (0.001 + 0.000 secs).","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794424,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"c","msg":"5 COMPRESS DEFLATE","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794440,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"5 OK Begin compression (0.001 + 0.000 secs).","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794441,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"c","msg":"6 ENABLE CONDSTORE","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794459,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* ENABLED CONDSTORE","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794459,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"6 OK Enabled (0.001 + 0.000 secs).","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794460,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"c","msg":"7 LIST \"INBOX.\" \"INBOX.Sent\"","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794479,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"7 OK List completed (0.003 + 0.000 + 0.002 secs).","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794479,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"c","msg":"8 LIST \"\" \"INBOX\"","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794495,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* LIST (\\HasChildren) \".\" INBOX","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794495,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"8 OK List completed (0.001 + 0.000 secs).","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794496,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"c","msg":"9 LSUB \"INBOX.\" \"INBOX.Sent\"","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794512,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"9 OK Lsub completed (0.001 + 0.000 secs).","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794512,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"c","msg":"A SELECT INBOX.Sent","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794531,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794531,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* OK [PERMANENTFLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft \"\\\\*\")] Flags permitted.","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794532,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* 99 EXISTS","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794532,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* 0 RECENT","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794532,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* OK [UNSEEN 1] First unseen.","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794532,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* OK [UIDVALIDITY 1758917061] UIDs valid","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794532,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* OK [UIDNEXT 100] Predicted next UID","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794532,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* OK [HIGHESTMODSEQ 102] Highest","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794532,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"A OK [READ-WRITE] Select completed (0.004 + 0.000 + 0.003 secs).","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794533,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"c","msg":"B APPEND INBOX.Sent \"(* 771B literal *)\"","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794575,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* 100 EXISTS","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794576,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"* 1 RECENT","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794576,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"s","msg":"B OK [APPENDUID 1758917061 100] Append completed (0.024 + 0.000 + 0.023 secs).","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":20,"time":1760124794576,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","src":"c","msg":"C LOGOUT","cid":"1a1k3zjjfaj2q85wygss"}
+{"level":10,"time":1760124794596,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"1a1k3zjjfaj2q85wygss","msg":"Connection closed","cid":"1a1k3zjjfaj2q85wygss"}
+✉️  Kopie im IMAP-Ordner abgelegt (Sent)
+📧 Acceptance-Mail gesendet (sendMail): 1760124789720-84caef230c8c3@matchleague.org
+Mailer aktiviert, versende E-Mail an: lennart.allenstein.@gmail.com
+[2025-10-10 19:39:08] DEBUG Sending mail using SMTP/7.0.6[client:7.0.6]
+[2025-10-10 19:39:08] DEBUG [41QFsJrpFYU] Resolved smtp.hostinger.com as 172.65.255.143 [cache miss]
+[2025-10-10 19:39:09] INFO  [41QFsJrpFYU] Secure connection established to 172.65.255.143:465
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 220 ESMTP smtp.hostinger.com
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] C: EHLO [127.0.0.1]
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 250-smtp.hostinger.com
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 250-PIPELINING
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 250-SIZE 48811212
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 250-ETRN
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 250-AUTH PLAIN LOGIN
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 250-ENHANCEDSTATUSCODES
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 250-8BITMIME
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 250-DSN
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 250 CHUNKING
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] SMTP handshake finished
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] C: AUTH PLAIN AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAvKiBzZWNyZXQgKi8=
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 235 2.7.0 Authentication successful
+[2025-10-10 19:39:09] INFO  [41QFsJrpFYU] User "info@dev.matchleague.org" authenticated
+[2025-10-10 19:39:09] INFO  Sending message 1760125148932-bb7322f79a7ec@matchleague.org to <lennart.allenstein.@gmail.com>
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] C: MAIL FROM:<info@dev.matchleague.org>
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 250 2.1.0 Ok
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] C: RCPT TO:<lennart.allenstein.@gmail.com>
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 250 2.1.5 Ok
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] C: DATA
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 354 End data with <CR><LF>.<CR><LF>
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] X-Mailer: MatchLeague
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] Auto-Submitted: auto-generated
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] From: MatchLeague <info@dev.matchleague.org>
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] To: lennart.allenstein.@gmail.com
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] Reply-To: info@dev.matchleague.org
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] Subject: =?UTF-8?Q?E-Mail_best=C3=A4tigen?=
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] Message-ID: <1760125148932-bb7322f79a7ec@matchleague.org>
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] Date: Fri, 10 Oct 2025 19:39:08 +0000
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] MIME-Version: 1.0
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] Content-Type: multipart/alternative;
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU]  boundary="--_NmP-bd1f4004033c7d9c-Part_1"
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] 
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] ----_NmP-bd1f4004033c7d9c-Part_1
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] Content-Type: text/plain; charset=utf-8
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] Content-Transfer-Encoding: quoted-printable
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] 
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] Hallo Lennart, bitte best=C3=A4tige deine E-Mail-Adresse, indem du auf den =
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] folgenden Link klickst: http://localhost:5001/confirm/eyJhbGciOiJIUzI1NiIsI=
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] nR5cCI6IkpXVCJ9.eyJlbWFpbCI6Imxlbm5hcnQuYWxsZW5zdGVpbi5AZ21haWwuY29tIiwiaWF=
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] 0IjoxNzYwMTI1MTQ4LCJleHAiOjE3NjAyMTE1NDh9.UD-E5n6k8Bdd3He9tFZh1260HREpXzYCR=
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] Wt5UBP4IMY
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] ----_NmP-bd1f4004033c7d9c-Part_1
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] Content-Type: text/html; charset=utf-8
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] Content-Transfer-Encoding: quoted-printable
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] 
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] 
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU]               <p>Hallo Lennart,</p>
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU]               <p>bitte best=C3=A4tige =
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] deine E-Mail-Adresse, indem du auf den folgenden Link klickst:</p>
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU]               <p><a href=3D"http://localhost:5001/confirm/eyJhbGciOiJIUzI1N=
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] iIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Imxlbm5hcnQuYWxsZW5zdGVpbi5AZ21haWwuY29tIiw=
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] iaWF0IjoxNzYwMTI1MTQ4LCJleHAiOjE3NjAyMTE1NDh9.UD-E5n6k8Bdd3He9tFZh1260HREpX=
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] zYCRWt5UBP4IMY">http://localhost:5001/confirm/eyJhbGciOiJIUzI1NiIsInR5cCI6I=
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] kpXVCJ9.eyJlbWFpbCI6Imxlbm5hcnQuYWxsZW5zdGVpbi5AZ21haWwuY29tIiwiaWF0IjoxNzY=
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] wMTI1MTQ4LCJleHAiOjE3NjAyMTE1NDh9.UD-E5n6k8Bdd3He9tFZh1260HREpXzYCRWt5UBP4I=
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] MY</a></p>
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU]            =20
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] ----_NmP-bd1f4004033c7d9c-Part_1--
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] .
+[2025-10-10 19:39:09] INFO  [41QFsJrpFYU] <1668 bytes encoded mime message (source size 1661 bytes)>
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] S: 250 2.0.0 Ok: queued as 4cjxrY2Qg0z13k1
+[2025-10-10 19:39:09] DEBUG [41QFsJrpFYU] Closing connection to the server using "end"
+📧 E-Mail gesendet: 1760125148932-bb7322f79a7ec@matchleague.org
+[2025-10-10 19:39:09] INFO  [41QFsJrpFYU] Connection closed
+{"level":30,"time":1760125149792,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"connection","msg":"Established secure TCP connection","cid":"i8ysvthyz21y9hiyl4i9","secure":true,"host":"imap.hostinger.com","servername":"imap.hostinger.com","port":993,"address":"2606:4700:90:0:4bc4:2557:ca17:2529","localAddress":"2003:f5:ff4e:3967:e9e1:421d:be5a:1366","localPort":58452,"authorized":true,"algo":"TLS_AES_256_GCM_SHA384","version":"TLSv1.3"}
+{"level":20,"time":1760125149820,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Server ready.","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125149821,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"c","msg":"1 ID (\"name\" \"imapflow\" \"version\" \"1.0.198\" \"vendor\" \"Postal Systems\" \"support-url\" \"https://github.com/postalsys/imapflow/issues\")","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125149848,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* ID (\"name\" \"Dovecot\")","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125149848,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"1 OK ID completed.","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125149848,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"c","msg":"2 AUTHENTICATE PLAIN","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125149876,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"+","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125149877,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"c","msg":"AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAoKiB2YWx1ZSBoaWRkZW4gKik=","comment":"Encoded response for AUTH=PLAIN"}
+{"level":20,"time":1760125149989,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"2 OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE SORT SORT=DISPLAY THREAD=REFERENCES THREAD=REFS THREAD=ORDEREDSUBJECT MULTIAPPEND URL-PARTIAL CATENATE UNSELECT CHILDREN NAMESPACE UIDPLUS LIST-EXTENDED I18NLEVEL=1 CONDSTORE QRESYNC ESEARCH ESORT SEARCHRES WITHIN CONTEXT=SEARCH LIST-STATUS BINARY MOVE SNIPPET=FUZZY PREVIEW=FUZZY PREVIEW STATUS=SIZE SAVEDATE LITERAL+ NOTIFY SPECIAL-USE COMPRESS=DEFLATE QUOTA] Logged in","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":30,"time":1760125149989,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"auth","msg":"User authenticated","cid":"i8ysvthyz21y9hiyl4i9","user":"info@dev.matchleague.org"}
+{"level":20,"time":1760125149990,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"c","msg":"3 ID (\"name\" \"imapflow\" \"version\" \"1.0.198\" \"vendor\" \"Postal Systems\" \"support-url\" \"https://github.com/postalsys/imapflow/issues\")","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150027,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* ID (\"name\" \"Dovecot\")","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150027,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"3 OK ID completed (0.001 + 0.000 secs).","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150028,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"c","msg":"4 NAMESPACE","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150127,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* NAMESPACE ((\"INBOX.\" \".\")) NIL NIL","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150128,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"4 OK Namespace completed (0.001 + 0.000 secs).","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150129,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"c","msg":"5 COMPRESS DEFLATE","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150165,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"5 OK Begin compression (0.001 + 0.000 secs).","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150167,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"c","msg":"6 ENABLE CONDSTORE","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150201,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* ENABLED CONDSTORE","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150201,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"6 OK Enabled (0.001 + 0.000 secs).","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150201,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"c","msg":"7 LIST \"INBOX.\" \"INBOX.Sent\"","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150241,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"7 OK List completed (0.002 + 0.000 + 0.001 secs).","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150241,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"c","msg":"8 LIST \"\" \"INBOX\"","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150278,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* LIST (\\HasChildren) \".\" INBOX","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150278,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"8 OK List completed (0.001 + 0.000 secs).","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150278,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"c","msg":"9 LSUB \"INBOX.\" \"INBOX.Sent\"","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150313,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"9 OK Lsub completed (0.001 + 0.000 secs).","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150314,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"c","msg":"A SELECT INBOX.Sent","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150354,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150355,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* OK [PERMANENTFLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft \"\\\\*\")] Flags permitted.","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150355,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* 100 EXISTS","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150355,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* 0 RECENT","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150355,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* OK [UNSEEN 1] First unseen.","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150355,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* OK [UIDVALIDITY 1758917061] UIDs valid","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150356,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* OK [UIDNEXT 101] Predicted next UID","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150356,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* OK [HIGHESTMODSEQ 103] Highest","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150356,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"A OK [READ-WRITE] Select completed (0.001 + 0.000 secs).","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150358,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"c","msg":"B APPEND INBOX.Sent \"(* 1661B literal *)\"","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150409,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* 101 EXISTS","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150409,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* 1 RECENT","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150409,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"B OK [APPENDUID 1758917061 101] Append completed (0.014 + 0.000 + 0.013 secs).","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150409,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"c","msg":"C LOGOUT","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":20,"time":1760125150445,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"* BYE Logging out","cid":"i8ysvthyz21y9hiyl4i9"}
+✉️  Kopie im IMAP-Ordner abgelegt (Sent)
+[2025-10-10 19:39:10] DEBUG Sending mail using SMTP/7.0.6[client:7.0.6]
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] Resolved smtp.hostinger.com as 172.65.255.143 [cache hit]
+{"level":20,"time":1760125150446,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","src":"s","msg":"C OK Logout completed (0.001 + 0.000 secs).","cid":"i8ysvthyz21y9hiyl4i9"}
+{"level":10,"time":1760125150447,"pid":50967,"hostname":"T0010cc902","component":"imap-connection","cid":"i8ysvthyz21y9hiyl4i9","msg":"Connection closed","cid":"i8ysvthyz21y9hiyl4i9"}
+[2025-10-10 19:39:10] INFO  [3NoNY02cytA] Secure connection established to 172.65.255.143:465
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] S: 220 ESMTP smtp.hostinger.com
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] C: EHLO [127.0.0.1]
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] S: 250-smtp.hostinger.com
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] S: 250-PIPELINING
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] S: 250-SIZE 48811212
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] S: 250-ETRN
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] S: 250-AUTH PLAIN LOGIN
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] S: 250-ENHANCEDSTATUSCODES
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] S: 250-8BITMIME
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] S: 250-DSN
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] S: 250 CHUNKING
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] SMTP handshake finished
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] C: AUTH PLAIN AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAvKiBzZWNyZXQgKi8=
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] S: 235 2.7.0 Authentication successful
+[2025-10-10 19:39:10] INFO  [3NoNY02cytA] User "info@dev.matchleague.org" authenticated
+[2025-10-10 19:39:10] INFO  Sending message 1760125150447-5ff520bf5a0d1@matchleague.org to <info@dev.matchleague.org>
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] C: MAIL FROM:<info@dev.matchleague.org>
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] S: 250 2.1.0 Ok
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] C: RCPT TO:<info@dev.matchleague.org>
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] S: 250 2.1.5 Ok
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] C: DATA
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] S: 354 End data with <CR><LF>.<CR><LF>
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] X-Mailer: MatchLeague
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] Auto-Submitted: auto-generated
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] From: MatchLeague <info@dev.matchleague.org>
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] To: info@dev.matchleague.org
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] Reply-To: info@dev.matchleague.org
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] Subject: =?UTF-8?Q?sent-email=5FE-Mail_best=C3=A4tigen?=
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] Message-ID: <1760125150447-5ff520bf5a0d1@matchleague.org>
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] Date: Fri, 10 Oct 2025 19:39:10 +0000
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] MIME-Version: 1.0
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] Content-Type: multipart/alternative;
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA]  boundary="--_NmP-2a11a363f2227309-Part_1"
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] 
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] ----_NmP-2a11a363f2227309-Part_1
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] Content-Type: text/plain; charset=utf-8
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] Content-Transfer-Encoding: quoted-printable
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] 
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] Forwarded copy (original to: lennart.allenstein.@gmail.com) Hallo Lennart, =
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] bitte best=C3=A4tige deine E-Mail-Adresse, indem du auf den folgenden Link =
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] klickst: http://localhost:5001/confirm/eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9=
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] ..eyJlbWFpbCI6Imxlbm5hcnQuYWxsZW5zdGVpbi5AZ21haWwuY29tIiwiaWF0IjoxNzYwMTI1MT=
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] Q4LCJleHAiOjE3NjAyMTE1NDh9.UD-E5n6k8Bdd3He9tFZh1260HREpXzYCRWt5UBP4IMY
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] ----_NmP-2a11a363f2227309-Part_1
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] Content-Type: text/html; charset=utf-8
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] Content-Transfer-Encoding: quoted-printable
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] 
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] <p>Forwarded copy (original to: lennart.allenstein.@gmail.com)</p><hr/>
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA]               <p>Hallo Lennart,</p>
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA]               <p>bitte best=C3=A4tige =
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] deine E-Mail-Adresse, indem du auf den folgenden Link klickst:</p>
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA]               <p><a href=3D"http://localhost:5001/confirm/eyJhbGciOiJIUzI1N=
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] iIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6Imxlbm5hcnQuYWxsZW5zdGVpbi5AZ21haWwuY29tIiw=
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] iaWF0IjoxNzYwMTI1MTQ4LCJleHAiOjE3NjAyMTE1NDh9.UD-E5n6k8Bdd3He9tFZh1260HREpX=
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] zYCRWt5UBP4IMY">http://localhost:5001/confirm/eyJhbGciOiJIUzI1NiIsInR5cCI6I=
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] kpXVCJ9.eyJlbWFpbCI6Imxlbm5hcnQuYWxsZW5zdGVpbi5AZ21haWwuY29tIiwiaWF0IjoxNzY=
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] wMTI1MTQ4LCJleHAiOjE3NjAyMTE1NDh9.UD-E5n6k8Bdd3He9tFZh1260HREpXzYCRWt5UBP4I=
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] MY</a></p>
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA]            =20
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] ----_NmP-2a11a363f2227309-Part_1--
+[2025-10-10 19:39:10] DEBUG [3NoNY02cytA] .
+[2025-10-10 19:39:10] INFO  [3NoNY02cytA] <1808 bytes encoded mime message (source size 1800 bytes)>
+[2025-10-10 19:39:11] DEBUG [3NoNY02cytA] S: 250 2.0.0 Ok: queued as 4cjxrZ5g51z135S
+[2025-10-10 19:39:11] DEBUG [3NoNY02cytA] Closing connection to the server using "end"
+E-Mail erfolgreich versendet an: lennart.allenstein.@gmail.com
+[2025-10-10 19:39:11] INFO  [3NoNY02cytA] Connection closed
+[MATCH-INSERT] {
+  rec: {
+    league_id: 2,
+    kickoff_at: '2025-10-11T09:00:00.000Z',
+    home_user_id: 13,
+    away_user_id: 1
+  },
+  info: {
+    id: {
+      type: 'integer',
+      maxLength: null,
+      nullable: true,
+      defaultValue: null
+    },
+    league_id: {
+      type: 'integer',
+      maxLength: null,
+      nullable: false,
+      defaultValue: null
+    },
+    kickoff_at: {
+      type: 'text',
+      maxLength: null,
+      nullable: true,
+      defaultValue: null
+    },
+    status: {
+      type: 'text',
+      maxLength: null,
+      nullable: true,
+      defaultValue: null
+    },
+    home_user_id: {
+      type: 'integer',
+      maxLength: null,
+      nullable: true,
+      defaultValue: null
+    },
+    away_user_id: {
+      type: 'integer',
+      maxLength: null,
+      nullable: true,
+      defaultValue: null
+    },
+    home_team_id: {
+      type: 'integer',
+      maxLength: null,
+      nullable: true,
+      defaultValue: null
+    },
+    away_team_id: {
+      type: 'integer',
+      maxLength: null,
+      nullable: true,
+      defaultValue: null
+    },
+    home_score: {
+      type: 'integer',
+      maxLength: null,
+      nullable: true,
+      defaultValue: null
+    },
+    away_score: {
+      type: 'integer',
+      maxLength: null,
+      nullable: true,
+      defaultValue: null
+    },
+    created_at: {
+      type: 'text',
+      maxLength: null,
+      nullable: true,
+      defaultValue: 'CURRENT_TIMESTAMP'
+    }
+  }
+}
+schedule mail failed: select `id`, `email`, `firstname`, `lastname`, `name` from `users` where `id` in (13, 5) - SQLITE_ERROR: no such column: name
+result mail failed: select `id`, `email`, `firstname`, `lastname`, `name` from `users` where `id` in (13, 5) - SQLITE_ERROR: no such column: name
+schedule mail failed: select `id`, `email`, `firstname`, `lastname`, `name` from `users` where `id` in (13, 1) - SQLITE_ERROR: no such column: name
+result mail failed: select `id`, `email`, `firstname`, `lastname`, `name` from `users` where `id` in (13, 1) - SQLITE_ERROR: no such column: name
+POST match-search failed: Error: Weekly match limit reached
+    at /Users/A105227786/Documents/projects/sL/pTght/backend/src/routes/leagueMatches.js:553:57
+POST match-search failed: Error: Weekly match limit reached
+    at /Users/A105227786/Documents/projects/sL/pTght/backend/src/routes/leagueMatches.js:553:57

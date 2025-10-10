@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { API_BASE } from "../config";
+import MatchChat from "../components/MatchChat";
 
 export default function GameDetailPage() {
   const { gameId } = useParams();
@@ -19,6 +20,7 @@ export default function GameDetailPage() {
   const [hasWeeklyMatch, setHasWeeklyMatch] = useState(false);
   const [joinMsg, setJoinMsg] = useState('');
   const [scheduleMsg, setScheduleMsg] = useState('');
+  const [showChat, setShowChat] = useState(false);
   // calendar-friendly date+time fields (pop up native calendar/time pickers)
   const [dateStr, setDateStr] = useState(""); // yyyy-mm-dd
   const [timeStr, setTimeStr] = useState(""); // HH:mm
@@ -369,7 +371,9 @@ export default function GameDetailPage() {
               {game.kickoff_at ? 'Termin ändern' : 'Termin festlegen'}
             </button>
           )}
-          <Link to={"#"} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', textDecoration: 'none' }}>MATCH-CHAT</Link>
+          <button onClick={() => setShowChat(v => !v)} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe' }}>
+            {showChat ? 'Chat ausblenden' : 'Match-Chat'}
+          </button>
           <button disabled style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #553f3f', background: '#2a1b1b', color: '#e9d8d8', opacity: 0.8 }}>ABSAGEN</button>
         </div>
 
@@ -415,6 +419,10 @@ export default function GameDetailPage() {
           </form>
         )}
       </div>
+
+      {showChat && (
+        <MatchChat matchId={gameId} token={token} />
+      )}
 
       {/* Past games table */}
       <div style={{ marginTop: 16 }}>

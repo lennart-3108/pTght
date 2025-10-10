@@ -1,6 +1,10 @@
-(node:93438) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+
+> frontend@0.1.0 start
+> react-scripts start
+
+(node:49791) [DEP_WEBPACK_DEV_SERVER_ON_AFTER_SETUP_MIDDLEWARE] DeprecationWarning: 'onAfterSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
 (Use `node --trace-deprecation ...` to show where the warning was created)
-(node:93438) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
+(node:49791) [DEP_WEBPACK_DEV_SERVER_ON_BEFORE_SETUP_MIDDLEWARE] DeprecationWarning: 'onBeforeSetupMiddleware' option is deprecated. Please use the 'setupMiddlewares' option.
 Starting the development server...
 
 Compiled successfully!
@@ -15,92 +19,1836 @@ To create a production build, use npm run build.
 
 webpack compiled successfully
 Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatDate' is defined but never used                                                                                                           no-unused-vars
+  Line 124:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 221:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 241:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatDate' is defined but never used                                                                                                           no-unused-vars
+  Line 124:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 221:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 241:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatDate' is defined but never used                                                                                                           no-unused-vars
+  Line 124:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 221:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 241:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatDate' is defined but never used                                                                                                           no-unused-vars
+  Line 124:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 221:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 241:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 103:9:   'isCommunityLeague' is assigned a value but never used                                                                                           no-unused-vars
+  Line 108:9:   'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 112:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 209:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 229:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
 Failed to compile.
 
 [eslint] 
-src/pages/GameDetailPage.js
-  Line 346:71:  'setShowScheduleForm' is not defined  no-undef
+src/pages/LeagueDetailPage.js
+Syntax error: Unexpected reserved word 'await'. (300:8) (300:8)
+ERROR in ./src/pages/LeagueDetailPage.js
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: /Users/A105227786/Documents/projects/sL/pTght/frontend/src/pages/LeagueDetailPage.js: Unexpected reserved word 'await'. (300:8)
 
-Search for the keywords to learn more about each error.
+  298 |       if (j && j.joined) setIsMemberByMe(true);
+  299 |       if (j && j.joined && j.match && j.match.id) {
+> 300 |         await fetchMyOpenMatch();
+      |         ^
+  301 |         await fetchMyWeeklyStatus();
+  302 |         await reloadExtras();
+  303 |         extrasReloaded = true;
+    at constructor (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:367:19)
+    at FlowParserMixin.raise (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6627:19)
+    at FlowParserMixin.checkReservedWord (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12232:12)
+    at FlowParserMixin.parseIdentifierName (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12212:12)
+    at FlowParserMixin.parseIdentifier (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12182:23)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11416:27)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4794:20)
+    at FlowParserMixin.parseExprSubscripts (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11076:23)
+    at FlowParserMixin.parseUpdate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11061:21)
+    at FlowParserMixin.parseMaybeUnary (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11041:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10894:61)
+    at FlowParserMixin.parseExprOps (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10899:23)
+    at FlowParserMixin.parseMaybeConditional (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10876:23)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10826:21)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3579:18)
+    at FlowParserMixin.parseExpressionBase (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10779:23)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:39
+    at FlowParserMixin.allowInAnd (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12422:16)
+    at FlowParserMixin.parseExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:17)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12895:23)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseBlock (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12858:21)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementOrSloppyAnnexBFunctionDeclaration (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12757:17)
+    at FlowParserMixin.parseIfStatement (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13130:28)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12796:21)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseBlock (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12101:24)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2923:11)
+    at FlowParserMixin.parseFunctionBodyAndFinish (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12087:10)
+    at FlowParserMixin.parseFunctionBodyAndFinish (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2931:18)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13445:12
+    at FlowParserMixin.withSmartMixTopicForbiddingContext (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12404:14)
+    at FlowParserMixin.parseFunction (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13444:10)
+    at FlowParserMixin.parseExportDefaultExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13907:19)
+    at FlowParserMixin.parseExportDefaultExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2994:18)
+    at FlowParserMixin.parseExport (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13828:25)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12878:27)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+
 ERROR in [eslint] 
-src/pages/GameDetailPage.js
-  Line 346:71:  'setShowScheduleForm' is not defined  no-undef
+src/pages/LeagueDetailPage.js
+  Line 300:8:  Parsing error: Unexpected reserved word 'await'. (300:8)
+
+webpack compiled with 2 errors
+Compiling...
+Failed to compile.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+Syntax error: Unexpected reserved word 'await'. (300:8) (300:8)
+ERROR in ./src/pages/LeagueDetailPage.js
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: /Users/A105227786/Documents/projects/sL/pTght/frontend/src/pages/LeagueDetailPage.js: Unexpected reserved word 'await'. (300:8)
+
+  298 |       if (j && j.joined) setIsMemberByMe(true);
+  299 |       if (j && j.joined && j.match && j.match.id) {
+> 300 |         await fetchMyOpenMatch();
+      |         ^
+  301 |         await fetchMyWeeklyStatus();
+  302 |         await reloadExtras();
+  303 |         extrasReloaded = true;
+    at constructor (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:367:19)
+    at FlowParserMixin.raise (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6627:19)
+    at FlowParserMixin.checkReservedWord (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12232:12)
+    at FlowParserMixin.parseIdentifierName (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12212:12)
+    at FlowParserMixin.parseIdentifier (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12182:23)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11416:27)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4794:20)
+    at FlowParserMixin.parseExprSubscripts (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11076:23)
+    at FlowParserMixin.parseUpdate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11061:21)
+    at FlowParserMixin.parseMaybeUnary (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11041:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10894:61)
+    at FlowParserMixin.parseExprOps (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10899:23)
+    at FlowParserMixin.parseMaybeConditional (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10876:23)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10826:21)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3579:18)
+    at FlowParserMixin.parseExpressionBase (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10779:23)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:39
+    at FlowParserMixin.allowInAnd (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12422:16)
+    at FlowParserMixin.parseExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:17)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12895:23)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseBlock (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12858:21)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementOrSloppyAnnexBFunctionDeclaration (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12757:17)
+    at FlowParserMixin.parseIfStatement (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13130:28)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12796:21)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseBlock (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12101:24)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2923:11)
+    at FlowParserMixin.parseFunctionBodyAndFinish (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12087:10)
+    at FlowParserMixin.parseFunctionBodyAndFinish (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2931:18)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13445:12
+    at FlowParserMixin.withSmartMixTopicForbiddingContext (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12404:14)
+    at FlowParserMixin.parseFunction (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13444:10)
+    at FlowParserMixin.parseExportDefaultExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13907:19)
+    at FlowParserMixin.parseExportDefaultExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2994:18)
+    at FlowParserMixin.parseExport (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13828:25)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12878:27)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+
+ERROR in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 300:8:  Parsing error: Unexpected reserved word 'await'. (300:8)
+
+webpack compiled with 2 errors
+Compiling...
+Failed to compile.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+Syntax error: Unexpected reserved word 'await'. (299:8) (299:8)
+ERROR in ./src/pages/LeagueDetailPage.js
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: /Users/A105227786/Documents/projects/sL/pTght/frontend/src/pages/LeagueDetailPage.js: Unexpected reserved word 'await'. (299:8)
+
+  297 |       if (j && j.joined) setIsMemberByMe(true);
+  298 |       if (j && j.joined && j.match && j.match.id) {
+> 299 |         await fetchMyOpenMatch();
+      |         ^
+  300 |         await fetchMyWeeklyStatus();
+  301 |         await reloadExtras();
+  302 |         extrasReloaded = true;
+    at constructor (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:367:19)
+    at FlowParserMixin.raise (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6627:19)
+    at FlowParserMixin.checkReservedWord (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12232:12)
+    at FlowParserMixin.parseIdentifierName (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12212:12)
+    at FlowParserMixin.parseIdentifier (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12182:23)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11416:27)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4794:20)
+    at FlowParserMixin.parseExprSubscripts (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11076:23)
+    at FlowParserMixin.parseUpdate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11061:21)
+    at FlowParserMixin.parseMaybeUnary (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11041:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10894:61)
+    at FlowParserMixin.parseExprOps (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10899:23)
+    at FlowParserMixin.parseMaybeConditional (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10876:23)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10826:21)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3579:18)
+    at FlowParserMixin.parseExpressionBase (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10779:23)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:39
+    at FlowParserMixin.allowInAnd (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12422:16)
+    at FlowParserMixin.parseExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:17)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12895:23)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseBlock (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12858:21)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementOrSloppyAnnexBFunctionDeclaration (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12757:17)
+    at FlowParserMixin.parseIfStatement (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13130:28)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12796:21)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseBlock (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12101:24)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2920:63
+    at FlowParserMixin.forwardNoArrowParamsConversionAt (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3096:16)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2920:12)
+    at FlowParserMixin.parseArrowExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12076:10)
+    at FlowParserMixin.parseParenAndDistinguishExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11686:12)
+    at FlowParserMixin.parseParenAndDistinguishExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3621:18)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11326:23)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4794:20)
+    at FlowParserMixin.parseExprSubscripts (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11076:23)
+    at FlowParserMixin.parseUpdate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11061:21)
+    at FlowParserMixin.parseMaybeUnary (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11041:23)
+
+ERROR in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 299:8:  Parsing error: Unexpected reserved word 'await'. (299:8)
+
+webpack compiled with 2 errors
+Compiling...
+Failed to compile.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+Syntax error: Unexpected reserved word 'await'. (299:8) (299:8)
+ERROR in ./src/pages/LeagueDetailPage.js
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: /Users/A105227786/Documents/projects/sL/pTght/frontend/src/pages/LeagueDetailPage.js: Unexpected reserved word 'await'. (299:8)
+
+  297 |       if (j && j.joined) setIsMemberByMe(true);
+  298 |       if (j && j.joined && j.match && j.match.id) {
+> 299 |         await fetchMyOpenMatch();
+      |         ^
+  300 |         await fetchMyWeeklyStatus();
+  301 |         await reloadExtras();
+  302 |         extrasReloaded = true;
+    at constructor (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:367:19)
+    at FlowParserMixin.raise (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6627:19)
+    at FlowParserMixin.checkReservedWord (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12232:12)
+    at FlowParserMixin.parseIdentifierName (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12212:12)
+    at FlowParserMixin.parseIdentifier (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12182:23)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11416:27)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4794:20)
+    at FlowParserMixin.parseExprSubscripts (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11076:23)
+    at FlowParserMixin.parseUpdate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11061:21)
+    at FlowParserMixin.parseMaybeUnary (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11041:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10894:61)
+    at FlowParserMixin.parseExprOps (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10899:23)
+    at FlowParserMixin.parseMaybeConditional (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10876:23)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10826:21)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3579:18)
+    at FlowParserMixin.parseExpressionBase (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10779:23)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:39
+    at FlowParserMixin.allowInAnd (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12422:16)
+    at FlowParserMixin.parseExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:17)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12895:23)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseBlock (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12858:21)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementOrSloppyAnnexBFunctionDeclaration (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12757:17)
+    at FlowParserMixin.parseIfStatement (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13130:28)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12796:21)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseBlock (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12101:24)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2920:63
+    at FlowParserMixin.forwardNoArrowParamsConversionAt (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3096:16)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2920:12)
+    at FlowParserMixin.parseArrowExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12076:10)
+    at FlowParserMixin.parseParenAndDistinguishExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11686:12)
+    at FlowParserMixin.parseParenAndDistinguishExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3621:18)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11326:23)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4794:20)
+    at FlowParserMixin.parseExprSubscripts (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11076:23)
+    at FlowParserMixin.parseUpdate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11061:21)
+    at FlowParserMixin.parseMaybeUnary (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11041:23)
+
+ERROR in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 299:8:  Parsing error: Unexpected reserved word 'await'. (299:8)
+
+webpack compiled with 2 errors
+Compiling...
+Failed to compile.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 74:34:   'runMatchSearch' is not defined                                                                                                                      no-undef
+  Line 107:19:  React Hook "useMemo" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function    react-hooks/rules-of-hooks
+  Line 118:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 205:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 210:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 224:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 274:32:  'runMatchSearch' is not defined                                                                                                                      no-undef
+  Line 329:21:  React Hook "useMemo" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function    react-hooks/rules-of-hooks
+  Line 331:11:  'j' is not defined                                                                                                                                   no-undef
+  Line 331:16:  'j' is not defined                                                                                                                                   no-undef
+  Line 332:21:  'getMemberUserId' is not defined                                                                                                                     no-undef
+  Line 332:37:  'm' is not defined                                                                                                                                   no-undef
+  Line 333:23:  'm' is not defined                                                                                                                                   no-undef
+  Line 333:38:  'm' is not defined                                                                                                                                   no-undef
+  Line 334:16:  'm' is not defined                                                                                                                                   no-undef
+  Line 334:31:  'm' is not defined                                                                                                                                   no-undef
+  Line 335:14:  'm' is not defined                                                                                                                                   no-undef
+  Line 335:24:  'm' is not defined                                                                                                                                   no-undef
+  Line 362:28:  'getMemberUserId' is not defined                                                                                                                     no-undef
+  Line 416:13:  'reloadExtras' is not defined                                                                                                                        no-undef
+  Line 452:15:  'amMember' is not defined                                                                                                                            no-undef
+  Line 452:28:  'isOpenLeague' is not defined                                                                                                                        no-undef
+  Line 452:44:  'isPublicLeague' is not defined                                                                                                                      no-undef
+  Line 453:32:  'handleJoin' is not defined                                                                                                                          no-undef
+  Line 457:14:  'amMember' is not defined                                                                                                                            no-undef
+  Line 458:32:  'handleLeave' is not defined                                                                                                                         no-undef
+  Line 486:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 499:18:  'opponents' is not defined                                                                                                                           no-undef
+  Line 513:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 520:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 526:38:  'runMatchSearch' is not defined                                                                                                                      no-undef
+  Line 544:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 551:8:   'amMember' is not defined                                                                                                                            no-undef
+
+Search for the keywords to learn more about each error.
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 30:20:   'handleJoin' is defined but never used                                                                                                                                                                                                                        no-unused-vars
+  Line 107:9:   'isOwner' is assigned a value but never used                                                                                                                                                                                                                  no-unused-vars
+  Line 109:6:   React Hook useMemo has unnecessary dependencies: 'league' and 'myId'. Either exclude them or remove the dependency array. Outer scope values like 'league' aren't valid dependencies because mutating them doesn't re-render the component                    react-hooks/exhaustive-deps
+  Line 111:12:  'formatScore' is defined but never used                                                                                                                                                                                                                       no-unused-vars
+  Line 147:6:   React Hook useEffect has an unnecessary dependency: 'leagueId'. Either exclude it or remove the dependency array. Outer scope values like 'leagueId' aren't valid dependencies because mutating them doesn't re-render the component                          react-hooks/exhaustive-deps
+  Line 208:6:   React Hook useEffect has unnecessary dependencies: 'league' and 'token'. Either exclude them or remove the dependency array. Outer scope values like 'league' aren't valid dependencies because mutating them doesn't re-render the component                 react-hooks/exhaustive-deps
+  Line 222:6:   React Hook useEffect has unnecessary dependencies: 'leagueId' and 'selectedSeasonId'. Either exclude them or remove the dependency array. Outer scope values like 'leagueId' aren't valid dependencies because mutating them doesn't re-render the component  react-hooks/exhaustive-deps
+  Line 228:6:   React Hook useEffect has unnecessary dependencies: 'isMemberByMe' and 'leagueId'. Either exclude them or remove the dependency array. Outer scope values like 'leagueId' aren't valid dependencies because mutating them doesn't re-render the component      react-hooks/exhaustive-deps
+  Line 230:18:  'handleJoin' is already defined                                                                                                                                                                                                                               no-redeclare
+  Line 307:18:  'handleLeave' is defined but never used                                                                                                                                                                                                                       no-unused-vars
+  Line 329:9:   'opponents' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 329:21:  React Hook useMemo does nothing when called with only one argument. Did you forget to pass an array of dependencies?                                                                                                                                          react-hooks/exhaustive-deps
+  Line 331:7:   Unreachable code                                                                                                                                                                                                                                              no-unreachable
+  Line 339:6:   React Hook useMemo has missing dependencies: 'isMemberByMe', 'league', 'leagueId', 'selectedSeasonId', and 'token'. Either include them or remove the dependency array                                                                                        react-hooks/exhaustive-deps
+  Line 339:16:  'myId' was used before it was defined                                                                                                                                                                                                                         no-use-before-define
+
+ERROR in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 74:34:   'runMatchSearch' is not defined                                                                                                                      no-undef
+  Line 107:19:  React Hook "useMemo" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function    react-hooks/rules-of-hooks
+  Line 118:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 205:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 210:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 224:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 274:32:  'runMatchSearch' is not defined                                                                                                                      no-undef
+  Line 329:21:  React Hook "useMemo" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function    react-hooks/rules-of-hooks
+  Line 331:11:  'j' is not defined                                                                                                                                   no-undef
+  Line 331:16:  'j' is not defined                                                                                                                                   no-undef
+  Line 332:21:  'getMemberUserId' is not defined                                                                                                                     no-undef
+  Line 332:37:  'm' is not defined                                                                                                                                   no-undef
+  Line 333:23:  'm' is not defined                                                                                                                                   no-undef
+  Line 333:38:  'm' is not defined                                                                                                                                   no-undef
+  Line 334:16:  'm' is not defined                                                                                                                                   no-undef
+  Line 334:31:  'm' is not defined                                                                                                                                   no-undef
+  Line 335:14:  'm' is not defined                                                                                                                                   no-undef
+  Line 335:24:  'm' is not defined                                                                                                                                   no-undef
+  Line 362:28:  'getMemberUserId' is not defined                                                                                                                     no-undef
+  Line 416:13:  'reloadExtras' is not defined                                                                                                                        no-undef
+  Line 452:15:  'amMember' is not defined                                                                                                                            no-undef
+  Line 452:28:  'isOpenLeague' is not defined                                                                                                                        no-undef
+  Line 452:44:  'isPublicLeague' is not defined                                                                                                                      no-undef
+  Line 453:32:  'handleJoin' is not defined                                                                                                                          no-undef
+  Line 457:14:  'amMember' is not defined                                                                                                                            no-undef
+  Line 458:32:  'handleLeave' is not defined                                                                                                                         no-undef
+  Line 486:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 499:18:  'opponents' is not defined                                                                                                                           no-undef
+  Line 513:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 520:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 526:38:  'runMatchSearch' is not defined                                                                                                                      no-undef
+  Line 544:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 551:8:   'amMember' is not defined                                                                                                                            no-undef
 
 Search for the keywords to learn more about each error.
 
-webpack compiled with 1 error
+webpack compiled with 1 error and 1 warning
 Compiling...
-Compiled successfully!
-webpack compiled successfully
+Failed to compile.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 74:34:   'runMatchSearch' is not defined                                                                                                                      no-undef
+  Line 107:19:  React Hook "useMemo" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function    react-hooks/rules-of-hooks
+  Line 118:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 205:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 210:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 224:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 274:32:  'runMatchSearch' is not defined                                                                                                                      no-undef
+  Line 329:21:  React Hook "useMemo" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function    react-hooks/rules-of-hooks
+  Line 331:11:  'j' is not defined                                                                                                                                   no-undef
+  Line 331:16:  'j' is not defined                                                                                                                                   no-undef
+  Line 332:21:  'getMemberUserId' is not defined                                                                                                                     no-undef
+  Line 332:37:  'm' is not defined                                                                                                                                   no-undef
+  Line 333:23:  'm' is not defined                                                                                                                                   no-undef
+  Line 333:38:  'm' is not defined                                                                                                                                   no-undef
+  Line 334:16:  'm' is not defined                                                                                                                                   no-undef
+  Line 334:31:  'm' is not defined                                                                                                                                   no-undef
+  Line 335:14:  'm' is not defined                                                                                                                                   no-undef
+  Line 335:24:  'm' is not defined                                                                                                                                   no-undef
+  Line 362:28:  'getMemberUserId' is not defined                                                                                                                     no-undef
+  Line 416:13:  'reloadExtras' is not defined                                                                                                                        no-undef
+  Line 452:15:  'amMember' is not defined                                                                                                                            no-undef
+  Line 452:28:  'isOpenLeague' is not defined                                                                                                                        no-undef
+  Line 452:44:  'isPublicLeague' is not defined                                                                                                                      no-undef
+  Line 453:32:  'handleJoin' is not defined                                                                                                                          no-undef
+  Line 457:14:  'amMember' is not defined                                                                                                                            no-undef
+  Line 458:32:  'handleLeave' is not defined                                                                                                                         no-undef
+  Line 486:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 499:18:  'opponents' is not defined                                                                                                                           no-undef
+  Line 513:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 520:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 526:38:  'runMatchSearch' is not defined                                                                                                                      no-undef
+  Line 544:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 551:8:   'amMember' is not defined                                                                                                                            no-undef
+
+Search for the keywords to learn more about each error.
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 30:20:   'handleJoin' is defined but never used                                                                                                                                                                                                                        no-unused-vars
+  Line 107:9:   'isOwner' is assigned a value but never used                                                                                                                                                                                                                  no-unused-vars
+  Line 109:6:   React Hook useMemo has unnecessary dependencies: 'league' and 'myId'. Either exclude them or remove the dependency array. Outer scope values like 'league' aren't valid dependencies because mutating them doesn't re-render the component                    react-hooks/exhaustive-deps
+  Line 111:12:  'formatScore' is defined but never used                                                                                                                                                                                                                       no-unused-vars
+  Line 147:6:   React Hook useEffect has an unnecessary dependency: 'leagueId'. Either exclude it or remove the dependency array. Outer scope values like 'leagueId' aren't valid dependencies because mutating them doesn't re-render the component                          react-hooks/exhaustive-deps
+  Line 208:6:   React Hook useEffect has unnecessary dependencies: 'league' and 'token'. Either exclude them or remove the dependency array. Outer scope values like 'league' aren't valid dependencies because mutating them doesn't re-render the component                 react-hooks/exhaustive-deps
+  Line 222:6:   React Hook useEffect has unnecessary dependencies: 'leagueId' and 'selectedSeasonId'. Either exclude them or remove the dependency array. Outer scope values like 'leagueId' aren't valid dependencies because mutating them doesn't re-render the component  react-hooks/exhaustive-deps
+  Line 228:6:   React Hook useEffect has unnecessary dependencies: 'isMemberByMe' and 'leagueId'. Either exclude them or remove the dependency array. Outer scope values like 'leagueId' aren't valid dependencies because mutating them doesn't re-render the component      react-hooks/exhaustive-deps
+  Line 230:18:  'handleJoin' is already defined                                                                                                                                                                                                                               no-redeclare
+  Line 307:18:  'handleLeave' is defined but never used                                                                                                                                                                                                                       no-unused-vars
+  Line 329:9:   'opponents' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 329:21:  React Hook useMemo does nothing when called with only one argument. Did you forget to pass an array of dependencies?                                                                                                                                          react-hooks/exhaustive-deps
+  Line 331:7:   Unreachable code                                                                                                                                                                                                                                              no-unreachable
+  Line 339:6:   React Hook useMemo has missing dependencies: 'isMemberByMe', 'league', 'leagueId', 'selectedSeasonId', and 'token'. Either include them or remove the dependency array                                                                                        react-hooks/exhaustive-deps
+  Line 339:16:  'myId' was used before it was defined                                                                                                                                                                                                                         no-use-before-define
+
+ERROR in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 74:34:   'runMatchSearch' is not defined                                                                                                                      no-undef
+  Line 107:19:  React Hook "useMemo" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function    react-hooks/rules-of-hooks
+  Line 118:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 205:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 210:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 224:3:   React Hook "useEffect" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function  react-hooks/rules-of-hooks
+  Line 274:32:  'runMatchSearch' is not defined                                                                                                                      no-undef
+  Line 329:21:  React Hook "useMemo" cannot be called inside a callback. React Hooks must be called in a React function component or a custom React Hook function    react-hooks/rules-of-hooks
+  Line 331:11:  'j' is not defined                                                                                                                                   no-undef
+  Line 331:16:  'j' is not defined                                                                                                                                   no-undef
+  Line 332:21:  'getMemberUserId' is not defined                                                                                                                     no-undef
+  Line 332:37:  'm' is not defined                                                                                                                                   no-undef
+  Line 333:23:  'm' is not defined                                                                                                                                   no-undef
+  Line 333:38:  'm' is not defined                                                                                                                                   no-undef
+  Line 334:16:  'm' is not defined                                                                                                                                   no-undef
+  Line 334:31:  'm' is not defined                                                                                                                                   no-undef
+  Line 335:14:  'm' is not defined                                                                                                                                   no-undef
+  Line 335:24:  'm' is not defined                                                                                                                                   no-undef
+  Line 362:28:  'getMemberUserId' is not defined                                                                                                                     no-undef
+  Line 416:13:  'reloadExtras' is not defined                                                                                                                        no-undef
+  Line 452:15:  'amMember' is not defined                                                                                                                            no-undef
+  Line 452:28:  'isOpenLeague' is not defined                                                                                                                        no-undef
+  Line 452:44:  'isPublicLeague' is not defined                                                                                                                      no-undef
+  Line 453:32:  'handleJoin' is not defined                                                                                                                          no-undef
+  Line 457:14:  'amMember' is not defined                                                                                                                            no-undef
+  Line 458:32:  'handleLeave' is not defined                                                                                                                         no-undef
+  Line 486:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 499:18:  'opponents' is not defined                                                                                                                           no-undef
+  Line 513:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 520:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 526:38:  'runMatchSearch' is not defined                                                                                                                      no-undef
+  Line 544:8:   'amMember' is not defined                                                                                                                            no-undef
+  Line 551:8:   'amMember' is not defined                                                                                                                            no-undef
+
+Search for the keywords to learn more about each error.
+
+webpack compiled with 1 error and 1 warning
 Compiling...
-Compiled successfully!
-webpack compiled successfully
+Failed to compile.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+Syntax error: Unexpected token (410:3) (410:3)
+ERROR in ./src/pages/LeagueDetailPage.js
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: /Users/A105227786/Documents/projects/sL/pTght/frontend/src/pages/LeagueDetailPage.js: Unexpected token (410:3)
+
+  408 |       })
+  409 |       .filter((o) => String(o.id) !== String(myId));
+> 410 |   }, [members, myId]);
+      |    ^
+  411 |
+  412 |   const standingsWithMembers = useMemo(() => {
+  413 |     const baseRows = (standings || []).map((row, idx) => {
+    at constructor (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:367:19)
+    at FlowParserMixin.raise (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6627:19)
+    at FlowParserMixin.unexpected (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6647:16)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11442:16)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4794:20)
+    at FlowParserMixin.parseExprSubscripts (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11076:23)
+    at FlowParserMixin.parseUpdate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11061:21)
+    at FlowParserMixin.parseMaybeUnary (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11041:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10894:61)
+    at FlowParserMixin.parseExprOps (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10899:23)
+    at FlowParserMixin.parseMaybeConditional (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10876:23)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10826:21)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3579:18)
+    at FlowParserMixin.parseExpressionBase (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10779:23)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:39
+    at FlowParserMixin.allowInAnd (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12422:16)
+    at FlowParserMixin.parseExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:17)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12895:23)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseBlock (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12101:24)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2923:11)
+    at FlowParserMixin.parseFunctionBodyAndFinish (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12087:10)
+    at FlowParserMixin.parseFunctionBodyAndFinish (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2931:18)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13445:12
+    at FlowParserMixin.withSmartMixTopicForbiddingContext (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12404:14)
+    at FlowParserMixin.parseFunction (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13444:10)
+    at FlowParserMixin.parseExportDefaultExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13907:19)
+    at FlowParserMixin.parseExportDefaultExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2994:18)
+    at FlowParserMixin.parseExport (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13828:25)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12878:27)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseModuleItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12744:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:36)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseProgram (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12625:10)
+    at FlowParserMixin.parseTopLevel (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12615:25)
+    at FlowParserMixin.parseTopLevel (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3715:28)
+    at FlowParserMixin.parse (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:14492:10)
+    at parse (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:14526:38)
+    at parser (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/parser/index.js:41:34)
+    at parser.next (<anonymous>)
+    at normalizeFile (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+    at normalizeFile.next (<anonymous>)
+    at run (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/transformation/index.js:22:50)
+
+ERROR in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 410:3:  Parsing error: Unexpected token (410:3)
+
+webpack compiled with 2 errors
 Compiling...
-Compiled successfully!
-webpack compiled successfully
+Failed to compile.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+Syntax error: Unexpected token (410:3) (410:3)
+ERROR in ./src/pages/LeagueDetailPage.js
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: /Users/A105227786/Documents/projects/sL/pTght/frontend/src/pages/LeagueDetailPage.js: Unexpected token (410:3)
+
+  408 |       })
+  409 |       .filter((o) => String(o.id) !== String(myId));
+> 410 |   }, [members, myId]);
+      |    ^
+  411 |
+  412 |   const standingsWithMembers = useMemo(() => {
+  413 |     const baseRows = (standings || []).map((row, idx) => {
+    at constructor (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:367:19)
+    at FlowParserMixin.raise (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6627:19)
+    at FlowParserMixin.unexpected (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6647:16)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11442:16)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4794:20)
+    at FlowParserMixin.parseExprSubscripts (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11076:23)
+    at FlowParserMixin.parseUpdate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11061:21)
+    at FlowParserMixin.parseMaybeUnary (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11041:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10894:61)
+    at FlowParserMixin.parseExprOps (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10899:23)
+    at FlowParserMixin.parseMaybeConditional (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10876:23)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10826:21)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3579:18)
+    at FlowParserMixin.parseExpressionBase (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10779:23)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:39
+    at FlowParserMixin.allowInAnd (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12422:16)
+    at FlowParserMixin.parseExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:17)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12895:23)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseBlock (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12101:24)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2923:11)
+    at FlowParserMixin.parseFunctionBodyAndFinish (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12087:10)
+    at FlowParserMixin.parseFunctionBodyAndFinish (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2931:18)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13445:12
+    at FlowParserMixin.withSmartMixTopicForbiddingContext (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12404:14)
+    at FlowParserMixin.parseFunction (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13444:10)
+    at FlowParserMixin.parseExportDefaultExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13907:19)
+    at FlowParserMixin.parseExportDefaultExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2994:18)
+    at FlowParserMixin.parseExport (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13828:25)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12878:27)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseModuleItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12744:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:36)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseProgram (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12625:10)
+    at FlowParserMixin.parseTopLevel (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12615:25)
+    at FlowParserMixin.parseTopLevel (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3715:28)
+    at FlowParserMixin.parse (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:14492:10)
+    at parse (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:14526:38)
+    at parser (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/parser/index.js:41:34)
+    at parser.next (<anonymous>)
+    at normalizeFile (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+    at normalizeFile.next (<anonymous>)
+    at run (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/transformation/index.js:22:50)
+
+ERROR in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 410:3:  Parsing error: Unexpected token (410:3)
+
+webpack compiled with 2 errors
 Compiling...
-Compiled successfully!
-webpack compiled successfully
+Failed to compile.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+Syntax error: Unexpected token (410:3) (410:3)
+ERROR in ./src/pages/LeagueDetailPage.js
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: /Users/A105227786/Documents/projects/sL/pTght/frontend/src/pages/LeagueDetailPage.js: Unexpected token (410:3)
+
+  408 |       })
+  409 |       .filter((o) => String(o.id) !== String(myId));
+> 410 |   }, [members, myId]);
+      |    ^
+  411 |
+  412 |   const standingsWithMembers = useMemo(() => {
+  413 |     const baseRows = (standings || []).map((row, idx) => {
+    at constructor (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:367:19)
+    at FlowParserMixin.raise (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6627:19)
+    at FlowParserMixin.unexpected (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6647:16)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11442:16)
+    at FlowParserMixin.parseExprAtom (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:4794:20)
+    at FlowParserMixin.parseExprSubscripts (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11076:23)
+    at FlowParserMixin.parseUpdate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11061:21)
+    at FlowParserMixin.parseMaybeUnary (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:11041:23)
+    at FlowParserMixin.parseMaybeUnaryOrPrivate (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10894:61)
+    at FlowParserMixin.parseExprOps (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10899:23)
+    at FlowParserMixin.parseMaybeConditional (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10876:23)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10826:21)
+    at FlowParserMixin.parseMaybeAssign (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3579:18)
+    at FlowParserMixin.parseExpressionBase (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10779:23)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:39
+    at FlowParserMixin.allowInAnd (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12422:16)
+    at FlowParserMixin.parseExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:10775:17)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12895:23)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseBlock (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12101:24)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2923:11)
+    at FlowParserMixin.parseFunctionBodyAndFinish (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12087:10)
+    at FlowParserMixin.parseFunctionBodyAndFinish (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2931:18)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13445:12
+    at FlowParserMixin.withSmartMixTopicForbiddingContext (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12404:14)
+    at FlowParserMixin.parseFunction (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13444:10)
+    at FlowParserMixin.parseExportDefaultExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13907:19)
+    at FlowParserMixin.parseExportDefaultExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2994:18)
+    at FlowParserMixin.parseExport (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13828:25)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12878:27)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseModuleItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12744:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:36)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseProgram (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12625:10)
+    at FlowParserMixin.parseTopLevel (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12615:25)
+    at FlowParserMixin.parseTopLevel (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3715:28)
+    at FlowParserMixin.parse (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:14492:10)
+    at parse (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:14526:38)
+    at parser (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/parser/index.js:41:34)
+    at parser.next (<anonymous>)
+    at normalizeFile (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+    at normalizeFile.next (<anonymous>)
+    at run (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/transformation/index.js:22:50)
+
+ERROR in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 410:3:  Parsing error: Unexpected token (410:3)
+
+webpack compiled with 2 errors
 Compiling...
-Compiled successfully!
-webpack compiled successfully
+Failed to compile.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+Syntax error: Identifier 'opponents' has already been declared. (398:8) (398:8)
+ERROR in ./src/pages/LeagueDetailPage.js
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: /Users/A105227786/Documents/projects/sL/pTght/frontend/src/pages/LeagueDetailPage.js: Identifier 'opponents' has already been declared. (398:8)
+
+  396 |   }
+  397 |   // Liste der möglichen Gegner aus den Mitgliedern (ohne mich)
+> 398 |   const opponents = useMemo(() => {
+      |         ^
+  399 |     return (members || [])
+  400 |       if (j && j.joined) setIsMemberByMe(true);
+  401 |         const uid = getMemberUserId(m);
+    at constructor (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:367:19)
+    at FlowParserMixin.raise (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6627:19)
+    at FlowScopeHandler.checkRedeclarationInScope (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:1644:19)
+    at FlowScopeHandler.declareName (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:1610:12)
+    at FlowScopeHandler.declareName (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:1711:11)
+    at FlowParserMixin.declareNameFromIdentifier (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:7591:16)
+    at FlowParserMixin.checkIdentifier (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:7587:12)
+    at FlowParserMixin.checkLVal (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:7526:12)
+    at FlowParserMixin.parseVarId (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13412:10)
+    at FlowParserMixin.parseVarId (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3504:11)
+    at FlowParserMixin.parseVar (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13383:12)
+    at FlowParserMixin.parseVarStatement (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13230:10)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12851:23)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseBlock (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12101:24)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2923:11)
+    at FlowParserMixin.parseFunctionBodyAndFinish (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12087:10)
+    at FlowParserMixin.parseFunctionBodyAndFinish (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2931:18)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13445:12
+    at FlowParserMixin.withSmartMixTopicForbiddingContext (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12404:14)
+    at FlowParserMixin.parseFunction (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13444:10)
+    at FlowParserMixin.parseExportDefaultExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13907:19)
+    at FlowParserMixin.parseExportDefaultExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2994:18)
+    at FlowParserMixin.parseExport (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13828:25)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12878:27)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseModuleItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12744:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:36)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseProgram (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12625:10)
+    at FlowParserMixin.parseTopLevel (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12615:25)
+    at FlowParserMixin.parseTopLevel (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3715:28)
+    at FlowParserMixin.parse (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:14492:10)
+    at parse (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:14526:38)
+    at parser (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/parser/index.js:41:34)
+    at parser.next (<anonymous>)
+    at normalizeFile (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+    at normalizeFile.next (<anonymous>)
+    at run (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/transformation/index.js:22:50)
+    at run.next (<anonymous>)
+    at transform (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/transform.js:22:33)
+    at transform.next (<anonymous>)
+    at step (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/gensync/index.js:261:32)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/gensync/index.js:273:13
+
+ERROR in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 398:8:  Parsing error: Identifier 'opponents' has already been declared. (398:8)
+
+webpack compiled with 2 errors
+Compiling...
+Failed to compile.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+Syntax error: Identifier 'opponents' has already been declared. (398:8) (398:8)
+ERROR in ./src/pages/LeagueDetailPage.js
+Module build failed (from ./node_modules/babel-loader/lib/index.js):
+SyntaxError: /Users/A105227786/Documents/projects/sL/pTght/frontend/src/pages/LeagueDetailPage.js: Identifier 'opponents' has already been declared. (398:8)
+
+  396 |   }
+  397 |   // Liste der möglichen Gegner aus den Mitgliedern (ohne mich)
+> 398 |   const opponents = useMemo(() => {
+      |         ^
+  399 |     return (members || [])
+  400 |       if (j && j.joined) setIsMemberByMe(true);
+  401 |         const uid = getMemberUserId(m);
+    at constructor (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:367:19)
+    at FlowParserMixin.raise (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:6627:19)
+    at FlowScopeHandler.checkRedeclarationInScope (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:1644:19)
+    at FlowScopeHandler.declareName (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:1610:12)
+    at FlowScopeHandler.declareName (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:1711:11)
+    at FlowParserMixin.declareNameFromIdentifier (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:7591:16)
+    at FlowParserMixin.checkIdentifier (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:7587:12)
+    at FlowParserMixin.checkLVal (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:7526:12)
+    at FlowParserMixin.parseVarId (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13412:10)
+    at FlowParserMixin.parseVarId (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3504:11)
+    at FlowParserMixin.parseVar (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13383:12)
+    at FlowParserMixin.parseVarStatement (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13230:10)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12851:23)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseStatementListItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12747:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:61)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseBlock (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13297:10)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12101:24)
+    at FlowParserMixin.parseFunctionBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2923:11)
+    at FlowParserMixin.parseFunctionBodyAndFinish (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12087:10)
+    at FlowParserMixin.parseFunctionBodyAndFinish (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2931:18)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13445:12
+    at FlowParserMixin.withSmartMixTopicForbiddingContext (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12404:14)
+    at FlowParserMixin.parseFunction (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13444:10)
+    at FlowParserMixin.parseExportDefaultExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13907:19)
+    at FlowParserMixin.parseExportDefaultExpression (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2994:18)
+    at FlowParserMixin.parseExport (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13828:25)
+    at FlowParserMixin.parseStatementContent (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12878:27)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12767:17)
+    at FlowParserMixin.parseStatementLike (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:2946:24)
+    at FlowParserMixin.parseModuleItem (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12744:17)
+    at FlowParserMixin.parseBlockOrModuleBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13316:36)
+    at FlowParserMixin.parseBlockBody (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:13309:10)
+    at FlowParserMixin.parseProgram (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12625:10)
+    at FlowParserMixin.parseTopLevel (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:12615:25)
+    at FlowParserMixin.parseTopLevel (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:3715:28)
+    at FlowParserMixin.parse (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:14492:10)
+    at parse (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/parser/lib/index.js:14526:38)
+    at parser (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/parser/index.js:41:34)
+    at parser.next (<anonymous>)
+    at normalizeFile (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/transformation/normalize-file.js:64:37)
+    at normalizeFile.next (<anonymous>)
+    at run (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/transformation/index.js:22:50)
+    at run.next (<anonymous>)
+    at transform (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/@babel/core/lib/transform.js:22:33)
+    at transform.next (<anonymous>)
+    at step (/Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/gensync/index.js:261:32)
+    at /Users/A105227786/Documents/projects/sL/pTght/frontend/node_modules/gensync/index.js:273:13
+
+ERROR in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 398:8:  Parsing error: Identifier 'opponents' has already been declared. (398:8)
+
+webpack compiled with 2 errors
 Compiling...
 Compiled with warnings.
 
 [eslint] 
-src/pages/ProfilePage.js
-  Line 70:9:  'hRow' is assigned a value but never used  no-unused-vars
+src/pages/LeagueDetailPage.js
+  Line 41:9:    'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 180:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 277:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 297:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
 
 Search for the keywords to learn more about each warning.
 To ignore, add // eslint-disable-next-line to the line before.
 
 WARNING in [eslint] 
-src/pages/ProfilePage.js
-  Line 70:9:  'hRow' is assigned a value but never used  no-unused-vars
+src/pages/LeagueDetailPage.js
+  Line 41:9:    'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 180:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 277:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 297:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
 
 webpack compiled with 1 warning
 Compiling...
 Compiled with warnings.
 
 [eslint] 
-src/pages/ProfilePage.js
-  Line 70:9:  'hRow' is assigned a value but never used  no-unused-vars
+src/pages/LeagueDetailPage.js
+  Line 41:9:    'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 180:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 277:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 297:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
 
 Search for the keywords to learn more about each warning.
 To ignore, add // eslint-disable-next-line to the line before.
 
 WARNING in [eslint] 
-src/pages/ProfilePage.js
-  Line 70:9:  'hRow' is assigned a value but never used  no-unused-vars
+src/pages/LeagueDetailPage.js
+  Line 41:9:    'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 180:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 277:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 297:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
 
 webpack compiled with 1 warning
 Compiling...
 Compiled with warnings.
 
 [eslint] 
-src/pages/ProfilePage.js
-  Line 70:9:  'hRow' is assigned a value but never used  no-unused-vars
+src/pages/LeagueDetailPage.js
+  Line 41:9:    'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 180:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 277:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 297:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
 
 Search for the keywords to learn more about each warning.
 To ignore, add // eslint-disable-next-line to the line before.
 
 WARNING in [eslint] 
-src/pages/ProfilePage.js
-  Line 70:9:  'hRow' is assigned a value but never used  no-unused-vars
+src/pages/LeagueDetailPage.js
+  Line 41:9:    'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 180:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 277:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 297:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
 
 webpack compiled with 1 warning
 Compiling...
 Compiled with warnings.
 
 [eslint] 
-src/pages/ProfilePage.js
-  Line 70:9:  'hRow' is assigned a value but never used  no-unused-vars
+src/pages/LeagueDetailPage.js
+  Line 41:9:    'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 180:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 277:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 297:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
 
 Search for the keywords to learn more about each warning.
 To ignore, add // eslint-disable-next-line to the line before.
 
 WARNING in [eslint] 
-src/pages/ProfilePage.js
-  Line 70:9:  'hRow' is assigned a value but never used  no-unused-vars
+src/pages/LeagueDetailPage.js
+  Line 41:9:    'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 180:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 277:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 297:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 41:9:    'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 180:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 277:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 297:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 41:9:    'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 180:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 277:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 297:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 41:9:    'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 180:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 277:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 297:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 41:9:    'isOwner' is assigned a value but never used                                                                                                     no-unused-vars
+  Line 180:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 277:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 297:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 174:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 271:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 291:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 174:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 271:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 291:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 174:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 271:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 291:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 174:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 271:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 291:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 174:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 271:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 291:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 174:12:  'formatScore' is defined but never used                                                                                                          no-unused-vars
+  Line 271:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 291:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 264:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 284:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 264:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 284:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 264:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 284:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 264:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 284:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 272:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 292:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 272:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 292:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/GameDetailPage.js
+  Line 4:8:  'MatchChat' is defined but never used  no-unused-vars
+
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/GameDetailPage.js
+  Line 4:8:  'MatchChat' is defined but never used  no-unused-vars
+
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/GameDetailPage.js
+  Line 4:8:  'MatchChat' is defined but never used  no-unused-vars
+
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/GameDetailPage.js
+  Line 4:8:  'MatchChat' is defined but never used  no-unused-vars
+
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/GameDetailPage.js
+  Line 4:8:    'MatchChat' is defined but never used             no-unused-vars
+  Line 23:10:  'showChat' is assigned a value but never used     no-unused-vars
+  Line 23:20:  'setShowChat' is assigned a value but never used  no-unused-vars
+
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/GameDetailPage.js
+  Line 4:8:    'MatchChat' is defined but never used             no-unused-vars
+  Line 23:10:  'showChat' is assigned a value but never used     no-unused-vars
+  Line 23:20:  'setShowChat' is assigned a value but never used  no-unused-vars
+
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/GameDetailPage.js
+  Line 4:8:    'MatchChat' is defined but never used             no-unused-vars
+  Line 23:10:  'showChat' is assigned a value but never used     no-unused-vars
+  Line 23:20:  'setShowChat' is assigned a value but never used  no-unused-vars
+
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/GameDetailPage.js
+  Line 4:8:    'MatchChat' is defined but never used             no-unused-vars
+  Line 23:10:  'showChat' is assigned a value but never used     no-unused-vars
+  Line 23:20:  'setShowChat' is assigned a value but never used  no-unused-vars
+
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/GameDetailPage.js
+  Line 4:8:  'MatchChat' is defined but never used  no-unused-vars
+
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/GameDetailPage.js
+  Line 4:8:  'MatchChat' is defined but never used  no-unused-vars
+
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/GameDetailPage.js
+  Line 4:8:  'MatchChat' is defined but never used  no-unused-vars
+
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/GameDetailPage.js
+  Line 4:8:  'MatchChat' is defined but never used  no-unused-vars
+
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/LoginPage.js
+  Line 101:9:  'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 102:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/LoginPage.js
+  Line 101:9:  'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 102:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/LoginPage.js
+  Line 101:9:  'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 102:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/LoginPage.js
+  Line 101:9:  'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 102:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/LoginPage.js
+  Line 101:9:  'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 102:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/LoginPage.js
+  Line 101:9:  'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 102:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/LoginPage.js
+  Line 101:9:  'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 102:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/LoginPage.js
+  Line 101:9:  'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 102:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/LoginPage.js
+  Line 101:9:  'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 102:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/LeagueDetailPage.js
+  Line 276:6:  React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 296:6:  React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/LoginPage.js
+  Line 101:9:  'btnGreen' is assigned a value but never used       no-unused-vars
+  Line 102:9:  'btnGreenHover' is assigned a value but never used  no-unused-vars
 
 webpack compiled with 1 warning

@@ -61,6 +61,134 @@ module.exports = function matchesRoutes({ db }) {
     return Number(cnt) >= 1;
   }
 
+  async function ensureMatchMessagesTable(k) {
+    const has = await k.schema.hasTable('match_messages').catch(() => false);
+    if (has) return;
+    await k.schema.createTable('match_messages', (table) => {
+      table.increments('id').primary();
+      table.integer('match_id').notNullable().references('id').inTable('matches').onDelete('CASCADE');
+      table.integer('sender_user_id').references('id').inTable('users').onDelete('SET NULL');
+      table.integer('sender_team_id').references('id').inTable('teams').onDelete('SET NULL');
+      table.text('body').notNullable();
+      table.text('created_at').notNullable().defaultTo(k.raw('CURRENT_TIMESTAMP'));
+      table.index(['match_id'], 'idx_match_messages_match');
+    });
+  }
+
+  function buildUserDisplayExpression(usersInfo, alias) {
+    if (!usersInfo) usersInfo = {};
+    const hasFirst = Object.prototype.hasOwnProperty.call(usersInfo, 'firstname');
+    const hasLast = Object.prototype.hasOwnProperty.call(usersInfo, 'lastname');
+    const hasName = Object.prototype.hasOwnProperty.call(usersInfo, 'name');
+    const hasEmail = Object.prototype.hasOwnProperty.call(usersInfo, 'email');
+
+    const parts = [];
+    if (hasFirst || hasLast) {
+      const firstExpr = hasFirst ? `COALESCE(${alias}.firstname,'')` : "''";
+      const lastExpr = hasLast ? `COALESCE(${alias}.lastname,'')` : "''";
+      parts.push(`NULLIF(TRIM(${firstExpr} || ' ' || ${lastExpr}), '')`);
+    }
+    if (hasName) parts.push(`${alias}.name`);
+    if (hasEmail) parts.push(`${alias}.email`);
+    if (!parts.length) return "''";
+    return `COALESCE(${parts.join(', ')})`;
+  }
+
+  async function fetchUserBasics(k, ids) {
+    const normalized = Array.from(new Set((ids || []).map((v) => Number(v)).filter((v) => Number.isFinite(v))));
+    if (!normalized.length) return [];
+    const hasUsers = await k.schema.hasTable('users').catch(() => false);
+    if (!hasUsers) return [];
+    const info = await k('users').columnInfo().catch(() => ({}));
+    const cols = ['id'];
+    if (Object.prototype.hasOwnProperty.call(info, 'email')) cols.push('email');
+    if (Object.prototype.hasOwnProperty.call(info, 'firstname')) cols.push('firstname');
+    if (Object.prototype.hasOwnProperty.call(info, 'lastname')) cols.push('lastname');
+    if (Object.prototype.hasOwnProperty.call(info, 'name')) cols.push('name');
+    return k('users').whereIn('id', normalized).select(cols);
+  }
+
+  async function loadMatch(k, matchId) {
+    const hasMatches = await k.schema.hasTable('matches').catch(() => false);
+    if (!hasMatches) return null;
+    return k('matches').where({ id: matchId }).first();
+  }
+
+  async function resolveParticipant(k, match, userId) {
+    const base = { allowed: false, side: null, teamId: null, matchType: (match?.home_team_id || match?.away_team_id) ? 'teams' : 'singles' };
+    if (!match) return base;
+    const userIdNum = Number(userId);
+    if (match.home_user_id != null && Number(match.home_user_id) === userIdNum) {
+      return { ...base, allowed: true, side: 'home' };
+    }
+    if (match.away_user_id != null && Number(match.away_user_id) === userIdNum) {
+      return { ...base, allowed: true, side: 'away' };
+    }
+    const teamIds = [match.home_team_id, match.away_team_id].filter((v) => v != null);
+    if (!teamIds.length) return base;
+    const hasTeamMembers = await k.schema.hasTable('team_members').catch(() => false);
+    if (!hasTeamMembers) return base;
+    const membership = await k('team_members').whereIn('team_id', teamIds).andWhere('user_id', userIdNum).first();
+    if (!membership) return base;
+    const side = membership.team_id === match.home_team_id ? 'home' : (membership.team_id === match.away_team_id ? 'away' : null);
+    return { ...base, allowed: true, side, teamId: membership.team_id };
+  }
+
+  async function fetchMessages(k, matchId) {
+    const hasUsers = await k.schema.hasTable('users').catch(() => false);
+    const hasTeams = await k.schema.hasTable('teams').catch(() => false);
+    const usersInfo = hasUsers ? await k('users').columnInfo().catch(() => ({})) : {};
+    const userExpr = hasUsers ? buildUserDisplayExpression(usersInfo, 'u') : null;
+    const cols = [
+      { id: 'mm.id' },
+      { body: 'mm.body' },
+      { created_at: 'mm.created_at' },
+      { sender_user_id: 'mm.sender_user_id' },
+      { sender_team_id: 'mm.sender_team_id' },
+    ];
+    if (hasUsers && userExpr) cols.push(k.raw(`${userExpr} as sender_user_name`));
+    else cols.push(k.raw("'' as sender_user_name"));
+    if (hasTeams) {
+      cols.push({ sender_team_name: 't.name' });
+    } else {
+      cols.push(k.raw("'' as sender_team_name"));
+    }
+    const query = k({ mm: 'match_messages' });
+    if (hasUsers) query.leftJoin({ u: 'users' }, 'u.id', 'mm.sender_user_id');
+    if (hasTeams) query.leftJoin({ t: 'teams' }, 't.id', 'mm.sender_team_id');
+    return query
+      .where('mm.match_id', matchId)
+      .orderBy('mm.created_at', 'asc')
+      .select(cols);
+  }
+
+  async function fetchMessageById(k, id) {
+    const hasUsers = await k.schema.hasTable('users').catch(() => false);
+    const hasTeams = await k.schema.hasTable('teams').catch(() => false);
+    const usersInfo = hasUsers ? await k('users').columnInfo().catch(() => ({})) : {};
+    const userExpr = hasUsers ? buildUserDisplayExpression(usersInfo, 'u') : null;
+    const cols = [
+      { id: 'mm.id' },
+      { body: 'mm.body' },
+      { created_at: 'mm.created_at' },
+      { sender_user_id: 'mm.sender_user_id' },
+      { sender_team_id: 'mm.sender_team_id' },
+    ];
+    if (hasUsers && userExpr) cols.push(k.raw(`${userExpr} as sender_user_name`));
+    else cols.push(k.raw("'' as sender_user_name"));
+    if (hasTeams) {
+      cols.push({ sender_team_name: 't.name' });
+    } else {
+      cols.push(k.raw("'' as sender_team_name"));
+    }
+    const query = k({ mm: 'match_messages' });
+    if (hasUsers) query.leftJoin({ u: 'users' }, 'u.id', 'mm.sender_user_id');
+    if (hasTeams) query.leftJoin({ t: 'teams' }, 't.id', 'mm.sender_team_id');
+    return query
+      .where('mm.id', id)
+      .first(cols);
+  }
+
   router.post('/', isAuthenticated, async (req, res) => {
     const userId = req.user.id;
     const leagueId = req.body?.leagueId;
@@ -406,7 +534,7 @@ module.exports = function matchesRoutes({ db }) {
         const dbk = k;
         if (typeof sendMail === 'function') {
           // resolve participant emails
-          const users = await dbk('users').whereIn('id', [g.home_user_id, g.away_user_id].filter(Boolean)).select('id','email','firstname','lastname','name');
+          const users = await fetchUserBasics(dbk, [g.home_user_id, g.away_user_id]);
           const subject = 'Match geplant';
           const when = new Date(patch.kickoff_at).toLocaleString();
           for (const u of users || []) {
@@ -662,7 +790,7 @@ module.exports = function matchesRoutes({ db }) {
         const sendMail = ctx.sendMail;
         if (typeof sendMail === 'function') {
           const dbk = getKnex();
-          const users = await dbk('users').whereIn('id', [g.home_user_id, g.away_user_id].filter(Boolean)).select('id','email','firstname','lastname','name');
+          const users = await fetchUserBasics(dbk, [g.home_user_id, g.away_user_id]);
           const subject = 'Match abgeschlossen';
           const score = `${hs}:${as}`;
           for (const u of users || []) {
@@ -681,5 +809,85 @@ module.exports = function matchesRoutes({ db }) {
     }
   });
 
+  router.get('/:id/chat', isAuthenticated, async (req, res) => {
+    try {
+      const matchId = Number(req.params.id);
+      if (!Number.isFinite(matchId) || matchId <= 0) return res.status(400).json({ error: 'INVALID_MATCH_ID' });
+      const k = getKnex();
+      await ensureMatchMessagesTable(k);
+      const match = await loadMatch(k, matchId);
+      if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+      const participant = await resolveParticipant(k, match, req.user.id);
+      if (!participant.allowed) return res.status(403).json({ error: 'NOT_PARTICIPANT' });
+      const rows = await fetchMessages(k, matchId);
+      const messages = (rows || []).map((row) => ({
+        id: row.id,
+        body: row.body,
+        createdAt: row.created_at,
+        senderUserId: row.sender_user_id,
+        senderTeamId: row.sender_team_id,
+        senderUserName: row.sender_user_name || null,
+        senderTeamName: row.sender_team_name || null,
+      }));
+      return res.json({ messages, meta: { viewerUserId: Number(req.user.id) || null, viewerTeamId: participant.teamId, viewerSide: participant.side, matchType: participant.matchType } });
+    } catch (e) {
+      const msg = (e && e.message || '').toLowerCase();
+      if (msg.includes('db_not_available')) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+      console.error('Get match chat failed', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'DB_ERROR' });
+    }
+  });
+
+  router.post('/:id/chat', isAuthenticated, async (req, res) => {
+    try {
+      const matchId = Number(req.params.id);
+      if (!Number.isFinite(matchId) || matchId <= 0) return res.status(400).json({ error: 'INVALID_MATCH_ID' });
+      const rawBody = typeof req.body?.message === 'string' ? req.body.message : (typeof req.body?.body === 'string' ? req.body.body : '');
+      const trimmed = rawBody.trim();
+      if (!trimmed) return res.status(400).json({ error: 'EMPTY_MESSAGE' });
+      if (trimmed.length > 2000) return res.status(400).json({ error: 'MESSAGE_TOO_LONG' });
+      const k = getKnex();
+      await ensureMatchMessagesTable(k);
+      const match = await loadMatch(k, matchId);
+      if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+      const participant = await resolveParticipant(k, match, req.user.id);
+      if (!participant.allowed) return res.status(403).json({ error: 'NOT_PARTICIPANT' });
+      const insertRec = {
+        match_id: matchId,
+        body: trimmed,
+        sender_user_id: Number(req.user.id) || null,
+        sender_team_id: participant.teamId || null,
+        created_at: new Date().toISOString(),
+      };
+      const inserted = await k('match_messages').insert(insertRec);
+      const newId = Array.isArray(inserted) ? inserted[0] : inserted;
+      const row = await fetchMessageById(k, newId);
+      const payload = row ? {
+        id: row.id,
+        body: row.body,
+        createdAt: row.created_at,
+        senderUserId: row.sender_user_id,
+        senderTeamId: row.sender_team_id,
+        senderUserName: row.sender_user_name || null,
+        senderTeamName: row.sender_team_name || null,
+      } : {
+        id: newId,
+        body: insertRec.body,
+        createdAt: insertRec.created_at,
+        senderUserId: insertRec.sender_user_id,
+        senderTeamId: insertRec.sender_team_id,
+        senderUserName: null,
+        senderTeamName: null,
+      };
+      return res.status(201).json({ message: payload, meta: { viewerUserId: Number(req.user.id) || null, viewerTeamId: participant.teamId, viewerSide: participant.side } });
+    } catch (e) {
+      const msg = (e && e.message || '').toLowerCase();
+      if (msg.includes('db_not_available')) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+      console.error('Post match chat failed', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'DB_ERROR' });
+    }
+  });
+
   return router;
 };
+

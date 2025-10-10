@@ -29,104 +29,159 @@ export default function LeagueDetailPage() {
   const myId = useMemo(() => {
     if (!token) return null;
     try {
-      const payload = JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/")));
-      return payload?.id ?? null;
+      const parts = token.split(".");
+      if (parts.length < 2) return null;
+      const payload = JSON.parse(atob(parts[1]));
+      return payload?.user?.id ?? payload?.userId ?? payload?.sub ?? payload?.id ?? null;
     } catch {
       return null;
     }
   }, [token]);
 
-  // helper to derive a user id from various API shapes
   function getMemberUserId(m) {
-    const userId = (
-      m.user_id ??
-      m.userId ??
-      m.uid ??
-      (m.user && m.user.id) ??
-      // if member row looks like a user (has firstname/lastname), m.id is likely the user id
-      ((m.firstname || m.lastname) ? m.id : undefined) ??
-      m.id
-    );
-    console.log("getMemberUserId:", userId, "from member:", m); // Debug log
-    return userId;
+    if (!m) return null;
+    return m.user_id ?? m.userId ?? m.member_user_id ?? m.memberUserId ?? m.member_id ?? m.memberId ?? m.id ?? null;
   }
 
   const amMember = useMemo(() => {
-    // Prefer /me/leagues result when available (more reliable)
-    if (isMemberByMe !== null) return !!isMemberByMe;
-    // Überprüfe, ob der Benutzer in der Mitgliederliste enthalten ist
-    const isMember = myId ? members.some(m => {
-      const memberId = String(getMemberUserId(m));
-      console.log("Überprüfe Mitglied:", memberId, "gegen", myId);
-      return memberId === String(myId);
-    }) : false;
+    if (isMemberByMe != null) return !!isMemberByMe;
+    if (!myId) return false;
+    return (members || []).some(m => String(getMemberUserId(m)) === String(myId));
+  }, [isMemberByMe, members, myId]);
 
-    console.log("Debugging amMember:");
-    console.log("myId:", myId);
-    console.log("members:", members);
-    console.log("isMember:", isMember);
-
-    return isMember;
-  }, [members, myId, isMemberByMe]);
-
-  const isOpenLeague = useMemo(() => {
-    const l = league || {};
-    // explicit boolean-ish flags
-    const openFlags = [l.is_open, l.isOpen, l.open];
-    for (const f of openFlags) {
-      if (f === true || f === 1 || f === "1") return true;
-      if (f === false || f === 0 || f === "0") return false;
-    }
-    const privFlags = [l.is_private, l.isPrivate, l.private];
-    for (const f of privFlags) {
-      if (f === true || f === 1 || f === "1") return false;
-      if (f === false || f === 0 || f === "0") return true;
-    }
-    // textual fields
-    const txt = (l.type || l.privacy || l.access || l.visibility || "").toString().toLowerCase();
-    if (txt.includes("priv")) return false; // private
-    if (txt.includes("closed") || txt.includes("invite")) return false;
-    if (txt.includes("open") || txt.includes("offen") || txt.includes("öffentlich") || txt.includes("public")) return true;
-    // default: treat as open if unknown
-    return true;
-  }, [league]);
+  const leaguePublicState = league?.publicState ?? league?.public_state ?? league?.visibility ?? "";
+  const joinPolicyRaw = league?.joinPolicy ?? league?.join_policy ?? "";
+  const joinPolicy = String(joinPolicyRaw || "").toLowerCase();
 
   const isPublicLeague = useMemo(() => {
-    const isPublic = league?.publicState === "public";
-    console.log("Debugging isPublicLeague:");
-    console.log("league:", league); // Logge die gesamten Liga-Daten
-    console.log("publicState:", league?.publicState);
-    console.log("isPublicLeague:", isPublic);
-    return isPublic;
-  }, [league]);
+    const state = String(leaguePublicState || "").toLowerCase();
+    if (!state && !joinPolicy) return true;
+    if (["public", "open", "visible", "listed"].includes(state)) return true;
+    if (["hidden", "private", "closed"].includes(state)) return false;
+    if (["public", "open", "auto", "automatic"].includes(joinPolicy)) return true;
+    if (["closed", "manual", "invite", "private"].includes(joinPolicy)) return false;
+    return !!(league?.isPublic || league?.public);
+  }, [leaguePublicState, joinPolicy, league]);
 
-  const isCommunityLeague = useMemo(() => {
-    const ps = String(league?.publicState || '').toLowerCase();
-    return ps === 'community' || league?.isCommunity === true;
-  }, [league]);
+  const isOpenLeague = useMemo(() => {
+    if (["open", "public", "auto", "automatic"].includes(joinPolicy)) return true;
+    if (["closed", "manual", "invite", "private"].includes(joinPolicy)) return false;
+    const state = String(leaguePublicState || "").toLowerCase();
+    if (!state && !joinPolicy) return true;
+    if (["open", "public"].includes(state)) return true;
+    if (["hidden", "private", "closed"].includes(state)) return false;
+    return !!league?.autoJoin;
+  }, [joinPolicy, leaguePublicState, league]);
 
-  const isOwner = useMemo(() => {
-    return String(league?.ownerId) === String(myId);
-  }, [league, myId]);
+  const joinAvailabilityUnknown = String(leaguePublicState || "").trim() === "" && joinPolicy === "";
 
-  function formatDate(input) {
-    if (!input) return "-";
-    const d = new Date(input);
-    if (!Number.isNaN(d.getTime())) return d.toLocaleString();
-    const num = Number(input);
-    if (Number.isFinite(num)) {
-      const d2 = new Date(num);
-      return Number.isNaN(d2.getTime()) ? "-" : d2.toLocaleString();
+  const canAttemptJoin = !amMember && (isOpenLeague || isPublicLeague || joinAvailabilityUnknown);
+
+  async function runMatchSearch({ auto = false, refresh = true } = {}) {
+    const t = localStorage.getItem("token");
+    if (!t) throw new Error("Nicht eingeloggt");
+    const resp = await fetch(`${API_BASE}/leagues/${leagueId}/match-search`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${t}`
+      },
+      body: JSON.stringify({ auto: !!auto })
+    });
+    const data = await resp.json().catch(() => ({}));
+    if (!resp.ok) throw new Error(data?.error || `HTTP ${resp.status}`);
+
+    if (data.match && data.match.id) {
+      setMyOpenMatch(data.match);
+      setGames(prev => {
+        const prevUpcoming = Array.isArray(prev?.upcoming) ? prev.upcoming : [];
+        const deduped = prevUpcoming.filter(m => String(m.id) !== String(data.match.id));
+        return {
+          ...prev,
+          upcoming: [...deduped, data.match]
+        };
+      });
     }
-    return "-";
+
+    if (refresh) {
+      await reloadExtras();
+      await fetchMyOpenMatch();
+      await fetchMyWeeklyStatus();
+    }
+
+    return data;
   }
 
-  function formatScore(g) {
-    if (g?.score != null && g.score !== "") return g.score;
-    if (g?.home_score != null && g?.away_score != null) return `${g.home_score}:${g.away_score}`;
-    if (g?.result) return g.result;
-    return "-";
-  }
+  const opponents = useMemo(() => {
+    return (members || [])
+      .map(m => {
+        const uid = getMemberUserId(m);
+        if (!uid) return null;
+        const name = (m.firstname && m.lastname)
+          ? `${m.firstname} ${m.lastname}`
+          : (m.name || m.username || m.displayName || `User ${uid}`);
+        return { id: uid, name };
+      })
+      .filter(Boolean)
+      .filter(o => String(o.id) !== String(myId));
+  }, [members, myId]);
+
+  const standingsWithMembers = useMemo(() => {
+    const baseRows = (standings || []).map((row, idx) => {
+      const uid = String(
+        row.user_id ??
+        row.userId ??
+        row.member_id ??
+        row.memberId ??
+        ((row.user || {}).id) ??
+        (row.key != null ? row.key : idx)
+      );
+      return {
+        ...row,
+        _uid: uid,
+        name: row.name || row.displayName || row.username || row.key || `User ${uid}`,
+        _order: idx
+      };
+    });
+
+    const existingIds = new Set(baseRows.map(r => r._uid));
+    const fillerRows = (members || [])
+      .map(m => {
+        const uid = String(getMemberUserId(m));
+        if (!uid) return null;
+        if (existingIds.has(uid)) return null;
+        const name = (m.firstname && m.lastname)
+          ? `${m.firstname} ${m.lastname}`
+          : (m.name || m.username || `User ${uid}`);
+        return {
+          _uid: uid,
+          name,
+          played: 0,
+          won: 0,
+          drawn: 0,
+          lost: 0,
+          gf: 0,
+          ga: 0,
+          gd: 0,
+          points: 0,
+          rank: null,
+          _order: Number.MAX_SAFE_INTEGER,
+        };
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.name.localeCompare(b.name, 'de'));
+
+    const merged = [...baseRows, ...fillerRows];
+    return merged
+      .map((row, idx) => ({
+        ...row,
+        rank: row.rank ?? (row.points || row.won || row.played ? idx + 1 : "–"),
+      }))
+      .sort((a, b) => {
+        if (a._order === b._order) return a.name.localeCompare(b.name, 'de');
+        return a._order - b._order;
+      });
+  }, [standings, members]);
 
   useEffect(() => {
     let mounted = true;
@@ -250,12 +305,65 @@ export default function LeagueDetailPage() {
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
-      setJoinMsg(j.joined ? "Beigetreten" : (j.message || "Bereits Mitglied"));
-      await reloadExtras();
-      // Ensure membership flag used by amMember is updated immediately so the UI
-      // can re-evaluate (otherwise isMemberByMe may still be false and override
-      // the members list check, leaving the "Beitreten" button visible).
+
+      const baseMsg = j.joined ? "✅ Beigetreten." : (j.message || "Bereits Mitglied");
+      let extrasMsg = "";
+      if (j.matchAction === "paired") extrasMsg = " Ein Match wurde dir direkt zugewiesen.";
+      else if (j.matchAction === "created") extrasMsg = " Ein offenes Match wurde für dich erstellt.";
+      else if (j.matchAction === "existing") extrasMsg = " Du hattest bereits ein offenes Match.";
+      else if (j.matchAction === "error") extrasMsg = ` Match-Zuordnung fehlgeschlagen: ${j.matchError || "unbekannter Fehler"}.`;
+      setJoinMsg(`${baseMsg}${extrasMsg}`.trim());
+
+      if (j.match && j.match.id) {
+        setGames(prev => {
+          const prevUpcoming = Array.isArray(prev?.upcoming) ? prev.upcoming : [];
+          const deduped = prevUpcoming.filter(m => String(m.id) !== String(j.match.id));
+          return {
+            ...prev,
+            upcoming: [...deduped, j.match]
+          };
+        });
+      }
+
+      let extrasReloaded = false;
+      const shouldTriggerSearch = j.joined && (!j.match || !j.match.id);
+
       if (j && j.joined) setIsMemberByMe(true);
+
+      if (j && j.joined && j.match && j.match.id) {
+        await fetchMyOpenMatch();
+        await fetchMyWeeklyStatus();
+        await reloadExtras();
+        extrasReloaded = true;
+      }
+
+      if (shouldTriggerSearch) {
+        try {
+          const result = await runMatchSearch({ auto: true });
+          if (result && result.action) {
+            let autoMsg = "";
+            if (result.action === "joined") autoMsg = " Automatische Matchsuche: Du wurdest einem offenen Match hinzugefügt.";
+            else if (result.action === "created") autoMsg = " Automatische Matchsuche: Offenes Match erstellt.";
+            else if (result.action === "paired") autoMsg = " Automatische Matchsuche: Gegner gefunden.";
+            else if (result.action === "skipped") autoMsg = " Automatische Matchsuche: Bereits ein offenes Match vorhanden.";
+            if (autoMsg) setJoinMsg(prev => `${prev}${autoMsg}`.trim());
+          }
+          extrasReloaded = true;
+        } catch (autoErr) {
+          const msg = autoErr?.message || String(autoErr);
+          if (!/429|Weekly match limit/i.test(msg)) {
+            setJoinMsg(prev => `${prev} (Matchsuche: ${msg})`.trim());
+          }
+        }
+      }
+
+      if (!extrasReloaded) {
+        await reloadExtras();
+        if (j && j.joined) {
+          await fetchMyOpenMatch();
+          await fetchMyWeeklyStatus();
+        }
+      }
     } catch (e) {
       setJoinMsg(`Beitritt fehlgeschlagen: ${e.message || e}`);
       alert(`Beitritt fehlgeschlagen: ${e.message || e}`);
@@ -286,19 +394,14 @@ export default function LeagueDetailPage() {
     }
   }
 
-  // Liste der möglichen Gegner aus den Mitgliedern (ohne mich)
-  const opponents = useMemo(() => {
-    return (members || [])
-      .map((m) => {
-        const uid = getMemberUserId(m);
-        const name = (m.firstname && m.lastname)
-          ? `${m.firstname} ${m.lastname}`
-          : (m.name || m.username || `User ${uid}`);
-        return { id: uid, name };
-      })
-      .filter((o) => String(o.id) !== String(myId));
-  }, [members, myId]);
-
+  function formatKickoff(match) {
+    if (!match) return "Noch kein Termin";
+    const raw = match.kickoff_at || match.kickoffAt || match.date || match.scheduled_at || match.scheduledAt;
+    if (!raw || (typeof raw === "string" && raw.trim() === "")) return "Noch kein Termin";
+    const dt = new Date(raw);
+    if (Number.isNaN(dt.getTime())) return "Noch kein Termin";
+    return dt.toLocaleString('de-DE');
+  }
   async function createMatch(e) {
     e && e.preventDefault();
     try {
@@ -331,43 +434,87 @@ export default function LeagueDetailPage() {
   if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
   if (!league) return <div style={{ padding: 16 }}>Keine Daten.</div>;
 
+  // Styles
+  const wrap = { padding: 16, color: '#e8efe8', fontFamily: 'Inter, system-ui, sans-serif' };
+  const card = { background: '#0f2a20', borderRadius: 16, boxShadow: '0 14px 36px rgba(0,0,0,0.5)' };
+  const pad = { padding: 16 };
+  const pill = { display: 'inline-block', padding: '6px 12px', borderRadius: 999, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe' };
+  const small = { fontSize: 12, color: '#a6bfb3' };
+
   return (
-    <div style={{ padding: 16 }}>
-      <h2>{league.name}</h2>
-      <div style={{ marginBottom: 8 }}>
-        Stadt: <Link to={`/cities/${league.cityId}`}>{league.city}</Link>
-        {" · "}
-        Sportart: <Link to={`/sports/${league.sportId}`}>{league.sport}</Link>
-      </div>
-      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-        {!amMember && (isOpenLeague || isPublicLeague) && (
-          <button onClick={handleJoin} disabled={!token || joining}>
-            {joining ? "Beitritt..." : "Beitreten"}
-          </button>
-        )}
-        {amMember && (
-          <button onClick={handleLeave} disabled={!token || joining}>
-            {joining ? "Austritt..." : "Austreten"}
-          </button>
-        )}
-        {joinMsg && <span style={{ color: joinMsg.includes("fehl") ? "crimson" : "green" }}>{joinMsg}</span>}
+    <div style={wrap}>
+      {/* Hero */}
+      <div style={{ ...card, paddingBottom: 0 }}>
+        <div style={{ ...pad }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ fontSize: 26 }}>🏆</div>
+            <div style={{ fontSize: 28, fontWeight: 900 }}>{league.name}</div>
+          </div>
+          <div style={{ marginTop: 4, ...small }}>
+            <Link to={`/cities/${league.cityId}`} style={{ color: '#cfe' }}>{league.city}</Link>
+            {" · "}
+            <Link to={`/sports/${league.sportId}`} style={{ color: '#cfe' }}>{league.sport}</Link>
+          </div>
+          <div style={{ marginTop: 10, display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {canAttemptJoin && (
+              <button onClick={handleJoin} disabled={!token || joining} style={pill}>
+                {joining ? "Beitritt..." : "Teilnehmen"}
+              </button>
+            )}
+            {amMember && (
+              <button onClick={handleLeave} disabled={!token || joining} style={pill}>
+                {joining ? "Austritt..." : "Austreten"}
+              </button>
+            )}
+            {joinMsg && <span style={{ color: joinMsg.includes("fehl") ? "crimson" : "#9fd" }}>{joinMsg}</span>}
+          </div>
+        </div>
+        {/* quick stats */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, padding: 16 }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 26, fontWeight: 900 }}>{(standingsWithMembers || []).reduce((a,b)=>a + (b.played||0),0)}</div>
+            <div style={{ color: '#bcd' }}>Spiele</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 26, fontWeight: 900 }}>{(games.completed||[]).reduce((a,b)=>a + ((b.home_score||0)+(b.away_score||0)),0)}</div>
+            <div style={{ color: '#bcd' }}>Tore</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 26, fontWeight: 900 }}>{members.length}</div>
+            <div style={{ color: '#bcd' }}>Mitglieder</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 26, fontWeight: 900 }}>{(games.upcoming||[]).length}</div>
+            <div style={{ color: '#bcd' }}>Anstehend</div>
+          </div>
+        </div>
       </div>
 
       {amMember && !myOpenMatch && !hasWeeklyMatch && (
-        <form onSubmit={createMatch} style={{ margin: "12px 0", display: "flex", gap: 12, alignItems: "end", flexWrap: "wrap" }}>
-          <label style={{ display: "grid", gap: 4 }}>
-            Gegner
-            <select value={opponentId} onChange={(e) => setOpponentId(e.target.value)}>
-              <option value="">– wählen –</option>
-              {opponents.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
-            </select>
-          </label>
-          <label style={{ display: "grid", gap: 4 }}>
-            Datum/Zeit
-            <input type="datetime-local" value={kickoffLocal} onChange={(e) => setKickoffLocal(e.target.value)} />
-          </label>
-          <button type="submit" disabled={hasWeeklyMatch || !!myOpenMatch}>Match erstellen</button>
-        </form>
+        <div style={{ ...card, marginTop: 12 }}>
+          <div style={{ ...pad, paddingBottom: 0 }}>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>Neues Match starten</div>
+            <div style={{ marginTop: 6, color: '#9db' }}>
+              Wähle einen Gegner und den Kickoff – wir legen das Match direkt an.
+            </div>
+          </div>
+          <form onSubmit={createMatch} style={{ ...pad, display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+            <label style={{ display: 'grid', gap: 6 }}>
+              Gegner
+              <select value={opponentId} onChange={(e) => setOpponentId(e.target.value)}>
+                <option value="">– wählen –</option>
+                {opponents.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+              </select>
+            </label>
+            <label style={{ display: 'grid', gap: 6 }}>
+              Datum &amp; Uhrzeit
+              <input type="datetime-local" value={kickoffLocal} onChange={(e) => setKickoffLocal(e.target.value)} />
+            </label>
+            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+              <button type="submit" disabled={hasWeeklyMatch || !!myOpenMatch} style={{ ...pill, width: '100%', justifyContent: 'center' }}>Match erstellen</button>
+            </div>
+          </form>
+        </div>
       )}
 
       {amMember && (myOpenMatch || hasWeeklyMatch) && (
@@ -383,31 +530,11 @@ export default function LeagueDetailPage() {
             onClick={async () => {
               try {
                 setMatchSearching(true);
-                setErr('');
-                const t = localStorage.getItem('token');
-                if (!t) throw new Error('Bitte einloggen');
-                // captain-only rule: check membership row if captain flag present
-                const memberRow = members.find(m => String(getMemberUserId(m)) === String(myId));
-                if (league && (league.sportType === 'team' || league.sport_type === 'team')) {
-                  // check memberRow.captain or user_leagues.captain via backend; fallback to memberRow.captain
-                  if (!(memberRow && memberRow.captain)) {
-                    alert('Nur Captains können für Team-Sportarten die Match-Suche starten.');
-                    return;
-                  }
-                }
-                const r = await fetch(`${API_BASE}/leagues/${leagueId}/match-search`, { method: 'POST', headers: { Authorization: `Bearer ${t}` } });
-                const j = await r.json().catch(() => ({}));
-                if (!r.ok) throw new Error(j.error || j.message || `HTTP ${r.status}`);
-                if (j.action === 'joined') {
-                  alert('Match gefunden und beigetreten');
-                } else if (j.action === 'created') {
-                  alert('Offenes Match erstellt');
-                } else if (j.action === 'paired') {
-                  alert('Gegner ohne Wochen-Spiel gefunden. Vorschlag erstellt.');
-                }
-                await reloadExtras();
-                await fetchMyOpenMatch();
-                await fetchMyWeeklyStatus();
+                const result = await runMatchSearch({ auto: false });
+                if (result?.action === 'joined') alert('Match gefunden und beigetreten');
+                else if (result?.action === 'created') alert('Offenes Match erstellt');
+                else if (result?.action === 'paired') alert('Gegner ohne Wochen-Spiel gefunden. Vorschlag erstellt.');
+                else if (result?.action === 'skipped') alert('Du hast bereits ein offenes Match.');
               } catch (e) {
                 alert(`Match-Suche fehlgeschlagen: ${e.message || e}`);
               } finally {
@@ -435,129 +562,121 @@ export default function LeagueDetailPage() {
       )}
 
       {loadingExtras ? (
-        <div>Lade zusätzliche Daten...</div>
+        <div style={{ ...card, ...pad, marginTop: 16 }}>Lade zusätzliche Daten...</div>
       ) : (
         <>
-          <h3 style={{ marginTop: 16 }}>Mitglieder</h3>
-          {members.length === 0 ? (
-            <div>Keine Mitglieder.</div>
-          ) : (
-            <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Beigetreten</th>
-                </tr>
-              </thead>
-              <tbody>
-                {members.map(m => {
-                  const userId = getMemberUserId(m);
-                  console.log("Mitglied in Tabelle:", m); // Debug log
-                  const name = (m.firstname && m.lastname)
-                    ? `${m.firstname} ${m.lastname}`
-                    : (m.name || m.username || `User ${userId}`);
-                  return (
-                    <tr key={userId}>
-                      <td><Link to={`/user/${userId}`}>{name}</Link></td>
-                      <td>{formatDate(m.joined_at)}</td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-
-          <h3 style={{ marginTop: 16 }}>Bevorstehende Spiele</h3>
-          {games.upcoming.length === 0 ? (
-            <div>Keine kommenden Spiele.</div>
-          ) : (
-            <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
-              <thead>
-                <tr>
-                  <th>Datum</th>
-                  <th>Spiel</th>
-                </tr>
-              </thead>
-              <tbody>
-                {games.upcoming.map(g => (
-                  <tr key={g.id}>
-                    <td><Link to={`/matches/${g.id}`}>{formatDate(g.kickoff_at || g.date)}</Link></td>
-                    <td>{g.home} – {g.away}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          <h3 style={{ marginTop: 16 }}>Abgeschlossene Spiele</h3>
-          {games.completed.length === 0 ? (
-            <div>Keine abgeschlossenen Spiele.</div>
-          ) : (
-            <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
-              <thead>
-                <tr>
-                  <th>Datum</th>
-                  <th>Spiel</th>
-                  <th>Ergebnis</th>
-                </tr>
-              </thead>
-              <tbody>
-                {games.completed.map(g => (
-                  <tr key={g.id}>
-                    <td><Link to={`/matches/${g.id}`}>{formatDate(g.kickoff_at || g.date)}</Link></td>
-                    <td>{g.home} – {g.away}</td>
-                    <td>{formatScore(g)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 16 }}>
-            <h3 style={{ margin: 0 }}>Tabelle</h3>
-            <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-              Saison:
-              <select value={selectedSeasonId} onChange={(e) => setSelectedSeasonId(e.target.value)}>
-                <option value="current">Aktuelle Saison</option>
-                {seasons.map(se => <option key={se.id} value={se.id}>{se.name}</option>)}
-                <option value="overall">Overall</option>
-              </select>
-            </label>
+          {/* Mitglieder */}
+          <div style={{ ...card, marginTop: 16 }}>
+            <div style={{ ...pad, paddingBottom: 8 }}>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>Tabelle</div>
+              <div style={{ marginTop: 8 }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  Saison:
+                  <select value={selectedSeasonId} onChange={(e) => setSelectedSeasonId(e.target.value)}>
+                    <option value="current">Aktuelle Saison</option>
+                    {seasons.map(se => <option key={se.id} value={se.id}>{se.name}</option>)}
+                    <option value="overall">Overall</option>
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div style={{ ...pad, paddingTop: 8 }}>
+              {standingsWithMembers.length === 0 ? (
+                <div style={small}>Keine Einträge.</div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                      <tr style={{ textAlign: 'left', borderBottom: '2px solid #234' }}>
+                        <th style={{ padding: '8px 6px' }}>Platz</th>
+                        <th style={{ padding: '8px 6px' }}>Team/Spieler</th>
+                        <th style={{ padding: '8px 6px' }}>Sp</th>
+                        <th style={{ padding: '8px 6px' }}>S</th>
+                        <th style={{ padding: '8px 6px' }}>U</th>
+                        <th style={{ padding: '8px 6px' }}>N</th>
+                        <th style={{ padding: '8px 6px' }}>Tore</th>
+                        <th style={{ padding: '8px 6px' }}>Diff</th>
+                        <th style={{ padding: '8px 6px' }}>Pkt</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {standingsWithMembers.map((row, idx) => (
+                        <tr key={row._uid || idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                          <td style={{ padding: '8px 6px' }}>{row.rank ?? (idx + 1)}</td>
+                          <td style={{ padding: '8px 6px' }}>{row.name || row.key}</td>
+                          <td style={{ padding: '8px 6px' }}>{row.played ?? 0}</td>
+                          <td style={{ padding: '8px 6px' }}>{row.won ?? 0}</td>
+                          <td style={{ padding: '8px 6px' }}>{row.drawn ?? 0}</td>
+                          <td style={{ padding: '8px 6px' }}>{row.lost ?? 0}</td>
+                          <td style={{ padding: '8px 6px' }}>{(row.gf ?? 0)}:{(row.ga ?? 0)}</td>
+                          <td style={{ padding: '8px 6px' }}>{(row.gd ?? ((row.gf||0) - (row.ga||0)))}</td>
+                          <td style={{ padding: '8px 6px' }}>{row.points ?? 0}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
           </div>
-          {standings.length === 0 ? (
-            <div>Keine Einträge.</div>
-          ) : (
-            <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
-              <thead>
-                <tr>
-                  <th>Platz</th>
-                  <th>Team/Spieler</th>
-                  <th>Sp</th>
-                  <th>S</th>
-                  <th>U</th>
-                  <th>N</th>
-                  <th>Tore</th>
-                  <th>Diff</th>
-                  <th>Pkt</th>
-                </tr>
-              </thead>
-              <tbody>
-                {standings.map((row, idx) => (
-                  <tr key={idx}>
-                    <td>{row.rank ?? (idx + 1)}</td>
-                    <td>{row.name || row.key}</td>
-                    <td>{row.played ?? 0}</td>
-                    <td>{row.won ?? 0}</td>
-                    <td>{row.drawn ?? 0}</td>
-                    <td>{row.lost ?? 0}</td>
-                    <td>{(row.gf ?? 0)}:{(row.ga ?? 0)}</td>
-                    <td>{(row.gd ?? ((row.gf||0) - (row.ga||0)))}</td>
-                    <td>{row.points ?? 0}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+
+          {/* Spiele */}
+          <div style={{ display: 'grid', gap: 16, gridTemplateColumns: '1fr', marginTop: 16 }}>
+            <div style={{ ...card }}>
+              <div style={{ ...pad, paddingBottom: 8 }}>
+                <div style={{ fontSize: 18, fontWeight: 700 }}>Anstehende Spiele</div>
+              </div>
+              <div style={{ ...pad, paddingTop: 8 }}>
+                {games.upcoming.length === 0 ? (
+                  <div style={small}>Keine kommenden Spiele.</div>
+                ) : (
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {games.upcoming.map(g => (
+                      <div key={g.id} style={{ background: '#0b1e19', borderRadius: 12, padding: 12, display: 'grid', gridTemplateColumns: '1fr auto 1fr auto', alignItems: 'center', gap: 10 }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 600 }}>{formatKickoff(g)}</div>
+                        </div>
+                        <div style={{ textAlign: 'right', color: '#9db' }}>{g.home}</div>
+                        <div style={{ textAlign: 'center', fontWeight: 700 }}>VS</div>
+                        <div style={{ color: '#9db' }}>{g.away}</div>
+                        <div style={{ gridColumn: '1 / -1', marginTop: 8 }}>
+                          <Link to={`/matches/${g.id}`} style={pill}>Details</Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ ...card }}>
+              <div style={{ ...pad, paddingBottom: 8 }}>
+                <div style={{ fontSize: 18, fontWeight: 700 }}>Vergangene Spiele</div>
+              </div>
+              <div style={{ ...pad, paddingTop: 8 }}>
+                {games.completed.length === 0 ? (
+                  <div style={small}>Keine abgeschlossenen Spiele.</div>
+                ) : (
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {games.completed.map(g => (
+                      <div key={g.id} style={{ background: '#0b1e19', borderRadius: 12, padding: 12, display: 'grid', gridTemplateColumns: '1fr auto 1fr auto', alignItems: 'center', gap: 10 }}>
+                        <div style={{ minWidth: 0 }}>
+                          <div style={{ fontWeight: 600 }}>{formatKickoff(g)}</div>
+                        </div>
+                        <div style={{ textAlign: 'right', color: '#9db' }}>{g.home}</div>
+                        <div style={{ textAlign: 'center', fontWeight: 700 }}>{(g.home_score!=null && g.away_score!=null) ? `${g.home_score}:${g.away_score}` : '— : —'}</div>
+                        <div style={{ color: '#9db' }}>{g.away}</div>
+                        <div style={{ gridColumn: '1 / -1', marginTop: 8 }}>
+                          <Link to={`/matches/${g.id}`} style={pill}>Details</Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
         </>
       )}
 
