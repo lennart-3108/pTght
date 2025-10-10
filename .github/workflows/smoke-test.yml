@@ -25,6 +25,11 @@ jobs:
         run: |
           npm ci
 
+      - name: Run migrations (SQLite)
+        working-directory: ./backend
+        run: |
+          npm run migrate
+
       - name: Start backend
         working-directory: ./backend
         run: |
@@ -46,10 +51,24 @@ jobs:
           done
           echo "backend did not start in time"; exit 1
 
+      - name: Ensure admin user (fallback)
+        working-directory: .
+        env:
+          SMOKE_EMAIL: ${{ secrets.SMOKE_ADMIN_EMAIL }}
+          SMOKE_PASSWORD: ${{ secrets.SMOKE_ADMIN_PASSWORD }}
+        run: |
+          # Create an admin if none exists; script prints the created email
+          node backend/scripts/create-admin.js || true
+          # Prepare email/password for smoke test (use secrets if set, otherwise defaults)
+          EMAIL="${SMOKE_EMAIL:-admin1@example.com}"
+          PASS="${SMOKE_PASSWORD:-test1234}"
+          echo "EMAIL=$EMAIL" >> "$GITHUB_ENV"
+          echo "PASS=$PASS" >> "$GITHUB_ENV"
+
       - name: Run smoke test
         working-directory: .
         run: |
-          node backend/test/smoke-teams.js --email ${{ secrets.SMOKE_ADMIN_EMAIL }} --password ${{ secrets.SMOKE_ADMIN_PASSWORD }}
+          node backend/test/smoke-teams.js --email "$EMAIL" --password "$PASS"
 
       - name: Stop backend
         if: always()
