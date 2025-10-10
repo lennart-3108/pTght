@@ -120,14 +120,14 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
         <div className="hero-overlay">
           <div className="hero-stripe">
             <img src={smallLogo} alt="ML" className="hero-small-logo" />
-            <h1 className="hero-title">Match League</h1>
+            <h1 className="hero-title" style={{ fontWeight: 700 }}>Match League</h1>
           </div>
-          <p className="hero-sub">Dein Sport. Dein Match. Deine Community.</p>
+          <p className="hero-sub" style={{ color: '#ffffffff', fontWeight: 700 }}>Connect. Match. Win.</p>
         </div>
       </section>
 
       <div style={{ textAlign: 'center', margin: '20px 0' }}>
-        <h2 style={{ color: '#e6efe6' }}>Willkommen bei Match League</h2>
+        <h2 style={{ color: '#e6efe6', fontWeight: 700 }}>Willkommen bei Match League</h2>
         <p>
         <b>MatchLeague</b> ist deine Plattform für Ligen, Sportarten und Community-Wettbewerbe.<br />
       </p>
@@ -135,7 +135,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
       </div>
 
       <div style={{ maxWidth: 350, margin: "20px auto 40px", padding: 20, borderRadius: 8, background: panelBg, border: panelBorder, boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
-        <h2>Login</h2>
+        <h2 style={{ fontWeight: 700 }}>Login</h2>
         {/* Login-Formular */}
         <form onSubmit={handleLogin}>
           <input
@@ -156,7 +156,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
             autoComplete="current-password"
             style={{ display: "block", marginBottom: 8, width: "100%", background: '#fafcf9', border: '1px solid rgba(0,0,0,0.12)', padding: '8px' }}
           />
-          <button type="submit" className="btn btn-primary" style={{ width: "100%" }}>Login</button>
+          <button type="submit" className="btn btn-primary" style={{ width: "100%", fontWeight: 700 }}>Login</button>
           {loginMsg && <div style={{ marginTop: 8 }}>{loginMsg}</div>}
         </form>
 
@@ -164,7 +164,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
         <button
           onClick={() => setShowReset((s) => !s)}
           className="btn btn-primary"
-          style={{ marginTop: 24, width: "100%" }}
+          style={{ marginTop: 24, width: "100%", fontWeight: 700 }}
           type="button"
         >
           Passwort vergessen?
@@ -174,7 +174,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
         <button
           onClick={() => setShowResend((s) => !s)}
           className="btn btn-primary"
-          style={{ marginTop: 12, width: "100%" }}
+          style={{ marginTop: 12, width: "100%", fontWeight: 700 }}
           type="button"
         >
           Bestätigungs-Mail erneut senden
@@ -186,7 +186,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
             onSubmit={handleReset}
             style={{ marginTop: 16, border: "1px solid #eee", padding: 16, borderRadius: 8 }}
           >
-            <h4>Passwort zurücksetzen</h4>
+            <h4 style={{ fontWeight: 700 }}>Passwort zurücksetzen</h4>
             <input
               type="text"
               placeholder="Benutzername oder E-Mail"
@@ -206,7 +206,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
               autoComplete="new-password"
               style={{ display: "block", marginBottom: 8, width: "100%" }}
             />
-              <button type="submit" className="btn btn-primary" style={{ width: "100%" }}>Zurücksetzen</button>
+              <button type="submit" className="btn btn-primary" style={{ width: "100%", fontWeight: 700 }}>Zurücksetzen</button>
             {resetMsg && <div style={{ marginTop: 8 }}>{resetMsg}</div>}
           </form>
         )}
@@ -235,7 +235,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
             }}
             style={{ marginTop: 16, border: "1px solid #eee", padding: 16, borderRadius: 8 }}
           >
-            <h4>Bestätigungs-Mail erneut anfordern</h4>
+            <h4 style={{ fontWeight: 700 }}>Bestätigungs-Mail erneut anfordern</h4>
             <input
               type="email"
               placeholder="E-Mail"
@@ -244,7 +244,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
               required
               style={{ display: "block", marginBottom: 8, width: "100%" }}
             />
-            <button type="submit" className="btn btn-primary" style={{ width: "100%" }}>Senden</button>
+            <button type="submit" className="btn btn-primary" style={{ width: "100%", fontWeight: 700 }}>Senden</button>
             {resendMsg && <div style={{ marginTop: 8 }}>{resendMsg}</div>}
           </form>
         )}

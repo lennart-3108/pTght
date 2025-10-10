@@ -40,6 +40,192 @@ module.exports = function leaguesRoutes(ctx) {
     }
   }
 
+  async function autoAssignMatchAfterJoin(trx, leagueId, userId) {
+    if (!trx) return null;
+    try {
+      const hasMatches = await trx.schema.hasTable("matches");
+      if (!hasMatches) return null;
+
+      const info = await trx("matches").columnInfo().catch(() => ({}));
+      const hasHomeUserId = !!info.home_user_id;
+      const hasAwayUserId = !!info.away_user_id;
+      const hasHomeText = !!info.home;
+      const hasAwayText = !!info.away;
+      const hasStatus = Object.prototype.hasOwnProperty.call(info, "status");
+      const hasCreatedAt = Object.prototype.hasOwnProperty.call(info, "created_at");
+      const hasSeasonColumn = Object.prototype.hasOwnProperty.call(info, "season_id");
+
+      const nowIso = new Date().toISOString();
+
+      let seasonId = null;
+      if (hasSeasonColumn) {
+        try {
+          const hasSeasonsTable = await trx.schema.hasTable("seasons");
+          if (hasSeasonsTable) {
+            const year = String(new Date().getFullYear());
+            const currentSeason = await trx("seasons").where({ league_id: leagueId, name: year }).first();
+            if (currentSeason && currentSeason.id) {
+              seasonId = currentSeason.id;
+            } else {
+              const fallbackSeason = await trx("seasons").where({ league_id: leagueId }).orderBy("start_date", "desc").first();
+              if (fallbackSeason && fallbackSeason.id) seasonId = fallbackSeason.id;
+            }
+          }
+        } catch (e) {
+          console.warn("autoAssignMatchAfterJoin season lookup failed", e && (e.message || e));
+        }
+      }
+
+      const withSeason = (rec) => {
+        if (seasonId != null) rec.season_id = seasonId;
+        return rec;
+      };
+
+      // 1. Suche offenes Match ohne Gegner und trage den neuen User als Gegner ein
+      let openMatch = await trx("matches")
+        .where({ league_id: leagueId })
+        .whereNull("home_score").whereNull("away_score")
+        .where(function () {
+          if (hasHomeUserId && hasAwayUserId) {
+            this.where(function () {
+              this.whereNotNull("home_user_id").whereNull("away_user_id");
+            }).orWhere(function () {
+              this.whereNotNull("away_user_id").whereNull("home_user_id");
+            });
+          }
+          if (hasHomeText && hasAwayText) {
+            this.orWhere(function () {
+              this.whereNotNull("home").whereRaw("(away IS NULL OR TRIM(away) = '')");
+            }).orWhere(function () {
+              this.whereNotNull("away").whereRaw("(home IS NULL OR TRIM(home) = '')");
+            });
+          }
+        })
+        .first();
+
+      if (openMatch) {
+        const updateRec = {};
+        if (hasHomeUserId && hasAwayUserId) {
+          if (openMatch.home_user_id != null && openMatch.away_user_id == null) {
+            updateRec.away_user_id = userId;
+          } else if (openMatch.away_user_id != null && openMatch.home_user_id == null) {
+            updateRec.home_user_id = userId;
+          }
+        } else if (hasHomeText && hasAwayText) {
+          if (openMatch.home && (!openMatch.away || String(openMatch.away).trim() === "")) {
+            updateRec.away = String(userId);
+          } else if (openMatch.away && (!openMatch.home || String(openMatch.home).trim() === "")) {
+            updateRec.home = String(userId);
+          }
+        }
+        if (Object.keys(updateRec).length > 0) {
+          await trx("matches").where({ id: openMatch.id }).update(updateRec);
+          const updated = await trx("matches").where({ id: openMatch.id }).first();
+          return { action: "joined_open", match: updated };
+        }
+      }
+
+      // 2. Prüfe, ob User schon ein offenes Match hat
+      const userPending = await trx("matches")
+        .where({ league_id: leagueId })
+        .whereNull("home_score").whereNull("away_score")
+        .where(function () {
+          if (hasHomeUserId || hasAwayUserId) this.where("home_user_id", userId).orWhere("away_user_id", userId);
+          if (hasHomeText || hasAwayText) this.orWhere("home", String(userId)).orWhere("away", String(userId));
+        })
+        .first();
+      if (userPending) return { action: "existing", match: userPending };
+
+      // 3. Erstelle neues Match (wie bisher)
+      const otherMemberIds = await trx("user_leagues")
+        .where({ league_id: leagueId })
+        .whereNot("user_id", userId)
+        .pluck("user_id")
+        .catch(() => []);
+
+      async function hasPendingBetween(a, b) {
+        const row = await trx("matches")
+          .where({ league_id: leagueId })
+          .whereNull("home_score").whereNull("away_score")
+          .where(function () {
+            if (hasHomeUserId || hasAwayUserId) {
+              this.where(function () { this.where("home_user_id", a).andWhere("away_user_id", b); })
+                  .orWhere(function () { this.where("home_user_id", b).andWhere("away_user_id", a); });
+            }
+            if (hasHomeText || hasAwayText) {
+              this.orWhere(function () { this.where("home", String(a)).andWhere("away", String(b)); })
+                  .orWhere(function () { this.where("home", String(b)).andWhere("away", String(a)); });
+            }
+          })
+          .first();
+        return !!row;
+      }
+
+      async function hasOpenSlot(uid) {
+        const row = await trx("matches")
+          .where({ league_id: leagueId })
+          .whereNull("home_score").whereNull("away_score")
+          .where(function () {
+            if (hasHomeUserId || hasAwayUserId) {
+              this.orWhere(function () { this.where("home_user_id", uid).whereNull("away_user_id"); })
+                  .orWhere(function () { this.where("away_user_id", uid).whereNull("home_user_id"); });
+            }
+            if (hasHomeText || hasAwayText) {
+              this.orWhere(function () { this.where("home", String(uid)).whereRaw("(away IS NULL OR TRIM(away) = '')"); })
+                  .orWhere(function () { this.where("away", String(uid)).whereRaw("(home IS NULL OR TRIM(home) = '')"); });
+            }
+          })
+          .first();
+        return !!row;
+      }
+
+      for (const opponentId of otherMemberIds) {
+        if (!opponentId && opponentId !== 0) continue;
+        if (await hasPendingBetween(userId, opponentId)) continue;
+        if (await hasOpenSlot(opponentId)) continue;
+
+        const insertRec = withSeason({ league_id: leagueId });
+        let assigned = false;
+        if (hasHomeUserId || hasAwayUserId) {
+          if (hasHomeUserId) { insertRec.home_user_id = userId; assigned = true; }
+          if (hasAwayUserId) { insertRec.away_user_id = opponentId; assigned = true; }
+        } else if (hasHomeText || hasAwayText) {
+          if (hasHomeText) { insertRec.home = String(userId); assigned = true; }
+          if (hasAwayText) { insertRec.away = String(opponentId); assigned = true; }
+        }
+        if (!assigned) break;
+
+        if (hasStatus) insertRec.status = "proposed";
+        if (hasCreatedAt) insertRec.created_at = nowIso;
+
+        const ins = await trx("matches").insert(insertRec);
+        const newId = Array.isArray(ins) ? ins[0] : ins;
+        const newRow = await trx("matches").where("id", newId).first();
+        return { action: "paired", match: newRow };
+      }
+
+      // fallback: open match für den neuen User allein (wie bisher)
+      const openRec = withSeason({ league_id: leagueId });
+      let assignedSide = false;
+      if (hasHomeUserId) { openRec.home_user_id = userId; assignedSide = true; }
+      else if (hasAwayUserId) { openRec.away_user_id = userId; assignedSide = true; }
+      else if (hasHomeText) { openRec.home = String(userId); assignedSide = true; }
+      else if (hasAwayText) { openRec.away = String(userId); assignedSide = true; }
+      if (!assignedSide) return null;
+
+      if (hasStatus) openRec.status = "open";
+      if (hasCreatedAt) openRec.created_at = nowIso;
+
+      const inserted = await trx("matches").insert(openRec);
+      const newId = Array.isArray(inserted) ? inserted[0] : inserted;
+      const row = await trx("matches").where("id", newId).first();
+      return { action: "created", match: row };
+    } catch (e) {
+      console.error("autoAssignMatchAfterJoin failed", e && (e.stack || e.message || e));
+      return { action: "error", error: e && (e.message || String(e)) };
+    }
+  }
+
   const DISPLAY_NAME_SQL = "COALESCE(u.firstname || ' ' || u.lastname, u.name, u.email)";
 
   // GET / - Ligenliste (dynamisch publicState)
@@ -478,17 +664,38 @@ module.exports = function leaguesRoutes(ctx) {
       const leagueId = Number(req.params.id);
       const userId = req.user.id;
 
-      const existing = await k("user_leagues").where({ user_id: userId, league_id: leagueId }).first();
-      if (existing) return res.json({ joined: false, message: "Bereits Mitglied" });
+      const outcome = await k.transaction(async (trx) => {
+        const existing = await trx("user_leagues").where({ user_id: userId, league_id: leagueId }).first();
+        if (existing) return { joined: false, message: "Bereits Mitglied" };
 
-      // Detect if user_leagues has a joined_at column before inserting it
-      const ulCols = await k("user_leagues").columnInfo().catch(() => ({}));
-      const hasJoinedAt = Object.prototype.hasOwnProperty.call(ulCols, "joined_at");
-      const insertRec = { user_id: userId, league_id: leagueId };
-      if (hasJoinedAt) insertRec.joined_at = new Date().toISOString();
+        const ulCols = await trx("user_leagues").columnInfo().catch(() => ({}));
+        const hasJoinedAt = Object.prototype.hasOwnProperty.call(ulCols, "joined_at");
+        const insertRec = { user_id: userId, league_id: leagueId };
+        if (hasJoinedAt) insertRec.joined_at = new Date().toISOString();
 
-      await k("user_leagues").insert(insertRec);
-      res.json({ joined: true });
+        await trx("user_leagues").insert(insertRec);
+
+        let matchInfo = null;
+        try {
+          matchInfo = await autoAssignMatchAfterJoin(trx, leagueId, userId);
+        } catch (matchErr) {
+          console.error("autoAssignMatchAfterJoin threw:", matchErr && (matchErr.stack || matchErr.message || matchErr));
+          matchInfo = { action: "error", error: matchErr && (matchErr.message || String(matchErr)) };
+        }
+
+        return { joined: true, matchInfo };
+      });
+
+      if (!outcome) return res.json({ joined: false, message: "Unbekannter Status" });
+      if (!outcome.joined) return res.json(outcome);
+
+      const payload = { joined: true };
+      if (outcome.matchInfo) {
+        payload.matchAction = outcome.matchInfo.action;
+        if (outcome.matchInfo.match) payload.match = outcome.matchInfo.match;
+        if (outcome.matchInfo.error) payload.matchError = outcome.matchInfo.error;
+      }
+      res.json(payload);
     } catch (err) {
       console.error("Fehler beim Beitreten zur Liga:", err);
       res.status(500).json({ error: "Datenbankfehler" });

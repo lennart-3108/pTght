@@ -66,6 +66,20 @@ function createMiddleware(ctx) {
            )`
         );
 
+        db.run(
+          `CREATE TABLE IF NOT EXISTS match_messages (
+             id INTEGER PRIMARY KEY AUTOINCREMENT,
+             match_id INTEGER NOT NULL,
+             sender_user_id INTEGER,
+             sender_team_id INTEGER,
+             body TEXT NOT NULL,
+             created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+             FOREIGN KEY(match_id) REFERENCES matches(id) ON DELETE CASCADE,
+             FOREIGN KEY(sender_user_id) REFERENCES users(id) ON DELETE SET NULL,
+             FOREIGN KEY(sender_team_id) REFERENCES teams(id) ON DELETE SET NULL
+           )`
+        );
+
         // --- teams & members (for team sports) ---
         db.run(
           `CREATE TABLE IF NOT EXISTS teams (
