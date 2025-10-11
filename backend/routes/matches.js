@@ -108,6 +108,14 @@ module.exports = function matchesRoutes({ db }) {
     return k('users').whereIn('id', normalized).select(cols);
   }
 
+  async function fetchTeamBasics(k, ids) {
+    const normalized = Array.from(new Set((ids || []).map((v) => Number(v)).filter((v) => Number.isFinite(v))));
+    if (!normalized.length) return [];
+    const hasTeams = await k.schema.hasTable('teams').catch(() => false);
+    if (!hasTeams) return [];
+    return k('teams').whereIn('id', normalized).select(['id', 'name']).catch(() => []);
+  }
+
   async function loadMatch(k, matchId) {
     const hasMatches = await k.schema.hasTable('matches').catch(() => false);
     if (!hasMatches) return null;
@@ -188,6 +196,211 @@ module.exports = function matchesRoutes({ db }) {
       .where('mm.id', id)
       .first(cols);
   }
+
+  router.get('/my/chats', isAuthenticated, async (req, res) => {
+    try {
+      const k = getKnex();
+      if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+      const userId = req.user.id;
+      const matchInfo = await k('matches').columnInfo().catch(() => ({}));
+      if (!matchInfo || !Object.keys(matchInfo).length) {
+        return res.json({ chats: [] });
+      }
+
+      const hasHomeUserId = Object.prototype.hasOwnProperty.call(matchInfo, 'home_user_id');
+      const hasAwayUserId = Object.prototype.hasOwnProperty.call(matchInfo, 'away_user_id');
+      const hasHomeTeamId = Object.prototype.hasOwnProperty.call(matchInfo, 'home_team_id');
+      const hasAwayTeamId = Object.prototype.hasOwnProperty.call(matchInfo, 'away_team_id');
+      const hasHomeScore = Object.prototype.hasOwnProperty.call(matchInfo, 'home_score');
+      const hasAwayScore = Object.prototype.hasOwnProperty.call(matchInfo, 'away_score');
+      const hasCreatedAt = Object.prototype.hasOwnProperty.call(matchInfo, 'created_at');
+      const hasKickoffAt = Object.prototype.hasOwnProperty.call(matchInfo, 'kickoff_at');
+      const hasUpdatedAt = Object.prototype.hasOwnProperty.call(matchInfo, 'updated_at');
+      const hasCompletedAt = Object.prototype.hasOwnProperty.call(matchInfo, 'completed_at');
+      const hasStatus = Object.prototype.hasOwnProperty.call(matchInfo, 'status');
+
+      if (!hasHomeUserId && !hasAwayUserId && !hasHomeTeamId && !hasAwayTeamId) {
+        return res.json({ chats: [] });
+      }
+
+      const hasSports = await k.schema.hasTable('sports').catch(() => false);
+      const hasTeamMembers = await k.schema.hasTable('team_members').catch(() => false);
+      const hasLeagues = await k.schema.hasTable('leagues').catch(() => false);
+
+      const base = k({ m: 'matches' });
+      if (hasLeagues) base.leftJoin({ l: 'leagues' }, 'l.id', 'm.league_id');
+      if (hasSports && hasLeagues) base.leftJoin({ s: 'sports' }, 's.id', 'l.sport_id');
+
+      base.select('m.id', { leagueId: 'm.league_id' });
+      if (hasLeagues) base.select({ leagueName: 'l.name' }); else base.select(k.raw("'' as leagueName"));
+      if (hasSports && hasLeagues) base.select({ sportName: 's.name' }); else base.select(k.raw("'' as sportName"));
+      if (hasHomeUserId) base.select({ homeUserId: 'm.home_user_id' }); else base.select(k.raw('NULL as homeUserId'));
+      if (hasAwayUserId) base.select({ awayUserId: 'm.away_user_id' }); else base.select(k.raw('NULL as awayUserId'));
+      if (hasHomeTeamId) base.select({ homeTeamId: 'm.home_team_id' }); else base.select(k.raw('NULL as homeTeamId'));
+      if (hasAwayTeamId) base.select({ awayTeamId: 'm.away_team_id' }); else base.select(k.raw('NULL as awayTeamId'));
+      if (hasHomeScore) base.select({ homeScore: 'm.home_score' }); else base.select(k.raw('NULL as homeScore'));
+      if (hasAwayScore) base.select({ awayScore: 'm.away_score' }); else base.select(k.raw('NULL as awayScore'));
+      if (hasCreatedAt) base.select({ createdAt: 'm.created_at' }); else base.select(k.raw('NULL as createdAt'));
+      if (hasKickoffAt) base.select({ kickoffAt: 'm.kickoff_at' }); else base.select(k.raw('NULL as kickoffAt'));
+      if (hasUpdatedAt) base.select({ updatedAt: 'm.updated_at' }); else base.select(k.raw('NULL as updatedAt'));
+      if (hasCompletedAt) base.select({ completedAt: 'm.completed_at' }); else base.select(k.raw('NULL as completedAt'));
+      if (hasStatus) base.select({ status: 'm.status' }); else base.select(k.raw('NULL as status'));
+
+      base.select(k.raw('CASE WHEN m.home_user_id = ? THEN 1 ELSE 0 END as isHomeUser', [userId]));
+      base.select(k.raw('CASE WHEN m.away_user_id = ? THEN 1 ELSE 0 END as isAwayUser', [userId]));
+      if (hasTeamMembers && hasHomeTeamId) {
+        base.select(k.raw('CASE WHEN m.home_team_id IS NOT NULL AND EXISTS (SELECT 1 FROM team_members tm WHERE tm.team_id = m.home_team_id AND tm.user_id = ?) THEN 1 ELSE 0 END as isHomeMember', [userId]));
+      } else {
+        base.select(k.raw('0 as isHomeMember'));
+      }
+      if (hasTeamMembers && hasAwayTeamId) {
+        base.select(k.raw('CASE WHEN m.away_team_id IS NOT NULL AND EXISTS (SELECT 1 FROM team_members tm WHERE tm.team_id = m.away_team_id AND tm.user_id = ?) THEN 1 ELSE 0 END as isAwayMember', [userId]));
+      } else {
+        base.select(k.raw('0 as isAwayMember'));
+      }
+
+      base.where(function () {
+        if (hasHomeUserId) this.orWhere('m.home_user_id', userId);
+        if (hasAwayUserId) this.orWhere('m.away_user_id', userId);
+        if (hasTeamMembers && hasHomeTeamId) {
+          this.orWhereExists(function () {
+            this.select(1)
+              .from({ tm: 'team_members' })
+              .whereColumn('tm.team_id', 'm.home_team_id')
+              .andWhere('tm.user_id', userId);
+          });
+        }
+        if (hasTeamMembers && hasAwayTeamId) {
+          this.orWhereExists(function () {
+            this.select(1)
+              .from({ tm: 'team_members' })
+              .whereColumn('tm.team_id', 'm.away_team_id')
+              .andWhere('tm.user_id', userId);
+          });
+        }
+      });
+
+      base.orderBy(hasUpdatedAt ? 'm.updated_at' : (hasCompletedAt ? 'm.completed_at' : (hasCreatedAt ? 'm.created_at' : 'm.id')), 'desc');
+
+      const rows = await base;
+      if (!rows || !rows.length) return res.json({ chats: [] });
+
+      const matchIds = rows.map((r) => r.id);
+      const hasMessages = await k.schema.hasTable('match_messages').catch(() => false);
+      let lastMessages = new Map();
+      if (hasMessages && matchIds.length) {
+        const msgs = await k({ mm: 'match_messages' })
+          .whereIn('mm.match_id', matchIds)
+          .orderBy('mm.match_id', 'asc')
+          .orderBy('mm.created_at', 'desc')
+          .select('mm.match_id', 'mm.id', 'mm.body', 'mm.created_at', 'mm.sender_user_id', 'mm.sender_team_id')
+          .catch(() => []);
+        for (const row of msgs || []) {
+          if (!lastMessages.has(row.match_id)) lastMessages.set(row.match_id, row);
+        }
+      }
+
+      const collectUserIds = new Set();
+      const collectTeamIds = new Set();
+      for (const m of rows) {
+        if (m.homeUserId != null) collectUserIds.add(Number(m.homeUserId));
+        if (m.awayUserId != null) collectUserIds.add(Number(m.awayUserId));
+        if (m.homeTeamId != null) collectTeamIds.add(Number(m.homeTeamId));
+        if (m.awayTeamId != null) collectTeamIds.add(Number(m.awayTeamId));
+        const last = lastMessages.get(m.id);
+        if (last) {
+          if (last.sender_user_id != null) collectUserIds.add(Number(last.sender_user_id));
+          if (last.sender_team_id != null) collectTeamIds.add(Number(last.sender_team_id));
+        }
+      }
+
+      const users = await fetchUserBasics(k, Array.from(collectUserIds));
+      const teams = await fetchTeamBasics(k, Array.from(collectTeamIds));
+
+      const userMap = new Map();
+      for (const u of users || []) {
+        const parts = [];
+        if (u.firstname) parts.push(u.firstname);
+        if (u.lastname) parts.push(u.lastname);
+        const fn = parts.join(' ').trim();
+        const label = fn || u.name || u.email || `User ${u.id}`;
+        userMap.set(Number(u.id), label);
+      }
+      const teamMap = new Map();
+      for (const t of teams || []) {
+        const label = (t && t.name) ? t.name : `Team ${t.id}`;
+        teamMap.set(Number(t.id), label);
+      }
+
+      function determineTimestamp(m) {
+        const order = [m.updatedAt, m.completedAt, m.createdAt, m.kickoffAt];
+        return order.find((v) => v != null) || null;
+      }
+
+      const chats = rows.map((m) => {
+        const matchType = (m.homeTeamId != null || m.awayTeamId != null) ? 'teams' : 'singles';
+        const viewerHome = Number(m.isHomeUser) === 1 || Number(m.isHomeMember) === 1;
+        const viewerAway = Number(m.isAwayUser) === 1 || Number(m.isAwayMember) === 1;
+        const viewerSide = viewerHome ? 'home' : (viewerAway ? 'away' : null);
+        let opponentName = 'Gegner gesucht';
+        let opponentId = null;
+        if (viewerSide === 'home') {
+          if (matchType === 'teams') {
+            opponentId = m.awayTeamId != null ? Number(m.awayTeamId) : null;
+            if (opponentId && teamMap.has(opponentId)) opponentName = teamMap.get(opponentId);
+            else if (opponentId == null) opponentName = 'Noch kein Gegner';
+          } else {
+            opponentId = m.awayUserId != null ? Number(m.awayUserId) : null;
+            if (opponentId && userMap.has(opponentId)) opponentName = userMap.get(opponentId);
+            else if (opponentId == null) opponentName = 'Noch kein Gegner';
+          }
+        } else if (viewerSide === 'away') {
+          if (matchType === 'teams') {
+            opponentId = m.homeTeamId != null ? Number(m.homeTeamId) : null;
+            if (opponentId && teamMap.has(opponentId)) opponentName = teamMap.get(opponentId);
+            else if (opponentId == null) opponentName = 'Noch kein Gegner';
+          } else {
+            opponentId = m.homeUserId != null ? Number(m.homeUserId) : null;
+            if (opponentId && userMap.has(opponentId)) opponentName = userMap.get(opponentId);
+            else if (opponentId == null) opponentName = 'Noch kein Gegner';
+          }
+        }
+
+        const last = lastMessages.get(m.id);
+        const lastMessage = last ? {
+          id: last.id,
+          body: last.body,
+          createdAt: last.created_at,
+          senderUserId: last.sender_user_id,
+          senderTeamId: last.sender_team_id,
+          senderUserName: (last.sender_user_id != null && userMap.has(Number(last.sender_user_id))) ? userMap.get(Number(last.sender_user_id)) : null,
+          senderTeamName: (last.sender_team_id != null && teamMap.has(Number(last.sender_team_id))) ? teamMap.get(Number(last.sender_team_id)) : null,
+        } : null;
+
+        const ts = determineTimestamp(m);
+
+        return {
+          matchId: m.id,
+          leagueId: m.leagueId,
+          leagueName: m.leagueName || null,
+          sportName: m.sportName || null,
+          matchType,
+          viewerSide,
+          opponentName,
+          lastMessage,
+          lastActivityAt: ts,
+          homeScore: hasHomeScore ? m.homeScore : null,
+          awayScore: hasAwayScore ? m.awayScore : null,
+          status: m.status || null,
+        };
+      }).filter((c) => c.viewerSide != null);
+
+      return res.json({ chats });
+    } catch (e) {
+      console.error('Get chat overview failed', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'CHAT_OVERVIEW_FAILED' });
+    }
+  });
 
   router.post('/', isAuthenticated, async (req, res) => {
     const userId = req.user.id;
@@ -805,6 +1018,79 @@ module.exports = function matchesRoutes({ db }) {
       return res.json(matchInfo || { id: gameId, home_score: hs, away_score: as });
     } catch (e) {
       console.error('Submit result error:', e);
+      return res.status(500).json({ error: 'DB_ERROR', details: e && e.message });
+    }
+  });
+
+  // Delete a pending match ("Absagen" = hard delete)
+  // Rules:
+  // - Match must exist and be pending (no scores yet)
+  // - For Single sport: only home_user_id or away_user_id can delete
+  // - For Team sport: only captains of home_team_id or away_team_id can delete
+  // - Requires league membership
+  router.delete('/:id', isAuthenticated, async (req, res) => {
+    const gameId = req.params.id;
+    const userId = req.user.id;
+    try {
+      const k = getKnex();
+      if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+
+      const hasSports = await k.schema.hasTable('sports').catch(() => false);
+      const sInfoDel = hasSports ? await k('sports').columnInfo().catch(() => ({})) : {};
+      const gRawDel = await k('matches as m')
+        .leftJoin('leagues as l', 'l.id', 'm.league_id')
+        .modify(qb => { if (hasSports) qb.leftJoin('sports as s', 's.id', 'l.sport_id'); })
+        .select([
+          'm.id', 'm.league_id', 'm.kickoff_at',
+          'm.home_user_id', 'm.away_user_id',
+          'm.home_team_id', 'm.away_team_id',
+          'm.home_score', 'm.away_score',
+          ...(Object.prototype.hasOwnProperty.call(sInfoDel, 'sport_type') ? [{ sport_type: 's.sport_type' }] : [k.raw('NULL as sport_type')]),
+          ...(Object.prototype.hasOwnProperty.call(sInfoDel, 'team_size') ? [{ team_size: 's.team_size' }] : [k.raw('NULL as team_size')]),
+          ...(Object.prototype.hasOwnProperty.call(sInfoDel, 'type') ? [{ type: 's.type' }] : [k.raw('NULL as type')])
+        ])
+        .where('m.id', gameId)
+        .first();
+      if (!gRawDel) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+      const sportType = (gRawDel.sport_type ? String(gRawDel.sport_type) : (gRawDel.type ? String(gRawDel.type) : (Number(gRawDel.team_size) > 1 ? 'Team' : 'Single')));
+      const g = { ...gRawDel, sportType };
+
+      // must be league member
+      const member = await k('user_leagues').where({ league_id: g.league_id, user_id: userId }).first();
+      if (!member) return res.status(403).json({ error: 'LEAGUE_MEMBERS_ONLY' });
+
+      // must be pending (no scores yet)
+      if (g.home_score != null || g.away_score != null) {
+        return res.status(409).json({ error: 'ALREADY_RECORDED' });
+      }
+
+      // permission check
+      if (g.sportType === 'Team') {
+        const teamIds = [g.home_team_id, g.away_team_id].filter(v => v != null);
+        // either not yet full (no opponent) or user is captain of one of the teams
+        if (teamIds.length >= 1) {
+          const cap = await k('team_members')
+            .whereIn('team_id', teamIds)
+            .andWhere({ user_id: userId, is_captain: 1 })
+            .first();
+          if (!cap) return res.status(403).json({ error: 'ONLY_CAPTAIN_CAN_CANCEL' });
+        } else {
+          // no teams assigned yet: allow league member to remove own created match if they are home_user
+          if (g.home_user_id && String(g.home_user_id) !== String(userId)) {
+            return res.status(403).json({ error: 'ONLY_OWNER_CAN_CANCEL' });
+          }
+        }
+      } else {
+        // Single
+        const isPlayer = (String(userId) === String(g.home_user_id)) || (String(userId) === String(g.away_user_id));
+        if (!isPlayer) return res.status(403).json({ error: 'ONLY_PLAYERS_CAN_CANCEL' });
+      }
+
+      // Delete match (cascades will remove messages/rosters if FK defined)
+      await k('matches').where({ id: gameId }).del();
+      return res.json({ deleted: true, id: Number(gameId) });
+    } catch (e) {
+      console.error('Delete match error:', e && (e.stack || e.message || e));
       return res.status(500).json({ error: 'DB_ERROR', details: e && e.message });
     }
   });
