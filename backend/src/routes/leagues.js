@@ -656,7 +656,7 @@ module.exports = function leaguesRoutes(ctx) {
   });
 
   // POST /:id/join - Liga beitreten
-  router.post("/:id/join", requireAuth, async (req, res) => {
+  router.post(":id/join", requireAuth, async (req, res) => {
     try {
       const k = resolveKnex(db);
       if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
@@ -699,6 +699,386 @@ module.exports = function leaguesRoutes(ctx) {
     } catch (err) {
       console.error("Fehler beim Beitreten zur Liga:", err);
       res.status(500).json({ error: "Datenbankfehler" });
+    }
+  });
+
+  // GET /:id/my-open-match - offenes Match des Users in dieser Liga
+  router.get(":id/my-open-match", requireAuth, async (req, res) => {
+    try {
+      const k = resolveKnex(db);
+      if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
+
+      const leagueId = Number(req.params.id);
+      const me = req.user.id;
+      if (!leagueId) return res.status(400).json({ error: "INVALID_LEAGUE_ID" });
+
+      const hasMatches = await k.schema.hasTable("matches").catch(() => false);
+      if (!hasMatches) return res.json(null);
+
+      const info = await k("matches").columnInfo().catch(() => ({}));
+      const hasHomeUserId = Object.prototype.hasOwnProperty.call(info, "home_user_id");
+      const hasHomeText = Object.prototype.hasOwnProperty.call(info, "home");
+      const hasAwayText = Object.prototype.hasOwnProperty.call(info, "away");
+
+      const row = await k("matches")
+        .where({ league_id: leagueId })
+        .where(function () {
+          if (hasHomeUserId) {
+            this.where("home_user_id", me).orWhere("away_user_id", me);
+          } else if (hasHomeText || hasAwayText) {
+            const meStr = String(me);
+            this.where("home", meStr).orWhere("away", meStr);
+          }
+        })
+        .where(function () {
+          if (hasHomeUserId) {
+            this.where(function () {
+              this.whereNull("away_user_id").whereNotNull("home_user_id");
+            }).orWhere(function () {
+              this.whereNull("home_user_id").whereNotNull("away_user_id");
+            });
+          } else if (hasHomeText || hasAwayText) {
+            this.where(function () {
+              this.whereRaw("(away IS NULL OR TRIM(away) = '')")
+                .whereRaw("(home IS NOT NULL AND TRIM(home) <> '')");
+            }).orWhere(function () {
+              this.whereRaw("(home IS NULL OR TRIM(home) = '')")
+                .whereRaw("(away IS NOT NULL AND TRIM(away) <> '')");
+            });
+          }
+        })
+        .whereNull("home_score")
+        .whereNull("away_score")
+        .where(function () {
+          if (Object.prototype.hasOwnProperty.call(info, "status")) {
+            this.whereNull("status").orWhereIn("status", ["open", "proposed"]);
+          } else {
+            this.whereNotNull("id");
+          }
+        })
+        .first();
+
+      return res.json(row || null);
+    } catch (err) {
+      console.error("GET /:id/my-open-match failed:", err && (err.stack || err.message || err));
+      return res.status(500).json({ error: "Datenbankfehler" });
+    }
+  });
+
+  // GET /:id/my-weekly-status - hat der User bereits ein Match in dieser Woche
+  router.get(":id/my-weekly-status", requireAuth, async (req, res) => {
+    try {
+      const k = resolveKnex(db);
+      if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
+
+      const leagueId = Number(req.params.id);
+      const me = req.user.id;
+      if (!leagueId) return res.status(400).json({ error: "INVALID_LEAGUE_ID" });
+
+      const hasMatches = await k.schema.hasTable("matches").catch(() => false);
+      if (!hasMatches) return res.json({ hasWeeklyMatch: false });
+
+      const info = await k("matches").columnInfo().catch(() => ({}));
+      const hasHomeUserId = Object.prototype.hasOwnProperty.call(info, "home_user_id");
+      const hasHomeText = Object.prototype.hasOwnProperty.call(info, "home");
+      const hasAwayText = Object.prototype.hasOwnProperty.call(info, "away");
+
+      const now = new Date();
+      const offset = (now.getDay() + 6) % 7; // Montag=0
+      const monday = new Date(now);
+      monday.setDate(now.getDate() - offset);
+      monday.setHours(0, 0, 0, 0);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+      sunday.setHours(23, 59, 59, 999);
+      const startIso = monday.toISOString();
+      const endIso = sunday.toISOString();
+
+      const rows = await k("matches")
+        .where({ league_id: leagueId })
+        .where(function () {
+          if (hasHomeUserId) {
+            this.where("home_user_id", me).orWhere("away_user_id", me);
+          } else if (hasHomeText || hasAwayText) {
+            const meStr = String(me);
+            this.where("home", meStr).orWhere("away", meStr);
+          }
+        })
+        .where(function () {
+          if (hasHomeUserId) {
+            this.whereNotNull("home_user_id").whereNotNull("away_user_id");
+          } else if (hasHomeText || hasAwayText) {
+            this.whereRaw("(home IS NOT NULL AND TRIM(home) <> '')")
+              .whereRaw("(away IS NOT NULL AND TRIM(away) <> '')");
+          }
+        })
+        .where(function () {
+          const hasCompleted = Object.prototype.hasOwnProperty.call(info, "completed_at");
+          const hasKickoff = Object.prototype.hasOwnProperty.call(info, "kickoff_at");
+          const hasCreated = Object.prototype.hasOwnProperty.call(info, "created_at");
+          if (hasCompleted || hasKickoff) {
+            this.where(function () {
+              if (hasCompleted) this.orWhereBetween("completed_at", [startIso, endIso]);
+              if (hasKickoff) this.orWhereBetween("kickoff_at", [startIso, endIso]);
+            });
+          } else if (hasCreated) {
+            this.whereBetween("created_at", [startIso, endIso]);
+          } else {
+            this.whereNotNull("id");
+          }
+        })
+        .count({ c: "*" });
+
+      const cntRow = Array.isArray(rows) ? rows[0] : rows;
+      const cnt = Number(cntRow?.c || 0);
+      return res.json({ hasWeeklyMatch: cnt >= 1 });
+    } catch (err) {
+      console.error("GET /:id/my-weekly-status failed:", err && (err.stack || err.message || err));
+      return res.status(500).json({ error: "Datenbankfehler" });
+    }
+  });
+
+  // POST /:id/match-search - offenes Match finden oder anlegen
+  router.post(":id/match-search", requireAuth, async (req, res) => {
+    try {
+      const k = resolveKnex(db);
+      if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
+
+      const leagueId = Number(req.params.id);
+      const me = req.user.id;
+      if (!leagueId) return res.status(400).json({ error: "INVALID_LEAGUE_ID" });
+
+      await k.transaction(async (trx) => {
+        const hasMatches = await trx.schema.hasTable("matches");
+        if (!hasMatches) throw Object.assign(new Error("NO_MATCHES_TABLE"), { status: 500 });
+
+        const info = await trx("matches").columnInfo().catch(() => ({}));
+        const hasHomeUserId = Object.prototype.hasOwnProperty.call(info, "home_user_id");
+        const hasAwayUserId = Object.prototype.hasOwnProperty.call(info, "away_user_id");
+        const hasHomeText = Object.prototype.hasOwnProperty.call(info, "home");
+        const hasAwayText = Object.prototype.hasOwnProperty.call(info, "away");
+
+        const member = await trx("user_leagues").where({ league_id: leagueId, user_id: me }).first();
+        if (!member) throw Object.assign(new Error("Not a member"), { status: 403 });
+
+        let sportType = "single";
+        try {
+          const leagueRow = await trx("leagues").where({ id: leagueId }).first();
+          if (leagueRow && leagueRow.sport_id) {
+            const sportInfo = await trx("sports").columnInfo().catch(() => ({}));
+            const sportRow = await trx("sports").where({ id: leagueRow.sport_id }).first();
+            if (sportRow) {
+              if (Object.prototype.hasOwnProperty.call(sportRow, "sport_type") && sportRow.sport_type) {
+                sportType = String(sportRow.sport_type).toLowerCase();
+              } else if (Object.prototype.hasOwnProperty.call(sportRow, "team_size") && Number(sportRow.team_size) > 1) {
+                sportType = "team";
+              }
+            }
+          }
+        } catch (e) {
+          console.warn("match-search sport detection failed", e && (e.message || e));
+        }
+
+        if (sportType === "team" && !member.captain) {
+          throw Object.assign(new Error("Only captains can start match-search in team sports"), { status: 403 });
+        }
+
+        const now = new Date();
+        const offset = (now.getDay() + 6) % 7;
+        const monday = new Date(now);
+        monday.setDate(now.getDate() - offset);
+        monday.setHours(0, 0, 0, 0);
+        const sunday = new Date(monday);
+        sunday.setDate(monday.getDate() + 6);
+        sunday.setHours(23, 59, 59, 999);
+        const startIso = monday.toISOString();
+        const endIso = sunday.toISOString();
+
+        const weeklyRows = await trx("matches")
+          .where({ league_id: leagueId })
+          .where(function () {
+            if (hasHomeUserId) this.where("home_user_id", me).orWhere("away_user_id", me);
+            else if (hasHomeText || hasAwayText) this.where("home", String(me)).orWhere("away", String(me));
+          })
+          .where(function () {
+            if (hasHomeUserId) this.whereNotNull("home_user_id").whereNotNull("away_user_id");
+            else if (hasHomeText || hasAwayText) this.whereRaw("(home IS NOT NULL AND TRIM(home) <> '')")
+              .whereRaw("(away IS NOT NULL AND TRIM(away) <> '')");
+          })
+          .where(function () {
+            const hasCompleted = Object.prototype.hasOwnProperty.call(info, "completed_at");
+            const hasKickoff = Object.prototype.hasOwnProperty.call(info, "kickoff_at");
+            const hasCreated = Object.prototype.hasOwnProperty.call(info, "created_at");
+            if (hasCompleted || hasKickoff) {
+              this.where(function () {
+                if (hasCompleted) this.orWhereBetween("completed_at", [startIso, endIso]);
+                if (hasKickoff) this.orWhereBetween("kickoff_at", [startIso, endIso]);
+              });
+            } else if (hasCreated) {
+              this.whereBetween("created_at", [startIso, endIso]);
+            } else {
+              this.whereNotNull("id");
+            }
+          })
+          .count({ c: "*" });
+
+        const weeklyCnt = Number((Array.isArray(weeklyRows) ? weeklyRows[0] : weeklyRows)?.c || 0);
+        if (weeklyCnt >= 1) throw Object.assign(new Error("Weekly match limit reached"), { status: 429 });
+
+        const openMatch = await trx("matches")
+          .where({ league_id: leagueId })
+          .whereNull("home_score").whereNull("away_score")
+          .where(function () {
+            if (hasHomeUserId && hasAwayUserId) {
+              this.where(function () {
+                this.where("home_user_id", me).whereNull("away_user_id");
+              }).orWhere(function () {
+                this.where("away_user_id", me).whereNull("home_user_id");
+              });
+            } else if (hasHomeText || hasAwayText) {
+              const meStr = String(me);
+              this.where(function () {
+                this.where("home", meStr).whereRaw("(away IS NULL OR TRIM(away) = '')");
+              }).orWhere(function () {
+                this.where("away", meStr).whereRaw("(home IS NULL OR TRIM(home) = '')");
+              });
+            }
+          })
+          .first();
+
+        if (openMatch) {
+          res.json({ action: "skipped", match: openMatch });
+          return;
+        }
+
+        const opponent = await trx("matches")
+          .where({ league_id: leagueId })
+          .whereNull("home_score").whereNull("away_score")
+          .where(function () {
+            if (hasHomeUserId && hasAwayUserId) {
+              this.whereNull("away_user_id").whereNotNull("home_user_id");
+            } else if (hasHomeText || hasAwayText) {
+              this.whereRaw("(away IS NULL OR TRIM(away) = '')")
+                .whereRaw("(home IS NOT NULL AND TRIM(home) <> '')");
+            }
+          })
+          .orderBy("id", "asc")
+          .first();
+
+        if (opponent) {
+          const update = {};
+          if (hasHomeUserId && hasAwayUserId) {
+            if (opponent.home_user_id != null && opponent.away_user_id == null) update.away_user_id = me;
+            else if (opponent.away_user_id != null && opponent.home_user_id == null) update.home_user_id = me;
+          } else if (hasHomeText || hasAwayText) {
+            if (opponent.home && (!opponent.away || !String(opponent.away).trim())) update.away = String(me);
+            else if (opponent.away && (!opponent.home || !String(opponent.home).trim())) update.home = String(me);
+          }
+
+          if (Object.keys(update).length) {
+            await trx("matches").where({ id: opponent.id }).update(update);
+            const joined = await trx("matches").where({ id: opponent.id }).first();
+            res.json({ action: "joined", match: joined });
+            return;
+          }
+        }
+
+        const members = await trx("user_leagues")
+          .where({ league_id: leagueId })
+          .whereNot({ user_id: me })
+          .pluck("user_id");
+
+        for (const candidate of members) {
+          if (candidate == null) continue;
+
+          const candidateBusy = await trx("matches")
+            .where({ league_id: leagueId })
+            .whereNull("home_score").whereNull("away_score")
+            .where(function () {
+              if (hasHomeUserId && hasAwayUserId) {
+                this.where("home_user_id", candidate).whereNull("away_user_id")
+                  .orWhere("away_user_id", candidate).whereNull("home_user_id");
+              } else if (hasHomeText || hasAwayText) {
+                const cid = String(candidate);
+                this.where("home", cid).whereRaw("(away IS NULL OR TRIM(away) = '')")
+                  .orWhere("away", cid).whereRaw("(home IS NULL OR TRIM(home) = '')");
+              }
+            })
+            .first();
+
+          if (candidateBusy) continue;
+
+          const pendingTogether = await trx("matches")
+            .where({ league_id: leagueId })
+            .whereNull("home_score").whereNull("away_score")
+            .where(function () {
+              if (hasHomeUserId && hasAwayUserId) {
+                this.where(function () {
+                  this.where("home_user_id", me).andWhere("away_user_id", candidate);
+                }).orWhere(function () {
+                  this.where("home_user_id", candidate).andWhere("away_user_id", me);
+                });
+              } else if (hasHomeText || hasAwayText) {
+                const meStr = String(me);
+                const candStr = String(candidate);
+                this.where(function () {
+                  this.where("home", meStr).andWhere("away", candStr);
+                }).orWhere(function () {
+                  this.where("home", candStr).andWhere("away", meStr);
+                });
+              }
+            })
+            .first();
+
+          if (pendingTogether) continue;
+
+          const insertRec = { league_id: leagueId };
+          if (hasHomeUserId || hasAwayUserId) {
+            if (hasHomeUserId) insertRec.home_user_id = me;
+            if (hasAwayUserId) insertRec.away_user_id = candidate;
+          } else if (hasHomeText || hasAwayText) {
+            if (hasHomeText) insertRec.home = String(me);
+            if (hasAwayText) insertRec.away = String(candidate);
+          }
+
+          insertRec.kickoff_at = null;
+          insertRec.home_score = null;
+          insertRec.away_score = null;
+
+          if (Object.prototype.hasOwnProperty.call(info, "status")) insertRec.status = "proposed";
+          if (Object.prototype.hasOwnProperty.call(info, "created_at")) insertRec.created_at = new Date().toISOString();
+
+          const ins = await trx("matches").insert(insertRec);
+          const newId = Array.isArray(ins) ? ins[0] : ins;
+          const newRow = await trx("matches").where({ id: newId }).first();
+          res.json({ action: "paired", match: newRow });
+          return;
+        }
+
+        const fallback = { league_id: leagueId };
+        if (hasHomeUserId) fallback.home_user_id = me;
+        else if (hasAwayUserId) fallback.away_user_id = me;
+        else if (hasHomeText) fallback.home = String(me);
+        else if (hasAwayText) fallback.away = String(me);
+
+        if (Object.prototype.hasOwnProperty.call(info, "status")) fallback.status = "open";
+        if (Object.prototype.hasOwnProperty.call(info, "created_at")) fallback.created_at = new Date().toISOString();
+
+        const ins = await trx("matches").insert(fallback);
+        const newId = Array.isArray(ins) ? ins[0] : ins;
+        const newRow = await trx("matches").where({ id: newId }).first();
+        res.json({ action: "created", match: newRow });
+      });
+    } catch (err) {
+      if (err?.status === 429) return res.status(429).json({ error: "WEEKLY_LIMIT_REACHED" });
+      if (err?.status === 403) return res.status(403).json({ error: err.message || "Not allowed" });
+      if (err?.status === 404) return res.status(404).json({ error: err.message || "Not found" });
+      if (err?.message === "NO_MATCHES_TABLE") {
+        return res.status(500).json({ error: "NO_MATCHES_TABLE" });
+      }
+      const status = err?.status ?? (err?.code === "SQLITE_ERROR" ? 400 : 500);
+      console.error("POST /:id/match-search failed:", err && (err.stack || err.message || err));
+      return res.status(status).json({ error: err.message || "Datenbankfehler" });
     }
   });
 

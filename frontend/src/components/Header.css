@@ -36,6 +36,62 @@
   justify-content: flex-end;
 }
 
+/* Actions on the right (bell + burger) */
+.ml-header__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-right: 12px;
+}
+.ml-action {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: rgba(255, 255, 255, 0.06);
+  color: #dfe7e2;
+  font-size: 18px;
+  line-height: 1;
+  padding: 6px;
+  border-radius: 10px;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: transform 160ms ease, background 160ms ease;
+}
+.ml-action:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, 0.12);
+}
+.ml-action__icon {
+  position: relative;
+  top: 1px;
+}
+.ml-burger {
+  display: none;
+  width: 36px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+  position: relative;
+  padding: 4px 2px;
+}
+.ml-burger span {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  height: 3px;
+  background: #dfe7e2;
+  border-radius: 2px;
+  transition: transform 200ms ease, opacity 200ms ease, top 200ms ease, bottom 200ms ease;
+}
+.ml-burger span:nth-child(1) { top: 6px; }
+.ml-burger span:nth-child(2) { top: 12px; }
+.ml-burger span:nth-child(3) { top: 18px; }
+.ml-burger.is-open span:nth-child(1) { transform: rotate(45deg); top: 12px; }
+.ml-burger.is-open span:nth-child(2) { opacity: 0; }
+.ml-burger.is-open span:nth-child(3) { transform: rotate(-45deg); top: 12px; }
+
 .ml-nav { display: flex; gap: 18px; align-items: center; }
 .ml-nav__item {
   color: #d3d3d3;
@@ -56,7 +112,22 @@
 
 @media (max-width: 720px) {
   .ml-header { height: 54px; padding: max(env(safe-area-inset-top), 0px) 4px 0 0; }
-  .ml-header__menu { overflow-x: auto; }
-  .ml-nav { gap: 10px; flex-wrap: nowrap; }
-  .ml-logo-full { height: 100%; }
+  .ml-header__actions { display: flex; }
+  .ml-burger { display: inline-block; }
+  /* Turn the menu into a slide-down drawer */
+  .ml-header__menu {
+    position: absolute;
+    top: 54px;
+    left: 0;
+    right: 0;
+    background: #0c221d;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    display: block;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 250ms ease;
+  }
+  .ml-header__menu.is-open { max-height: 280px; }
+  .ml-nav { display: grid; gap: 6px; padding: 8px; }
+  .ml-logout { padding: 8px; }
 }

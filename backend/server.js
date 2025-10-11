@@ -622,6 +622,152 @@ app.get("/me/games", isAuthenticated, async (req, res) => {
   }
 });
 
+app.get("/news", isAuthenticated, async (req, res) => {
+  try {
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
+
+    const userId = req.user.id;
+    const matchTable = (await k.schema.hasTable("matches")) ? "matches" : ((await k.schema.hasTable("games")) ? "games" : null);
+    if (!matchTable) return res.json({ items: [] });
+
+    const info = await k(matchTable).columnInfo().catch(() => ({}));
+    const hasHomeUserId = Object.prototype.hasOwnProperty.call(info, "home_user_id");
+    const hasAwayUserId = Object.prototype.hasOwnProperty.call(info, "away_user_id");
+    const hasHomeTeamId = Object.prototype.hasOwnProperty.call(info, "home_team_id");
+    const hasAwayTeamId = Object.prototype.hasOwnProperty.call(info, "away_team_id");
+    const hasHomeScore = Object.prototype.hasOwnProperty.call(info, "home_score");
+    const hasAwayScore = Object.prototype.hasOwnProperty.call(info, "away_score");
+    const hasCreatedAt = Object.prototype.hasOwnProperty.call(info, "created_at");
+    const hasKickoffAt = Object.prototype.hasOwnProperty.call(info, "kickoff_at");
+    const hasUpdatedAt = Object.prototype.hasOwnProperty.call(info, "updated_at");
+    const hasCompletedAt = Object.prototype.hasOwnProperty.call(info, "completed_at");
+
+    const hasLeagues = await k.schema.hasTable("leagues").catch(() => false);
+    const hasSports = await k.schema.hasTable("sports").catch(() => false);
+    const hasTeamMembers = await k.schema.hasTable("team_members").catch(() => false);
+    const hasUserLeagues = await k.schema.hasTable("user_leagues").catch(() => false);
+
+    let leagueIds = [];
+    if (hasUserLeagues) {
+      const entries = await k("user_leagues").where({ user_id: userId }).select("league_id");
+      leagueIds = (entries || []).map((r) => r.league_id).filter((v) => v != null);
+    }
+
+    const base = k({ m: matchTable });
+    if (hasLeagues) base.leftJoin({ l: "leagues" }, "l.id", "m.league_id");
+    if (hasSports && hasLeagues) base.leftJoin({ s: "sports" }, "s.id", "l.sport_id");
+
+    base.select({ matchId: "m.id" });
+    base.select({ leagueId: "m.league_id" });
+    base.select(hasLeagues ? { leagueName: "l.name" } : k.raw("'' as leagueName"));
+    base.select(hasSports && hasLeagues ? { sportName: "s.name" } : k.raw("'' as sportName"));
+    if (hasHomeScore) base.select({ homeScore: "m.home_score" }); else base.select(k.raw("NULL as homeScore"));
+    if (hasAwayScore) base.select({ awayScore: "m.away_score" }); else base.select(k.raw("NULL as awayScore"));
+    if (hasHomeUserId) base.select({ homeUserId: "m.home_user_id" }); else base.select(k.raw("NULL as homeUserId"));
+    if (hasAwayUserId) base.select({ awayUserId: "m.away_user_id" }); else base.select(k.raw("NULL as awayUserId"));
+    if (hasHomeTeamId) base.select({ homeTeamId: "m.home_team_id" }); else base.select(k.raw("NULL as homeTeamId"));
+    if (hasAwayTeamId) base.select({ awayTeamId: "m.away_team_id" }); else base.select(k.raw("NULL as awayTeamId"));
+    if (hasCreatedAt) base.select({ createdAt: "m.created_at" }); else base.select(k.raw("NULL as createdAt"));
+    if (hasKickoffAt) base.select({ kickoffAt: "m.kickoff_at" }); else base.select(k.raw("NULL as kickoffAt"));
+    if (hasUpdatedAt) base.select({ updatedAt: "m.updated_at" }); else base.select(k.raw("NULL as updatedAt"));
+    if (hasCompletedAt) base.select({ completedAt: "m.completed_at" }); else base.select(k.raw("NULL as completedAt"));
+
+    base.where(function () {
+      if (leagueIds.length) this.orWhereIn("m.league_id", leagueIds);
+      if (hasHomeUserId) this.orWhere("m.home_user_id", userId);
+      if (hasAwayUserId) this.orWhere("m.away_user_id", userId);
+      if (hasTeamMembers && hasHomeTeamId) {
+        this.orWhereExists(function () {
+          this.select(1)
+            .from({ tm: "team_members" })
+            .whereColumn("tm.team_id", "m.home_team_id")
+            .andWhere("tm.user_id", userId);
+        });
+      }
+      if (hasTeamMembers && hasAwayTeamId) {
+        this.orWhereExists(function () {
+          this.select(1)
+            .from({ tm: "team_members" })
+            .whereColumn("tm.team_id", "m.away_team_id")
+            .andWhere("tm.user_id", userId);
+        });
+      }
+    });
+
+    const orderColumn = hasUpdatedAt ? "m.updated_at" : (hasCompletedAt ? "m.completed_at" : (hasCreatedAt ? "m.created_at" : "m.id"));
+    base.orderBy(orderColumn, "desc").limit(100);
+
+    const rows = await base;
+    if (!rows || !rows.length) return res.json({ items: [] });
+
+    const items = [];
+
+    const formatLeague = (m) => {
+      if (m.leagueName) return m.leagueName;
+      if (m.leagueId != null) return `Liga #${m.leagueId}`;
+      return "Liga";
+    };
+
+    function pickTimestamp(m) {
+      const order = [m.updatedAt, m.completedAt, m.createdAt, m.kickoffAt];
+      return order.find((v) => v != null) || null;
+    }
+
+    for (const m of rows) {
+      const tsCreated = m.createdAt || m.kickoffAt || null;
+      const timestamp = pickTimestamp(m);
+      const leagueLabel = formatLeague(m);
+      items.push({
+        id: `match-${m.matchId}-created`,
+        type: "match_created",
+        matchId: m.matchId,
+        leagueId: m.leagueId,
+        leagueName: m.leagueName || null,
+        sportName: m.sportName || null,
+        timestamp: tsCreated || timestamp,
+        title: `Neues Match in ${leagueLabel}`,
+        details: "Es wurde ein neues Match erstellt.",
+      });
+
+      if (hasHomeScore && hasAwayScore && m.homeScore != null && m.awayScore != null) {
+        const resultTs = m.completedAt || m.updatedAt || tsCreated || timestamp;
+        items.push({
+          id: `match-${m.matchId}-result`,
+          type: "match_result",
+          matchId: m.matchId,
+          leagueId: m.leagueId,
+          leagueName: m.leagueName || null,
+          sportName: m.sportName || null,
+          timestamp: resultTs,
+          title: `Ergebnis im Match ${m.matchId}`,
+          details: `Endstand ${m.homeScore}:${m.awayScore}`,
+        });
+      }
+    }
+
+    items.sort((a, b) => {
+      const ta = a.timestamp ? Date.parse(a.timestamp) || 0 : 0;
+      const tb = b.timestamp ? Date.parse(b.timestamp) || 0 : 0;
+      return tb - ta;
+    });
+
+    const dedup = [];
+    const seen = new Set();
+    for (const item of items) {
+      const key = `${item.id}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      dedup.push(item);
+    }
+
+    return res.json({ items: dedup });
+  } catch (e) {
+    console.error("GET /news failed", e && (e.stack || e.message || e));
+    return res.status(500).json({ error: "NEWS_FETCH_FAILED" });
+  }
+});
+
 // Routes
 registerRoutes(app, ctx);
 

@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 import MatchChat from "../components/MatchChat";
 
 export default function GameDetailPage() {
   const { gameId } = useParams();
+  const navigate = useNavigate();
   const [game, setGame] = useState(null);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
@@ -20,7 +21,6 @@ export default function GameDetailPage() {
   const [hasWeeklyMatch, setHasWeeklyMatch] = useState(false);
   const [joinMsg, setJoinMsg] = useState('');
   const [scheduleMsg, setScheduleMsg] = useState('');
-  const [showChat, setShowChat] = useState(false);
   // calendar-friendly date+time fields (pop up native calendar/time pickers)
   const [dateStr, setDateStr] = useState(""); // yyyy-mm-dd
   const [timeStr, setTimeStr] = useState(""); // HH:mm
@@ -178,6 +178,24 @@ export default function GameDetailPage() {
   const playerA = { name: game.home_user_name || game.home || "-", id: game.home_user_id || null };
   const playerB = { name: game.away_user_name || game.away || "-", id: game.away_user_id || null };
 
+  // decode JWT (locally) to get the current viewer's user id without extra /me call
+  function decodeJwt(t) {
+    try {
+      const p = t.split(".")[1];
+      const json = atob(p.replace(/-/g, "+").replace(/_/g, "/"));
+      return JSON.parse(decodeURIComponent(
+        json.split("").map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)).join("")
+      ));
+    } catch { return null; }
+  }
+  const viewer = token ? decodeJwt(token) : null;
+  const viewerId = viewer && (viewer.id || viewer.userId || viewer.user_id);
+  const isParticipant = viewerId && (
+    (game.home_user_id != null && String(game.home_user_id) === String(viewerId)) ||
+    (game.away_user_id != null && String(game.away_user_id) === String(viewerId))
+  );
+  const isCompleted = (game.home_score != null && game.away_score != null);
+
   // compute simple table positions from standings (win=3, draw=1, loss=0)
   function computeTablePositions(rows) {
     const map = Object.create(null);
@@ -309,6 +327,20 @@ export default function GameDetailPage() {
     }
   }
 
+  async function cancelMatch() {
+    setScheduleMsg('');
+    if (!token) { setScheduleMsg('Bitte einloggen.'); return; }
+    try {
+      const r = await fetch(`${API_BASE}/matches/${gameId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
+      // after deletion, navigate back to league overview
+  navigate(leagueId ? `/league/${leagueId}` : '/leagues', { replace: true });
+    } catch (e) {
+      setScheduleMsg(e.message || 'Absagen fehlgeschlagen.');
+    }
+  }
+
   return (
     <div style={containerStyle}>
       {/* Hero match card */}
@@ -316,7 +348,7 @@ export default function GameDetailPage() {
         {/* Header row */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 24, fontWeight: 700 }}>{game.league || 'Liga'}</div>
-          <div style={{ color: '#b9d3c7', fontSize: 14 }}>#{game.id} · {(game.home_score != null && game.away_score != null) ? 'Beendet' : 'Ausstehend'}</div>
+          <div style={{ color: '#b9d3c7', fontSize: 14 }}>#{game.id} · {isCompleted ? 'Beendet' : 'Ausstehend'}</div>
         </div>
 
         {/* Date + status */}
@@ -327,17 +359,28 @@ export default function GameDetailPage() {
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ width: 8, height: 8, background: '#ffd35d', borderRadius: 999 }} />
-            <span style={{ color: '#ffd35d' }}>{(game.home_score != null && game.away_score != null) ? 'Beendet' : 'Ausstehend'}</span>
+            <span style={{ color: '#ffd35d' }}>{isCompleted ? 'Beendet' : 'Ausstehend'}</span>
           </div>
         </div>
 
         {/* VS Row */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 16, marginTop: 16 }}>
           <div style={{ textAlign: 'left' }}>
-            <div style={{ width: 110, height: 110, borderRadius: 110, background: '#173a30', display: 'grid', placeItems: 'center', color: '#6fc89c', fontWeight: 800, fontSize: 28 }}>
-              {String(playerA.name || '?').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
-            </div>
-            <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerA.name}</div>
+            {playerA.id ? (
+              <Link to={`/user/${playerA.id}`} style={{ textDecoration: 'none', color: '#f4fff8', display: 'inline-block' }}>
+                <div style={{ width: 110, height: 110, borderRadius: 110, background: '#173a30', display: 'grid', placeItems: 'center', color: '#6fc89c', fontWeight: 800, fontSize: 28 }}>
+                  {String(playerA.name || '?').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
+                </div>
+                <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerA.name}</div>
+              </Link>
+            ) : (
+              <>
+                <div style={{ width: 110, height: 110, borderRadius: 110, background: '#173a30', display: 'grid', placeItems: 'center', color: '#6fc89c', fontWeight: 800, fontSize: 28 }}>
+                  {String(playerA.name || '?').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
+                </div>
+                <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerA.name}</div>
+              </>
+            )}
             <div style={{ color: '#9db' }}>{tablePositions[playerA.name] ? `${tablePositions[playerA.name].rank}. Rang` : '—'}</div>
             <div style={{ marginTop: 10 }}>
               <Link to={playerA.id ? `/user/${playerA.id}` : '#'} style={{ display: 'inline-block', padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', textDecoration: 'none' }}>Team ansehen</Link>
@@ -345,16 +388,36 @@ export default function GameDetailPage() {
           </div>
           <div style={{ fontSize: 40, color: '#cde' }}>VS</div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ width: 110, height: 110, borderRadius: 110, background: '#3a1717', display: 'grid', placeItems: 'center', color: '#f3a1a1', fontWeight: 800, fontSize: 28, marginLeft: 'auto' }}>
-              {String(playerB.name || '?').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
-            </div>
-            <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerB.name}</div>
+            {playerB.id ? (
+              <Link to={`/user/${playerB.id}`} style={{ textDecoration: 'none', color: '#f4fff8', display: 'inline-block' }}>
+                <div style={{ width: 110, height: 110, borderRadius: 110, background: '#3a1717', display: 'grid', placeItems: 'center', color: '#f3a1a1', fontWeight: 800, fontSize: 28, marginLeft: 'auto' }}>
+                  {String(playerB.name || '?').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
+                </div>
+                <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerB.name}</div>
+              </Link>
+            ) : (
+              <>
+                <div style={{ width: 110, height: 110, borderRadius: 110, background: '#3a1717', display: 'grid', placeItems: 'center', color: '#f3a1a1', fontWeight: 800, fontSize: 28, marginLeft: 'auto' }}>
+                  {String(playerB.name || '?').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
+                </div>
+                <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerB.name}</div>
+              </>
+            )}
             <div style={{ color: '#9db' }}>{tablePositions[playerB.name] ? `${tablePositions[playerB.name].rank}. Rang` : '—'}</div>
             <div style={{ marginTop: 10 }}>
               <Link to={playerB.id ? `/user/${playerB.id}` : '#'} style={{ display: 'inline-block', padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', textDecoration: 'none' }}>Team ansehen</Link>
             </div>
           </div>
         </div>
+
+        {/* Final result banner (when completed) */}
+        {isCompleted && (
+          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
+            <div style={{ fontSize: 36, fontWeight: 800, color: '#e8efe8', letterSpacing: 1, background: '#0a1c17', border: '1px solid #26493c', padding: '8px 16px', borderRadius: 12 }}>
+              {Number(game.home_score)} : {Number(game.away_score)}
+            </div>
+          </div>
+        )}
 
         {/* Location */}
         {game.location && (
@@ -371,10 +434,10 @@ export default function GameDetailPage() {
               {game.kickoff_at ? 'Termin ändern' : 'Termin festlegen'}
             </button>
           )}
-          <button onClick={() => setShowChat(v => !v)} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe' }}>
-            {showChat ? 'Chat ausblenden' : 'Match-Chat'}
-          </button>
-          <button disabled style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #553f3f', background: '#2a1b1b', color: '#e9d8d8', opacity: 0.8 }}>ABSAGEN</button>
+          {/* Chat toggle removed; chat is always visible below */}
+          {(token && game && game.home_score == null && game.away_score == null) && (
+            <button onClick={cancelMatch} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #553f3f', background: '#2a1b1b', color: '#e9d8d8' }}>ABSAGEN</button>
+          )}
         </div>
 
         {/* Schedule form (toggled) */}
@@ -392,7 +455,7 @@ export default function GameDetailPage() {
         )}
 
         {/* Join match when opponent not yet assigned */}
-        {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away)) && (
+        {(token && game && !isParticipant && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away)) && (
           <div style={{ marginTop: 12 }}>
             <button onClick={joinMatch} disabled={hasWeeklyMatch} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: hasWeeklyMatch ? '#24463c' : '#1b4b3d', color: '#fff', cursor: hasWeeklyMatch ? 'not-allowed' : 'pointer' }}>
               Diesem Match beitreten
@@ -420,9 +483,7 @@ export default function GameDetailPage() {
         )}
       </div>
 
-      {showChat && (
-        <MatchChat matchId={gameId} token={token} />
-      )}
+      <MatchChat matchId={gameId} token={token} />
 
       {/* Past games table */}
       <div style={{ marginTop: 16 }}>
