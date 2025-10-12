@@ -17,3 +17,17 @@ function resolveApiBase() {
 
 export const API_BASE = resolveApiBase();
 
+// Small helper: fetch with timeout (default 8s)
+export async function fetchWithTimeout(resource, options = {}) {
+	const { timeout = 8000, signal } = options;
+	const controller = new AbortController();
+	const id = setTimeout(() => controller.abort(), timeout);
+	try {
+		const merged = { ...options, signal: signal || controller.signal };
+		const resp = await fetch(resource, merged);
+		return resp;
+	} finally {
+		clearTimeout(id);
+	}
+}
+
