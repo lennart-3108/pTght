@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
-import { API_BASE } from "../config";
+import { API_BASE, fetchWithTimeout } from "../config";
 
 export default function LeagueDetailPage() {
   const { leagueId } = useParams();
@@ -80,13 +80,14 @@ export default function LeagueDetailPage() {
   async function runMatchSearch({ auto = false, refresh = true } = {}) {
     const t = localStorage.getItem("token");
     if (!t) throw new Error("Nicht eingeloggt");
-    const resp = await fetch(`${API_BASE}/leagues/${leagueId}/match-search`, {
+    const resp = await fetchWithTimeout(`${API_BASE}/leagues/${leagueId}/match-search`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${t}`
       },
-      body: JSON.stringify({ auto: !!auto })
+      body: JSON.stringify({ auto: !!auto }),
+      timeout: 8000
     });
     const data = await resp.json().catch(() => ({}));
     if (!resp.ok) throw new Error(data?.error || `HTTP ${resp.status}`);
@@ -299,9 +300,10 @@ export default function LeagueDetailPage() {
     try {
       setJoining(true);
       const token = localStorage.getItem("token");
-      const r = await fetch(`${API_BASE}/leagues/${leagueId}/join`, {
+      const r = await fetchWithTimeout(`${API_BASE}/leagues/${leagueId}/join`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 8000
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
@@ -376,9 +378,10 @@ export default function LeagueDetailPage() {
     try {
       setJoining(true);
       const token = localStorage.getItem("token");
-      const r = await fetch(`${API_BASE}/leagues/${leagueId}/leave`, {
+      const r = await fetchWithTimeout(`${API_BASE}/leagues/${leagueId}/leave`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 8000
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);

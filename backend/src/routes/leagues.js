@@ -656,7 +656,7 @@ module.exports = function leaguesRoutes(ctx) {
   });
 
   // POST /:id/join - Liga beitreten
-  router.post(":id/join", requireAuth, async (req, res) => {
+  router.post("/:id/join", requireAuth, async (req, res) => {
     try {
       const k = resolveKnex(db);
       if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
@@ -703,7 +703,7 @@ module.exports = function leaguesRoutes(ctx) {
   });
 
   // GET /:id/my-open-match - offenes Match des Users in dieser Liga
-  router.get(":id/my-open-match", requireAuth, async (req, res) => {
+  router.get("/:id/my-open-match", requireAuth, async (req, res) => {
     try {
       const k = resolveKnex(db);
       if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
@@ -766,7 +766,7 @@ module.exports = function leaguesRoutes(ctx) {
   });
 
   // GET /:id/my-weekly-status - hat der User bereits ein Match in dieser Woche
-  router.get(":id/my-weekly-status", requireAuth, async (req, res) => {
+  router.get("/:id/my-weekly-status", requireAuth, async (req, res) => {
     try {
       const k = resolveKnex(db);
       if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
@@ -839,7 +839,7 @@ module.exports = function leaguesRoutes(ctx) {
   });
 
   // POST /:id/match-search - offenes Match finden oder anlegen
-  router.post(":id/match-search", requireAuth, async (req, res) => {
+  router.post("/:id/match-search", requireAuth, async (req, res) => {
     try {
       const k = resolveKnex(db);
       if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
