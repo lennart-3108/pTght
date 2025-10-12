@@ -13,6 +13,7 @@ const users = require("./users");
 const games = require("./games");
 const teamsRoutes = require("./teams");
 const matchesRoutes = require("./matches");
+const messagesRoutes = require("./messages");
 
 function registerRoutes(app, ctx) {
   const { ensureTables } = createMiddleware(ctx);
@@ -34,6 +35,7 @@ function registerRoutes(app, ctx) {
   app.use(games(ctx));
   app.use('/teams', teamsRoutes(ctx));
   app.use('/matches', matchesRoutes(ctx));
+  app.use(messagesRoutes(ctx));
 
   // --- Email status + test routes ---
   app.get("/admin/email-status", async (req, res) => {

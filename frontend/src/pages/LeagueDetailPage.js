@@ -405,6 +405,62 @@ export default function LeagueDetailPage() {
     if (Number.isNaN(dt.getTime())) return "Noch kein Termin";
     return dt.toLocaleString('de-DE');
   }
+
+  // Helpers for user IDs and display
+  function toNumericId(v) {
+    if (v == null) return null;
+    const m = String(v).match(/\d+/);
+    return m ? m[0] : null;
+  }
+  function initialsFor(name) {
+    const s = String(name || "").trim();
+    if (!s) return "?";
+    const p = s.split(/\s+/);
+    const a = (p[0]?.[0] || "").toUpperCase();
+    const b = (p[1]?.[0] || "").toUpperCase();
+    return (a + b) || a || "?";
+  }
+
+  // Fast lookup of member meta by numeric user id
+  const memberById = useMemo(() => {
+    const map = new Map();
+    (members || []).forEach(m => {
+      const uid = toNumericId(getMemberUserId(m));
+      if (uid) map.set(String(uid), m);
+    });
+    return map;
+  }, [members]);
+
+  // Build last-5 form (W/U/N) for each user from completed games
+  const formByUserId = useMemo(() => {
+    const map = new Map();
+    const completed = Array.isArray(games?.completed) ? [...games.completed] : [];
+    completed.sort((a, b) => {
+      const da = new Date(a.kickoff_at || a.kickoffAt || a.date || 0).getTime();
+      const db = new Date(b.kickoff_at || b.kickoffAt || b.date || 0).getTime();
+      return db - da; // newest first
+    });
+    const toId = (g, side) => toNumericId(g?.[`${side}_id`] ?? g?.[`${side}Id`] ?? g?.[side]);
+    const gScore = (g, k) => g?.[k] ?? g?.[k.replace(/_/, "")] ?? null; // home_score -> homeScore
+    completed.forEach(g => {
+      const hId = toId(g, 'home');
+      const aId = toId(g, 'away');
+      const hs = gScore(g, 'home_score');
+      const as = gScore(g, 'away_score');
+      if (hId && aId && hs != null && as != null) {
+        let hRes = 'U', aRes = 'U';
+        if (Number(hs) > Number(as)) { hRes = 'W'; aRes = 'N'; }
+        else if (Number(hs) < Number(as)) { hRes = 'N'; aRes = 'W'; }
+        if (!map.has(hId)) map.set(hId, []);
+        if (!map.has(aId)) map.set(aId, []);
+        map.get(hId).push(hRes);
+        map.get(aId).push(aRes);
+      }
+    });
+    // keep only last 5
+    for (const [k, arr] of map.entries()) map.set(k, arr.slice(0, 5));
+    return map;
+  }, [games?.completed]);
   async function createMatch(e) {
     e && e.preventDefault();
     try {
@@ -600,13 +656,44 @@ export default function LeagueDetailPage() {
                         <th style={{ padding: '8px 6px' }}>Tore</th>
                         <th style={{ padding: '8px 6px' }}>Diff</th>
                         <th style={{ padding: '8px 6px' }}>Pkt</th>
+                        <th style={{ padding: '8px 6px' }}>Form</th>
                       </tr>
                     </thead>
                     <tbody>
                       {standingsWithMembers.map((row, idx) => (
                         <tr key={row._uid || idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                           <td style={{ padding: '8px 6px' }}>{row.rank ?? (idx + 1)}</td>
-                          <td style={{ padding: '8px 6px' }}>{row.name || row.key}</td>
+                          <td style={{ padding: '8px 6px' }}>
+                            {(() => {
+                              const uid = toNumericId(row._uid);
+                              const m = uid ? memberById.get(String(uid)) : null;
+                              const avatarUrl = m?.avatar || m?.avatarUrl || m?.image || m?.imageUrl || m?.profile_image || m?.profileImage || null;
+                              const display = row.name || row.key || `User ${uid || ''}`;
+                              const avatar = (
+                                <span style={{ width: 28, height: 28, borderRadius: 20, background: '#163a2f', color: '#e8efe8', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, marginRight: 8, overflow: 'hidden', verticalAlign: 'middle' }}>
+                                  {avatarUrl ? (
+                                    <img src={avatarUrl} alt={display} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                  ) : (
+                                    initialsFor(display)
+                                  )}
+                                </span>
+                              );
+                              return uid ? (
+                                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                  {avatar}
+                                  <Link to={`/user/${uid}`} style={{ color: '#cfe', textDecoration: 'none' }} title="Profil öffnen">
+                                    {display}
+                                  </Link>
+                                  <span aria-hidden style={{ marginLeft: 6, opacity: 0.7 }}>↗︎</span>
+                                </span>
+                              ) : (
+                                <span style={{ display: 'inline-flex', alignItems: 'center' }}>
+                                  {avatar}
+                                  {display}
+                                </span>
+                              );
+                            })()}
+                          </td>
                           <td style={{ padding: '8px 6px' }}>{row.played ?? 0}</td>
                           <td style={{ padding: '8px 6px' }}>{row.won ?? 0}</td>
                           <td style={{ padding: '8px 6px' }}>{row.drawn ?? 0}</td>
@@ -614,6 +701,20 @@ export default function LeagueDetailPage() {
                           <td style={{ padding: '8px 6px' }}>{(row.gf ?? 0)}:{(row.ga ?? 0)}</td>
                           <td style={{ padding: '8px 6px' }}>{(row.gd ?? ((row.gf||0) - (row.ga||0)))}</td>
                           <td style={{ padding: '8px 6px' }}>{row.points ?? 0}</td>
+                          <td style={{ padding: '8px 6px', whiteSpace: 'nowrap' }}>
+                            {(() => {
+                              const uid = toNumericId(row._uid);
+                              const form = (uid && formByUserId.get(String(uid))) || [];
+                              const color = (r) => (r === 'W' ? '#29e0ad' : r === 'N' ? '#ff6b6b' : '#c4d0ca');
+                              return (
+                                <span>
+                                  {form.map((r, i) => (
+                                    <span key={i} style={{ color: color(r), fontWeight: 700, display: 'inline-block', marginRight: 6 }}>{r}</span>
+                                  ))}
+                                </span>
+                              );
+                            })()}
+                          </td>
                         </tr>
                       ))}
                     </tbody>

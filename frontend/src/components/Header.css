@@ -116,18 +116,24 @@
   .ml-burger { display: inline-block; }
   /* Turn the menu into a slide-down drawer */
   .ml-header__menu {
-    position: absolute;
+    position: fixed; /* overlay the page, independent from header box height */
     top: 54px;
     left: 0;
     right: 0;
+    z-index: 1100; /* above header */
     background: #0c221d;
     border-bottom: 1px solid rgba(255,255,255,0.06);
     display: block;
-    max-height: 0;
-    overflow: hidden;
+    max-height: 0; /* collapsed */
+    overflow-y: hidden; /* hidden when collapsed */
     transition: max-height 250ms ease;
   }
-  .ml-header__menu.is-open { max-height: 280px; }
-  .ml-nav { display: grid; gap: 6px; padding: 8px; }
-  .ml-logout { padding: 8px; }
+  /* Expand to viewport height minus header and safe area; enable scrolling */
+  .ml-header__menu.is-open {
+    max-height: calc(100vh - 54px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .ml-nav { display: grid; gap: 10px; padding: 12px; padding-bottom: calc(12px + env(safe-area-inset-bottom)); }
+  .ml-logout { padding: 12px; }
 }

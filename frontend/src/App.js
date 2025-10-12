@@ -12,6 +12,7 @@ import CitiesPage from "./pages/CitiesPage"; // neu
 import SportsDetailPage from "./pages/SportsDetailPage"; // neu
 import CreatePage from "./pages/CreatePage"; // neu
 import UserDetailPage from "./pages/UserDetailPage"; // neu
+import UserChatPage from "./pages/UserChatPage"; // neu
 import GameDetailPage from "./pages/GameDetailPage"; // neu
 import AdminPage from "./pages/AdminPage"; // neu
 import matchLeagueLogo from "./images/matchleague_logo.png"; // Import the logo
@@ -167,6 +168,16 @@ function App() {
             element={
               <ProtectedRoute token={token} setToken={setToken}>
                 <UserDetailPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Direkter Chat zwischen Nutzern */}
+          <Route
+            path="/chat/user/:id"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <UserChatPage />
               </ProtectedRoute>
             }
           />
