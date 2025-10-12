@@ -147,6 +147,7 @@ module.exports = function matchesRoutes({ db }) {
     const hasTeams = await k.schema.hasTable('teams').catch(() => false);
     const usersInfo = hasUsers ? await k('users').columnInfo().catch(() => ({})) : {};
     const userExpr = hasUsers ? buildUserDisplayExpression(usersInfo, 'u') : null;
+    const hasUserAvatar = hasUsers && Object.prototype.hasOwnProperty.call(usersInfo, 'avatar_url');
     const cols = [
       { id: 'mm.id' },
       { body: 'mm.body' },
@@ -156,6 +157,8 @@ module.exports = function matchesRoutes({ db }) {
     ];
     if (hasUsers && userExpr) cols.push(k.raw(`${userExpr} as sender_user_name`));
     else cols.push(k.raw("'' as sender_user_name"));
+    if (hasUsers && hasUserAvatar) cols.push({ sender_user_avatar: 'u.avatar_url' });
+    else cols.push(k.raw('NULL as sender_user_avatar'));
     if (hasTeams) {
       cols.push({ sender_team_name: 't.name' });
     } else {
@@ -175,6 +178,7 @@ module.exports = function matchesRoutes({ db }) {
     const hasTeams = await k.schema.hasTable('teams').catch(() => false);
     const usersInfo = hasUsers ? await k('users').columnInfo().catch(() => ({})) : {};
     const userExpr = hasUsers ? buildUserDisplayExpression(usersInfo, 'u') : null;
+    const hasUserAvatar = hasUsers && Object.prototype.hasOwnProperty.call(usersInfo, 'avatar_url');
     const cols = [
       { id: 'mm.id' },
       { body: 'mm.body' },
@@ -184,6 +188,8 @@ module.exports = function matchesRoutes({ db }) {
     ];
     if (hasUsers && userExpr) cols.push(k.raw(`${userExpr} as sender_user_name`));
     else cols.push(k.raw("'' as sender_user_name"));
+    if (hasUsers && hasUserAvatar) cols.push({ sender_user_avatar: 'u.avatar_url' });
+    else cols.push(k.raw('NULL as sender_user_avatar'));
     if (hasTeams) {
       cols.push({ sender_team_name: 't.name' });
     } else {
@@ -1113,6 +1119,7 @@ module.exports = function matchesRoutes({ db }) {
         senderUserId: row.sender_user_id,
         senderTeamId: row.sender_team_id,
         senderUserName: row.sender_user_name || null,
+        senderUserAvatar: row.sender_user_avatar || null,
         senderTeamName: row.sender_team_name || null,
       }));
       return res.json({ messages, meta: { viewerUserId: Number(req.user.id) || null, viewerTeamId: participant.teamId, viewerSide: participant.side, matchType: participant.matchType } });
@@ -1155,6 +1162,7 @@ module.exports = function matchesRoutes({ db }) {
         senderUserId: row.sender_user_id,
         senderTeamId: row.sender_team_id,
         senderUserName: row.sender_user_name || null,
+        senderUserAvatar: row.sender_user_avatar || null,
         senderTeamName: row.sender_team_name || null,
       } : {
         id: newId,
@@ -1163,6 +1171,7 @@ module.exports = function matchesRoutes({ db }) {
         senderUserId: insertRec.sender_user_id,
         senderTeamId: insertRec.sender_team_id,
         senderUserName: null,
+        senderUserAvatar: null,
         senderTeamName: null,
       };
       return res.status(201).json({ message: payload, meta: { viewerUserId: Number(req.user.id) || null, viewerTeamId: participant.teamId, viewerSide: participant.side } });

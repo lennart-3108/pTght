@@ -4,32 +4,111 @@ module.exports = function usersRoutes(ctx) {
   const router = express.Router();
   const { db } = ctx;
 
+  // Try to resolve a Knex instance for more complex queries if available
+  function resolveKnex() {
+    if (ctx && ctx.db && ctx.db.knex && ctx.db.knex.client) return ctx.db.knex;
+    try {
+      // fallback to legacy knex instance
+      // path relative to this file: backend/src/routes/users.js -> ../../db.js
+      const k = require("../../db");
+      if (k && k.client) return k;
+    } catch (_) {}
+    return null;
+  }
+
   router.get("/users/:id", (req, res) => {
     const id = Number(req.params.id);
     if (!Number.isFinite(id)) return res.status(400).json({ error: "Ungültige ID" });
-
-    db.get(
-      `SELECT id, firstname, lastname, email FROM users WHERE id = ?`,
-      [id],
-      (err, user) => {
-        if (err) return res.status(500).json({ error: "Datenbankfehler" });
+    // Be tolerant to missing avatar_url column
+    db.all(`PRAGMA table_info(users)`, [], (pe, cols) => {
+      if (pe) return res.status(500).json({ error: "Datenbankfehler", details: pe.message });
+      const hasAvatar = Array.isArray(cols) && cols.some(c => String(c.name || "").toLowerCase() === "avatar_url");
+      const sql = hasAvatar
+        ? `SELECT id, firstname, lastname, email, avatar_url FROM users WHERE id = ?`
+        : `SELECT id, firstname, lastname, email FROM users WHERE id = ?`;
+      db.get(sql, [id], (err, user) => {
+        if (err) return res.status(500).json({ error: "Datenbankfehler", details: err.message });
         if (!user) return res.status(404).json({ error: "Nutzer nicht gefunden" });
-
-        db.all(
-          `SELECT s.id, s.name
-           FROM user_sports us
-           JOIN sports s ON s.id = us.sport_id
-           WHERE us.user_id = ?
-           ORDER BY s.name`,
-          [id],
-          (e2, sports) => {
-            if (e2) return res.status(500).json({ error: "Datenbankfehler" });
-            res.json({ ...user, sports: sports || [] });
+        // Check if user_sports table exists; if not, try fallback via user_leagues→leagues→sports
+        db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='user_sports'`, [], (te, rs) => {
+          const avatar_url = hasAvatar ? (user.avatar_url || null) : null;
+          if (te) return res.status(500).json({ error: "Datenbankfehler", details: te.message });
+          if (rs && rs.name === 'user_sports') {
+            db.all(
+              `SELECT s.id, s.name
+               FROM user_sports us
+               JOIN sports s ON s.id = us.sport_id
+               WHERE us.user_id = ?
+               ORDER BY s.name`,
+              [id],
+              (e2, sports) => {
+                if (e2) return res.status(500).json({ error: "Datenbankfehler", details: e2.message });
+                return res.json({ ...user, avatar_url, sports: sports || [] });
+              }
+            );
+          } else {
+            // Fallback: infer sports via user_leagues
+            db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='user_leagues'`, [], (te2, rs2) => {
+              if (te2) return res.status(500).json({ error: "Datenbankfehler", details: te2.message });
+              if (!rs2) return res.json({ ...user, avatar_url, sports: [] });
+              const sql2 = `
+                SELECT DISTINCT s.id, s.name
+                FROM user_leagues ul
+                JOIN leagues l ON l.id = ul.league_id
+                JOIN sports s ON s.id = l.sport_id
+                WHERE ul.user_id = ?
+                ORDER BY s.name`;
+              db.all(sql2, [id], (e3, sports2) => {
+                if (e3) return res.status(500).json({ error: "Datenbankfehler", details: e3.message });
+                return res.json({ ...user, avatar_url, sports: sports2 || [] });
+              });
+            });
           }
-        );
-      }
-    );
+        });
+      });
+    });
   });
+
+    // Upload avatar (simple base64 image) → stores under /uploads/avatars/<id>.png and sets users.avatar_url
+    router.post('/users/:id/avatar', (req, res) => {
+      const userId = Number(req.params.id);
+      if (!Number.isFinite(userId)) return res.status(400).json({ error: 'Ungültige ID' });
+      try {
+        const raw = req.body?.image || req.body?.avatar || '';
+        const m = String(raw).match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/i);
+        if (!m) return res.status(400).json({ error: 'INVALID_IMAGE' });
+        const ext = m[1].toLowerCase() === 'jpeg' ? 'jpg' : m[1].toLowerCase();
+        const buf = Buffer.from(m[2], 'base64');
+        const fs = require('fs');
+        const path = require('path');
+        const dir = path.join(__dirname, '../../uploads/avatars');
+        fs.mkdirSync(dir, { recursive: true });
+        const filePath = path.join(dir, `${userId}.${ext}`);
+        fs.writeFileSync(filePath, buf);
+        const publicUrl = `/uploads/avatars/${userId}.${ext}`;
+        // Ensure avatar_url column exists (add if missing)
+        db.all(`PRAGMA table_info(users)`, [], (pe, cols) => {
+          if (pe) return res.status(500).json({ error: 'DB_ERROR', details: pe.message });
+          const hasAvatar = Array.isArray(cols) && cols.some(c => String(c.name || '').toLowerCase() === 'avatar_url');
+          const proceed = () => {
+            db.run(`UPDATE users SET avatar_url = ? WHERE id = ?`, [publicUrl, userId], function (err) {
+              if (err) return res.status(500).json({ error: 'DB_ERROR', details: err.message });
+              return res.json({ ok: true, url: publicUrl });
+            });
+          };
+          if (hasAvatar) return proceed();
+          db.run(`ALTER TABLE users ADD COLUMN avatar_url TEXT`, [], (altErr) => {
+            // ignore error if column already exists (race or incompatible)
+            if (altErr && !/duplicate column|exists/i.test(altErr.message || '')) {
+              return res.status(500).json({ error: 'DB_ALTER_FAILED', details: altErr.message });
+            }
+            proceed();
+          });
+        });
+      } catch (e) {
+        return res.status(500).json({ error: 'UPLOAD_FAILED', details: e?.message || String(e) });
+      }
+    });
 
   // Ligen eines Users (tolerant gegenüber fehlender joined_at-Spalte)
   router.get("/users/:id/leagues", (req, res) => {
@@ -79,94 +158,94 @@ module.exports = function usersRoutes(ctx) {
   });
 
   // Spiele eines Users (über seine Ligen) – tolerant: bevorzugt 'matches', fallback 'games'
-  router.get("/users/:id/games", (req, res) => {
-    const id = Number(req.params.id);
-    if (!Number.isFinite(id)) return res.status(400).json({ error: "Ungültige ID" });
+  router.get("/users/:id/games", async (req, res) => {
+    try {
+      const userId = Number(req.params.id);
+      if (!Number.isFinite(userId)) return res.status(400).json({ error: "Ungültige ID" });
 
-    // Ermittele verfügbare Tabelle
-    db.all(`SELECT name FROM sqlite_master WHERE type='table' AND name IN ('matches','games')`, [], (te, tabs) => {
-      if (te) return res.status(500).json({ error: 'Datenbankfehler', details: te.message });
-      const names = (tabs || []).map(r => (r.name || r.NAME)).filter(Boolean);
-      const useMatches = names.includes('matches');
-      const table = useMatches ? 'matches' : (names.includes('games') ? 'games' : null);
+      // Wähle eine Knex-Instanz aus dem Kontext oder fallback
+      const k = resolveKnex();
+      if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
+
+      // Ermittele verfügbare Tabelle
+      const table = (await k.schema.hasTable("matches")) ? "matches" : ((await k.schema.hasTable("games")) ? "games" : null);
       if (!table) return res.json({ upcoming: [], completed: [] });
 
       // Lese Spalteninformationen
-      db.all(`PRAGMA table_info(${table})`, [], (pe, cols) => {
-        if (pe) return res.status(500).json({ error: 'Datenbankfehler', details: pe.message });
-        const has = (n) => Array.isArray(cols) && cols.some(c => String(c.name || '').toLowerCase() === n);
-        const hasKick = has('kickoff_at') || has('kickoff') || has('scheduled_at') || has('date') || has('datetime') || has('start_time');
-        const tsCol = has('kickoff_at') ? 'kickoff_at'
-          : has('kickoff') ? 'kickoff'
-          : has('scheduled_at') ? 'scheduled_at'
-          : has('date') ? 'date'
-          : has('datetime') ? 'datetime'
-          : has('start_time') ? 'start_time'
-          : null;
-        const hasHomeText = has('home');
-        const hasAwayText = has('away');
-        const hasHomeId = has('home_user_id');
-        const hasAwayId = has('away_user_id');
+      const info = await k(table).columnInfo().catch(() => ({}));
+      const hasHomeUserId = Object.prototype.hasOwnProperty.call(info, "home_user_id");
+      const hasAwayUserId = Object.prototype.hasOwnProperty.call(info, "away_user_id");
+      const hasHomeText = Object.prototype.hasOwnProperty.call(info, "home");
+      const hasAwayText = Object.prototype.hasOwnProperty.call(info, "away");
 
-        // Nutzer-Spalten bestimmen (für Namensanzeige)
-        db.all(`PRAGMA table_info(users)`, [], (ue, userCols) => {
-          if (ue) return res.status(500).json({ error: 'Datenbankfehler', details: ue.message });
-          const uHas = (n) => Array.isArray(userCols) && userCols.some(c => String(c.name || '').toLowerCase() === n);
-          const hasFirst = uHas('firstname');
-          const hasLast = uHas('lastname');
-          const hasName = uHas('name');
-          const hasEmail = uHas('email');
-          const fullNameExpr = (hasFirst || hasLast)
-            ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')), '')"
-            : null;
-          const displayExpr = (alias) => {
-            const parts = [];
-            if (fullNameExpr) parts.push(fullNameExpr.replace(/u\./g, `${alias}.`));
-            if (hasName) parts.push(`${alias}.name`);
-            if (hasEmail) parts.push(`${alias}.email`);
-            if (!parts.length) parts.push("'User'");
-            return `COALESCE(${parts.join(', ')})`;
-          };
-          const homeName = hasHomeId ? `(SELECT ${displayExpr('u')} FROM users u WHERE u.id = g.home_user_id)`
-            : (hasHomeText ? 'g.home' : 'NULL');
-          const awayName = hasAwayId ? `(SELECT ${displayExpr('u')} FROM users u WHERE u.id = g.away_user_id)`
-            : (hasAwayText ? 'g.away' : 'NULL');
-          const tsSelect = tsCol ? `g.${tsCol} AS kickoff_at` : `NULL AS kickoff_at`;
+      const tsCandidates = ["kickoff_at", "kickoff", "scheduled_at", "date", "datetime", "start_time"];
+      const tsCol = tsCandidates.find(c => Object.prototype.hasOwnProperty.call(info, c)) || null;
 
-          const sql = `
-            SELECT
-              g.id,
-              ${tsSelect},
-              ${homeName} AS home,
-              ${awayName} AS away,
-              g.home_score, g.away_score,
-              l.id AS leagueId, l.name AS league,
-              c.name AS city,
-              s.name AS sport
-            FROM ${table} g
-            JOIN leagues l ON l.id = g.league_id
-            JOIN cities c ON c.id = l.city_id
-            JOIN sports s ON s.id = l.sport_id
-            WHERE g.league_id IN (SELECT league_id FROM user_leagues WHERE user_id = ?)
-            ORDER BY ${tsCol ? `g.${tsCol} DESC` : 'g.id DESC'}
-          `;
+      const usersInfo = await k("users").columnInfo().catch(() => ({}));
+      const hasFirst = Object.prototype.hasOwnProperty.call(usersInfo, "firstname");
+      const hasLast = Object.prototype.hasOwnProperty.call(usersInfo, "lastname");
+      const hasName = Object.prototype.hasOwnProperty.call(usersInfo, "name");
+      const hasEmail = Object.prototype.hasOwnProperty.call(usersInfo, "email");
+      const fullNameExpr = (hasFirst || hasLast) ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')), '')" : null;
+      const displayExpr = (alias) => {
+        const parts = [];
+        if (fullNameExpr) parts.push(fullNameExpr.replace(/u\./g, `${alias}.`));
+        if (hasName) parts.push(`${alias}.name`);
+        if (hasEmail) parts.push(`${alias}.email`);
+        if (!parts.length) parts.push("'User'");
+        return `COALESCE(${parts.join(', ')})`;
+      };
+      const homeName = hasHomeUserId ? k.raw(`(SELECT ${displayExpr('u')} FROM users u WHERE u.id = g.home_user_id) as home`) : (hasHomeText ? k.raw("g.home as home") : k.raw("NULL as home"));
+      const awayName = hasAwayUserId ? k.raw(`(SELECT ${displayExpr('u')} FROM users u WHERE u.id = g.away_user_id) as away`) : (hasAwayText ? k.raw("g.away as away") : k.raw("NULL as away"));
+      const tsSelect = tsCol ? k.raw(`g.${tsCol} as kickoff_at`) : k.raw("NULL as kickoff_at");
 
-          db.all(sql, [id], (err, rows) => {
-            if (err) return res.status(500).json({ error: 'Datenbankfehler', details: err.message });
-            const now = Date.now();
-            const split = (rows || []).reduce((acc, r) => {
-              const t = r.kickoff_at ? Date.parse(r.kickoff_at) : 0;
-              const completed = r.home_score != null && r.away_score != null;
-              if (completed || (t && t < now)) acc.completed.push(r);
-              else acc.upcoming.push(r);
-              return acc;
-            }, { upcoming: [], completed: [] });
-            return res.json(split);
-          });
+      let q = k({ g: table })
+        .leftJoin({ l: "leagues" }, "l.id", "g.league_id")
+        .leftJoin({ c: "cities" }, "c.id", "l.city_id")
+        .leftJoin({ s: "sports" }, "s.id", "l.sport_id")
+        .select(
+          "g.id",
+          tsSelect,
+          { leagueId: "g.league_id" },
+          { league: "l.name" },
+          k.raw("COALESCE(c.name, '') as city"),
+          k.raw("COALESCE(s.name, '') as sport"),
+          homeName,
+          awayName,
+          "g.home_score",
+          "g.away_score"
+        );
+
+      if (hasHomeUserId || hasAwayUserId) {
+        q = q.where(function () {
+          if (hasHomeUserId) this.orWhere("g.home_user_id", userId);
+          if (hasAwayUserId) this.orWhere("g.away_user_id", userId);
         });
-      });
-    });
+      } else if (hasHomeText || hasAwayText) {
+        q = q.join({ ul: "user_leagues" }, "ul.league_id", "g.league_id").where("ul.user_id", userId);
+      } else {
+        return res.json({ upcoming: [], completed: [] });
+      }
+
+      if (tsCol) q = q.orderBy(`g.${tsCol}`, "desc"); else q = q.orderBy("g.id", "desc");
+
+      const rows = await q;
+      const withTs = (rows || []).map(r => ({ ...r, ts: r.kickoff_at ? (Date.parse(r.kickoff_at) || 0) : 0 }));
+      const completed = withTs.filter(r => (r.home_score != null && r.away_score != null)).sort((a, b) => (b.ts - a.ts));
+      const upcoming = withTs.filter(r => (r.home_score == null && r.away_score == null)).sort((a, b) => (a.ts - b.ts));
+      return res.json({ upcoming, completed });
+    } catch (e) {
+      return res.status(500).json({ error: "Datenbankfehler", details: e?.message || String(e) });
+    }
   });
+
+    // Start a direct chat intent between current user and target user (creates an empty chat page link)
+    router.post('/users/:id/start-chat', (req, res) => {
+      const targetId = Number(req.params.id);
+      if (!Number.isFinite(targetId)) return res.status(400).json({ error: 'Ungültige ID' });
+      // For now, we just respond with a placeholder URL for a future direct chat page
+      return res.json({ ok: true, url: `/chat/user/${targetId}` });
+    });
 
   return router;
 };

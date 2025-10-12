@@ -33,6 +33,8 @@ const PORT = Number(process.env.PORT) || 5001;
 app.use(cors(cfg.cors));
 app.options("*", cors());
 app.use(express.json());
+// Serve uploaded files (avatars, etc.)
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Healthcheck für Caddy/Monitoring
 app.get("/healthz", (req, res) => res.json({ ok: true }));
@@ -199,6 +201,61 @@ try {
         t.string("shirt_number");
       });
       logInfo("[DB] Created table team_roster_players via Knex");
+    }
+
+    // direct_chats (between two users)
+    if (!(await k.schema.hasTable("direct_chats"))) {
+      await k.schema.createTable("direct_chats", (t) => {
+        t.increments("id").primary();
+        t.integer("user1_id").notNullable();
+        t.integer("user2_id").notNullable();
+        t.text("created_at").defaultTo(k.raw("CURRENT_TIMESTAMP"));
+        t.unique(["user1_id", "user2_id"]);
+        // Optional columns for read tracking
+        t.text("user1_last_read_at");
+        t.text("user2_last_read_at");
+      });
+      logInfo("[DB] Created table direct_chats via Knex");
+    }
+    // If table exists, add missing read-tracking columns
+    else {
+      try {
+        const info = await k("direct_chats").columnInfo().catch(() => ({}));
+        if (!Object.prototype.hasOwnProperty.call(info, "user1_last_read_at")) {
+          await k.schema.alterTable("direct_chats", (t) => { t.text("user1_last_read_at"); });
+          logInfo("[DB] Added column direct_chats.user1_last_read_at");
+        }
+        if (!Object.prototype.hasOwnProperty.call(info, "user2_last_read_at")) {
+          await k.schema.alterTable("direct_chats", (t) => { t.text("user2_last_read_at"); });
+          logInfo("[DB] Added column direct_chats.user2_last_read_at");
+        }
+      } catch (e) {
+        console.warn("[DB] direct_chats alter add last_read columns failed:", e && (e.message || e));
+      }
+    }
+
+    // direct_messages
+    if (!(await k.schema.hasTable("direct_messages"))) {
+      await k.schema.createTable("direct_messages", (t) => {
+        t.increments("id").primary();
+        t.integer("chat_id").notNullable();
+        t.integer("sender_id").notNullable();
+        t.text("body").notNullable();
+        t.text("created_at").defaultTo(k.raw("CURRENT_TIMESTAMP"));
+        t.index(["chat_id", "created_at"], "dm_chat_created_idx");
+      });
+      logInfo("[DB] Created table direct_messages via Knex");
+    }
+
+    // match_message_reads – per user, per match last read timestamp
+    if (!(await k.schema.hasTable("match_message_reads"))) {
+      await k.schema.createTable("match_message_reads", (t) => {
+        t.integer("match_id").notNullable();
+        t.integer("user_id").notNullable();
+        t.text("last_read_at");
+        t.primary(["match_id", "user_id"]);
+      });
+      logInfo("[DB] Created table match_message_reads via Knex");
     }
   } catch (e) {
     console.warn("[DB] ensureKnexTables failed:", e && (e.message || e));
@@ -783,6 +840,7 @@ app.use("/leagues", leagueMatchesRoutes({ db: knexDirect || db }));
 
 const sportsRoutes = require("./src/routes/sports");
 const matchesRoutes = require("./routes/matches");
+const chatsRoutes = require("./routes/chats");
 
 // Mount routes BEFORE any 404 handler
 app.use("/sports", sportsRoutes({ db }));
@@ -800,6 +858,7 @@ if (process.env.DEBUG_BOOT === '1' || canLog('debug')) {
   });
 }
 app.use("/matches", matchesRoutes({ db: resolvedKnexForRoutes }));
+app.use("/chats", chatsRoutes({ db: resolvedKnexForRoutes }));
 
 // --- ensure root /sports exists (some setups expose only /sports/:id/... but not GET /sports) ---
 app.get("/sports", async (req, res) => {

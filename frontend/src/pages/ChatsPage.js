@@ -38,7 +38,8 @@ export default function ChatsPage() {
     setLoading(true);
     setError("");
 
-    fetch(`${API_BASE}/matches/my/chats`, {
+    // unified chats list (match-based and direct chats)
+    fetch(`${API_BASE}/chats`, {
       headers: { Authorization: `Bearer ${token}` },
       signal: controller.signal,
     })
@@ -86,12 +87,15 @@ export default function ChatsPage() {
       <div style={{ display: "grid", gap: 16 }}>
         {chats.map((chat) => {
           const last = chat.lastMessage;
-          const matchLink = `/matches/${chat.matchId}`;
           const activity = formatTimestamp(chat.lastActivityAt || last?.createdAt);
+          const href = chat.type === 'direct'
+            ? `/chat/user/${chat.opponentUserId}`
+            : `/matches/${chat.matchId}`;
+          const typeLabel = chat.type === 'direct' ? 'Privater Chat' : 'Match-Chat';
           return (
             <Link
-              key={chat.matchId}
-              to={matchLink}
+              key={`${chat.type}-${chat.type === 'direct' ? chat.chatId : chat.matchId}`}
+              to={href}
               style={{
                 display: "block",
                 background: "linear-gradient(135deg, #0f2e25, #16382e)",
@@ -103,12 +107,28 @@ export default function ChatsPage() {
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
-                <div style={{ flex: "1 1 auto" }}>
-                  <div style={{ fontSize: 18, fontWeight: 600, color: "#f4fff8" }}>{chat.opponentName || "Match"}</div>
-                  <div style={{ color: "#9fbeb0", marginTop: 4 }}>
-                    {chat.leagueName || "Liga unbekannt"}
-                    {chat.sportName ? ` · ${chat.sportName}` : ""}
-                  </div>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center', flex: '1 1 auto' }}>
+                  {chat.opponentAvatar ? (
+                    <img src={chat.opponentAvatar} alt="avatar" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '1px solid #2b6b57' }} />
+                  ) : (
+                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#123226', border: '1px solid #2b6b57', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9bc7b4', fontWeight: 700 }}>
+                      {(chat.opponentName || 'M').slice(0,1).toUpperCase()}
+                    </div>
+                  )}
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <div style={{ fontSize: 18, fontWeight: 600, color: "#f4fff8" }}>{chat.opponentName || "Match"}</div>
+                      <span style={{ fontSize: 11, background: '#144033', color: '#cfeee1', padding: '2px 8px', borderRadius: 999, border: '1px solid #2b6b57' }}>{typeLabel}</span>
+                      {chat.unread ? (
+                        <span style={{ marginLeft: 4, fontSize: 11, background: '#b93a3a', color: '#fff', padding: '2px 8px', borderRadius: 999 }}>Neu</span>
+                      ) : null}
+                    </div>
+                  {chat.type === 'match' && (
+                    <div style={{ color: "#9fbeb0", marginTop: 4 }}>
+                      {chat.leagueName || "Liga unbekannt"}
+                      {chat.sportName ? ` · ${chat.sportName}` : ""}
+                    </div>
+                  )}
                   {last ? (
                     <div style={{ marginTop: 10, fontSize: 14 }}>
                       <div style={{ fontWeight: 600, color: "#d4ede1" }}>{last.senderTeamName || last.senderUserName || "Letzte Nachricht"}</div>
@@ -117,15 +137,16 @@ export default function ChatsPage() {
                   ) : (
                     <div style={{ marginTop: 12, fontSize: 14, color: "#8fb3a0" }}>Noch keine Nachrichten.</div>
                   )}
+                  </div>
                 </div>
                 <div style={{ flex: "0 0 auto", display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
                   {activity && <div style={{ fontSize: 13, color: "#94b5a5" }}>{activity}</div>}
-                  {chat.homeScore != null && chat.awayScore != null && (
+                  {chat.type === 'match' && chat.homeScore != null && chat.awayScore != null && (
                     <div style={{ fontSize: 14, background: "rgba(255,255,255,0.08)", padding: "4px 12px", borderRadius: 999, color: "#f7fff9" }}>
                       {chat.homeScore}:{chat.awayScore}
                     </div>
                   )}
-                  <div style={{ fontSize: 13, color: "#7ca895" }}>Zum Match</div>
+                  <div style={{ fontSize: 13, color: "#7ca895" }}>{chat.type === 'direct' ? 'Zum Chat' : 'Zum Match'}</div>
                 </div>
               </div>
             </Link>

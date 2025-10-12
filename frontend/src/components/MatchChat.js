@@ -45,6 +45,10 @@ export default function MatchChat({ matchId, token }) {
           setMessages(Array.isArray(data.messages) ? data.messages : []);
           setMeta(data.meta || null);
           if (initial) setTimeout(scrollToBottom, 0);
+          // mark as read
+          try {
+            await fetch(`${API_BASE}/chats/match/${matchId}/read`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+          } catch {}
         }
       } catch (e) {
         if (cancelled || controller.signal.aborted) return;
@@ -111,19 +115,26 @@ export default function MatchChat({ matchId, token }) {
   const viewerTeamId = meta?.viewerTeamId || null;
 
   function renderMessage(msg) {
-    const isOwn = (viewerUserId != null && Number(msg.senderUserId) === Number(viewerUserId))
-      || (viewerUserId == null && viewerTeamId != null && Number(msg.senderTeamId) === Number(viewerTeamId));
-    const alignment = isOwn ? "flex-end" : "flex-start";
-    const bubbleColor = isOwn ? "#1f5c47" : "#16342c";
-    const name = msg.senderTeamName || msg.senderUserName || (msg.senderUserId ? `User ${msg.senderUserId}` : "Unbekannt");
+    // Team cannot send; only users send messages (even in team matches).
+    const isOwn = viewerUserId != null && Number(msg.senderUserId) === Number(viewerUserId);
+    const align = isOwn ? 'row-reverse' : 'row';
+    const bubbleColor = isOwn ? '#1f5c47' : '#16342c';
+    const name = msg.senderUserName || msg.senderTeamName || (msg.senderUserId ? `User ${msg.senderUserId}` : 'Unbekannt');
+    const avatarUrl = msg.senderUserAvatar || '';
+    const initials = (name || 'U').slice(0, 1).toUpperCase();
     return (
-      <div key={msg.id} style={{ display: "flex", justifyContent: alignment, marginBottom: 12 }}>
-        <div style={{ maxWidth: "70%", background: bubbleColor, borderRadius: 12, padding: "10px 12px", color: "#e5f4ec" }}>
-          <div style={{ fontSize: 12, color: "#a9c9bb", marginBottom: 4 }}>{name}</div>
-          <div style={{ whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{msg.body}</div>
-          <div style={{ fontSize: 11, color: "#7fa392", marginTop: 6 }}>
-            {formatTimestamp(msg.createdAt)}
+      <div key={msg.id} style={{ display: 'flex', flexDirection: align, gap: 8, marginBottom: 12, alignItems: 'flex-end' }}>
+        {avatarUrl ? (
+          <img alt="avatar" src={avatarUrl} style={{ width: 32, height: 32, borderRadius: 999, objectFit: 'cover', border: '1px solid #2f6b57' }} />
+        ) : (
+          <div style={{ width: 32, height: 32, borderRadius: 999, background: '#123226', border: '1px solid #2f6b57', color: '#a9c9bb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+            {initials}
           </div>
+        )}
+        <div style={{ maxWidth: '70%', background: bubbleColor, borderRadius: 12, padding: '10px 12px', color: '#e5f4ec' }}>
+          <div style={{ fontSize: 12, color: '#a9c9bb', marginBottom: 4 }}>{name}</div>
+          <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.body}</div>
+          <div style={{ fontSize: 11, color: '#7fa392', marginTop: 6 }}>{formatTimestamp(msg.createdAt)}</div>
         </div>
       </div>
     );
@@ -148,7 +159,12 @@ export default function MatchChat({ matchId, token }) {
         <div style={{ color: "#ffb4b4" }}>{error}</div>
       ) : (
         <>
-          <div ref={listRef} style={{ maxHeight: 280, overflowY: "auto", paddingRight: 8, marginBottom: 12 }}>
+          <div ref={listRef} style={{ height: 420, overflowY: "auto", paddingRight: 8, marginBottom: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 12 }}>
+              <div style={{ background: '#12382c', border: '1px solid #285243', color: '#d7efe5', padding: '8px 12px', borderRadius: 999, fontSize: 12 }}>
+                Herzlich willkommen zum Match – von Match League
+              </div>
+            </div>
             {messages.length === 0 ? (
               <div style={{ color: "#92b2a4" }}>Noch keine Nachrichten.</div>
             ) : (
