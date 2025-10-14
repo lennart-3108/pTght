@@ -62,23 +62,21 @@ export default function Header() {
 
       <div className={"ml-header__menu" + (open ? " is-open" : "")}>        
         <nav className="ml-nav">
-          {/* When not logged in: Login, Ligen, Städte, Registrieren (Teams ausgeblendet) */}
+          {/* When not logged in: Login, Ligen, Registrieren ("Städte" entfernt) */}
           {!token && (
             <>
               <Link to="/login" className="ml-nav__item" onClick={handleNavigate}>Login</Link>
               <Link to="/leagues" className="ml-nav__item" onClick={handleNavigate}>Ligen</Link>
-              <Link to="/cities" className="ml-nav__item" onClick={handleNavigate}>Städte</Link>
               <Link to="/register" className="ml-nav__item" onClick={handleNavigate}>Registrieren</Link>
             </>
           )}
 
-          {/* When logged in: Profil, Ligen, Städte */}
+          {/* When logged in: Profil, Teams, Ligen, Chats, Neuigkeiten ("Städte" entfernt) */}
           {token && (
             <>
               <Link to="/profile" className="ml-nav__item" onClick={handleNavigate}>Profil</Link>
               <Link to="/teams" className="ml-nav__item" onClick={handleNavigate}>Teams</Link>
               <Link to="/leagues" className="ml-nav__item" onClick={handleNavigate}>Ligen</Link>
-              <Link to="/cities" className="ml-nav__item" onClick={handleNavigate}>Städte</Link>
               <Link to="/chats" className="ml-nav__item" onClick={handleNavigate}>Chats</Link>
               <Link to="/news" className="ml-nav__item" onClick={handleNavigate}>Neuigkeiten</Link>
             </>
