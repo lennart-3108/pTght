@@ -13,6 +13,39 @@ module.exports = function chatsRoutes({ db }) {
     return null;
   }
 
+  async function detectMatchTable(knex) {
+    if (!knex || !knex.schema || typeof knex.schema.hasTable !== 'function') return null;
+    if (await knex.schema.hasTable('matches').catch(() => false)) return 'matches';
+    if (await knex.schema.hasTable('games').catch(() => false)) return 'games';
+    return null;
+  }
+
+  async function detectMessageTable(knex) {
+    if (!knex || !knex.schema || typeof knex.schema.hasTable !== 'function') {
+      return { table: null, matchIdColumn: null };
+    }
+    if (await knex.schema.hasTable('match_messages').catch(() => false)) {
+      return { table: 'match_messages', matchIdColumn: 'match_id' };
+    }
+    if (await knex.schema.hasTable('game_messages').catch(() => false)) {
+      return { table: 'game_messages', matchIdColumn: 'game_id' };
+    }
+    return { table: null, matchIdColumn: null };
+  }
+
+  async function detectReadTable(knex) {
+    if (!knex || !knex.schema || typeof knex.schema.hasTable !== 'function') {
+      return { table: null, matchIdColumn: null };
+    }
+    if (await knex.schema.hasTable('match_message_reads').catch(() => false)) {
+      return { table: 'match_message_reads', matchIdColumn: 'match_id' };
+    }
+    if (await knex.schema.hasTable('game_message_reads').catch(() => false)) {
+      return { table: 'game_message_reads', matchIdColumn: 'game_id' };
+    }
+    return { table: null, matchIdColumn: null };
+  }
+
   function buildUserDisplayExpression(usersInfo, alias) {
     if (!usersInfo) usersInfo = {};
     const hasFirst = Object.prototype.hasOwnProperty.call(usersInfo, 'firstname');
@@ -32,26 +65,31 @@ module.exports = function chatsRoutes({ db }) {
   }
 
   async function listMatchChats(k, userId) {
-    const info = await k('matches').columnInfo().catch(() => ({}));
+    const tableName = await detectMatchTable(k);
+    if (!tableName) return [];
+    const info = await k(tableName).columnInfo().catch(() => ({}));
     if (!info || !Object.keys(info).length) return [];
     const hasHomeUserId = !!info.home_user_id;
     const hasAwayUserId = !!info.away_user_id;
-    const hasHomeTeamId = !!info.home_team_id;
-    const hasAwayTeamId = !!info.away_team_id;
-    const hasHomeScore = !!info.home_score;
-    const hasAwayScore = !!info.away_score;
-    const hasCreatedAt = !!info.created_at;
-    const hasKickoffAt = !!info.kickoff_at;
-    const hasUpdatedAt = !!info.updated_at;
-    const hasCompletedAt = !!info.completed_at;
+  const hasHomeTeamId = !!info.home_team_id;
+  const hasAwayTeamId = !!info.away_team_id;
+  const hasHomeText = Object.prototype.hasOwnProperty.call(info, 'home');
+  const hasAwayText = Object.prototype.hasOwnProperty.call(info, 'away');
+  const hasHomeScore = !!info.home_score;
+  const hasAwayScore = !!info.away_score;
+  const hasCreatedAt = !!info.created_at;
+  const hasKickoffAt = !!info.kickoff_at;
+  const hasUpdatedAt = !!info.updated_at;
+  const hasCompletedAt = !!info.completed_at;
 
-    if (!hasHomeUserId && !hasAwayUserId && !hasHomeTeamId && !hasAwayTeamId) return [];
+  if (!hasHomeUserId && !hasAwayUserId && !hasHomeTeamId && !hasAwayTeamId && !hasHomeText && !hasAwayText) return [];
 
     const hasSports = await k.schema.hasTable('sports').catch(() => false);
     const hasTeamMembers = await k.schema.hasTable('team_members').catch(() => false);
     const hasLeagues = await k.schema.hasTable('leagues').catch(() => false);
+  const hasUserLeagues = await k.schema.hasTable('user_leagues').catch(() => false);
 
-    const base = k({ m: 'matches' });
+    const base = k({ m: tableName });
     if (hasLeagues) base.leftJoin({ l: 'leagues' }, 'l.id', 'm.league_id');
     if (hasSports && hasLeagues) base.leftJoin({ s: 'sports' }, 's.id', 'l.sport_id');
 
@@ -68,6 +106,8 @@ module.exports = function chatsRoutes({ db }) {
     if (hasKickoffAt) base.select({ kickoffAt: 'm.kickoff_at' }); else base.select(k.raw('NULL as kickoffAt'));
     if (hasUpdatedAt) base.select({ updatedAt: 'm.updated_at' }); else base.select(k.raw('NULL as updatedAt'));
     if (hasCompletedAt) base.select({ completedAt: 'm.completed_at' }); else base.select(k.raw('NULL as completedAt'));
+  if (hasHomeText) base.select({ homeName: 'm.home' }); else base.select(k.raw('NULL as homeName'));
+  if (hasAwayText) base.select({ awayName: 'm.away' }); else base.select(k.raw('NULL as awayName'));
 
     base.select(k.raw('CASE WHEN m.home_user_id = ? THEN 1 ELSE 0 END as isHomeUser', [userId]));
     base.select(k.raw('CASE WHEN m.away_user_id = ? THEN 1 ELSE 0 END as isAwayUser', [userId]));
@@ -82,70 +122,97 @@ module.exports = function chatsRoutes({ db }) {
       base.select(k.raw('0 as isAwayMember'));
     }
 
-    base.where(function () {
-      if (hasHomeUserId) this.orWhere('m.home_user_id', userId);
-      if (hasAwayUserId) this.orWhere('m.away_user_id', userId);
-      if (hasTeamMembers && hasHomeTeamId) {
-        this.orWhereExists(function () {
-          this.select(1).from({ tm: 'team_members' }).whereColumn('tm.team_id', 'm.home_team_id').andWhere('tm.user_id', userId);
-        });
-      }
-      if (hasTeamMembers && hasAwayTeamId) {
-        this.orWhereExists(function () {
-          this.select(1).from({ tm: 'team_members' }).whereColumn('tm.team_id', 'm.away_team_id').andWhere('tm.user_id', userId);
-        });
-      }
-    });
+    let appliedFilter = false;
+    if (hasHomeUserId || hasAwayUserId || hasHomeTeamId || hasAwayTeamId) {
+      base.where(function () {
+        if (hasHomeUserId) this.orWhere('m.home_user_id', userId);
+        if (hasAwayUserId) this.orWhere('m.away_user_id', userId);
+        if (hasTeamMembers && hasHomeTeamId) {
+          this.orWhereExists(function () {
+            this.select(1).from({ tm: 'team_members' }).whereColumn('tm.team_id', 'm.home_team_id').andWhere('tm.user_id', userId);
+          });
+        }
+        if (hasTeamMembers && hasAwayTeamId) {
+          this.orWhereExists(function () {
+            this.select(1).from({ tm: 'team_members' }).whereColumn('tm.team_id', 'm.away_team_id').andWhere('tm.user_id', userId);
+          });
+        }
+      });
+      appliedFilter = true;
+    } else if (hasUserLeagues) {
+      base.join({ ul: 'user_leagues' }, 'ul.league_id', 'm.league_id');
+      base.where('ul.user_id', userId);
+      appliedFilter = true;
+    }
 
-    base.orderBy(hasUpdatedAt ? 'm.updated_at' : (hasCompletedAt ? 'm.completed_at' : (hasCreatedAt ? 'm.created_at' : 'm.id')), 'desc');
+    if (!appliedFilter) return [];
+
+    const orderColumn = hasUpdatedAt ? 'm.updated_at' : (hasCompletedAt ? 'm.completed_at' : (hasCreatedAt ? 'm.created_at' : 'm.id'));
+    base.orderBy(orderColumn, 'desc');
 
     const rows = await base;
     if (!rows || !rows.length) return [];
 
-  const matchIds = rows.map(r => r.id);
-    const hasMessages = await k.schema.hasTable('match_messages').catch(() => false);
+    const matchIds = rows.map(r => r.id);
+    const { table: messageTable, matchIdColumn: messageMatchIdColumn } = await detectMessageTable(k);
     const lastMessages = new Map();
-    if (hasMessages && matchIds.length) {
-      const msgs = await k({ mm: 'match_messages' })
-        .whereIn('mm.match_id', matchIds)
-        .orderBy('mm.match_id', 'asc')
+    if (messageTable && messageMatchIdColumn && matchIds.length) {
+      const columnRef = `mm.${messageMatchIdColumn}`;
+      const msgs = await k({ mm: messageTable })
+        .whereIn(columnRef, matchIds)
+        .orderBy(columnRef, 'asc')
         .orderBy('mm.created_at', 'desc')
-        .select('mm.match_id', 'mm.id', 'mm.body', 'mm.created_at', 'mm.sender_user_id', 'mm.sender_team_id')
+        .select(
+          k.raw(`${columnRef} as matchId`),
+          'mm.id as id',
+          'mm.body',
+          'mm.created_at as created_at',
+          'mm.sender_user_id',
+          'mm.sender_team_id',
+          'mm.sender_id as legacy_sender_id',
+          'mm.team_id as legacy_team_id'
+        )
         .catch(() => []);
       for (const row of msgs || []) {
-        if (!lastMessages.has(row.match_id)) lastMessages.set(row.match_id, row);
+        const key = Number(row.matchId);
+        if (!lastMessages.has(key)) lastMessages.set(key, row);
       }
     }
 
     // Load last_read markers for this user across these matches to compute unread quickly
-    const hasReads = await k.schema.hasTable('match_message_reads').catch(() => false);
+    const { table: readsTable, matchIdColumn: readsMatchIdColumn } = await detectReadTable(k);
     const readsByMatch = new Map();
-    if (hasReads && matchIds.length) {
-      const rr = await k('match_message_reads')
+    if (readsTable && readsMatchIdColumn && matchIds.length) {
+      const rr = await k(readsTable)
         .where('user_id', userId)
-        .whereIn('match_id', matchIds)
-        .select('match_id', 'last_read_at')
+        .whereIn(readsMatchIdColumn, matchIds)
+        .select(
+          k.raw(`${readsMatchIdColumn} as matchId`),
+          'last_read_at'
+        )
         .catch(() => []);
       for (const r of rr || []) {
-        readsByMatch.set(Number(r.match_id), r.last_read_at ? (Date.parse(r.last_read_at) || 0) : 0);
+        readsByMatch.set(Number(r.matchId), r.last_read_at ? (Date.parse(r.last_read_at) || 0) : 0);
       }
     }
 
-  const collectUserIds = new Set([userId]);
+    const collectUserIds = new Set([userId]);
     const collectTeamIds = new Set();
     for (const m of rows) {
       if (m.homeUserId != null) collectUserIds.add(Number(m.homeUserId));
       if (m.awayUserId != null) collectUserIds.add(Number(m.awayUserId));
       if (m.homeTeamId != null) collectTeamIds.add(Number(m.homeTeamId));
       if (m.awayTeamId != null) collectTeamIds.add(Number(m.awayTeamId));
-      const last = lastMessages.get(m.id);
+      const last = lastMessages.get(Number(m.id));
       if (last) {
-        if (last.sender_user_id != null) collectUserIds.add(Number(last.sender_user_id));
-        if (last.sender_team_id != null) collectTeamIds.add(Number(last.sender_team_id));
+        const lastSenderUserId = (last.sender_user_id != null) ? last.sender_user_id : (last.legacy_sender_id != null ? last.legacy_sender_id : null);
+        const lastSenderTeamId = (last.sender_team_id != null) ? last.sender_team_id : (last.legacy_team_id != null ? last.legacy_team_id : null);
+        if (lastSenderUserId != null) collectUserIds.add(Number(lastSenderUserId));
+        if (lastSenderTeamId != null) collectTeamIds.add(Number(lastSenderTeamId));
       }
     }
 
-  const usersInfo = await k('users').columnInfo().catch(() => ({}));
+    const usersInfo = await k('users').columnInfo().catch(() => ({}));
     const hasUsers = await k.schema.hasTable('users').catch(() => false);
     const userMap = new Map();
     if (hasUsers) {
@@ -187,45 +254,49 @@ module.exports = function chatsRoutes({ db }) {
       const matchType = (m.homeTeamId != null || m.awayTeamId != null) ? 'teams' : 'singles';
       const viewerHome = Number(m.isHomeUser) === 1 || Number(m.isHomeMember) === 1;
       const viewerAway = Number(m.isAwayUser) === 1 || Number(m.isAwayMember) === 1;
-      const viewerSide = viewerHome ? 'home' : (viewerAway ? 'away' : null);
+      const fallbackSide = (m.homeName || m.awayName) ? 'home' : null;
+      const viewerSide = viewerHome ? 'home' : (viewerAway ? 'away' : fallbackSide);
       if (!viewerSide) return null;
       let opponentName = 'Gegner gesucht';
       let opponentAvatar = null;
       if (viewerSide === 'home') {
         if (matchType === 'teams') {
           const opp = m.awayTeamId && teamMap.get(Number(m.awayTeamId));
-          opponentName = (opp && opp.name) || 'Noch kein Gegner';
+          opponentName = (opp && opp.name) || m.awayName || 'Noch kein Gegner';
         } else {
           const opp = m.awayUserId && userMap.get(Number(m.awayUserId));
-          opponentName = (opp && opp.name) || 'Noch kein Gegner';
+          opponentName = (opp && opp.name) || m.awayName || 'Noch kein Gegner';
           opponentAvatar = (opp && opp.avatar_url) || null;
         }
       } else {
         if (matchType === 'teams') {
           const opp = m.homeTeamId && teamMap.get(Number(m.homeTeamId));
-          opponentName = (opp && opp.name) || 'Noch kein Gegner';
+          opponentName = (opp && opp.name) || m.homeName || 'Noch kein Gegner';
         } else {
           const opp = m.homeUserId && userMap.get(Number(m.homeUserId));
-          opponentName = (opp && opp.name) || 'Noch kein Gegner';
+          opponentName = (opp && opp.name) || m.homeName || 'Noch kein Gegner';
           opponentAvatar = (opp && opp.avatar_url) || null;
         }
       }
-      const last = lastMessages.get(m.id);
+      const last = lastMessages.get(Number(m.id));
+      const lastSenderUserId = last ? ((last.sender_user_id != null) ? last.sender_user_id : (last.legacy_sender_id != null ? last.legacy_sender_id : null)) : null;
+      const lastSenderTeamId = last ? ((last.sender_team_id != null) ? last.sender_team_id : (last.legacy_team_id != null ? last.legacy_team_id : null)) : null;
+      const lastCreatedAt = last ? (last.created_at || last.createdAt || null) : null;
       const lastMessage = last ? {
         id: last.id,
         body: last.body,
-        createdAt: last.created_at,
-        senderUserId: last.sender_user_id,
-        senderTeamId: last.sender_team_id,
-        senderUserName: (last.sender_user_id != null && userMap.has(Number(last.sender_user_id))) ? userMap.get(Number(last.sender_user_id)).name : null,
-        senderTeamName: (last.sender_team_id != null && teamMap.has(Number(last.sender_team_id))) ? teamMap.get(Number(last.sender_team_id)).name : null,
+        createdAt: lastCreatedAt,
+        senderUserId: lastSenderUserId,
+        senderTeamId: lastSenderTeamId,
+        senderUserName: (lastSenderUserId != null && userMap.has(Number(lastSenderUserId))) ? userMap.get(Number(lastSenderUserId)).name : null,
+        senderTeamName: (lastSenderTeamId != null && teamMap.has(Number(lastSenderTeamId))) ? teamMap.get(Number(lastSenderTeamId)).name : null,
       } : null;
       const ts = determineTimestamp(m);
       // unread: for match chats we use match_message_reads.last_read_at per user
       let unread = 0;
       const lastRead = readsByMatch.get(Number(m.id)) || 0;
-      if (last && last.created_at) {
-        const lastTs = Date.parse(last.created_at) || 0;
+      if (last && lastCreatedAt) {
+        const lastTs = Date.parse(lastCreatedAt) || 0;
         unread = lastTs > lastRead ? 1 : 0;
       }
 
@@ -242,6 +313,8 @@ module.exports = function chatsRoutes({ db }) {
         lastActivityAt: ts,
         homeScore: hasHomeScore ? m.homeScore : null,
         awayScore: hasAwayScore ? m.awayScore : null,
+        homeName: m.homeName || null,
+        awayName: m.awayName || null,
         unread,
       };
     }).filter(Boolean);
@@ -321,20 +394,49 @@ module.exports = function chatsRoutes({ db }) {
 
   router.get('/', isAuthenticated, async (req, res) => {
     try {
+      const started = Date.now();
+      const startedIso = new Date(started).toISOString();
+      console.log('[chats] GET /chats start', { user: req.user && req.user.id, at: startedIso });
       const k = getKnex();
       if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
       const userId = Number(req.user.id);
-      const [matchChats, directChats] = await Promise.all([
-        listMatchChats(k, userId).catch(() => []),
-        listDirectChats(k, userId).catch(() => []),
-      ]);
-      const merged = [...matchChats, ...directChats].sort((a, b) => {
-        const ta = a.lastActivityAt ? Date.parse(a.lastActivityAt) || 0 : 0;
-        const tb = b.lastActivityAt ? Date.parse(b.lastActivityAt) || 0 : 0;
-        return tb - ta;
+
+      const TIMEOUT_MS = Number(process.env.CHATS_TIMEOUT_MS || 2000);
+
+      const work = (async () => {
+        console.log('[chats] query.begin', { user: userId });
+        const [matchChats, directChats] = await Promise.all([
+          listMatchChats(k, userId).catch(() => []),
+          listDirectChats(k, userId).catch(() => []),
+        ]);
+        const merged = [...matchChats, ...directChats].sort((a, b) => {
+          const ta = a.lastActivityAt ? Date.parse(a.lastActivityAt) || 0 : 0;
+          const tb = b.lastActivityAt ? Date.parse(b.lastActivityAt) || 0 : 0;
+          return tb - ta;
+        });
+        return merged;
+      })();
+
+      const timeout = new Promise((_, reject) => {
+        const t = setTimeout(() => {
+          const took = Date.now() - started;
+          console.warn('[chats] timeout', { user: userId, tookMs: took, timeoutMs: TIMEOUT_MS });
+          const err = new Error('CHAT_LIST_TIMEOUT');
+          err.code = 'CHAT_LIST_TIMEOUT';
+          reject(err);
+        }, TIMEOUT_MS);
+        // attach ref for potential future use (not strictly needed here)
+        timeout._t = t; // eslint-disable-line no-underscore-dangle
       });
+
+      const merged = await Promise.race([work, timeout]);
+      const took = Date.now() - started;
+      console.log('[chats] done', { user: userId, tookMs: took, items: Array.isArray(merged) ? merged.length : 0 });
       return res.json({ chats: merged });
     } catch (e) {
+      if (e && (e.code === 'CHAT_LIST_TIMEOUT' || e.message === 'CHAT_LIST_TIMEOUT')) {
+        return res.status(501).json({ error: 'CHAT_LIST_TIMEOUT' });
+      }
       console.error('[GET /chats] failed', e && (e.stack || e.message || e));
       return res.status(500).json({ error: 'CHAT_LIST_FAILED' });
     }
@@ -368,9 +470,19 @@ module.exports = function chatsRoutes({ db }) {
       const { matchId } = req.params;
       const userId = Number(req.user.id);
       const now = new Date().toISOString();
-      const existing = await k('match_message_reads').where({ match_id: matchId, user_id: userId }).first();
-      if (existing) await k('match_message_reads').where({ match_id: matchId, user_id: userId }).update({ last_read_at: now });
-      else await k('match_message_reads').insert({ match_id: matchId, user_id: userId, last_read_at: now });
+      const { table: readsTable, matchIdColumn } = await detectReadTable(k);
+      if (!readsTable || !matchIdColumn) {
+        return res.json({ ok: true, last_read_at: now, note: 'READ_TRACKING_DISABLED' });
+      }
+      const normalizedMatchId = Number(matchId);
+      const matchValue = Number.isNaN(normalizedMatchId) ? matchId : normalizedMatchId;
+      const whereClause = { [matchIdColumn]: matchValue, user_id: userId };
+      const existing = await k(readsTable).where(whereClause).first();
+      if (existing) {
+        await k(readsTable).where(whereClause).update({ last_read_at: now });
+      } else {
+        await k(readsTable).insert({ ...whereClause, last_read_at: now });
+      }
       return res.json({ ok: true, last_read_at: now });
     } catch (e) {
       console.error('[POST /chats/match/:matchId/read] failed', e && (e.stack || e.message || e));

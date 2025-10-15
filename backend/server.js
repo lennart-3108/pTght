@@ -680,146 +680,170 @@ app.get("/me/games", isAuthenticated, async (req, res) => {
 });
 
 app.get("/news", isAuthenticated, async (req, res) => {
+  const started = Date.now();
+  const startedIso = new Date(started).toISOString();
   try {
+    console.log('[news] GET /news start', { user: req.user && req.user.id, at: startedIso });
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
     if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
 
+    const TIMEOUT_MS = Number(process.env.NEWS_TIMEOUT_MS || 2000);
     const userId = req.user.id;
-    const matchTable = (await k.schema.hasTable("matches")) ? "matches" : ((await k.schema.hasTable("games")) ? "games" : null);
-    if (!matchTable) return res.json({ items: [] });
 
-    const info = await k(matchTable).columnInfo().catch(() => ({}));
-    const hasHomeUserId = Object.prototype.hasOwnProperty.call(info, "home_user_id");
-    const hasAwayUserId = Object.prototype.hasOwnProperty.call(info, "away_user_id");
-    const hasHomeTeamId = Object.prototype.hasOwnProperty.call(info, "home_team_id");
-    const hasAwayTeamId = Object.prototype.hasOwnProperty.call(info, "away_team_id");
-    const hasHomeScore = Object.prototype.hasOwnProperty.call(info, "home_score");
-    const hasAwayScore = Object.prototype.hasOwnProperty.call(info, "away_score");
-    const hasCreatedAt = Object.prototype.hasOwnProperty.call(info, "created_at");
-    const hasKickoffAt = Object.prototype.hasOwnProperty.call(info, "kickoff_at");
-    const hasUpdatedAt = Object.prototype.hasOwnProperty.call(info, "updated_at");
-    const hasCompletedAt = Object.prototype.hasOwnProperty.call(info, "completed_at");
+    const work = (async () => {
+      const matchTable = (await k.schema.hasTable("matches")) ? "matches" : ((await k.schema.hasTable("games")) ? "games" : null);
+      if (!matchTable) return [];
 
-    const hasLeagues = await k.schema.hasTable("leagues").catch(() => false);
-    const hasSports = await k.schema.hasTable("sports").catch(() => false);
-    const hasTeamMembers = await k.schema.hasTable("team_members").catch(() => false);
-    const hasUserLeagues = await k.schema.hasTable("user_leagues").catch(() => false);
+      const info = await k(matchTable).columnInfo().catch(() => ({}));
+      const hasHomeUserId = Object.prototype.hasOwnProperty.call(info, "home_user_id");
+      const hasAwayUserId = Object.prototype.hasOwnProperty.call(info, "away_user_id");
+      const hasHomeTeamId = Object.prototype.hasOwnProperty.call(info, "home_team_id");
+      const hasAwayTeamId = Object.prototype.hasOwnProperty.call(info, "away_team_id");
+      const hasHomeScore = Object.prototype.hasOwnProperty.call(info, "home_score");
+      const hasAwayScore = Object.prototype.hasOwnProperty.call(info, "away_score");
+      const hasCreatedAt = Object.prototype.hasOwnProperty.call(info, "created_at");
+      const hasKickoffAt = Object.prototype.hasOwnProperty.call(info, "kickoff_at");
+      const hasUpdatedAt = Object.prototype.hasOwnProperty.call(info, "updated_at");
+      const hasCompletedAt = Object.prototype.hasOwnProperty.call(info, "completed_at");
 
-    let leagueIds = [];
-    if (hasUserLeagues) {
-      const entries = await k("user_leagues").where({ user_id: userId }).select("league_id");
-      leagueIds = (entries || []).map((r) => r.league_id).filter((v) => v != null);
-    }
+      const hasLeagues = await k.schema.hasTable("leagues").catch(() => false);
+      const hasSports = await k.schema.hasTable("sports").catch(() => false);
+      const hasTeamMembers = await k.schema.hasTable("team_members").catch(() => false);
+      const hasUserLeagues = await k.schema.hasTable("user_leagues").catch(() => false);
 
-    const base = k({ m: matchTable });
-    if (hasLeagues) base.leftJoin({ l: "leagues" }, "l.id", "m.league_id");
-    if (hasSports && hasLeagues) base.leftJoin({ s: "sports" }, "s.id", "l.sport_id");
-
-    base.select({ matchId: "m.id" });
-    base.select({ leagueId: "m.league_id" });
-    base.select(hasLeagues ? { leagueName: "l.name" } : k.raw("'' as leagueName"));
-    base.select(hasSports && hasLeagues ? { sportName: "s.name" } : k.raw("'' as sportName"));
-    if (hasHomeScore) base.select({ homeScore: "m.home_score" }); else base.select(k.raw("NULL as homeScore"));
-    if (hasAwayScore) base.select({ awayScore: "m.away_score" }); else base.select(k.raw("NULL as awayScore"));
-    if (hasHomeUserId) base.select({ homeUserId: "m.home_user_id" }); else base.select(k.raw("NULL as homeUserId"));
-    if (hasAwayUserId) base.select({ awayUserId: "m.away_user_id" }); else base.select(k.raw("NULL as awayUserId"));
-    if (hasHomeTeamId) base.select({ homeTeamId: "m.home_team_id" }); else base.select(k.raw("NULL as homeTeamId"));
-    if (hasAwayTeamId) base.select({ awayTeamId: "m.away_team_id" }); else base.select(k.raw("NULL as awayTeamId"));
-    if (hasCreatedAt) base.select({ createdAt: "m.created_at" }); else base.select(k.raw("NULL as createdAt"));
-    if (hasKickoffAt) base.select({ kickoffAt: "m.kickoff_at" }); else base.select(k.raw("NULL as kickoffAt"));
-    if (hasUpdatedAt) base.select({ updatedAt: "m.updated_at" }); else base.select(k.raw("NULL as updatedAt"));
-    if (hasCompletedAt) base.select({ completedAt: "m.completed_at" }); else base.select(k.raw("NULL as completedAt"));
-
-    base.where(function () {
-      if (leagueIds.length) this.orWhereIn("m.league_id", leagueIds);
-      if (hasHomeUserId) this.orWhere("m.home_user_id", userId);
-      if (hasAwayUserId) this.orWhere("m.away_user_id", userId);
-      if (hasTeamMembers && hasHomeTeamId) {
-        this.orWhereExists(function () {
-          this.select(1)
-            .from({ tm: "team_members" })
-            .whereColumn("tm.team_id", "m.home_team_id")
-            .andWhere("tm.user_id", userId);
-        });
+      let leagueIds = [];
+      if (hasUserLeagues) {
+        const entries = await k("user_leagues").where({ user_id: userId }).select("league_id");
+        leagueIds = (entries || []).map((r) => r.league_id).filter((v) => v != null);
       }
-      if (hasTeamMembers && hasAwayTeamId) {
-        this.orWhereExists(function () {
-          this.select(1)
-            .from({ tm: "team_members" })
-            .whereColumn("tm.team_id", "m.away_team_id")
-            .andWhere("tm.user_id", userId);
-        });
-      }
-    });
 
-    const orderColumn = hasUpdatedAt ? "m.updated_at" : (hasCompletedAt ? "m.completed_at" : (hasCreatedAt ? "m.created_at" : "m.id"));
-    base.orderBy(orderColumn, "desc").limit(100);
+      const base = k({ m: matchTable });
+      if (hasLeagues) base.leftJoin({ l: "leagues" }, "l.id", "m.league_id");
+      if (hasSports && hasLeagues) base.leftJoin({ s: "sports" }, "s.id", "l.sport_id");
 
-    const rows = await base;
-    if (!rows || !rows.length) return res.json({ items: [] });
+      base.select({ matchId: "m.id" });
+      base.select({ leagueId: "m.league_id" });
+      base.select(hasLeagues ? { leagueName: "l.name" } : k.raw("'' as leagueName"));
+      base.select(hasSports && hasLeagues ? { sportName: "s.name" } : k.raw("'' as sportName"));
+      if (hasHomeScore) base.select({ homeScore: "m.home_score" }); else base.select(k.raw("NULL as homeScore"));
+      if (hasAwayScore) base.select({ awayScore: "m.away_score" }); else base.select(k.raw("NULL as awayScore"));
+      if (hasHomeUserId) base.select({ homeUserId: "m.home_user_id" }); else base.select(k.raw("NULL as homeUserId"));
+      if (hasAwayUserId) base.select({ awayUserId: "m.away_user_id" }); else base.select(k.raw("NULL as awayUserId"));
+      if (hasHomeTeamId) base.select({ homeTeamId: "m.home_team_id" }); else base.select(k.raw("NULL as homeTeamId"));
+      if (hasAwayTeamId) base.select({ awayTeamId: "m.away_team_id" }); else base.select(k.raw("NULL as awayTeamId"));
+      if (hasCreatedAt) base.select({ createdAt: "m.created_at" }); else base.select(k.raw("NULL as createdAt"));
+      if (hasKickoffAt) base.select({ kickoffAt: "m.kickoff_at" }); else base.select(k.raw("NULL as kickoffAt"));
+      if (hasUpdatedAt) base.select({ updatedAt: "m.updated_at" }); else base.select(k.raw("NULL as updatedAt"));
+      if (hasCompletedAt) base.select({ completedAt: "m.completed_at" }); else base.select(k.raw("NULL as completedAt"));
 
-    const items = [];
-
-    const formatLeague = (m) => {
-      if (m.leagueName) return m.leagueName;
-      if (m.leagueId != null) return `Liga #${m.leagueId}`;
-      return "Liga";
-    };
-
-    function pickTimestamp(m) {
-      const order = [m.updatedAt, m.completedAt, m.createdAt, m.kickoffAt];
-      return order.find((v) => v != null) || null;
-    }
-
-    for (const m of rows) {
-      const tsCreated = m.createdAt || m.kickoffAt || null;
-      const timestamp = pickTimestamp(m);
-      const leagueLabel = formatLeague(m);
-      items.push({
-        id: `match-${m.matchId}-created`,
-        type: "match_created",
-        matchId: m.matchId,
-        leagueId: m.leagueId,
-        leagueName: m.leagueName || null,
-        sportName: m.sportName || null,
-        timestamp: tsCreated || timestamp,
-        title: `Neues Match in ${leagueLabel}`,
-        details: "Es wurde ein neues Match erstellt.",
+      base.where(function () {
+        if (leagueIds.length) this.orWhereIn("m.league_id", leagueIds);
+        if (hasHomeUserId) this.orWhere("m.home_user_id", userId);
+        if (hasAwayUserId) this.orWhere("m.away_user_id", userId);
+        if (hasTeamMembers && hasHomeTeamId) {
+          this.orWhereExists(function () {
+            this.select(1)
+              .from({ tm: "team_members" })
+              .whereColumn("tm.team_id", "m.home_team_id")
+              .andWhere("tm.user_id", userId);
+          });
+        }
+        if (hasTeamMembers && hasAwayTeamId) {
+          this.orWhereExists(function () {
+            this.select(1)
+              .from({ tm: "team_members" })
+              .whereColumn("tm.team_id", "m.away_team_id")
+              .andWhere("tm.user_id", userId);
+          });
+        }
       });
 
-      if (hasHomeScore && hasAwayScore && m.homeScore != null && m.awayScore != null) {
-        const resultTs = m.completedAt || m.updatedAt || tsCreated || timestamp;
+      const orderColumn = hasUpdatedAt ? "m.updated_at" : (hasCompletedAt ? "m.completed_at" : (hasCreatedAt ? "m.created_at" : "m.id"));
+      base.orderBy(orderColumn, "desc").limit(100);
+
+      const rows = await base;
+      if (!rows || !rows.length) return [];
+
+      const items = [];
+
+      const formatLeague = (m) => {
+        if (m.leagueName) return m.leagueName;
+        if (m.leagueId != null) return `Liga #${m.leagueId}`;
+        return "Liga";
+      };
+
+      function pickTimestamp(m) {
+        const order = [m.updatedAt, m.completedAt, m.createdAt, m.kickoffAt];
+        return order.find((v) => v != null) || null;
+      }
+
+      for (const m of rows) {
+        const tsCreated = m.createdAt || m.kickoffAt || null;
+        const timestamp = pickTimestamp(m);
+        const leagueLabel = formatLeague(m);
         items.push({
-          id: `match-${m.matchId}-result`,
-          type: "match_result",
+          id: `match-${m.matchId}-created`,
+          type: "match_created",
           matchId: m.matchId,
           leagueId: m.leagueId,
           leagueName: m.leagueName || null,
           sportName: m.sportName || null,
-          timestamp: resultTs,
-          title: `Ergebnis im Match ${m.matchId}`,
-          details: `Endstand ${m.homeScore}:${m.awayScore}`,
+          timestamp: tsCreated || timestamp,
+          title: `Neues Match in ${leagueLabel}`,
+          details: "Es wurde ein neues Match erstellt.",
         });
-      }
-    }
 
-    items.sort((a, b) => {
-      const ta = a.timestamp ? Date.parse(a.timestamp) || 0 : 0;
-      const tb = b.timestamp ? Date.parse(b.timestamp) || 0 : 0;
-      return tb - ta;
+        if (hasHomeScore && hasAwayScore && m.homeScore != null && m.awayScore != null) {
+          const resultTs = m.completedAt || m.updatedAt || tsCreated || timestamp;
+          items.push({
+            id: `match-${m.matchId}-result`,
+            type: "match_result",
+            matchId: m.matchId,
+            leagueId: m.leagueId,
+            leagueName: m.leagueName || null,
+            sportName: m.sportName || null,
+            timestamp: resultTs,
+            title: `Ergebnis im Match ${m.matchId}`,
+            details: `Endstand ${m.homeScore}:${m.awayScore}`,
+          });
+        }
+      }
+
+      items.sort((a, b) => {
+        const ta = a.timestamp ? Date.parse(a.timestamp) || 0 : 0;
+        const tb = b.timestamp ? Date.parse(b.timestamp) || 0 : 0;
+        return tb - ta;
+      });
+
+      const dedup = [];
+      const seen = new Set();
+      for (const item of items) {
+        const key = `${item.id}`;
+        if (seen.has(key)) continue;
+        seen.add(key);
+        dedup.push(item);
+      }
+      return dedup;
+    })();
+
+    const timeout = new Promise((_, reject) => {
+      setTimeout(() => {
+        const took = Date.now() - started;
+        console.warn('[news] timeout', { user: req.user && req.user.id, tookMs: took, timeoutMs: TIMEOUT_MS });
+        const err = new Error('NEWS_FETCH_TIMEOUT');
+        err.code = 'NEWS_FETCH_TIMEOUT';
+        reject(err);
+      }, TIMEOUT_MS);
     });
 
-    const dedup = [];
-    const seen = new Set();
-    for (const item of items) {
-      const key = `${item.id}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      dedup.push(item);
-    }
-
-    return res.json({ items: dedup });
+    const items = await Promise.race([work, timeout]);
+    const took = Date.now() - started;
+    console.log('[news] done', { user: req.user && req.user.id, tookMs: took, items: Array.isArray(items) ? items.length : 0 });
+    return res.json({ items });
   } catch (e) {
+    if (e && (e.code === 'NEWS_FETCH_TIMEOUT' || e.message === 'NEWS_FETCH_TIMEOUT')) {
+      return res.status(501).json({ error: 'NEWS_FETCH_TIMEOUT' });
+    }
     console.error("GET /news failed", e && (e.stack || e.message || e));
     return res.status(500).json({ error: "NEWS_FETCH_FAILED" });
   }
@@ -891,11 +915,45 @@ app.get("/cities/list", async (req, res) => {
   try {
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
     if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
-    const rows = await k("cities").select("id", "name").orderBy("name");
+    const hasCountries = await k.schema.hasTable('countries').catch(() => false);
+    const hasStates = await k.schema.hasTable('states').catch(() => false);
+    const cityCols = await k('cities').columnInfo().catch(() => ({}));
+    const hasCountryId = Object.prototype.hasOwnProperty.call(cityCols, 'country_id');
+    const hasStateId = Object.prototype.hasOwnProperty.call(cityCols, 'state_id');
+
+    let q = k({ c: 'cities' }).select('c.id', 'c.name');
+    if (hasCountryId && hasCountries) {
+      q = q.leftJoin({ co: 'countries' }, 'co.id', 'c.country_id').select({ countryId: 'co.id', countryCode: k.raw('COALESCE(co.iso2, co.code)') , countryName: 'co.name' });
+    } else {
+      q = q.select(k.raw('NULL as countryId'), k.raw("NULL as countryCode"), k.raw("NULL as countryName"));
+    }
+    if (hasStateId && hasStates) {
+      q = q.leftJoin({ st: 'states' }, 'st.id', 'c.state_id').select({ stateId: 'st.id', stateCode: 'st.code', stateName: 'st.name' });
+    } else {
+      q = q.select(k.raw('NULL as stateId'), k.raw('NULL as stateCode'), k.raw('NULL as stateName'));
+    }
+    const rows = await q.orderBy('c.name', 'asc');
     return res.json(rows || []);
   } catch (e) {
     console.error("GET /cities/list failed:", e && (e.stack || e.message || e));
     return res.status(500).json({ error: "Datenbankfehler", details: (e && e.message) || String(e) });
+  }
+});
+
+// Public list of countries
+app.get('/countries', async (req, res) => {
+  try {
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+    const hasCountries = await k.schema.hasTable('countries').catch(() => false);
+    if (!hasCountries) return res.json([]);
+    const colInfo = await k('countries').columnInfo().catch(() => ({}));
+    const hasIso2 = Object.prototype.hasOwnProperty.call(colInfo, 'iso2');
+    const rows = await k('countries').select('id', hasIso2 ? { code: 'iso2' } : { code: 'code' }, 'name').orderBy('name');
+    return res.json(rows || []);
+  } catch (e) {
+    console.error('GET /countries failed:', e && (e.stack || e.message || e));
+    return res.status(500).json({ error: 'Datenbankfehler' });
   }
 });
 
@@ -1052,6 +1110,79 @@ const server = app.listen(PORT, () => {
     logDebug("Link tests are disabled (set ENABLE_LINK_TESTS=1 to enable).");
   }
 });
+
+// --- Public statistics endpoint (lightweight, cached) ---
+// Returns aggregate counts for public display on landing/login page.
+// Shape: { users, confirmedUsers?, leagues, matches, teams, teamMembers, memberships, sports, generatedAt }
+// Defensive: only queries tables that exist; falls back from matches->games if needed.
+// Simple in-memory cache to avoid spamming DB on high traffic.
+(() => {
+  const cache = { data: null, ts: 0 };
+  const TTL_MS = 60 * 1000; // 60s cache
+  app.get('/public/stats', async (req, res) => {
+    try {
+      const now = Date.now();
+      if (cache.data && (now - cache.ts) < TTL_MS) {
+        return res.json(cache.data);
+      }
+      const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex && db.knex.client ? db.knex : null);
+      if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+
+      const tables = {};
+      const tableNames = ['users','leagues','matches','games','user_leagues','sports','teams','team_members'];
+      for (const t of tableNames) {
+        tables[t] = await k.schema.hasTable(t).catch(() => false);
+      }
+
+      async function countSafe(table) {
+        if (!tables[table]) return null;
+        const r = await k(table).count({ c: '*' }).first().catch(() => null);
+        if (!r) return 0;
+        const val = r.c != null ? r.c : r.C;
+        return Number(val) || 0;
+      }
+
+      const users = await countSafe('users');
+      let confirmedUsers = null;
+      if (tables.users) {
+        // detect confirmation/verified columns
+        const info = await k('users').columnInfo().catch(() => ({}));
+        const confirmationCols = ['confirmed','is_confirmed','email_confirmed','verified','is_verified'];
+        const found = confirmationCols.find(c => Object.prototype.hasOwnProperty.call(info, c));
+        if (found) {
+          confirmedUsers = await k('users').where(found, 1).count({ c: '*' }).first().then(r => Number(r.c || 0)).catch(() => null);
+        }
+      }
+      const leagues = await countSafe('leagues');
+      // prefer matches table, else games
+      let matches = null;
+      if (tables.matches) matches = await countSafe('matches');
+      else if (tables.games) matches = await countSafe('games');
+      const memberships = await countSafe('user_leagues');
+      const sports = await countSafe('sports');
+      const teams = await countSafe('teams');
+      const teamMembers = await countSafe('team_members');
+
+      const payload = {
+        users,
+        ...(confirmedUsers != null ? { confirmedUsers } : {}),
+        leagues,
+        matches,
+        teams,
+        teamMembers,
+        memberships,
+        sports,
+        generatedAt: new Date().toISOString()
+      };
+      cache.data = payload;
+      cache.ts = now;
+      return res.json(payload);
+    } catch (e) {
+      console.error('GET /public/stats failed', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'STATS_FAILED' });
+    }
+  });
+})();
 
 // export for tests
 module.exports = { app, server };
