@@ -90,7 +90,18 @@ module.exports = function authRoutes(ctx) {
         if (!user) return res.status(401).json({ error: "Ungültige Zugangsdaten" });
         if (!user.is_confirmed) return res.status(403).json({ error: "E-Mail noch nicht bestätigt" });
 
-        const ok = bcrypt.compareSync(password, user.password);
+        // Defensive: if the password hash is missing/invalid, treat as invalid credentials
+        if (typeof user.password !== 'string' || user.password.length < 10) {
+          return res.status(401).json({ error: "Ungültige Zugangsdaten" });
+        }
+
+        let ok = false;
+        try {
+          ok = bcrypt.compareSync(password, user.password);
+        } catch (e) {
+          // Invalid hash format or other bcrypt error – treat as invalid credentials
+          return res.status(401).json({ error: "Ungültige Zugangsdaten" });
+        }
         if (!ok) return res.status(401).json({ error: "Ungültige Zugangsdaten" });
 
         const token = jwt.sign(

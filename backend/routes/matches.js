@@ -458,6 +458,28 @@ module.exports = function matchesRoutes({ db }) {
       } catch {}
       const [id] = await k('matches').insert(rec);
       const match = await k('matches').where({ id }).first();
+
+      // Insert a system message so the new match shows up as a new chat
+      try {
+        // ensure match_messages exists (reuse helper if available)
+        const hasMM = await k.schema.hasTable('match_messages').catch(() => false);
+        if (!hasMM) {
+          await k.schema.createTable('match_messages', (table) => {
+            table.increments('id').primary();
+            table.integer('match_id').notNullable().references('id').inTable('matches').onDelete('CASCADE');
+            table.integer('sender_user_id').references('id').inTable('users').onDelete('SET NULL');
+            table.integer('sender_team_id').references('id').inTable('teams').onDelete('SET NULL');
+            table.text('body').notNullable();
+            table.text('created_at').notNullable().defaultTo(k.raw('CURRENT_TIMESTAMP'));
+            table.index(['match_id'], 'idx_match_messages_match');
+          });
+        }
+        const sysBody = 'Match erstellt – MatchLeague';
+        await k('match_messages').insert({ match_id: id, body: sysBody, sender_user_id: null, sender_team_id: null, created_at: new Date().toISOString() });
+      } catch (e) {
+        console.warn('[matches] failed to insert system message on create', e && (e.message || e));
+      }
+
       res.status(201).json(match);
     } catch (e) {
       console.error('Create match error:', e);

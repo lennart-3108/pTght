@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 // large hero logo not currently used here
@@ -27,6 +27,10 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loginMsg, setLoginMsg] = useState("");
+  // Stats
+  const [stats, setStats] = useState(null);
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState(null);
 
   // Reset-Form-States
   const [showReset, setShowReset] = useState(false);
@@ -95,11 +99,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
     }
   };
 
-  // choose a visibly green-tinted panel (not near-white) so it reads as a soft surface
-  const panelBg = '#081c19';
-  const panelBorder = '4px solid rgba(245, 241, 241, 0.08)';
-  const btnGreen = '#0a2221';
-  const btnGreenHover = '#0e2f2d';
+  // (legacy color constants removed after layout redesign)
 
   // hero carousel state (use all images in the background folder)
   // slides: array of image URLs (use sorted backgrounds)
@@ -109,6 +109,81 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
     const t = setInterval(() => setIndex(i => (i + 1) % slides.length), 5000);
     return () => clearInterval(t);
   }, [slides.length]);
+
+  // Load public stats (non-blocking)
+  useEffect(() => {
+    let cancelled = false;
+    async function loadStats() {
+      setStatsLoading(true); setStatsError(null);
+      try {
+        const resp = await fetch(`${API}/public/stats`);
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        const data = await resp.json();
+        if (!cancelled) setStats(data);
+      } catch (e) {
+        if (!cancelled) setStatsError('keine Statistik verfügbar');
+      } finally {
+        if (!cancelled) setStatsLoading(false);
+      }
+    }
+    loadStats();
+    // refresh every 60s while on page
+    const intv = setInterval(loadStats, 60000);
+    return () => { cancelled = true; clearInterval(intv); };
+  }, [API]);
+
+  function StatNumber({ value, label }) {
+    const [display, setDisplay] = useState(0);
+    useEffect(() => {
+      if (typeof value !== 'number') return;
+      let frame; const start = performance.now(); const duration = 600;
+      const from = 0; const to = value;
+      function tick(ts) {
+        const p = Math.min(1, (ts - start) / duration);
+        const eased = 1 - Math.pow(1 - p, 3);
+        setDisplay(Math.round(from + (to - from) * eased));
+        if (p < 1) frame = requestAnimationFrame(tick);
+      }
+      frame = requestAnimationFrame(tick);
+      return () => cancelAnimationFrame(frame);
+    }, [value]);
+    return (
+      <div style={{ padding: '8px 0' }}>
+        <div style={{ fontSize: 28, fontWeight: 700, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{display}</div>
+        <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.75 }}>{label}</div>
+      </div>
+    );
+  }
+
+  function StatsPanel() {
+    if (statsLoading && !stats) return <div style={{ padding: 16 }}>Lade Statistik…</div>;
+    if (statsError) return <div style={{ padding: 16, opacity: 0.7 }}>{statsError}</div>;
+    if (!stats) return null;
+    const items = [
+      { key: 'users', label: 'Nutzer', val: stats.users },
+      stats.confirmedUsers != null ? { key: 'confirmedUsers', label: 'Bestätigt', val: stats.confirmedUsers } : null,
+      { key: 'leagues', label: 'Ligen', val: stats.leagues },
+      { key: 'matches', label: 'Matches', val: stats.matches },
+      stats.teams != null ? { key: 'teams', label: 'Teams', val: stats.teams } : null,
+      stats.teamMembers != null ? { key: 'teamMembers', label: 'Team-Mitglieder', val: stats.teamMembers } : null,
+      { key: 'memberships', label: 'Liga-Mitgliedschaften', val: stats.memberships },
+      { key: 'sports', label: 'Sportarten', val: stats.sports }
+    ].filter(Boolean);
+    return (
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit,minmax(110px,1fr))',
+        gap: 12,
+        padding: 12
+      }}>
+        {items.map(it => (
+          <div key={it.key} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, textAlign: 'center', padding: '12px 8px', backdropFilter: 'blur(6px)' }}>
+            <StatNumber value={typeof it.val === 'number' ? it.val : 0} label={it.label} />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -134,8 +209,24 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
       <p>     </p>
       </div>
 
-      <div style={{ maxWidth: 350, margin: "20px auto 40px", padding: 20, borderRadius: 8, background: panelBg, border: panelBorder, boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
-        <h2 style={{ fontWeight: 700 }}>Login</h2>
+      <div style={{
+        maxWidth: 940,
+        margin: '20px auto 60px',
+        display: 'grid',
+        gridTemplateColumns: 'minmax(300px,360px) 1fr',
+        gap: 32,
+        alignItems: 'start',
+        padding: '32px 36px',
+        borderRadius: 20,
+        background: 'linear-gradient(135deg,#071716,#0d2422)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 8px 32px -8px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.3)',
+        position: 'relative',
+        overflow: 'hidden'
+      }}>
+        <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at 85% 20%, rgba(72,186,170,0.15), transparent 60%)' }} />
+        <div style={{ position: 'relative' }}>
+          <h2 style={{ fontWeight: 700, marginTop: 0 }}>Login</h2>
         {/* Login-Formular */}
         <form onSubmit={handleLogin}>
           <input
@@ -248,6 +339,19 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
             {resendMsg && <div style={{ marginTop: 8 }}>{resendMsg}</div>}
           </form>
         )}
+        </div>
+        <div style={{ position: 'relative' }}>
+          <h3 style={{ fontWeight: 700, margin: '0 0 12px' }}>Community Statistik</h3>
+          <p style={{ marginTop: 0, lineHeight: 1.4, opacity: 0.85, fontSize: 14 }}>
+            Ein schneller Überblick über die Aktivität auf der Plattform – wächst jeden Tag.
+          </p>
+          <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(4px)', overflow: 'hidden' }}>
+            <StatsPanel />
+          </div>
+          {stats && stats.generatedAt && (
+            <div style={{ marginTop: 8, fontSize: 11, opacity: 0.5 }}>Aktualisiert: {new Date(stats.generatedAt).toLocaleTimeString()}</div>
+          )}
+        </div>
       </div>
     </div>
   );

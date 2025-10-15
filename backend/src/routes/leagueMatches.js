@@ -206,6 +206,24 @@ module.exports = function leagueMatchesRoutes({ db }) {
 
       const inserted = await k("matches").insert(rec);
       const id = Array.isArray(inserted) ? inserted[0] : inserted;
+      // also add a system message so it counts as a new chat/unread
+      try {
+        const hasMM = await k.schema.hasTable('match_messages').catch(() => false);
+        if (!hasMM) {
+          await k.schema.createTable('match_messages', (t) => {
+            t.increments('id').primary();
+            t.integer('match_id').notNullable().references('id').inTable('matches').onDelete('CASCADE');
+            t.integer('sender_user_id').references('id').inTable('users').onDelete('SET NULL');
+            t.integer('sender_team_id').references('id').inTable('teams').onDelete('SET NULL');
+            t.text('body').notNullable();
+            t.text('created_at').notNullable().defaultTo(k.raw('CURRENT_TIMESTAMP'));
+            t.index(['match_id'], 'idx_match_messages_match');
+          });
+        }
+        await k('match_messages').insert({ match_id: id, body: 'Match erstellt – MatchLeague', sender_user_id: null, sender_team_id: null, created_at: new Date().toISOString() });
+      } catch (e) {
+        console.warn('[leagueMatches] failed to insert system message on create', e && (e.message || e));
+      }
       return res.status(201).json({ id });
     } catch (e) {
       console.error("POST /:leagueId/matches failed:", e && (e.stack || e.message || e), { body: req.body });
