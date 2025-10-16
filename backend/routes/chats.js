@@ -425,8 +425,6 @@ module.exports = function chatsRoutes({ db }) {
           err.code = 'CHAT_LIST_TIMEOUT';
           reject(err);
         }, TIMEOUT_MS);
-        // attach ref for potential future use (not strictly needed here)
-        timeout._t = t; // eslint-disable-line no-underscore-dangle
       });
 
       const merged = await Promise.race([work, timeout]);
@@ -434,11 +432,19 @@ module.exports = function chatsRoutes({ db }) {
       console.log('[chats] done', { user: userId, tookMs: took, items: Array.isArray(merged) ? merged.length : 0 });
       return res.json({ chats: merged });
     } catch (e) {
+      // Handle timeout explicitly (client can choose to retry)
       if (e && (e.code === 'CHAT_LIST_TIMEOUT' || e.message === 'CHAT_LIST_TIMEOUT')) {
         return res.status(501).json({ error: 'CHAT_LIST_TIMEOUT' });
       }
-      console.error('[GET /chats] failed', e && (e.stack || e.message || e));
-      return res.status(500).json({ error: 'CHAT_LIST_FAILED' });
+      // For all other errors we degrade gracefully in dev/prod by returning an empty list
+      // to avoid breaking the whole header/notifications UI.
+      const errMsg = (e && (e.stack || e.message)) || String(e);
+      const userId = req && req.user && req.user.id;
+      console.error('[GET /chats] failed – returning empty list', { user: userId, err: errMsg });
+      if (String(process.env.DEBUG_CHATS) === '1') {
+        return res.status(200).json({ chats: [], debug: { error: errMsg } });
+      }
+      return res.status(200).json({ chats: [] });
     }
   });
 
