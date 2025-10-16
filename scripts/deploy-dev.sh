@@ -109,3 +109,22 @@ fi
 
 pm2 save || true
 echo "Deploy finished. Expected ports: backend ${BACKEND_PORT}, frontend ${FRONTEND_PORT}."
+
+# --- Post-deploy smoke test ---
+if [ -f scripts/smoke-dev.sh ]; then
+  echo "Running post-deploy smoke checks..."
+  chmod +x scripts/smoke-dev.sh
+  # Try to infer URLs:
+  # If running on a server with Caddy/NGINX, FRONTEND_BASE_URL/BACKEND_BASE_URL may be provided in environment.
+  export BACKEND_URL="${BACKEND_BASE_URL:-http://localhost:${BACKEND_PORT}}"
+  # Only set FRONTEND_URL if a frontend is expected or URL provided
+  if [ -n "${FRONTEND_BASE_URL:-}" ]; then
+    export FRONTEND_URL="${FRONTEND_BASE_URL}"
+  elif [ -n "${FRONTEND_PORT:-}" ]; then
+    export FRONTEND_URL="http://localhost:${FRONTEND_PORT}"
+  fi
+  # Optional credentials for login check (set SMOKE_EMAIL/SMOKE_PASSWORD in environment to enable)
+  bash scripts/smoke-dev.sh || { echo "Smoke checks failed" >&2; exit 10; }
+else
+  echo "No smoke-dev.sh found, skipping smoke checks."
+fi

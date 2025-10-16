@@ -1073,10 +1073,18 @@ app.use((err, req, res, next) => {
 // Global uncaught handlers
 process.on("uncaughtException", (err) => {
   logError(err, { origin: "uncaughtException" });
-  // keep process alive for dev, but recommend restart in prod
+  // Exit on fatal listen/bind errors so a supervisor (systemd/docker) can restart us
+  if (err && (err.code === 'EADDRINUSE' || err.code === 'EACCES')) {
+    try { console.error('[FATAL] uncaughtException:', err.code); } catch {}
+    process.exit(1);
+  }
 });
 process.on("unhandledRejection", (reason) => {
   logError(reason, { origin: "unhandledRejection" });
+  if (reason && (reason.code === 'EADDRINUSE' || reason.code === 'EACCES')) {
+    try { console.error('[FATAL] unhandledRejection:', reason.code); } catch {}
+    process.exit(1);
+  }
 });
 
 // --- Optional: SQL Debug Logging ---
@@ -1185,6 +1193,15 @@ const server = app.listen(PORT, () => {
     })();
   } else {
     logDebug("Link tests are disabled (set ENABLE_LINK_TESTS=1 to enable).");
+  }
+});
+
+// Fail fast on bind errors so a supervisor can restart us (avoids zombie state)
+server.on('error', (err) => {
+  logError(err, { origin: 'server.listen' });
+  if (err && (err.code === 'EADDRINUSE' || err.code === 'EACCES')) {
+    try { console.error('[FATAL] server listen failed:', err.code); } catch {}
+    process.exit(1);
   }
 });
 
