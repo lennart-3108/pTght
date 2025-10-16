@@ -14,6 +14,7 @@ const games = require("./games");
 const teamsRoutes = require("./teams");
 const matchesRoutes = require("./matches");
 const messagesRoutes = require("./messages");
+const profileRoutes = require("./profile");
 
 function registerRoutes(app, ctx) {
   const { ensureTables } = createMiddleware(ctx);
@@ -27,6 +28,7 @@ function registerRoutes(app, ctx) {
   app.use("/leagues", leaguesRoutes(ctx));
   app.use("/sports", sportsRoutes(ctx));
   app.use(citiesRoutes(ctx));
+  app.use(profileRoutes(ctx));
   app.use("/admin", adminRoutes(ctx));
   // Mount mailer under explicit prefix so endpoints are /mailer/*
   app.use("/mailer", mailerRoutes(ctx));

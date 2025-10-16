@@ -257,6 +257,24 @@ try {
       });
       logInfo("[DB] Created table match_message_reads via Knex");
     }
+
+    // Ensure user profile columns exist (open_for_matches, favorite_sports)
+    try {
+      const hasUsers = await k.schema.hasTable('users').catch(() => false);
+      if (hasUsers) {
+        const uinfo = await k('users').columnInfo().catch(() => ({}));
+        if (!Object.prototype.hasOwnProperty.call(uinfo, 'open_for_matches')) {
+          await k.schema.alterTable('users', (t) => t.boolean('open_for_matches').defaultTo(false));
+          logInfo('[DB] Added column users.open_for_matches');
+        }
+        if (!Object.prototype.hasOwnProperty.call(uinfo, 'favorite_sports')) {
+          await k.schema.alterTable('users', (t) => t.text('favorite_sports'));
+          logInfo('[DB] Added column users.favorite_sports');
+        }
+      }
+    } catch (e) {
+      console.warn('[DB] ensure users profile columns failed:', e && (e.message || e));
+    }
   } catch (e) {
     console.warn("[DB] ensureKnexTables failed:", e && (e.message || e));
   }
@@ -676,6 +694,65 @@ app.get("/me/games", isAuthenticated, async (req, res) => {
   } catch (e) {
     console.error("GET /me/games failed:", e && (e.stack || e.message || e));
     return res.status(500).json({ error: "Datenbankfehler", details: (e && e.message) || String(e) });
+  }
+});
+
+// Create an open friendly match without league
+// This mirrors the implementation in src/routes/profile.js, but is mounted
+// directly here to avoid any router ordering/caching issues for POST.
+app.post('/open-matches', isAuthenticated, async (req, res) => {
+  try {
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+    const hasMatches = await k.schema.hasTable('matches').catch(() => false);
+    if (!hasMatches) return res.status(500).json({ error: 'NO_MATCHES_TABLE' });
+    const hasLeagues = await k.schema.hasTable('leagues').catch(() => false);
+    if (!hasLeagues) return res.status(500).json({ error: 'NO_LEAGUES_TABLE' });
+
+    const sportId = Number(req.body?.sportId) || null;
+    const cityId = Number(req.body?.cityId) || null;
+    if (!sportId || !cityId) return res.status(400).json({ error: 'sportId and cityId are required' });
+
+    // ensure 'Open Matches' league exists for sport/city
+    let leagueId = null;
+    const existing = await k('leagues').where({ name: 'Open Matches', sport_id: sportId, city_id: cityId }).first().catch(() => null);
+    if (existing && existing.id) leagueId = Number(existing.id);
+    else {
+      try {
+        const insL = await k('leagues').insert({ name: 'Open Matches', sport_id: sportId, city_id: cityId });
+        leagueId = Array.isArray(insL) ? insL[0] : insL;
+      } catch (e) {
+        const retry = await k('leagues').where({ name: 'Open Matches', sport_id: sportId, city_id: cityId }).first().catch(() => null);
+        leagueId = retry && retry.id ? Number(retry.id) : null;
+      }
+    }
+    if (!leagueId) return res.status(500).json({ error: 'OPEN_LEAGUE_CREATE_FAILED' });
+
+    const info = await k('matches').columnInfo().catch(() => ({}));
+
+    const rec = {
+      league_id: leagueId,
+      home_user_id: req.user.id || null,
+      home_team_id: null,
+      away_user_id: null,
+      away_team_id: null,
+      home_score: null,
+      away_score: null,
+    };
+    if (Object.prototype.hasOwnProperty.call(info, 'kickoff_at')) {
+      const when = req.body?.kickoff_at ? new Date(req.body.kickoff_at) : null;
+      rec.kickoff_at = when && !isNaN(when) ? when.toISOString() : null;
+    }
+    if (Object.prototype.hasOwnProperty.call(info, 'status')) rec.status = 'open';
+    if (Object.prototype.hasOwnProperty.call(info, 'created_at')) rec.created_at = new Date().toISOString();
+
+    const ins = await k('matches').insert(rec);
+    const id = Array.isArray(ins) ? ins[0] : ins;
+    const row = await k('matches').where({ id }).first();
+    return res.status(201).json(row || { id });
+  } catch (e) {
+    console.error('[POST /open-matches] failed (server.js)', e && (e.stack || e.message || e));
+    return res.status(500).json({ error: 'DB_ERROR' });
   }
 });
 

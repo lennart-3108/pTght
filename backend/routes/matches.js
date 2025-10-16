@@ -574,8 +574,14 @@ module.exports = function matchesRoutes({ db }) {
       const sportType = (gRaw.sport_type ? String(gRaw.sport_type) : (gRaw.type ? String(gRaw.type) : (Number(gRaw.team_size) > 1 ? 'Team' : 'Single')));
       const g = { ...gRaw, sportType };
       if (!g) return res.status(404).json({ error: 'Match nicht gefunden' });
-      const member = await k('user_leagues').where({ league_id: g.league_id, user_id: userId }).first();
-      if (!member) return res.status(403).json({ error: 'Nur Mitglieder der Liga können Matches beitreten' });
+      
+      // Check if this is an Open Matches league (friendly matches don't require league membership)
+      const isOpenMatch = await k('leagues').where({ id: g.league_id, name: 'Open Matches' }).first().catch(() => null);
+      
+      if (!isOpenMatch) {
+        const member = await k('user_leagues').where({ league_id: g.league_id, user_id: userId }).first();
+        if (!member) return res.status(403).json({ error: 'Nur Mitglieder der Liga können Matches beitreten' });
+      }
       // Weekly limit for community leagues
       if (await isCommunityLeague(k, g.league_id)) {
         const reached = await hasWeeklyMatchForUser(k, g.league_id, userId);
@@ -864,8 +870,14 @@ module.exports = function matchesRoutes({ db }) {
       const g = { ...gRawCS, sportType };
       if (!g) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
 
-      const member = await k('user_leagues').where({ league_id: g.league_id, user_id: userId }).first();
-      if (!member) return res.json({ canSubmit: false, reason: 'LEAGUE_MEMBERS_ONLY' });
+      // Check if this is an Open Matches league (friendly matches don't require league membership for result submission)
+      const league = await k('leagues').where({ id: g.league_id }).first().catch(() => null);
+      const isOpenMatch = league && league.name && league.name.includes('Open Matches');
+      
+      if (!isOpenMatch) {
+        const member = await k('user_leagues').where({ league_id: g.league_id, user_id: userId }).first();
+        if (!member) return res.json({ canSubmit: false, reason: 'LEAGUE_MEMBERS_ONLY' });
+      }
 
       // must be pending
       if (g.home_score != null || g.away_score != null) {
@@ -948,9 +960,15 @@ module.exports = function matchesRoutes({ db }) {
       const g = { ...gRawRes, sportType };
       if (!g) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
 
-      // must be league member
-      const member = await k('user_leagues').where({ league_id: g.league_id, user_id: userId }).first();
-      if (!member) return res.status(403).json({ error: 'LEAGUE_MEMBERS_ONLY' });
+      // Check if this is an Open Matches league (friendly matches don't require league membership for result submission)
+      const leagueForResult = await k('leagues').where({ id: g.league_id }).first().catch(() => null);
+      const isOpenMatchForResult = leagueForResult && leagueForResult.name && leagueForResult.name.includes('Open Matches');
+      
+      if (!isOpenMatchForResult) {
+        // must be league member
+        const member = await k('user_leagues').where({ league_id: g.league_id, user_id: userId }).first();
+        if (!member) return res.status(403).json({ error: 'LEAGUE_MEMBERS_ONLY' });
+      }
 
       // must be pending
       if (g.home_score != null || g.away_score != null) {
@@ -1083,9 +1101,15 @@ module.exports = function matchesRoutes({ db }) {
       const sportType = (gRawDel.sport_type ? String(gRawDel.sport_type) : (gRawDel.type ? String(gRawDel.type) : (Number(gRawDel.team_size) > 1 ? 'Team' : 'Single')));
       const g = { ...gRawDel, sportType };
 
-      // must be league member
-      const member = await k('user_leagues').where({ league_id: g.league_id, user_id: userId }).first();
-      if (!member) return res.status(403).json({ error: 'LEAGUE_MEMBERS_ONLY' });
+      // Check if this is an Open Matches league (friendly matches don't require league membership for deletion)
+      const leagueForDeletion = await k('leagues').where({ id: g.league_id }).first().catch(() => null);
+      const isOpenMatchForDeletion = leagueForDeletion && leagueForDeletion.name && leagueForDeletion.name.includes('Open Matches');
+      
+      if (!isOpenMatchForDeletion) {
+        // must be league member
+        const member = await k('user_leagues').where({ league_id: g.league_id, user_id: userId }).first();
+        if (!member) return res.status(403).json({ error: 'LEAGUE_MEMBERS_ONLY' });
+      }
 
       // must be pending (no scores yet)
       if (g.home_score != null || g.away_score != null) {
