@@ -117,19 +117,21 @@ button:hover, .btn:hover {
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  padding: 32px;
+  padding: 32px 0;
   pointer-events: none;
 }
+.hero-inner { width: min(1400px, 96vw); margin: 0 auto; padding: 0 24px; }
+.hero-controls { pointer-events: auto; }
 .hero-stripe {
   display: inline-flex;
   align-items: center;
   gap: 12px;
   background: rgba(8,28,25,0.85);
-  padding: 12px 20px;
+  padding: 14px 22px;
   transform: skewX(-12deg);
 }
-.hero-stripe .hero-small-logo { width: 48px; height: 48px; transform: skewX(12deg); }
-.hero-title { font-size: 32px; margin: 0; color: #e6efe6; transform: skewX(12deg); }
+.hero-stripe .hero-small-logo { width: 56px; height: 56px; transform: skewX(12deg); }
+.hero-title { font-size: 34px; margin: 0; color: #e6efe6; transform: skewX(12deg); }
 .hero-sub { color: rgba(230,239,230,0.9); margin-top: 12px; pointer-events: none; }
 
 /* Mobile tuning */
@@ -138,4 +140,82 @@ button:hover, .btn:hover {
   .hero-title { font-size: 22px; }
   .hero-stripe { padding: 8px 14px; }
   .hero-stripe .hero-small-logo { width: 36px; height: 36px; }
+}
+
+/* --- Shared components to align visuals across pages --- */
+.ml-card { background: #0b1e19; border-radius: 12px; padding: 12px; border: 1px solid #1a3c33; }
+.ml-bordered { border: 1px solid #1a3c33; border-radius: 12px; }
+.ml-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 8px; border-radius: 999px; background: #0e2a22; color: #cfe; border: 1px solid #2f6b57; }
+.ml-status-dot { width: 8px; height: 8px; border-radius: 999px; display: inline-block; background: #a2d56a; box-shadow: 0 0 0 2px rgba(162,213,106,0.2); }
+.ml-match { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+.ml-match__side { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: center; }
+.ml-avatar { width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: #13342b; color: #cfe; }
+.ml-vs { font-size: 40px; color: #cde; opacity: 0.9; }
+.ml-btn-secondary { display: inline-block; padding: 8px 12px; border-radius: 10px; border: 1px solid #2f6b57; background: #0e2a22; color: #dfe; text-decoration: none; }
+.ml-btn-secondary:hover { background: #0f3026; }
+
+/* Nicer profile links inside tables */
+.ml-link-profile { color: #dfe; text-decoration: none; }
+.ml-link-profile:hover { color: #fff; }
+.ml-link-profile-icon { margin-left: 6px; opacity: 0.6; transition: transform 120ms ease, opacity 120ms ease; }
+.ml-link-profile:hover + .ml-link-profile-icon { transform: translateY(-1px); opacity: 0.9; }
+
+/* Table look */
+.ml-table { width: 100%; border-collapse: collapse; }
+.ml-table th { text-align: left; padding: 8px 6px; border-bottom: 1px solid #194638; color: #cfe; font-weight: 600; }
+.ml-table td { padding: 8px 6px; border-bottom: 1px solid #113528; }
+.ml-form-badge { font-weight: 700; }
+.ml-form-badge.W { color: #50c878; }
+.ml-form-badge.U { color: #d4c25a; }
+.ml-form-badge.N { color: #e25b5b; }
+
+/* Small round dots for form visualization */
+.ml-dots { display: inline-flex; gap: 6px; align-items: center; }
+.ml-dot { width: 8px; height: 8px; border-radius: 999px; background: #9db; opacity: 0.9; }
+.ml-dot.W { background: #29e0ad; box-shadow: 0 0 0 2px rgba(41,224,173,0.15); }
+.ml-dot.U { background: #d4c25a; box-shadow: 0 0 0 2px rgba(212,194,90,0.15); }
+.ml-dot.N { background: #ff6b6b; box-shadow: 0 0 0 2px rgba(255,107,107,0.15); }
+
+/* Robust full-width section: spans viewport width without shifting content.
+  Keeps centered layout above and below, only inner block bleeds. */
+.ml-bleed {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  margin-right: calc(50% - 50vw);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* Full-bleed section (break out of centered container)
+   Use safe-area insets to avoid pushing content off-screen on devices with notches
+   and ensure we never exceed the viewport width. */
+.ml-fullbleed {
+  position: relative;
+  left: 100%;
+  right: 50%;
+  /* Pull the element out to the viewport edges but respect safe areas */
+  margin-left: calc(-50vw + env(safe-area-inset-left));
+  margin-right: calc(-50vw + env(safe-area-inset-right));
+  width: calc(100vw - env(safe-area-inset-left) - env(safe-area-inset-right));
+  max-width: none;
+}
+
+/* On small screens use symmetric centering to avoid visible left shift */
+@media (max-width: 720px) {
+  .ml-fullbleed {
+    left: 50%;
+    right: 50%;
+  }
+}
+
+/* Three-column strip that only stacks on real mobile widths */
+.ml-triple { display: grid; gap: 16px; grid-template-columns: repeat(3, 1fr); align-items: start; }
+@media (max-width: 600px) {
+  .ml-triple { grid-template-columns: 1fr; }
+}
+
+/* Two-column grid for top blocks */
+.ml-dual { display: grid; gap: 16px; grid-template-columns: repeat(2, 1fr); align-items: start; }
+@media (max-width: 600px) {
+  .ml-dual { grid-template-columns: 1fr; }
 }
