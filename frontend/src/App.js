@@ -14,6 +14,7 @@ import CreatePage from "./pages/CreatePage"; // neu
 import UserDetailPage from "./pages/UserDetailPage"; // neu
 import UserChatPage from "./pages/UserChatPage"; // neu
 import GameDetailPage from "./pages/GameDetailPage"; // neu
+import SearchMatchDialog from "./pages/SearchMatchDialog"; // neu
 import AdminPage from "./pages/AdminPage"; // neu
 import matchLeagueLogo from "./images/matchleague_logo.png"; // Import the logo
 import "./styles.css"; // neu
@@ -188,6 +189,16 @@ function App() {
             element={
               <ProtectedRoute token={token} setToken={setToken}>
                 <GameDetailPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Match-Suche (eigene Seite) */}
+          <Route
+            path="/match-search"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <SearchMatchDialog />
               </ProtectedRoute>
             }
           />

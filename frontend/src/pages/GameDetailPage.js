@@ -2,6 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 import MatchChat from "../components/MatchChat";
+import Counter from "../components/Counter";
+import TimeCounter from "../components/TimeCounter";
 
 export default function GameDetailPage() {
   const { gameId } = useParams();
@@ -11,8 +13,8 @@ export default function GameDetailPage() {
   const [loading, setLoading] = useState(true);
   // auth token for optional result submission
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-  const [hScore, setHScore] = useState('');
-  const [aScore, setAScore] = useState('');
+  const [hScore, setHScore] = useState(0);
+  const [aScore, setAScore] = useState(0);
   const [submitMsg, setSubmitMsg] = useState('');
   // permission to submit result (must be declared before any early return)
   const [canSubmit, setCanSubmit] = useState(false);
@@ -24,6 +26,9 @@ export default function GameDetailPage() {
   // calendar-friendly date+time fields (pop up native calendar/time pickers)
   const [dateStr, setDateStr] = useState(""); // yyyy-mm-dd
   const [timeStr, setTimeStr] = useState(""); // HH:mm
+  // Time counter state (default to 12:00)
+  const [scheduleHours, setScheduleHours] = useState(12);
+  const [scheduleMinutes, setScheduleMinutes] = useState(0);
 
   // Layout policy: keep three cards always side-by-side; enable horizontal scrolling on small screens
 
@@ -160,16 +165,24 @@ export default function GameDetailPage() {
     const yyyy = d.getFullYear();
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const dd = String(d.getDate()).padStart(2, '0');
-    const hh = String(d.getHours()).padStart(2, '0');
-    const mi = String(d.getMinutes()).padStart(2, '0');
+    const hh = d.getHours();
+    const mi = d.getMinutes();
     setDateStr(`${yyyy}-${mm}-${dd}`);
-    setTimeStr(`${hh}:${mi}`);
+    setScheduleHours(hh);
+    setScheduleMinutes(mi);
   }, [game?.kickoff_at]);
 
   // decide default visibility of schedule form
   useEffect(() => {
     setShowSchedule(!game?.kickoff_at);
   }, [game?.kickoff_at]);
+
+  // Update timeStr when scheduleHours or scheduleMinutes change
+  useEffect(() => {
+    const hh = String(scheduleHours).padStart(2, '0');
+    const mm = String(scheduleMinutes).padStart(2, '0');
+    setTimeStr(`${hh}:${mm}`);
+  }, [scheduleHours, scheduleMinutes]);
 
   if (loading) return <div style={{ padding: 16 }}>Lade Spiel ...</div>;
   if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
@@ -251,17 +264,11 @@ export default function GameDetailPage() {
     e.preventDefault();
     setSubmitMsg('');
     if (!token) { setSubmitMsg('Bitte einloggen.'); return; }
-    const hs = String(hScore).trim();
-    const as = String(aScore).trim();
-    if (hs === '' || as === '' || Number.isNaN(Number(hs)) || Number.isNaN(Number(as))) {
-      setSubmitMsg('Bitte gültige Zahlen eingeben.');
-      return;
-    }
     try {
       const r = await fetch(`${API_BASE}/matches/${gameId}/result`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ home_score: Number(hs), away_score: Number(as) })
+        body: JSON.stringify({ home_score: hScore, away_score: aScore })
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
@@ -345,25 +352,34 @@ export default function GameDetailPage() {
     <div style={containerStyle}>
       {/* Hero match card */}
       <div style={{ ...cardStyle, padding: 20, background: 'linear-gradient(145deg, #102a22, #0c1f1a)' }}>
-        {/* Header row */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
+        {/* Header row with action buttons */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 24, fontWeight: 700 }}>{game.league || 'Liga'}</div>
-          <div style={{ color: '#b9d3c7', fontSize: 14 }}>#{game.id} · {isCompleted ? 'Beendet' : 'Ausstehend'}</div>
+          
+          {/* Action buttons moved to top right */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {(token && game && game.home_score == null && game.away_score == null && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
+              <button onClick={() => setShowSchedule(s => !s)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', fontSize: 14 }}>
+                {game.kickoff_at ? 'Termin ändern' : 'Termin festlegen'}
+              </button>
+            )}
+            {(token && game && game.home_score == null && game.away_score == null) && (
+              <button onClick={cancelMatch} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #553f3f', background: '#2a1b1b', color: '#e9d8d8', fontSize: 14 }}>ABSAGEN</button>
+            )}
+          </div>
         </div>
 
-        {/* Date + status */}
+        {/* Date + status in one line */}
         <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div>
-            <div style={{ fontSize: 20 }}>{formatDate(game.kickoff_at) || 'Termin N.N.'}</div>
-            <div style={{ color: '#9db', fontSize: 14 }}>{game.kickoff_at ? relativeFromNow(game.kickoff_at) : '—'}</div>
-          </div>
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontSize: 20 }}>{formatDate(game.kickoff_at) || 'Termin N.N.'}</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ width: 8, height: 8, background: '#ffd35d', borderRadius: 999 }} />
             <span style={{ color: '#ffd35d' }}>{isCompleted ? 'Beendet' : 'Ausstehend'}</span>
           </div>
+          <div style={{ color: '#9db', fontSize: 14 }}>{game.kickoff_at ? relativeFromNow(game.kickoff_at) : '—'}</div>
         </div>
 
-        {/* VS Row */}
+        {/* VS Row with integrated counters */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 16, marginTop: 16 }}>
           <div style={{ textAlign: 'left' }}>
             {playerA.id ? (
@@ -382,11 +398,59 @@ export default function GameDetailPage() {
               </>
             )}
             <div style={{ color: '#9db' }}>{tablePositions[playerA.name] ? `${tablePositions[playerA.name].rank}. Rang` : '—'}</div>
-            <div style={{ marginTop: 10 }}>
-              <Link to={playerA.id ? `/user/${playerA.id}` : '#'} style={{ display: 'inline-block', padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', textDecoration: 'none' }}>Team ansehen</Link>
-            </div>
           </div>
-          <div style={{ fontSize: 40, color: '#cde' }}>VS</div>
+          
+          {/* Center section with VS or Counters */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+            {(token && (game.home_score == null && game.away_score == null)) ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                  <Counter
+                    value={hScore}
+                    onChange={setHScore}
+                    min={0}
+                    max={99}
+                    disabled={!canSubmit}
+                  />
+                  <span style={{ fontSize: 28, color: '#9db', fontWeight: 700 }}>VS</span>
+                  <Counter
+                    value={aScore}
+                    onChange={setAScore}
+                    min={0}
+                    max={99}
+                    disabled={!canSubmit}
+                  />
+                </div>
+                <button disabled={!canSubmit} type="submit" onClick={submitResult} style={{ 
+                  padding: '10px 20px', 
+                  borderRadius: 20, 
+                  border: 'none',
+                  background: canSubmit ? 'linear-gradient(135deg, #d4af37, #b8941f)' : 'rgba(100, 100, 100, 0.3)',
+                  color: canSubmit ? '#000' : '#666',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: canSubmit ? 'pointer' : 'not-allowed',
+                  boxShadow: canSubmit ? '0 4px 12px rgba(212, 175, 55, 0.3)' : 'none'
+                }}>
+                  Ergebnis speichern
+                </button>
+                {(!canSubmit && cannotReason) && (
+                  <div style={{ color: '#ff9999', fontSize: 12, textAlign: 'center', maxWidth: 200 }}>
+                    {cannotReason === 'KICKOFF_NOT_SET' ? 'Termin noch nicht festgelegt' : 
+                     cannotReason === 'LEAGUE_MEMBERS_ONLY' ? 'Nur Liga-Mitglieder' : cannotReason}
+                  </div>
+                )}
+                {submitMsg && (
+                  <div style={{ color: submitMsg.includes('gespeichert') ? '#99ff99' : '#ff9999', fontSize: 12, textAlign: 'center' }}>
+                    {submitMsg}
+                  </div>
+                )}
+              </>
+            ) : (
+              <div style={{ fontSize: 40, color: '#cde' }}>VS</div>
+            )}
+          </div>
+          
           <div style={{ textAlign: 'right' }}>
             {playerB.id ? (
               <Link to={`/user/${playerB.id}`} style={{ textDecoration: 'none', color: '#f4fff8', display: 'inline-block' }}>
@@ -404,9 +468,6 @@ export default function GameDetailPage() {
               </>
             )}
             <div style={{ color: '#9db' }}>{tablePositions[playerB.name] ? `${tablePositions[playerB.name].rank}. Rang` : '—'}</div>
-            <div style={{ marginTop: 10 }}>
-              <Link to={playerB.id ? `/user/${playerB.id}` : '#'} style={{ display: 'inline-block', padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', textDecoration: 'none' }}>Team ansehen</Link>
-            </div>
           </div>
         </div>
 
@@ -427,28 +488,17 @@ export default function GameDetailPage() {
           </div>
         )}
 
-        {/* Action buttons */}
-        <div style={{ marginTop: 16, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          {(token && game && game.home_score == null && game.away_score == null && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
-            <button onClick={() => setShowSchedule(s => !s)} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe' }}>
-              {game.kickoff_at ? 'Termin ändern' : 'Termin festlegen'}
-            </button>
-          )}
-          {/* Chat toggle removed; chat is always visible below */}
-          {(token && game && game.home_score == null && game.away_score == null) && (
-            <button onClick={cancelMatch} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #553f3f', background: '#2a1b1b', color: '#e9d8d8' }}>ABSAGEN</button>
-          )}
-        </div>
-
         {/* Schedule form (toggled) */}
         {(token && game && game.home_score == null && game.away_score == null && showSchedule) && (
           <ScheduleSection
             open={showSchedule}
             setOpen={setShowSchedule}
             dateStr={dateStr}
-            timeStr={timeStr}
             setDateStr={setDateStr}
-            setTimeStr={setTimeStr}
+            hours={scheduleHours}
+            minutes={scheduleMinutes}
+            setHours={setScheduleHours}
+            setMinutes={setScheduleMinutes}
             onSubmit={scheduleMatch}
             message={scheduleMsg}
           />
@@ -457,30 +507,24 @@ export default function GameDetailPage() {
         {/* Join match when opponent not yet assigned */}
         {(token && game && !isParticipant && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away)) && (
           <div style={{ marginTop: 12 }}>
-            <button onClick={joinMatch} disabled={hasWeeklyMatch} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: hasWeeklyMatch ? '#24463c' : '#1b4b3d', color: '#fff', cursor: hasWeeklyMatch ? 'not-allowed' : 'pointer' }}>
-              Diesem Match beitreten
-            </button>
-            {hasWeeklyMatch && <div style={{ marginTop: 6, color: '#ccc' }}>Du hast diese Woche bereits ein Match in dieser Liga.</div>}
-            {joinMsg && <div style={{ marginTop: 6, color: joinMsg.includes('Beigetreten') ? '#9f9' : '#fcc' }}>{joinMsg}</div>}
+            {(() => {
+              // Check if this is an Open Match (friendly match) - these don't have weekly limits
+              const isOpenMatch = game.league === 'Open Matches' || (game.league && game.league.includes('Open Matches'));
+              const canJoin = isOpenMatch || !hasWeeklyMatch;
+              return (
+                <>
+                  <button onClick={joinMatch} disabled={!canJoin} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: canJoin ? '#1b4b3d' : '#24463c', color: '#fff', cursor: canJoin ? 'pointer' : 'not-allowed' }}>
+                    {isOpenMatch ? 'Anfrage zum Beitreten senden' : 'Diesem Match beitreten'}
+                  </button>
+                  {!canJoin && !isOpenMatch && <div style={{ marginTop: 6, color: '#ccc' }}>Du hast diese Woche bereits ein Match in dieser Liga.</div>}
+                  {joinMsg && <div style={{ marginTop: 6, color: joinMsg.includes('Beigetreten') ? '#9f9' : '#fcc' }}>{joinMsg}</div>}
+                </>
+              );
+            })()}
           </div>
         )}
 
-        {/* Result submission */}
-        {(token && (game.home_score == null && game.away_score == null)) && (
-          <form onSubmit={submitResult} style={{ marginTop: 18 }}>
-            <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 8 }}>Ergebnis eintragen</div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <input disabled={!canSubmit} type="number" inputMode="numeric" pattern="[0-9]*" min={0} value={hScore} onChange={e => setHScore(e.target.value)} placeholder="—" style={{ flex: '0 0 120px', padding: '10px 12px', borderRadius: 12, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8', fontSize: 20, textAlign: 'center' }} />
-              <span style={{ fontSize: 28, color: '#9db', fontWeight: 700 }}>:</span>
-              <input disabled={!canSubmit} type="number" inputMode="numeric" pattern="[0-9]*" min={0} value={aScore} onChange={e => setAScore(e.target.value)} placeholder="—" style={{ flex: '0 0 120px', padding: '10px 12px', borderRadius: 12, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8', fontSize: 20, textAlign: 'center' }} />
-              <button disabled={!canSubmit} type="submit" style={{ padding: '10px 14px', borderRadius: 12, border: '1px solid #2f6b57', background: canSubmit ? '#1b4b3d' : '#24463c', color: '#fff', cursor: canSubmit ? 'pointer' : 'not-allowed' }}>Ergebnis speichern</button>
-            </div>
-            {(!canSubmit && cannotReason) && (
-              <div style={{ marginTop: 8, color: '#ccc' }}>Kein Schreibrecht: {cannotReason === 'KICKOFF_NOT_SET' ? 'Termin noch nicht festgelegt' : cannotReason}</div>
-            )}
-            {submitMsg && <div style={{ marginTop: 8, color: submitMsg.includes('gespeichert') ? '#9f9' : '#fcc' }}>{submitMsg}</div>}
-          </form>
-        )}
+
       </div>
 
       <MatchChat matchId={gameId} token={token} />
@@ -541,8 +585,8 @@ export default function GameDetailPage() {
   );
 }
 
-// Collapsible schedule section with native calendar and time popups
-function ScheduleSection({ open, setOpen, dateStr, timeStr, setDateStr, setTimeStr, onSubmit, message }) {
+// Collapsible schedule section with counter-based time selection
+function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, setHours, setMinutes, onSubmit, message }) {
   return (
     <div style={{ marginTop: 16 }}>
       {!open && (
@@ -551,15 +595,38 @@ function ScheduleSection({ open, setOpen, dateStr, timeStr, setDateStr, setTimeS
         </button>
       )}
       {open && (
-        <form onSubmit={onSubmit} style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-          <label style={{ color: '#9db' }}>Datum
-            <input type="date" value={dateStr} onChange={(e) => setDateStr(e.target.value)} style={{ marginLeft: 8, padding: '8px 10px', borderRadius: 10, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }} />
-          </label>
-          <label style={{ color: '#9db' }}>Uhrzeit
-            <input type="time" value={timeStr} onChange={(e) => setTimeStr(e.target.value)} style={{ marginLeft: 8, padding: '8px 10px', borderRadius: 10, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }} />
-          </label>
-          <button type="submit" style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#1b4b3d', color: '#fff' }}>Speichern</button>
-          <button type="button" onClick={() => setOpen(false)} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: 'transparent', color: '#dfe' }}>Schließen</button>
+        <form onSubmit={onSubmit} style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <label style={{ color: '#9db', fontSize: '14px', fontWeight: '500' }}>Datum</label>
+            <input 
+              type="date" 
+              value={dateStr} 
+              onChange={(e) => setDateStr(e.target.value)} 
+              style={{ 
+                padding: '8px 10px', 
+                borderRadius: 10, 
+                border: '1px solid #26493c', 
+                background: '#0a1c17', 
+                color: '#e8efe8' 
+              }} 
+            />
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <label style={{ color: '#9db', fontSize: '14px', fontWeight: '500' }}>Uhrzeit</label>
+            <TimeCounter
+              hours={hours}
+              minutes={minutes}
+              onHoursChange={setHours}
+              onMinutesChange={setMinutes}
+            />
+          </div>
+          
+          <div style={{ display: 'flex', gap: 8, marginTop: 28 }}>
+            <button type="submit" style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#1b4b3d', color: '#fff' }}>Speichern</button>
+            <button type="button" onClick={() => setOpen(false)} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: 'transparent', color: '#dfe' }}>Schließen</button>
+          </div>
+          
           {message && <div style={{ width: '100%', color: message.includes('gespeichert') ? '#9f9' : '#fcc' }}>{message}</div>}
         </form>
       )}

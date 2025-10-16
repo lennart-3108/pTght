@@ -4,6 +4,7 @@ import { API_BASE } from "../config";
 
 export default function ProfilePage() {
   const [data, setData] = useState(null);
+  const [profile, setProfile] = useState({ open_for_matches: false, favorite_sports: [] });
   const [leagues, setLeagues] = useState([]);
   const [games, setGames] = useState({ upcoming: [], completed: [] });
   const [err, setErr] = useState("");
@@ -25,6 +26,15 @@ export default function ProfilePage() {
       .then(j => mounted && setData(j))
       .catch(e => mounted && setErr(e.message || "Fehler"))
       .finally(() => mounted && setLoading(false));
+
+    // load profile preferences
+    fetch(`${API_BASE}/profile`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : { open_for_matches: false, favorite_sports: [] })
+      .then(j => mounted && setProfile({
+        open_for_matches: !!j.open_for_matches,
+        favorite_sports: Array.isArray(j.favorite_sports) ? j.favorite_sports : []
+      }))
+      .catch(() => {});
 
     fetch(`${API_BASE}/me/leagues`, { headers: { Authorization: `Bearer ${token}` } })
       .then(r => (r.ok ? r.json() : []))
@@ -142,6 +152,50 @@ export default function ProfilePage() {
 
   return (
     <div style={wrap}>
+      {/* Preferences card */}
+      <div style={{ ...card, marginBottom: 16 }}>
+        <div style={{ ...pad }}>
+          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Einstellungen</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
+            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <input type="checkbox" checked={!!profile.open_for_matches} onChange={(e) => setProfile(p => ({ ...p, open_for_matches: e.target.checked }))} />
+              Offen für Matches (Anfragen erlauben)
+            </label>
+          </div>
+          <div style={{ marginBottom: 8 }}>
+            <div style={{ marginBottom: 6, ...small, color: '#cfe' }}>Favorisierte Sportarten (Komma-getrennt)</div>
+            <input
+              type="text"
+              value={(profile.favorite_sports || []).join(', ')}
+              onChange={(e) => setProfile(p => ({ ...p, favorite_sports: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
+              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0b1e19', color: '#e8efe8' }}
+              placeholder="z.B. Tennis, Fußball"
+            />
+          </div>
+          <div>
+            <button
+              onClick={async () => {
+                try {
+                  const token = localStorage.getItem('token');
+                  const resp = await fetch(`${API_BASE}/profile`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({
+                      open_for_matches: !!profile.open_for_matches,
+                      favorite_sports: Array.isArray(profile.favorite_sports) ? profile.favorite_sports : []
+                    })
+                  });
+                  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+                  alert('Profil gespeichert');
+                } catch (e) {
+                  alert('Konnte Profil nicht speichern: ' + (e.message || e));
+                }
+              }}
+              style={{ ...pill, cursor: 'pointer', background: '#195642' }}
+            >Speichern</button>
+          </div>
+        </div>
+      </div>
       {/* Header with avatar, name, role, sport badges and stats summary */}
       <div style={{ ...card, paddingBottom: 0 }}>
         <div style={{ ...pad, display: 'flex', alignItems: 'center', gap: 16 }}>
