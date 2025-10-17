@@ -92,10 +92,21 @@ module.exports = function usersRoutes(ctx) {
         fs.mkdirSync(dir, { recursive: true });
         const filePath = path.join(dir, `${userId}.${ext}`);
         fs.writeFileSync(filePath, buf);
-  // Build public URL; prefer BACKEND_PUBLIC_URL env (e.g., https://dev.example.com/api)
-  const base = process.env.BACKEND_PUBLIC_URL || '';
-  const rel = `/uploads/avatars/${userId}.${ext}`;
-  const publicUrl = base ? `${String(base).replace(/\/$/, '')}${rel}` : rel;
+        // Build public URL
+        // Prefer explicit env BACKEND_PUBLIC_URL (e.g., https://dev.matchleague.org/api)
+        // Otherwise derive from the incoming request host (works for local dev: http://localhost:5002)
+        const rel = `/uploads/avatars/${userId}.${ext}`;
+        let publicUrl = rel;
+        const envBase = process.env.BACKEND_PUBLIC_URL && String(process.env.BACKEND_PUBLIC_URL).trim();
+        if (envBase) {
+          publicUrl = `${envBase.replace(/\/$/, '')}${rel}`;
+        } else {
+          try {
+            const proto = (req.headers['x-forwarded-proto'] || req.protocol || 'http');
+            const host = req.get && req.get('host');
+            if (host) publicUrl = `${proto}://${host}${rel}`;
+          } catch (_) {}
+        }
         // Ensure avatar_url column exists (add if missing)
         db.all(`PRAGMA table_info(users)`, [], (pe, cols) => {
           if (pe) return res.status(500).json({ error: 'DB_ERROR', details: pe.message });
