@@ -24,3 +24,4 @@ yarn-error.log*
 
 # local npm cache (to avoid ~/.npm permission issues)
 /.npm-cache
+/frontend/serve.log
