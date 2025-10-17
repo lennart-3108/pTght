@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { API_BASE } from "../config";
+import Avatar from "../components/Avatar";
 
 function formatTimestamp(value) {
   if (!value) return "";
@@ -108,13 +109,7 @@ export default function ChatsPage() {
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 16 }}>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center', flex: '1 1 auto' }}>
-                  {chat.opponentAvatar ? (
-                    <img src={chat.opponentAvatar} alt="avatar" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover', border: '1px solid #2b6b57' }} />
-                  ) : (
-                    <div style={{ width: 40, height: 40, borderRadius: '50%', background: '#123226', border: '1px solid #2b6b57', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9bc7b4', fontWeight: 700 }}>
-                      {(chat.opponentName || 'M').slice(0,1).toUpperCase()}
-                    </div>
-                  )}
+                  <Avatar userId={chat.opponentUserId} name={chat.opponentName} src={chat.opponentAvatar} size={40} />
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                       <div style={{ fontSize: 18, fontWeight: 600, color: "#f4fff8" }}>{chat.opponentName || "Match"}</div>

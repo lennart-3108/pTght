@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { API_BASE } from '../config';
+import Avatar from '../components/Avatar';
 
 export default function SearchMatchDialog() {
   const navigate = useNavigate();
@@ -160,8 +161,6 @@ export default function SearchMatchDialog() {
         ) : rows.map(m => {
           const aName = m.home || m.home_name || 'A';
           const bName = m.away || m.away_name || 'B';
-          const aInitial = String(aName).trim()[0]?.toUpperCase() || 'A';
-          const bInitial = String(bName).trim()[0]?.toUpperCase() || 'B';
           const status = (m.status || 'Ausstehend');
           return (
             <div key={m.id} className="ml-card" style={{ display: 'grid', gap: 10 }}>
@@ -178,7 +177,7 @@ export default function SearchMatchDialog() {
               <div className="ml-match">
                 {/* Left side */}
                 <div className="ml-match__side">
-                  <div className="ml-avatar">{aInitial}</div>
+                  <Avatar userId={m.home_id} name={aName} size={64} />
                   <div>
                     <div style={{ fontWeight: 700 }}>{aName}</div>
                     <div style={{ color: '#9db', fontSize: 12 }}>—</div>
@@ -200,7 +199,7 @@ export default function SearchMatchDialog() {
                       <Link to={m.away_id ? `/user/${m.away_id}` : '#'} className="ml-btn-secondary">Team ansehen</Link>
                     </div>
                   </div>
-                  <div className="ml-avatar" style={{ background: '#3a1717' }}>{bInitial}</div>
+                  <Avatar userId={m.away_id} name={bName} size={64} />
                 </div>
               </div>
 

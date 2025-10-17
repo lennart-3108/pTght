@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { API_BASE } from "../config";
+import Avatar from "../components/Avatar";
 
 export default function TeamDetailPage() {
   const { id } = useParams();
@@ -136,7 +137,7 @@ export default function TeamDetailPage() {
             <div style={{ display: 'grid', gap: 8 }}>
               {(team.members || []).map(m => (
                 <div key={m.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#0b1e19', borderRadius: 12, padding: 12 }}>
-                  <img alt="avatar" src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(m.display_name)}`} style={{ width: 36, height: 36, borderRadius: 36 }} />
+                  <Avatar userId={m.user_id} name={m.display_name} size={36} />
                   <div style={{ flex: 1 }}>
                     <div style={{ fontWeight: 600 }}>{m.display_name}</div>
                     {m.is_captain && <div style={small}>Captain</div>}

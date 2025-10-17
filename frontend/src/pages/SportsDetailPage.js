@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { API_BASE } from "../config";
+import Avatar from "../components/Avatar";
 
 export default function SportsDetailPage() {
   const { id } = useParams();
@@ -104,7 +105,7 @@ export default function SportsDetailPage() {
           <div style={{ display: 'grid', gap: 10 }}>
             {[{"name":"Max Schröder","points":132},{"name":"Nico Hartmann","points":121},{"name":"Jonas Berger","points":115}].map((u, idx) => (
               <div key={idx} style={{ display: 'grid', gridTemplateColumns: 'auto 1fr auto auto', alignItems: 'center', gap: 12, background: '#0b1e19', borderRadius: 12, padding: 12 }}>
-                <img alt="avatar" src={`https://api.dicebear.com/7.x/thumbs/svg?seed=${encodeURIComponent(u.name)}`} style={{ width: 40, height: 40, borderRadius: 40 }} />
+                <Avatar userId={null} name={u.name} size={40} />
                 <div style={{ fontWeight: 700 }}>{u.name}</div>
                 <div style={{ color: '#9db' }}>{u.points}</div>
                 <button style={pill} disabled>Profil ansehen</button>
