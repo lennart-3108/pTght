@@ -416,9 +416,9 @@ module.exports = function chatsRoutes({ db }) {
         });
         return merged;
       })();
-
+      let timeoutId;
       const timeout = new Promise((_, reject) => {
-        const t = setTimeout(() => {
+        timeoutId = setTimeout(() => {
           const took = Date.now() - started;
           console.warn('[chats] timeout', { user: userId, tookMs: took, timeoutMs: TIMEOUT_MS });
           const err = new Error('CHAT_LIST_TIMEOUT');
@@ -427,7 +427,9 @@ module.exports = function chatsRoutes({ db }) {
         }, TIMEOUT_MS);
       });
 
-      const merged = await Promise.race([work, timeout]);
+      const merged = await Promise.race([work, timeout]).finally(() => {
+        if (timeoutId) clearTimeout(timeoutId);
+      });
       const took = Date.now() - started;
       console.log('[chats] done', { user: userId, tookMs: took, items: Array.isArray(merged) ? merged.length : 0 });
       return res.json({ chats: merged });
