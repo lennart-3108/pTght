@@ -16,11 +16,11 @@ git pull --ff-only origin "$BRANCH" || true
 if [ ! -f .env ]; then
   cat > .env <<'EOF'
 # Default ports
-BACKEND_PORT=5000
+BACKEND_PORT=5001
 FRONTEND_PORT=3000
 
 # Backend internal PORT (must match container internal port)
-# Do not set this to BACKEND_PORT; compose maps host BACKEND_PORT -> container 5001
+# For PM2 (non-Docker), we also keep backend at 5001 to match reverse proxy (/api -> :5001)
 PORT=5001
 
 # SQLite default (if app supports it)
@@ -80,9 +80,17 @@ fi
 if [ -d backend ] && [ -f backend/package.json ]; then
   (
     cd backend
-    # Port setzen, falls App PORT nutzt
-    grep -q '^PORT=' .env 2>/dev/null || echo "PORT=${BACKEND_PORT}" >> .env || true
-    export PORT="${BACKEND_PORT}"
+    # Ensure backend listens on 5001 (matches reverse proxy /api -> 127.0.0.1:5001)
+    if [ -f .env ]; then
+      if grep -q '^PORT=' .env; then
+        sed -i 's/^PORT=.*/PORT=5001/' .env || true
+      else
+        echo "PORT=5001" >> .env
+      fi
+    else
+      echo "PORT=5001" > .env
+    fi
+    export PORT="5001"
     npm ci
     pm2 start npm --name "ptght-backend" -- start || pm2 start npm --name "ptght-backend" -- run dev || pm2 restart "ptght-backend"
   )
