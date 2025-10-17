@@ -92,7 +92,10 @@ module.exports = function usersRoutes(ctx) {
         fs.mkdirSync(dir, { recursive: true });
         const filePath = path.join(dir, `${userId}.${ext}`);
         fs.writeFileSync(filePath, buf);
-        const publicUrl = `/uploads/avatars/${userId}.${ext}`;
+  // Build public URL; prefer BACKEND_PUBLIC_URL env (e.g., https://dev.example.com/api)
+  const base = process.env.BACKEND_PUBLIC_URL || '';
+  const rel = `/uploads/avatars/${userId}.${ext}`;
+  const publicUrl = base ? `${String(base).replace(/\/$/, '')}${rel}` : rel;
         // Ensure avatar_url column exists (add if missing)
         db.all(`PRAGMA table_info(users)`, [], (pe, cols) => {
           if (pe) return res.status(500).json({ error: 'DB_ERROR', details: pe.message });
