@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import matchLeagueLogo from "../images/matchleague_logo.png"; // use long branded logo
 import { API_BASE, fetchWithTimeout } from "../config";
+import Avatar from "./Avatar";
 import "./Header.css";
 
 function formatShortTimestamp(value) {
@@ -587,11 +588,12 @@ export default function Header() {
                               <Link to={href} onClick={handleNavigate}>
                                 <div className="ml-popover__itemLinkBody">
                                   <div className="ml-popover__avatar">
-                                    {chat.opponentAvatar ? (
-                                      <img src={chat.opponentAvatar} alt="avatar" />
-                                    ) : (
-                                      <span>{(name || "C").slice(0, 1).toUpperCase()}</span>
-                                    )}
+                                    <Avatar 
+                                      userId={chat.opponentUserId} 
+                                      name={name} 
+                                      src={chat.opponentAvatar} 
+                                      size={40} 
+                                    />
                                   </div>
                                   <div className="ml-popover__itemContent">
                                     <div className="ml-popover__itemRow">
