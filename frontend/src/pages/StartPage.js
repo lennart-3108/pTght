@@ -53,6 +53,14 @@ export default function StartPage() {
   // simple carousel state for backgrounds
   const [index, setIndex] = useState(0);
 
+  // Helper: extract numeric user id for a game side (home/away)
+  const toId = (g, side) => {
+    if (!g) return null;
+    const v = g?.[`${side}_id`] ?? g?.[`${side}Id`] ?? g?.[side];
+    const m = String(v ?? '').match(/\d+/);
+    return m ? m[0] : null;
+  };
+
   // rotate backgrounds every 5s
   useEffect(() => {
     if (!backgrounds.length) return;
