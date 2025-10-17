@@ -73,3 +73,6 @@ backend/.env.prod
 backend/backend-run.log
 frontend-run.log
 frontend/frontend.pid
+
+# Local npm cache at repo root (avoid tracking thousands of cache files)
+/.npm-cache/

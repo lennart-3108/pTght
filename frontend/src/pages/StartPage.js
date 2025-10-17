@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 import smallLogo from "../images/matchleague_logo_4x4.png";
+import Avatar from "../components/Avatar";
 
 // load background images same as LoginPage
 function importAllBackgrounds(r) {
@@ -201,12 +202,12 @@ export default function StartPage() {
                 return (
                   <div key={g.id} className="ml-match" style={{ padding: '10px 2px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                     <div className="ml-match__side">
-                      <span className="ml-avatar" style={{ width: 44, height: 44, fontSize: 14 }}>A</span>
+                      <Avatar userId={hId} name={g.home} size={44} />
                       <Name name={g.home} uid={hId} />
                     </div>
                     <div className="ml-vs">VS</div>
                     <div className="ml-match__side" style={{ justifyContent: 'flex-end' }}>
-                      <span className="ml-avatar" style={{ width: 44, height: 44, fontSize: 14 }}>A</span>
+                      <Avatar userId={aId} name={g.away} size={44} />
                       <Name name={g.away} uid={aId} />
                     </div>
                     <div style={{ gridColumn: '1 / -1', color: '#9db', fontSize: 12, display: 'flex', justifyContent: 'space-between' }}>
@@ -248,12 +249,12 @@ export default function StartPage() {
                 return (
                   <div key={g.id} className="ml-match" style={{ padding: '10px 2px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                     <div className="ml-match__side">
-                      <span className="ml-avatar" style={{ width: 44, height: 44, fontSize: 14 }}>A</span>
+                      <Avatar userId={hId} name={g.home} size={44} />
                       <Name name={g.home} uid={hId} />
                     </div>
                     <div className="ml-vs" style={{ fontSize: 24 }}>{score}</div>
                     <div className="ml-match__side" style={{ justifyContent: 'flex-end' }}>
-                      <span className="ml-avatar" style={{ width: 44, height: 44, fontSize: 14 }}>A</span>
+                      <Avatar userId={aId} name={g.away} size={44} />
                       <Name name={g.away} uid={aId} />
                     </div>
                     <div style={{ gridColumn: '1 / -1', color: '#9db', fontSize: 12, display: 'flex', justifyContent: 'space-between' }}>
@@ -453,9 +454,7 @@ export default function StartPage() {
                         <tr key={key} style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                           <td style={{ padding: '8px 6px' }}>{row.rank ?? row.platz ?? (start + i + 1)}</td>
                           <td style={{ padding: '10px 8px' }}>
-                            <span style={{ width: 40, height: 40, borderRadius: 22, background: '#163a2f', color: '#e8efe8', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, marginRight: 12, overflow: 'hidden', verticalAlign: 'middle' }}>
-                              {initialsFor(display)}
-                            </span>
+                            <Avatar userId={uid} name={display} size={40} style={{ marginRight: 12 }} />
                             {uid ? (
                               <span style={{ display: 'inline-flex', alignItems: 'center' }}>
                                 <Link to={`/user/${uid}`} className="ml-link-profile" title="Profil öffnen">{display}</Link>
@@ -529,12 +528,12 @@ export default function StartPage() {
                     <div style={{ color: '#9db', fontSize: 12 }}>{g.league || standings?.leagueName || 'Community Liga'}</div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'auto auto auto', gap: 10, alignItems: 'center' }}>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                        <span className="ml-avatar" style={{ width: 28, height: 28, fontSize: 11 }}>A</span>
+                        <Avatar userId={toId(g,'home')} name={g.home} size={28} />
                         <span>{g.home}</span>
                       </div>
                       <div style={{ fontWeight: 800 }}>{(g.home_score!=null && g.away_score!=null) ? `${g.home_score}:${g.away_score}` : '— : —'}</div>
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                        <span className="ml-avatar" style={{ width: 28, height: 28, fontSize: 11 }}>A</span>
+                        <Avatar userId={toId(g,'away')} name={g.away} size={28} />
                         <span>{g.away}</span>
                       </div>
                     </div>

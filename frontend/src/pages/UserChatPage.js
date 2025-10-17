@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { API_BASE } from "../config";
+import Avatar from "../components/Avatar";
 
 export default function UserChatPage() {
   const { id } = useParams();
@@ -145,26 +146,14 @@ export default function UserChatPage() {
                   return (
                     <div key={m.id} style={{ display: 'flex', justifyContent: isOwn ? 'flex-end' : 'flex-start', gap: 8, alignItems: 'flex-end' }}>
                       {!isOwn && (
-                        opponent?.avatar_url ? (
-                          <img alt="avatar" src={opponent.avatar_url} style={{ width: 36, height: 36, borderRadius: 999, objectFit: 'cover', border: '1px solid #2f6b57' }} />
-                        ) : (
-                          <div style={{ width: 36, height: 36, borderRadius: 999, background: '#123226', border: '1px solid #2f6b57', color: '#a9c9bb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
-                            {(opponent?.name || 'U').slice(0,1).toUpperCase()}
-                          </div>
-                        )
+                        <Avatar userId={id} name={opponent?.name} src={opponent?.avatar_url} size={36} />
                       )}
                       <div style={{ background: isOwn ? '#1f5c47' : '#143329', borderRadius: 12, padding: '8px 10px', maxWidth: '75%' }}>
                         <div style={{ whiteSpace: 'pre-wrap' }}>{m.body}</div>
                         <div style={{ ...small, opacity: 0.8 }}>{new Date(m.created_at || Date.now()).toLocaleString('de-DE')}</div>
                       </div>
                       {isOwn && (
-                        me?.avatar_url ? (
-                          <img alt="avatar" src={me.avatar_url} style={{ width: 36, height: 36, borderRadius: 999, objectFit: 'cover', border: '1px solid #2f6b57' }} />
-                        ) : (
-                          <div style={{ width: 36, height: 36, borderRadius: 999, background: '#123226', border: '1px solid #2f6b57', color: '#a9c9bb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
-                            I
-                          </div>
-                        )
+                        <Avatar userId={Number(localStorage.getItem('userId'))} name={"Ich"} src={me?.avatar_url} size={36} />
                       )}
                     </div>
                   );

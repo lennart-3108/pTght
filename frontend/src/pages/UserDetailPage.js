@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
+import Avatar from "../components/Avatar";
 
 export default function UserDetailPage() {
   const { id } = useParams();
@@ -88,7 +89,7 @@ export default function UserDetailPage() {
       {/* Header mit Avatar, Name, Badges, Stats */}
       <div style={{ ...card, paddingBottom: 0 }}>
         <div style={{ ...pad, display: 'flex', alignItems: 'center', gap: 16 }}>
-          <img alt="avatar" src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent((user.firstname||'')+' '+(user.lastname||''))}&backgroundType=gradientLinear&fontWeight=700`} style={{ width: 80, height: 80, borderRadius: 80, objectFit: 'cover', background: '#1b3a31' }} />
+          <Avatar userId={user?.id} name={`${user.firstname||''} ${user.lastname||''}`} size={80} />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 28, fontWeight: 900 }}>{user.firstname} {user.lastname}</div>
             <div style={small}>Einzelspieler</div>

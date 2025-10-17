@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { API_BASE, fetchWithTimeout } from "../config";
+import Avatar from "../components/Avatar";
 
 export default function LeagueDetailPage() {
   const { leagueId } = useParams();
@@ -670,12 +671,8 @@ export default function LeagueDetailPage() {
                               const avatarUrl = m?.avatar || m?.avatarUrl || m?.image || m?.imageUrl || m?.profile_image || m?.profileImage || null;
                               const display = row.name || row.key || `User ${uid || ''}`;
                               const avatar = (
-                                <span style={{ width: 28, height: 28, borderRadius: 20, background: '#163a2f', color: '#e8efe8', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, marginRight: 8, overflow: 'hidden', verticalAlign: 'middle' }}>
-                                  {avatarUrl ? (
-                                    <img src={avatarUrl} alt={display} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                  ) : (
-                                    initialsFor(display)
-                                  )}
+                                <span style={{ marginRight: 8, verticalAlign: 'middle', display: 'inline-flex' }}>
+                                  <Avatar userId={uid} name={display} src={avatarUrl} size={28} />
                                 </span>
                               );
                               return uid ? (

@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
+import AvatarEditor from "react-avatar-editor";
 
 export default function ProfilePage() {
   const [data, setData] = useState(null);
@@ -10,6 +11,11 @@ export default function ProfilePage() {
   const [games, setGames] = useState({ upcoming: [], completed: [] });
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
+  // avatar cropper state
+  const [cropSrc, setCropSrc] = useState(null);
+  const [cropScale, setCropScale] = useState(1.2);
+  const [cropPos, setCropPos] = useState({ x: 0.5, y: 0.5 });
+  const editorRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,7 +37,13 @@ export default function ProfilePage() {
         try {
           const r2 = await fetch(`${API_BASE}/users/${j.id}`, { headers: { Authorization: `Bearer ${token}` } });
           const u = await r2.json().catch(() => ({}));
-          if (u && u.avatar_url) setAvatarUrl(u.avatar_url);
+          if (u && u.avatar_url) {
+            const url = String(u.avatar_url || '');
+            const abs = /^(https?:)?\/\//i.test(url)
+              ? url
+              : `${API_BASE.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
+            setAvatarUrl(abs);
+          }
         } catch {}
       })
       .catch(e => mounted && setErr(e.message || "Fehler"))
@@ -218,7 +230,7 @@ export default function ProfilePage() {
             <div style={{ fontSize: 28, fontWeight: 900 }}>{data.firstname} {data.lastname}</div>
             <div style={small}>Einzelspieler</div>
           </div>
-          {/* Avatar upload */}
+          {/* Avatar upload with cropper */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <label style={{ ...pill, cursor: 'pointer', background: '#143329' }}>
               Bild wählen
@@ -226,55 +238,13 @@ export default function ProfilePage() {
                 type="file"
                 accept="image/png, image/jpeg"
                 style={{ display: 'none' }}
-                onChange={async (e) => {
+                onChange={(e) => {
                   const file = e.target.files && e.target.files[0];
                   if (!file) return;
-                  try {
-                    // downscale to max 512px to reduce payload
-                    const toDataUrl = (file) => new Promise((resolve, reject) => {
-                      const reader = new FileReader();
-                      reader.onload = () => {
-                        const img = new Image();
-                        img.onload = () => {
-                          const maxSide = 512;
-                          let { width, height } = img;
-                          const scale = Math.min(1, maxSide / Math.max(width, height));
-                          width = Math.round(width * scale);
-                          height = Math.round(height * scale);
-                          const canvas = document.createElement('canvas');
-                          canvas.width = width; canvas.height = height;
-                          const ctx = canvas.getContext('2d');
-                          ctx.drawImage(img, 0, 0, width, height);
-                          const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
-                          const dataUrl = canvas.toDataURL(mime, 0.9);
-                          resolve(dataUrl);
-                        };
-                        img.onerror = reject;
-                        img.src = reader.result;
-                      };
-                      reader.onerror = reject;
-                      reader.readAsDataURL(file);
-                    });
-                    const dataUrl = await toDataUrl(file);
-                    const token = localStorage.getItem('token');
-                    const resp = await fetch(`${API_BASE}/users/${data.id}/avatar`, {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                      body: JSON.stringify({ image: dataUrl })
-                    });
-                    const j = await resp.json().catch(() => ({}));
-                    if (!resp.ok || !j.ok) {
-                      if (resp.status === 413 || j.error === 'PAYLOAD_TOO_LARGE') {
-                        throw new Error('Bild ist zu groß. Bitte kleiner hochladen.');
-                      }
-                      throw new Error(j.error || `HTTP ${resp.status}`);
-                    }
-                    setAvatarUrl(j.url);
-                  } catch (err) {
-                    alert('Upload fehlgeschlagen: ' + (err.message || err));
-                  } finally {
-                    e.target.value = '';
-                  }
+                  const reader = new FileReader();
+                  reader.onload = () => setCropSrc(reader.result);
+                  reader.readAsDataURL(file);
+                  e.target.value = '';
                 }}
               />
             </label>
@@ -343,6 +313,102 @@ export default function ProfilePage() {
       {/* Spiel-Listen (ensure distinct arrays) */}
       <GameList title="Kommende Spiele" items={(games.upcoming || []).filter(g => g.home_score == null && g.away_score == null)} showScore={false} />
       <GameList title="Vergangene Spiele" items={(games.completed || []).filter(g => g.home_score != null && g.away_score != null)} showScore={true} />
+
+      {/* Avatar cropper modal */}
+      <Modal open={!!cropSrc} onClose={() => setCropSrc(null)}>
+        <div style={{ display: 'grid', gap: 12 }}>
+          <div style={{ fontSize: 18, fontWeight: 700 }}>Avatar zuschneiden</div>
+          <div style={{ display: 'grid', justifyItems: 'center' }}>
+            {cropSrc && (
+              <AvatarEditor
+                image={cropSrc}
+                ref={editorRef}
+                width={300}
+                height={300}
+                border={0}
+                borderRadius={150}
+                color={[0, 0, 0, 0.4]}
+                scale={cropScale}
+                position={cropPos}
+                onPositionChange={setCropPos}
+                style={{ borderRadius: 150, background: '#0b1e19', boxShadow: '0 0 0 2px #2f6b57 inset' }}
+              />
+            )}
+          </div>
+          <div style={{ display: 'grid', gap: 6 }}>
+            <label style={{ fontSize: 12, color: '#a6bfb3' }}>Zoom</label>
+            <input
+              type="range"
+              min={1}
+              max={3}
+              step={0.01}
+              value={cropScale}
+              onChange={(e) => setCropScale(parseFloat(e.target.value) || 1)}
+            />
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 4 }}>
+            <button
+              onClick={() => setCropSrc(null)}
+              style={{ ...{ display: 'inline-block', padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe' } }}
+            >Abbrechen</button>
+            <button
+              onClick={async () => {
+                try {
+                  const ed = editorRef.current;
+                  if (!ed) return;
+                  // Export square 512x512
+                  const out = ed.getImageScaledToCanvas();
+                  // Draw onto fixed 512 canvas
+                  const canvas = document.createElement('canvas');
+                  canvas.width = 512; canvas.height = 512;
+                  const ctx = canvas.getContext('2d');
+                  ctx.drawImage(out, 0, 0, 512, 512);
+                  const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+                  const token = localStorage.getItem('token');
+                  const resp = await fetch(`${API_BASE}/users/${data.id}/avatar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                    body: JSON.stringify({ image: dataUrl })
+                  });
+                  const j = await resp.json().catch(() => ({}));
+                  if (!resp.ok || !j.ok) {
+                    if (resp.status === 413 || j.error === 'PAYLOAD_TOO_LARGE') {
+                      throw new Error('Bild ist zu groß. Bitte kleiner hochladen.');
+                    }
+                    throw new Error(j.error || `HTTP ${resp.status}`);
+                  }
+                  // cache-bust so the freshly uploaded file displays immediately
+                  const raw = String(j.url || '');
+                  const abs = /^(https?:)?\/\//i.test(raw)
+                    ? raw
+                    : `${API_BASE.replace(/\/$/, '')}/${raw.replace(/^\//, '')}`;
+                  const bust = `${abs}${abs.includes('?') ? '&' : '?'}t=${Date.now()}`;
+                  setAvatarUrl(bust);
+                  setCropSrc(null);
+                } catch (e) {
+                  alert('Upload fehlgeschlagen: ' + (e.message || e));
+                }
+              }}
+              style={{ ...{ display: 'inline-block', padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#195642', color: '#dfe' } }}
+            >Als Avatar speichern</button>
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
+}
+
+// Simple modal component
+function Modal({ open, onClose, children }) {
+  if (!open) return null;
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+      <div style={{ background: '#0f2a20', border: '1px solid #2f6b57', borderRadius: 14, width: 'min(92vw, 560px)', maxWidth: '100%', padding: 16, color: '#e8efe8' }}>
+        {children}
+        <div style={{ textAlign: 'right', marginTop: 8 }}>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#9db', cursor: 'pointer' }}>Schließen</button>
+        </div>
+      </div>
     </div>
   );
 }

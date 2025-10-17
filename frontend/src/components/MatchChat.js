@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { API_BASE } from "../config";
+import Avatar from "./Avatar";
 
 export default function MatchChat({ matchId, token }) {
   const [messages, setMessages] = useState([]);
@@ -121,16 +122,9 @@ export default function MatchChat({ matchId, token }) {
     const bubbleColor = isOwn ? '#1f5c47' : '#16342c';
     const name = msg.senderUserName || msg.senderTeamName || (msg.senderUserId ? `User ${msg.senderUserId}` : 'Unbekannt');
     const avatarUrl = msg.senderUserAvatar || '';
-    const initials = (name || 'U').slice(0, 1).toUpperCase();
     return (
       <div key={msg.id} style={{ display: 'flex', flexDirection: align, gap: 8, marginBottom: 12, alignItems: 'flex-end' }}>
-        {avatarUrl ? (
-          <img alt="avatar" src={avatarUrl} style={{ width: 32, height: 32, borderRadius: 999, objectFit: 'cover', border: '1px solid #2f6b57' }} />
-        ) : (
-          <div style={{ width: 32, height: 32, borderRadius: 999, background: '#123226', border: '1px solid #2f6b57', color: '#a9c9bb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
-            {initials}
-          </div>
-        )}
+        <Avatar userId={msg.senderUserId} name={name} src={avatarUrl} size={32} />
         <div style={{ maxWidth: '70%', background: bubbleColor, borderRadius: 12, padding: '10px 12px', color: '#e5f4ec' }}>
           <div style={{ fontSize: 12, color: '#a9c9bb', marginBottom: 4 }}>{name}</div>
           <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.body}</div>
