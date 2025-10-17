@@ -919,8 +919,9 @@ app.get("/news", isAuthenticated, async (req, res) => {
       return dedup;
     })();
 
+    let timeoutId;
     const timeout = new Promise((_, reject) => {
-      setTimeout(() => {
+      timeoutId = setTimeout(() => {
         const took = Date.now() - started;
         console.warn('[news] timeout', { user: req.user && req.user.id, tookMs: took, timeoutMs: TIMEOUT_MS });
         const err = new Error('NEWS_FETCH_TIMEOUT');
@@ -929,7 +930,9 @@ app.get("/news", isAuthenticated, async (req, res) => {
       }, TIMEOUT_MS);
     });
 
-    const items = await Promise.race([work, timeout]);
+    const items = await Promise.race([work, timeout]).finally(() => {
+      if (timeoutId) clearTimeout(timeoutId);
+    });
     const took = Date.now() - started;
     console.log('[news] done', { user: req.user && req.user.id, tookMs: took, items: Array.isArray(items) ? items.length : 0 });
     return res.json({ items });
