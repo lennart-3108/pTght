@@ -26,6 +26,7 @@ export default function GameDetailPage() {
   // calendar-friendly date+time fields (pop up native calendar/time pickers)
   const [dateStr, setDateStr] = useState(""); // yyyy-mm-dd
   const [timeStr, setTimeStr] = useState(""); // HH:mm
+  const [location, setLocation] = useState("");
   // Time counter state (default to 12:00)
   const [scheduleHours, setScheduleHours] = useState(12);
   const [scheduleMinutes, setScheduleMinutes] = useState(0);
@@ -170,7 +171,15 @@ export default function GameDetailPage() {
     setDateStr(`${yyyy}-${mm}-${dd}`);
     setScheduleHours(hh);
     setScheduleMinutes(mi);
+    // prefill location if present
+    setLocation(String(game.location || '').trim());
   }, [game?.kickoff_at]);
+
+  // also prefill location when it loads even if no kickoff set yet
+  useEffect(() => {
+    if (!game) return;
+    setLocation(String(game.location || '').trim());
+  }, [game?.location]);
 
   // decide default visibility of schedule form
   useEffect(() => {
@@ -311,7 +320,7 @@ export default function GameDetailPage() {
       const r = await fetch(`${API_BASE}/matches/${gameId}/schedule`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ kickoff_at: scheduleAt })
+        body: JSON.stringify({ kickoff_at: scheduleAt, location: location && location.trim() ? location.trim() : undefined })
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
@@ -331,6 +340,35 @@ export default function GameDetailPage() {
       } catch {}
     } catch (e) {
       setScheduleMsg(e.message || 'Termin setzen fehlgeschlagen.');
+    }
+  }
+
+  async function suggestNextSlot() {
+    setScheduleMsg('');
+    if (!token) { setScheduleMsg('Bitte einloggen.'); return; }
+    try {
+      const baseAt = dateStr && timeStr ? `${dateStr}T${timeStr}` : undefined;
+      const r = await fetch(`${API_BASE}/matches/${gameId}/suggest-slot`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ base_at: baseAt })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
+      if (j && j.suggested_at) {
+        const d = new Date(j.suggested_at);
+        if (!Number.isNaN(d.getTime())) {
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, '0');
+          const dd = String(d.getDate()).padStart(2, '0');
+          setDateStr(`${yyyy}-${mm}-${dd}`);
+          setScheduleHours(d.getHours());
+          setScheduleMinutes(d.getMinutes());
+          setScheduleMsg('Vorschlag übernommen. Bitte speichern.');
+        }
+      }
+    } catch (e) {
+      setScheduleMsg(e.message || 'Vorschlag fehlgeschlagen.');
     }
   }
 
@@ -500,6 +538,9 @@ export default function GameDetailPage() {
             setHours={setScheduleHours}
             setMinutes={setScheduleMinutes}
             onSubmit={scheduleMatch}
+            onSuggest={suggestNextSlot}
+            location={location}
+            setLocation={setLocation}
             message={scheduleMsg}
           />
         )}
@@ -586,7 +627,7 @@ export default function GameDetailPage() {
 }
 
 // Collapsible schedule section with counter-based time selection
-function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, setHours, setMinutes, onSubmit, message }) {
+function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, setHours, setMinutes, onSubmit, onSuggest, location, setLocation, message }) {
   return (
     <div style={{ marginTop: 16 }}>
       {!open && (
@@ -621,8 +662,20 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
               onMinutesChange={setMinutes}
             />
           </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 220, flex: '1 1 240px' }}>
+            <label style={{ color: '#9db', fontSize: '14px', fontWeight: '500' }}>Ort / Platz</label>
+            <input
+              type="text"
+              placeholder="z.B. Sportpark Mitte – Platz 3"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }}
+            />
+          </div>
           
           <div style={{ display: 'flex', gap: 8, marginTop: 28 }}>
+            <button type="button" onClick={onSuggest} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe' }}>Nächster freier Platz</button>
             <button type="submit" style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#1b4b3d', color: '#fff' }}>Speichern</button>
             <button type="button" onClick={() => setOpen(false)} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: 'transparent', color: '#dfe' }}>Schließen</button>
           </div>

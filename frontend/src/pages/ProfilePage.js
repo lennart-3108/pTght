@@ -4,6 +4,7 @@ import { API_BASE } from "../config";
 
 export default function ProfilePage() {
   const [data, setData] = useState(null);
+  const [avatarUrl, setAvatarUrl] = useState(null);
   const [profile, setProfile] = useState({ open_for_matches: false, favorite_sports: [] });
   const [leagues, setLeagues] = useState([]);
   const [games, setGames] = useState({ upcoming: [], completed: [] });
@@ -23,7 +24,16 @@ export default function ProfilePage() {
         if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
         return j;
       })
-      .then(j => mounted && setData(j))
+      .then(async (j) => {
+        if (!mounted) return;
+        setData(j);
+        // Try to load full user (to get avatar_url if present)
+        try {
+          const r2 = await fetch(`${API_BASE}/users/${j.id}`, { headers: { Authorization: `Bearer ${token}` } });
+          const u = await r2.json().catch(() => ({}));
+          if (u && u.avatar_url) setAvatarUrl(u.avatar_url);
+        } catch {}
+      })
       .catch(e => mounted && setErr(e.message || "Fehler"))
       .finally(() => mounted && setLoading(false));
 
@@ -198,11 +208,76 @@ export default function ProfilePage() {
       </div>
       {/* Header with avatar, name, role, sport badges and stats summary */}
       <div style={{ ...card, paddingBottom: 0 }}>
-        <div style={{ ...pad, display: 'flex', alignItems: 'center', gap: 16 }}>
-          <img alt="avatar" src={`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent((data.firstname||'')+' '+(data.lastname||''))}&backgroundType=gradientLinear&fontWeight=700`} style={{ width: 80, height: 80, borderRadius: 80, objectFit: 'cover', background: '#1b3a31' }} />
+        <div style={{ ...pad, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <img
+            alt="avatar"
+            src={avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent((data.firstname||'')+' '+(data.lastname||''))}&backgroundType=gradientLinear&fontWeight=700`}
+            style={{ width: 80, height: 80, borderRadius: 80, objectFit: 'cover', background: '#1b3a31' }}
+          />
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 28, fontWeight: 900 }}>{data.firstname} {data.lastname}</div>
             <div style={small}>Einzelspieler</div>
+          </div>
+          {/* Avatar upload */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <label style={{ ...pill, cursor: 'pointer', background: '#143329' }}>
+              Bild wählen
+              <input
+                type="file"
+                accept="image/png, image/jpeg"
+                style={{ display: 'none' }}
+                onChange={async (e) => {
+                  const file = e.target.files && e.target.files[0];
+                  if (!file) return;
+                  try {
+                    // downscale to max 512px to reduce payload
+                    const toDataUrl = (file) => new Promise((resolve, reject) => {
+                      const reader = new FileReader();
+                      reader.onload = () => {
+                        const img = new Image();
+                        img.onload = () => {
+                          const maxSide = 512;
+                          let { width, height } = img;
+                          const scale = Math.min(1, maxSide / Math.max(width, height));
+                          width = Math.round(width * scale);
+                          height = Math.round(height * scale);
+                          const canvas = document.createElement('canvas');
+                          canvas.width = width; canvas.height = height;
+                          const ctx = canvas.getContext('2d');
+                          ctx.drawImage(img, 0, 0, width, height);
+                          const mime = file.type === 'image/png' ? 'image/png' : 'image/jpeg';
+                          const dataUrl = canvas.toDataURL(mime, 0.9);
+                          resolve(dataUrl);
+                        };
+                        img.onerror = reject;
+                        img.src = reader.result;
+                      };
+                      reader.onerror = reject;
+                      reader.readAsDataURL(file);
+                    });
+                    const dataUrl = await toDataUrl(file);
+                    const token = localStorage.getItem('token');
+                    const resp = await fetch(`${API_BASE}/users/${data.id}/avatar`, {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+                      body: JSON.stringify({ image: dataUrl })
+                    });
+                    const j = await resp.json().catch(() => ({}));
+                    if (!resp.ok || !j.ok) {
+                      if (resp.status === 413 || j.error === 'PAYLOAD_TOO_LARGE') {
+                        throw new Error('Bild ist zu groß. Bitte kleiner hochladen.');
+                      }
+                      throw new Error(j.error || `HTTP ${resp.status}`);
+                    }
+                    setAvatarUrl(j.url);
+                  } catch (err) {
+                    alert('Upload fehlgeschlagen: ' + (err.message || err));
+                  } finally {
+                    e.target.value = '';
+                  }
+                }}
+              />
+            </label>
           </div>
           {/* Sport-Badges (Text, komma-getrennt) */}
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>

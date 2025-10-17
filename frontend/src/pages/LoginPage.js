@@ -21,6 +21,60 @@ backgrounds.sort((a, b) => {
   return a.key.localeCompare(b.key);
 });
 
+// Hoisted components to avoid remount on each LoginPage re-render
+function StatNumber({ value, label }) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    if (typeof value !== 'number') return;
+    let frame; const start = performance.now(); const duration = 600;
+    const from = 0; const to = value;
+    function tick(ts) {
+      const p = Math.min(1, (ts - start) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      setDisplay(Math.round(from + (to - from) * eased));
+      if (p < 1) frame = requestAnimationFrame(tick);
+    }
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [value]);
+  return (
+    <div style={{ padding: '8px 0' }}>
+      <div style={{ fontSize: 28, fontWeight: 700, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{display}</div>
+      <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.75 }}>{label}</div>
+    </div>
+  );
+}
+
+function StatsPanel({ stats, statsLoading, statsError }) {
+  if (statsLoading && !stats) return <div style={{ padding: 16 }}>Lade Statistik…</div>;
+  if (statsError) return <div style={{ padding: 16, opacity: 0.7 }}>{statsError}</div>;
+  if (!stats) return null;
+  const items = [
+    { key: 'users', label: 'Nutzer', val: stats.users },
+    stats.confirmedUsers != null ? { key: 'confirmedUsers', label: 'Bestätigt', val: stats.confirmedUsers } : null,
+    { key: 'leagues', label: 'Ligen', val: stats.leagues },
+    { key: 'matches', label: 'Matches', val: stats.matches },
+    stats.teams != null ? { key: 'teams', label: 'Teams', val: stats.teams } : null,
+    stats.teamMembers != null ? { key: 'teamMembers', label: 'Team-Mitglieder', val: stats.teamMembers } : null,
+    { key: 'memberships', label: 'Liga-Mitgliedschaften', val: stats.memberships },
+    { key: 'sports', label: 'Sportarten', val: stats.sports }
+  ].filter(Boolean);
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit,minmax(110px,1fr))',
+      gap: 12,
+      padding: 12
+    }}>
+      {items.map(it => (
+        <div key={it.key} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, textAlign: 'center', padding: '12px 8px', backdropFilter: 'blur(6px)' }}>
+          <StatNumber value={typeof it.val === 'number' ? it.val : 0} label={it.label} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function LoginPage({ setToken, setIsAdminFlag }) {
   const navigate = useNavigate();
   // Login-Form-States
@@ -110,7 +164,10 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
     return () => clearInterval(t);
   }, [slides.length]);
 
-  // Load public stats (non-blocking)
+  // Load public stats einmalig pro Mount (kein Auto-Refresh)
+  // Hinweis: In React 18 StrictMode wird useEffect in Dev doppelt aufgerufen.
+  // Wir erlauben den zweiten Aufruf (unschädlich), statt ihn mit einer Ref zu blocken,
+  // damit der Ladezustand nicht hängen bleibt.
   useEffect(() => {
     let cancelled = false;
     async function loadStats() {
@@ -127,63 +184,10 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
       }
     }
     loadStats();
-    // refresh every 60s while on page
-    const intv = setInterval(loadStats, 60000);
-    return () => { cancelled = true; clearInterval(intv); };
+    return () => { cancelled = true; };
   }, [API]);
 
-  function StatNumber({ value, label }) {
-    const [display, setDisplay] = useState(0);
-    useEffect(() => {
-      if (typeof value !== 'number') return;
-      let frame; const start = performance.now(); const duration = 600;
-      const from = 0; const to = value;
-      function tick(ts) {
-        const p = Math.min(1, (ts - start) / duration);
-        const eased = 1 - Math.pow(1 - p, 3);
-        setDisplay(Math.round(from + (to - from) * eased));
-        if (p < 1) frame = requestAnimationFrame(tick);
-      }
-      frame = requestAnimationFrame(tick);
-      return () => cancelAnimationFrame(frame);
-    }, [value]);
-    return (
-      <div style={{ padding: '8px 0' }}>
-        <div style={{ fontSize: 28, fontWeight: 700, lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{display}</div>
-        <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.75 }}>{label}</div>
-      </div>
-    );
-  }
-
-  function StatsPanel() {
-    if (statsLoading && !stats) return <div style={{ padding: 16 }}>Lade Statistik…</div>;
-    if (statsError) return <div style={{ padding: 16, opacity: 0.7 }}>{statsError}</div>;
-    if (!stats) return null;
-    const items = [
-      { key: 'users', label: 'Nutzer', val: stats.users },
-      stats.confirmedUsers != null ? { key: 'confirmedUsers', label: 'Bestätigt', val: stats.confirmedUsers } : null,
-      { key: 'leagues', label: 'Ligen', val: stats.leagues },
-      { key: 'matches', label: 'Matches', val: stats.matches },
-      stats.teams != null ? { key: 'teams', label: 'Teams', val: stats.teams } : null,
-      stats.teamMembers != null ? { key: 'teamMembers', label: 'Team-Mitglieder', val: stats.teamMembers } : null,
-      { key: 'memberships', label: 'Liga-Mitgliedschaften', val: stats.memberships },
-      { key: 'sports', label: 'Sportarten', val: stats.sports }
-    ].filter(Boolean);
-    return (
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit,minmax(110px,1fr))',
-        gap: 12,
-        padding: 12
-      }}>
-        {items.map(it => (
-          <div key={it.key} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, textAlign: 'center', padding: '12px 8px', backdropFilter: 'blur(6px)' }}>
-            <StatNumber value={typeof it.val === 'number' ? it.val : 0} label={it.label} />
-          </div>
-        ))}
-      </div>
-    );
-  }
+  
 
   return (
     <div>
@@ -346,7 +350,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
             Ein schneller Überblick über die Aktivität auf der Plattform – wächst jeden Tag.
           </p>
           <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(4px)', overflow: 'hidden' }}>
-            <StatsPanel />
+            <StatsPanel stats={stats} statsLoading={statsLoading} statsError={statsError} />
           </div>
           {stats && stats.generatedAt && (
             <div style={{ marginTop: 8, fontSize: 11, opacity: 0.5 }}>Aktualisiert: {new Date(stats.generatedAt).toLocaleTimeString()}</div>
