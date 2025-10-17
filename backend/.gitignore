@@ -1,3 +1,7 @@
 # ...existing code...
 .env
 # ...existing code...
+
+# Uploaded media (do not commit user uploads)
+uploads/
+uploads/**
