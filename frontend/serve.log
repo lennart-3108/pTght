@@ -1,0 +1,77 @@
+ INFO  Accepting connections at http://localhost:3001
+ HTTP  10/18/2025 12:24:24 AM ::1 HEAD /
+ HTTP  10/18/2025 12:24:24 AM ::1 Returned 200 in 38 ms
+ HTTP  10/18/2025 12:24:28 AM ::1 GET /start
+ HTTP  10/18/2025 12:24:28 AM ::1 Returned 200 in 4 ms
+ HTTP  10/18/2025 12:24:28 AM ::1 GET /static/js/main.e15f86e9.js
+ HTTP  10/18/2025 12:24:28 AM ::1 GET /static/css/main.0425fd25.css
+ HTTP  10/18/2025 12:24:28 AM ::1 Returned 304 in 16 ms
+ HTTP  10/18/2025 12:24:28 AM ::1 Returned 200 in 29 ms
+ HTTP  10/18/2025 12:24:28 AM ::1 GET /.well-known/appspecific/com.chrome.devtools.json
+ HTTP  10/18/2025 12:24:28 AM ::1 Returned 200 in 1 ms
+ HTTP  10/18/2025 12:24:28 AM ::1 GET /static/css/main.0425fd25.css.map
+ HTTP  10/18/2025 12:24:28 AM ::1 Returned 304 in 2 ms
+ HTTP  10/18/2025 12:24:28 AM ::1 GET /static/js/main.e15f86e9.js.map
+ HTTP  10/18/2025 12:24:28 AM ::1 Returned 200 in 5 ms
+ HTTP  10/18/2025 12:24:28 AM ::1 GET /static/media/matchleague_logo.3542f21af08ad47a638c.png
+ HTTP  10/18/2025 12:24:28 AM ::1 Returned 304 in 1 ms
+ HTTP  10/18/2025 12:24:29 AM ::1 GET /static/media/MatchLeague2.2a350611fca568e2537f.png
+ HTTP  10/18/2025 12:24:29 AM ::1 GET /static/media/matchleague_logo_4x4.5703e6151d94c6c3fdfa.png
+ HTTP  10/18/2025 12:24:29 AM ::1 GET /manifest.json
+ HTTP  10/18/2025 12:24:29 AM ::1 GET /static/media/1-heros.461ab0f882e7d83e575f.png
+ HTTP  10/18/2025 12:24:29 AM ::1 GET /static/media/2-beach-volleyball.32a282af39d062e68f81.png
+ HTTP  10/18/2025 12:24:29 AM ::1 GET /static/media/3-football.25ca3e0f99bd6cab1b02.png
+ HTTP  10/18/2025 12:24:29 AM ::1 GET /static/media/l-running.615dd61bf940a54bd60a.png
+ HTTP  10/18/2025 12:24:29 AM ::1 Returned 304 in 7 ms
+ HTTP  10/18/2025 12:24:29 AM ::1 Returned 304 in 9 ms
+ HTTP  10/18/2025 12:24:29 AM ::1 GET /static/media/l-football.d40489630f020c8a5844.png
+ HTTP  10/18/2025 12:24:29 AM ::1 Returned 304 in 19 ms
+ HTTP  10/18/2025 12:24:29 AM ::1 GET /static/media/l-tennis.8d3957bb2d6fe5fd44c8.png
+ HTTP  10/18/2025 12:24:29 AM ::1 Returned 304 in 30 ms
+ HTTP  10/18/2025 12:24:29 AM ::1 Returned 304 in 34 ms
+ HTTP  10/18/2025 12:24:29 AM ::1 GET /static/media/padel.db9efbe33a5229546532.png
+ HTTP  10/18/2025 12:24:29 AM ::1 GET /static/media/bike.f0ed12c3d6f44feba1ee.png
+ HTTP  10/18/2025 12:24:29 AM ::1 Returned 304 in 37 ms
+ HTTP  10/18/2025 12:24:29 AM ::1 GET /static/media/tennis.0f7f8a874257eca4ca64.png
+ HTTP  10/18/2025 12:24:29 AM ::1 Returned 304 in 39 ms
+ HTTP  10/18/2025 12:24:29 AM ::1 Returned 304 in 36 ms
+ HTTP  10/18/2025 12:24:29 AM ::1 Returned 304 in 13 ms
+ HTTP  10/18/2025 12:24:29 AM ::1 Returned 304 in 33 ms
+ HTTP  10/18/2025 12:24:29 AM ::1 Returned 304 in 17 ms
+ HTTP  10/18/2025 12:24:29 AM ::1 Returned 304 in 14 ms
+ HTTP  10/18/2025 12:24:29 AM ::1 GET /logo192.png
+ HTTP  10/18/2025 12:24:29 AM ::1 Returned 304 in 2 ms
+ HTTP  10/18/2025 12:24:49 AM ::1 GET /
+ HTTP  10/18/2025 12:24:49 AM ::1 Returned 200 in 2 ms
+ HTTP  10/18/2025 12:24:49 AM ::1 GET /static/js/main.e15f86e9.js
+ HTTP  10/18/2025 12:24:49 AM ::1 Returned 200 in 1 ms
+ HTTP  10/18/2025 12:24:49 AM ::1 GET /static/css/main.0425fd25.css
+ HTTP  10/18/2025 12:24:49 AM ::1 Returned 200 in 1 ms
+ HTTP  10/18/2025 12:24:49 AM ::1 GET /static/media/matchleague_logo.3542f21af08ad47a638c.png
+ HTTP  10/18/2025 12:24:49 AM ::1 Returned 200 in 1 ms
+ HTTP  10/18/2025 12:24:49 AM ::1 GET /static/media/1-heros.461ab0f882e7d83e575f.png
+ HTTP  10/18/2025 12:24:49 AM ::1 Returned 200 in 1 ms
+ HTTP  10/18/2025 12:24:49 AM ::1 GET /static/media/2-beach-volleyball.32a282af39d062e68f81.png
+ HTTP  10/18/2025 12:24:49 AM ::1 Returned 200 in 0 ms
+ HTTP  10/18/2025 12:24:49 AM ::1 GET /static/media/3-football.25ca3e0f99bd6cab1b02.png
+ HTTP  10/18/2025 12:24:49 AM ::1 GET /static/media/bike.f0ed12c3d6f44feba1ee.png
+ HTTP  10/18/2025 12:24:49 AM ::1 GET /static/media/l-football.d40489630f020c8a5844.png
+ HTTP  10/18/2025 12:24:49 AM ::1 GET /static/media/l-running.615dd61bf940a54bd60a.png
+ HTTP  10/18/2025 12:24:49 AM ::1 Returned 200 in 3 ms
+ HTTP  10/18/2025 12:24:49 AM ::1 Returned 200 in 5 ms
+ HTTP  10/18/2025 12:24:49 AM ::1 Returned 200 in 7 ms
+ HTTP  10/18/2025 12:24:49 AM ::1 Returned 200 in 8 ms
+ HTTP  10/18/2025 12:24:49 AM ::1 GET /static/media/tennis.0f7f8a874257eca4ca64.png
+ HTTP  10/18/2025 12:24:49 AM ::1 Returned 200 in 1 ms
+ HTTP  10/18/2025 12:24:49 AM ::1 GET /static/media/l-tennis.8d3957bb2d6fe5fd44c8.png
+ HTTP  10/18/2025 12:24:49 AM ::1 Returned 200 in 1 ms
+ HTTP  10/18/2025 12:24:49 AM ::1 GET /static/media/padel.db9efbe33a5229546532.png
+ HTTP  10/18/2025 12:24:49 AM ::1 GET /static/media/matchleague_logo_4x4.5703e6151d94c6c3fdfa.png
+ HTTP  10/18/2025 12:24:49 AM ::1 Returned 200 in 1 ms
+ HTTP  10/18/2025 12:24:49 AM ::1 Returned 200 in 1 ms
+ HTTP  10/18/2025 12:24:50 AM ::1 GET /static/media/MatchLeague2.2a350611fca568e2537f.png
+ HTTP  10/18/2025 12:24:50 AM ::1 Returned 200 in 1 ms
+ HTTP  10/18/2025 12:24:50 AM ::1 GET /manifest.json
+ HTTP  10/18/2025 12:24:50 AM ::1 Returned 200 in 1 ms
+ HTTP  10/18/2025 12:24:50 AM ::1 GET /logo192.png
+ HTTP  10/18/2025 12:24:50 AM ::1 Returned 200 in 0 ms
