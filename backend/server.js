@@ -32,7 +32,9 @@ const PORT = Number(process.env.PORT) || 5001;
 
 app.use(cors(cfg.cors));
 app.options("*", cors());
-app.use(express.json());
+// Increase body limits to allow base64 image uploads (avatars)
+app.use(express.json({ limit: '20mb' }));
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 // Serve uploaded files (avatars, etc.)
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -143,6 +145,8 @@ try {
         t.increments("id").primary();
         t.integer("league_id").notNullable();
         t.text("kickoff_at");
+        // Optional: human readable place/venue
+        t.text("location");
         t.text("status");
         t.integer("home_user_id");
         t.integer("away_user_id");
@@ -153,6 +157,18 @@ try {
         t.text("created_at").defaultTo(k.raw("CURRENT_TIMESTAMP"));
       });
       logInfo("[DB] Created table matches via Knex");
+    }
+    // If table exists ensure new optional columns
+    else {
+      try {
+        const info = await k("matches").columnInfo().catch(() => ({}));
+        if (!Object.prototype.hasOwnProperty.call(info, "location")) {
+          await k.schema.alterTable("matches", (t) => { t.text("location"); });
+          logInfo("[DB] Added column matches.location");
+        }
+      } catch (e) {
+        console.warn("[DB] ensure matches optional columns failed:", e && (e.message || e));
+      }
     }
 
     // teams
@@ -1067,6 +1083,10 @@ app.use((err, req, res, next) => {
   // This middleware catches errors passed with next(err)
   logError(err, { url: req.originalUrl, method: req.method, body: req.body });
   if (res.headersSent) return next(err);
+  // Handle body-parser size limit errors explicitly
+  if (err && (err.type === 'entity.too.large' || /request entity too large/i.test(err.message || ''))) {
+    return res.status(413).json({ error: 'PAYLOAD_TOO_LARGE' });
+  }
   res.status(500).json({ error: "INTERNAL_SERVER_ERROR" });
 });
 

@@ -527,6 +527,7 @@ module.exports = function matchesRoutes({ db }) {
         .select(
           'm.id',
           'm.kickoff_at',
+          'm.location',
           'm.home_user_id',
           'm.away_user_id',
           // include home/away text only if columns exist to avoid errors
@@ -721,7 +722,7 @@ module.exports = function matchesRoutes({ db }) {
   router.post('/:id/schedule', isAuthenticated, async (req, res) => {
     const gameId = req.params.id;
     const userId = req.user.id;
-    const { kickoff_at } = req.body || {};
+    const { kickoff_at, location } = req.body || {};
     if (!kickoff_at) return res.status(400).json({ error: 'kickoff_at required' });
     try {
       const k = getKnex();
@@ -759,6 +760,13 @@ module.exports = function matchesRoutes({ db }) {
       const info = await k('matches').columnInfo().catch(() => ({}));
       if (!Object.prototype.hasOwnProperty.call(info, 'kickoff_at')) return res.status(400).json({ error: 'NO_KICKOFF_COLUMN' });
       const patch = { kickoff_at: new Date(kickoff_at).toISOString() };
+      // optional location if column exists
+      try {
+        const info2 = await k('matches').columnInfo().catch(() => ({}));
+        if (Object.prototype.hasOwnProperty.call(info2, 'location')) {
+          if (typeof location === 'string' && location.trim()) patch.location = location.trim();
+        }
+      } catch {}
       if (Object.prototype.hasOwnProperty.call(info, 'status')) patch.status = 'scheduled';
       // season_id safeguard
       if (Object.prototype.hasOwnProperty.call(info, 'season_id') && !g.season_id) {
@@ -822,7 +830,7 @@ module.exports = function matchesRoutes({ db }) {
           .leftJoin({ uh: 'users' }, 'uh.id', 'm.home_user_id')
           .leftJoin({ ua: 'users' }, 'ua.id', 'm.away_user_id')
           .select(
-            'm.id', 'm.kickoff_at', 'm.home_user_id', 'm.away_user_id',
+            'm.id', 'm.kickoff_at', 'm.location', 'm.home_user_id', 'm.away_user_id',
             ...(hasHomeText ? ['m.home as home'] : [k.raw('NULL as home')]),
             ...(hasAwayText ? ['m.away as away'] : [k.raw('NULL as away')]),
             'm.home_score', 'm.away_score',
@@ -839,6 +847,94 @@ module.exports = function matchesRoutes({ db }) {
     } catch (e) {
       console.error('Schedule match error:', e);
       return res.status(500).json({ error: 'DB_ERROR', details: e && e.message });
+    }
+  });
+
+  // Suggest next free slot for this match within the same league.
+  // Input: { base_at?: string (ISO or local), duration_minutes?: number (default 60) }
+  // Returns: { suggested_at: ISO, reason?: string }
+  router.post('/:id/suggest-slot', isAuthenticated, async (req, res) => {
+    const gameId = Number(req.params.id);
+    const userId = Number(req.user.id);
+    try {
+      const k = getKnex();
+      if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+      const m = await k('matches').where({ id: gameId }).first();
+      if (!m) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+      // Permission: must be participant (single) or captain (team)
+      let allowed = false;
+      if (m.home_user_id != null || m.away_user_id != null) {
+        allowed = String(m.home_user_id) === String(userId) || String(m.away_user_id) === String(userId);
+      } else if (m.home_team_id != null || m.away_team_id != null) {
+        const cap = await k('team_members')
+          .whereIn('team_id', [m.home_team_id, m.away_team_id].filter(Boolean))
+          .andWhere({ user_id: userId, is_captain: 1 })
+          .first();
+        allowed = !!cap;
+      }
+      if (!allowed) return res.status(403).json({ error: 'NOT_ALLOWED' });
+
+      const baseRaw = req.body && (req.body.base_at || req.body.baseAt || req.body.kickoff_at);
+      const base = baseRaw ? new Date(baseRaw) : new Date();
+      const duration = Number(req.body?.duration_minutes) || 60;
+      const leagueId = m.league_id;
+
+      // Load existing scheduled matches in league
+      const info = await k('matches').columnInfo().catch(() => ({}));
+      const hasKickoff = Object.prototype.hasOwnProperty.call(info, 'kickoff_at');
+      let scheduled = [];
+      if (hasKickoff) {
+        scheduled = await k('matches').where({ league_id: leagueId }).whereNotNull('kickoff_at').select('kickoff_at').catch(() => []);
+      }
+      const taken = new Set((scheduled || []).map(r => {
+        const d = new Date(r.kickoff_at);
+        if (Number.isNaN(d.getTime())) return null;
+        const hh = d.getHours();
+        const mm = d.getMinutes();
+        return `${hh}:${mm}`;
+      }).filter(Boolean));
+
+      // Business hours grid: 08:00..22:00 quarter-hour slots; prefer requested time rounded up
+      function* slotsFrom(date) {
+        const d = new Date(date);
+        d.setSeconds(0, 0);
+        // round up to next 15-min step
+        const m0 = d.getMinutes();
+        const step = 15;
+        const next = Math.ceil(m0 / step) * step;
+        d.setMinutes(next, 0, 0);
+        // try today and next 7 days
+        for (let day = 0; day < 7; day++) {
+          for (let h = 8; h <= 22; h++) {
+            for (let m = 0; m < 60; m += step) {
+              const cand = new Date(d);
+              cand.setHours(h, m, 0, 0);
+              // skip past slots
+              if (cand.getTime() < Date.now()) continue;
+              yield cand;
+            }
+          }
+          d.setDate(d.getDate() + 1);
+          d.setHours(8, 0, 0, 0);
+        }
+      }
+
+      let suggested = null;
+      for (const s of slotsFrom(base)) {
+        const key = `${s.getHours()}:${s.getMinutes()}`;
+        if (!taken.has(key)) { suggested = s; break; }
+      }
+      if (!suggested) {
+        // fallback: next day 18:00
+        const f = new Date(base);
+        f.setDate(f.getDate() + 1);
+        f.setHours(18, 0, 0, 0);
+        suggested = f;
+      }
+      return res.json({ suggested_at: suggested.toISOString(), duration_minutes: duration });
+    } catch (e) {
+      console.error('Suggest slot failed', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'SUGGEST_FAILED' });
     }
   });
 

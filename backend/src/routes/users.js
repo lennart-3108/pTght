@@ -1,4 +1,5 @@
 const express = require("express");
+const { isAuthenticated } = require("../../middleware/auth");
 
 module.exports = function usersRoutes(ctx) {
   const router = express.Router();
@@ -70,9 +71,15 @@ module.exports = function usersRoutes(ctx) {
   });
 
     // Upload avatar (simple base64 image) → stores under /uploads/avatars/<id>.png and sets users.avatar_url
-    router.post('/users/:id/avatar', (req, res) => {
+    router.post('/users/:id/avatar', isAuthenticated, (req, res) => {
       const userId = Number(req.params.id);
       if (!Number.isFinite(userId)) return res.status(400).json({ error: 'Ungültige ID' });
+      // Only allow users to upload their own avatar unless admin
+      const reqUserId = Number(req.user && req.user.id);
+      const isAdmin = !!(req.user && (req.user.is_admin || req.user.isAdmin));
+      if (!isAdmin && reqUserId !== userId) {
+        return res.status(403).json({ error: 'FORBIDDEN' });
+      }
       try {
         const raw = req.body?.image || req.body?.avatar || '';
         const m = String(raw).match(/^data:image\/(png|jpeg|jpg);base64,(.+)$/i);
