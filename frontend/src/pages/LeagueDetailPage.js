@@ -2,10 +2,14 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { API_BASE, fetchWithTimeout } from "../config";
 import Avatar from "../components/Avatar";
+import { useResponsive } from "../hooks/useResponsive";
 
 export default function LeagueDetailPage() {
   const { leagueId } = useParams();
   const navigate = useNavigate();
+  
+  // Dynamic responsive hook
+  const isMobile = useResponsive(768);
   const [league, setLeague] = useState(null);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
@@ -494,12 +498,28 @@ export default function LeagueDetailPage() {
   if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
   if (!league) return <div style={{ padding: 16 }}>Keine Daten.</div>;
 
-  // Styles
-  const wrap = { padding: 16, color: '#e8efe8', fontFamily: 'Inter, system-ui, sans-serif' };
-  const card = { background: '#0f2a20', borderRadius: 16, boxShadow: '0 14px 36px rgba(0,0,0,0.5)' };
-  const pad = { padding: 16 };
-  const pill = { display: 'inline-block', padding: '6px 12px', borderRadius: 999, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe' };
-  const small = { fontSize: 12, color: '#a6bfb3' };
+  // Mobile responsive styles (now using dynamic hook)
+  const wrap = { 
+    padding: isMobile ? 8 : 16, 
+    color: '#e8efe8', 
+    fontFamily: 'Inter, system-ui, sans-serif' 
+  };
+  const card = { 
+    background: '#0f2a20', 
+    borderRadius: isMobile ? 12 : 16, 
+    boxShadow: isMobile ? '0 8px 24px rgba(0,0,0,0.4)' : '0 14px 36px rgba(0,0,0,0.5)' 
+  };
+  const pad = { padding: isMobile ? 12 : 16 };
+  const pill = { 
+    display: 'inline-block', 
+    padding: isMobile ? '5px 10px' : '6px 12px', 
+    borderRadius: 999, 
+    border: '1px solid #2f6b57', 
+    background: '#0e2a22', 
+    color: '#dfe',
+    fontSize: isMobile ? 12 : 14
+  };
+  const small = { fontSize: isMobile ? 11 : 12, color: '#a6bfb3' };
 
   return (
     <div style={wrap}>
@@ -530,22 +550,39 @@ export default function LeagueDetailPage() {
           </div>
         </div>
         {/* quick stats */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8, padding: 16 }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', 
+          gap: isMobile ? 6 : 8, 
+          padding: isMobile ? 12 : 16 
+        }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 26, fontWeight: 900 }}>{(standingsWithMembers || []).reduce((a,b)=>a + (b.played||0),0)}</div>
-            <div style={{ color: '#bcd' }}>Spiele</div>
+            <div style={{ 
+              fontSize: isMobile ? 20 : 26, 
+              fontWeight: 900 
+            }}>{(standingsWithMembers || []).reduce((a,b)=>a + (b.played||0),0)}</div>
+            <div style={{ color: '#bcd', fontSize: isMobile ? 12 : 14 }}>Spiele</div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 26, fontWeight: 900 }}>{(games.completed||[]).reduce((a,b)=>a + ((b.home_score||0)+(b.away_score||0)),0)}</div>
-            <div style={{ color: '#bcd' }}>Tore</div>
+            <div style={{ 
+              fontSize: isMobile ? 20 : 26, 
+              fontWeight: 900 
+            }}>{(games.completed||[]).reduce((a,b)=>a + ((b.home_score||0)+(b.away_score||0)),0)}</div>
+            <div style={{ color: '#bcd', fontSize: isMobile ? 12 : 14 }}>Tore</div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 26, fontWeight: 900 }}>{members.length}</div>
-            <div style={{ color: '#bcd' }}>Mitglieder</div>
+            <div style={{ 
+              fontSize: isMobile ? 20 : 26, 
+              fontWeight: 900 
+            }}>{members.length}</div>
+            <div style={{ color: '#bcd', fontSize: isMobile ? 12 : 14 }}>Mitglieder</div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 26, fontWeight: 900 }}>{(games.upcoming||[]).length}</div>
-            <div style={{ color: '#bcd' }}>Anstehend</div>
+            <div style={{ 
+              fontSize: isMobile ? 20 : 26, 
+              fontWeight: 900 
+            }}>{(games.upcoming||[]).length}</div>
+            <div style={{ color: '#bcd', fontSize: isMobile ? 12 : 14 }}>Anstehend</div>
           </div>
         </div>
       </div>
@@ -558,7 +595,12 @@ export default function LeagueDetailPage() {
               Wähle einen Gegner und den Kickoff – wir legen das Match direkt an.
             </div>
           </div>
-          <form onSubmit={createMatch} style={{ ...pad, display: 'grid', gap: 12, gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))' }}>
+          <form onSubmit={createMatch} style={{ 
+            ...pad, 
+            display: 'grid', 
+            gap: isMobile ? 8 : 12, 
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))' 
+          }}>
             <label style={{ display: 'grid', gap: 6 }}>
               Gegner
               <select value={opponentId} onChange={(e) => setOpponentId(e.target.value)}>
