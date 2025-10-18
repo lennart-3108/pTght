@@ -5,6 +5,72 @@ module.exports = function usersRoutes(ctx) {
   const router = express.Router();
   const { db } = ctx;
 
+  const dbAllAsync = (sql, params = []) => new Promise((resolve, reject) => {
+    if (!db || typeof db.all !== 'function') return reject(new Error('DB_NOT_AVAILABLE'));
+    db.all(sql, params, (err, rows) => (err ? reject(err) : resolve(rows)));
+  });
+
+  const dbGetAsync = (sql, params = []) => new Promise((resolve, reject) => {
+    if (!db || typeof db.get !== 'function') return reject(new Error('DB_NOT_AVAILABLE'));
+    db.get(sql, params, (err, row) => (err ? reject(err) : resolve(row)));
+  });
+
+  const dbRunAsync = (sql, params = []) => new Promise((resolve, reject) => {
+    if (!db || typeof db.run !== 'function') return reject(new Error('DB_NOT_AVAILABLE'));
+    db.run(sql, params, function (err) {
+      if (err) return reject(err);
+      resolve(this);
+    });
+  });
+
+  let friendshipsEnsured = false;
+  async function ensureFriendshipsTable() {
+    if (friendshipsEnsured) return true;
+    await dbRunAsync(
+      `CREATE TABLE IF NOT EXISTS user_friendships (
+        user_low INTEGER NOT NULL,
+        user_high INTEGER NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        initiator_id INTEGER,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        responded_at TEXT,
+        PRIMARY KEY (user_low, user_high)
+      )`
+    );
+    await dbRunAsync(`CREATE INDEX IF NOT EXISTS idx_user_friendships_status ON user_friendships(status)`);
+    friendshipsEnsured = true;
+    return true;
+  }
+
+  const normalizePair = (a, b) => {
+    const aNum = Number(a);
+    const bNum = Number(b);
+    return aNum <= bNum ? [aNum, bNum] : [bNum, aNum];
+  };
+
+  const buildDisplayName = (row) => {
+    const parts = [row.firstname || "", row.lastname || ""].map(s => String(s || "").trim()).filter(Boolean);
+    if (parts.length) return parts.join(" ");
+    if (row.name && String(row.name).trim()) return String(row.name).trim();
+    if (row.email && String(row.email).trim()) return String(row.email).trim();
+    const id = row.id || row.user_id || row.friend_id;
+    return id ? `User ${id}` : "Unbekannt";
+  };
+
+  const parseFavoriteSports = (raw) => {
+    if (Array.isArray(raw)) return raw;
+    if (typeof raw !== 'string') return [];
+    const trimmed = raw.trim();
+    if (!trimmed) return [];
+    try {
+      if (trimmed.startsWith('[')) {
+        const parsed = JSON.parse(trimmed);
+        return Array.isArray(parsed) ? parsed : [];
+      }
+    } catch (_) {}
+    return trimmed.split(',').map(s => s.trim()).filter(Boolean);
+  };
+
   // Try to resolve a Knex instance for more complex queries if available
   function resolveKnex() {
     if (ctx && ctx.db && ctx.db.knex && ctx.db.knex.client) return ctx.db.knex;
@@ -17,57 +83,256 @@ module.exports = function usersRoutes(ctx) {
     return null;
   }
 
-  router.get("/users/:id", (req, res) => {
-    const id = Number(req.params.id);
-    if (!Number.isFinite(id)) return res.status(400).json({ error: "Ungültige ID" });
-    // Be tolerant to missing avatar_url column
-    db.all(`PRAGMA table_info(users)`, [], (pe, cols) => {
-      if (pe) return res.status(500).json({ error: "Datenbankfehler", details: pe.message });
+  const handleGetUser = async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isFinite(id)) return res.status(400).json({ error: "Ungültige ID" });
+
+      const cols = await dbAllAsync(`PRAGMA table_info(users)`);
       const hasAvatar = Array.isArray(cols) && cols.some(c => String(c.name || "").toLowerCase() === "avatar_url");
-      const sql = hasAvatar
-        ? `SELECT id, firstname, lastname, email, avatar_url FROM users WHERE id = ?`
-        : `SELECT id, firstname, lastname, email FROM users WHERE id = ?`;
-      db.get(sql, [id], (err, user) => {
-        if (err) return res.status(500).json({ error: "Datenbankfehler", details: err.message });
-        if (!user) return res.status(404).json({ error: "Nutzer nicht gefunden" });
-        // Check if user_sports table exists; if not, try fallback via user_leagues→leagues→sports
-        db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='user_sports'`, [], (te, rs) => {
-          const avatar_url = hasAvatar ? (user.avatar_url || null) : null;
-          if (te) return res.status(500).json({ error: "Datenbankfehler", details: te.message });
-          if (rs && rs.name === 'user_sports') {
-            db.all(
-              `SELECT s.id, s.name
-               FROM user_sports us
-               JOIN sports s ON s.id = us.sport_id
-               WHERE us.user_id = ?
+      const hasOpenFlag = Array.isArray(cols) && cols.some(c => String(c.name || "").toLowerCase() === "open_for_matches");
+      const hasFavSports = Array.isArray(cols) && cols.some(c => String(c.name || "").toLowerCase() === "favorite_sports");
+
+      const selectColumns = ["id", "firstname", "lastname", "email"];
+      if (hasAvatar) selectColumns.push("avatar_url");
+      if (hasOpenFlag) selectColumns.push("open_for_matches");
+      if (hasFavSports) selectColumns.push("favorite_sports");
+
+      const user = await dbGetAsync(`SELECT ${selectColumns.join(", ")} FROM users WHERE id = ?`, [id]);
+      if (!user) return res.status(404).json({ error: "Nutzer nicht gefunden" });
+
+      const avatar_url = hasAvatar ? (user.avatar_url || null) : null;
+      const open_for_matches = hasOpenFlag ? !!user.open_for_matches : null;
+      const favorite_sports = hasFavSports ? parseFavoriteSports(user.favorite_sports) : [];
+
+      let sports = [];
+      const userSportsTable = await dbGetAsync(`SELECT name FROM sqlite_master WHERE type='table' AND name='user_sports'`);
+      if (userSportsTable && userSportsTable.name === 'user_sports') {
+        sports = await dbAllAsync(
+          `SELECT s.id, s.name
+             FROM user_sports us
+             JOIN sports s ON s.id = us.sport_id
+             WHERE us.user_id = ?
+             ORDER BY s.name`,
+          [id]
+        ).catch(() => []);
+      } else {
+        const hasUserLeagues = await dbGetAsync(`SELECT name FROM sqlite_master WHERE type='table' AND name='user_leagues'`);
+        if (hasUserLeagues && hasUserLeagues.name === 'user_leagues') {
+          sports = await dbAllAsync(
+            `SELECT DISTINCT s.id, s.name
+               FROM user_leagues ul
+               JOIN leagues l ON l.id = ul.league_id
+               JOIN sports s ON s.id = l.sport_id
+               WHERE ul.user_id = ?
                ORDER BY s.name`,
-              [id],
-              (e2, sports) => {
-                if (e2) return res.status(500).json({ error: "Datenbankfehler", details: e2.message });
-                return res.json({ ...user, avatar_url, sports: sports || [] });
-              }
-            );
-          } else {
-            // Fallback: infer sports via user_leagues
-            db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='user_leagues'`, [], (te2, rs2) => {
-              if (te2) return res.status(500).json({ error: "Datenbankfehler", details: te2.message });
-              if (!rs2) return res.json({ ...user, avatar_url, sports: [] });
-              const sql2 = `
-                SELECT DISTINCT s.id, s.name
-                FROM user_leagues ul
-                JOIN leagues l ON l.id = ul.league_id
-                JOIN sports s ON s.id = l.sport_id
-                WHERE ul.user_id = ?
-                ORDER BY s.name`;
-              db.all(sql2, [id], (e3, sports2) => {
-                if (e3) return res.status(500).json({ error: "Datenbankfehler", details: e3.message });
-                return res.json({ ...user, avatar_url, sports: sports2 || [] });
-              });
-            });
-          }
-        });
+            [id]
+          ).catch(() => []);
+        }
+      }
+
+      return res.json({
+        id: user.id,
+        firstname: user.firstname,
+        lastname: user.lastname,
+        email: user.email,
+        avatar_url,
+        open_for_matches,
+        favorite_sports,
+        sports: sports || []
       });
-    });
+    } catch (e) {
+      return res.status(500).json({ error: "Datenbankfehler", details: e?.message || String(e) });
+    }
+  };
+
+  router.get("/users/:id", handleGetUser);
+  // Legacy singular route used by older frontend builds
+  router.get("/user/:id", handleGetUser);
+
+  router.get("/users/:id/friends", async (req, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isFinite(id)) return res.status(400).json({ error: "Ungültige ID" });
+      await ensureFriendshipsTable().catch(() => {});
+      const rows = await dbAllAsync(
+        `SELECT
+           CASE WHEN uf.user_low = ? THEN uf.user_high ELSE uf.user_low END AS friend_id,
+           uf.status,
+           uf.created_at,
+           u.id,
+           u.firstname,
+           u.lastname,
+           u.name,
+           u.email,
+           u.avatar_url
+         FROM user_friendships uf
+         JOIN users u ON u.id = CASE WHEN uf.user_low = ? THEN uf.user_high ELSE uf.user_low END
+         WHERE (uf.user_low = ? OR uf.user_high = ?) AND uf.status = 'accepted'
+         ORDER BY uf.created_at DESC
+         LIMIT 50`,
+        [id, id, id, id]
+      ).catch(() => []);
+
+      const list = (rows || []).map(row => ({
+        id: row.friend_id,
+        displayName: buildDisplayName(row),
+        avatar_url: row.avatar_url || null,
+        since: row.created_at || null
+      }));
+      return res.json(list);
+    } catch (e) {
+      return res.status(500).json({ error: "Datenbankfehler", details: e?.message || String(e) });
+    }
+  });
+
+  router.get("/users/:id/mutual-friends", isAuthenticated, async (req, res) => {
+    try {
+      const targetId = Number(req.params.id);
+      const viewerId = Number(req.user && req.user.id);
+      if (!Number.isFinite(targetId)) return res.status(400).json({ error: "Ungültige ID" });
+      if (!Number.isFinite(viewerId)) return res.status(401).json({ error: "AUTH_REQUIRED" });
+      if (targetId === viewerId) return res.json([]);
+
+      await ensureFriendshipsTable().catch(() => {});
+
+      const viewerFriends = await dbAllAsync(
+        `SELECT CASE WHEN user_low = ? THEN user_high ELSE user_low END AS friend_id
+         FROM user_friendships
+         WHERE (user_low = ? OR user_high = ?) AND status = 'accepted'`,
+        [viewerId, viewerId, viewerId]
+      ).catch(() => []);
+      const targetFriends = await dbAllAsync(
+        `SELECT CASE WHEN user_low = ? THEN user_high ELSE user_low END AS friend_id
+         FROM user_friendships
+         WHERE (user_low = ? OR user_high = ?) AND status = 'accepted'`,
+        [targetId, targetId, targetId]
+      ).catch(() => []);
+
+      const viewerSet = new Set((viewerFriends || []).map(r => Number(r.friend_id)).filter(Number.isFinite));
+      const sharedIds = Array.from(new Set((targetFriends || []).map(r => Number(r.friend_id)).filter(id => viewerSet.has(id)))).slice(0, 12);
+      if (!sharedIds.length) return res.json([]);
+
+      const placeholders = sharedIds.map(() => '?').join(', ');
+      const rows = await dbAllAsync(
+        `SELECT id, firstname, lastname, name, email, avatar_url
+         FROM users
+         WHERE id IN (${placeholders})`,
+        sharedIds
+      ).catch(() => []);
+
+      const ordered = sharedIds
+        .map(id => {
+          const row = (rows || []).find(r => Number(r.id) === Number(id));
+          if (!row) return null;
+          return {
+            id: row.id,
+            displayName: buildDisplayName(row),
+            avatar_url: row.avatar_url || null
+          };
+        })
+        .filter(Boolean);
+
+      return res.json(ordered);
+    } catch (e) {
+      return res.status(500).json({ error: "Datenbankfehler", details: e?.message || String(e) });
+    }
+  });
+
+  router.get("/users/:id/friendship-status", isAuthenticated, async (req, res) => {
+    try {
+      const targetId = Number(req.params.id);
+      const viewerId = Number(req.user && req.user.id);
+      if (!Number.isFinite(targetId)) return res.status(400).json({ error: "Ungültige ID" });
+      if (!Number.isFinite(viewerId)) return res.status(401).json({ error: "AUTH_REQUIRED" });
+      if (targetId === viewerId) return res.json({ status: "self" });
+
+      await ensureFriendshipsTable().catch(() => {});
+      const [low, high] = normalizePair(viewerId, targetId);
+      const row = await dbGetAsync(`SELECT * FROM user_friendships WHERE user_low = ? AND user_high = ?`, [low, high]).catch(() => null);
+      if (!row) return res.json({ status: "none" });
+      const pendingDirection = row.status === 'pending' ? (row.initiator_id === viewerId ? 'outgoing' : 'incoming') : null;
+      return res.json({
+        status: row.status,
+        initiatorId: row.initiator_id,
+        created_at: row.created_at || null,
+        responded_at: row.responded_at || null,
+        pendingDirection
+      });
+    } catch (e) {
+      return res.status(500).json({ error: "Datenbankfehler", details: e?.message || String(e) });
+    }
+  });
+
+  router.post("/users/:id/friendships", isAuthenticated, async (req, res) => {
+    try {
+      const targetId = Number(req.params.id);
+      const viewerId = Number(req.user && req.user.id);
+      if (!Number.isFinite(targetId)) return res.status(400).json({ error: "Ungültige ID" });
+      if (!Number.isFinite(viewerId)) return res.status(401).json({ error: "AUTH_REQUIRED" });
+      if (targetId === viewerId) return res.status(400).json({ error: "SELF_FRIEND" });
+
+      await ensureFriendshipsTable();
+      const [low, high] = normalizePair(viewerId, targetId);
+      const now = new Date().toISOString();
+      const existing = await dbGetAsync(`SELECT * FROM user_friendships WHERE user_low = ? AND user_high = ?`, [low, high]).catch(() => null);
+
+      if (!existing) {
+        await dbRunAsync(
+          `INSERT INTO user_friendships (user_low, user_high, status, initiator_id, created_at)
+           VALUES (?, ?, 'pending', ?, ?)`,
+          [low, high, viewerId, now]
+        );
+        return res.status(201).json({ status: 'pending', pendingDirection: 'outgoing', message: 'Freundschaftsanfrage gesendet.' });
+      }
+
+      if (existing.status === 'accepted') {
+        return res.json({ status: 'accepted', pendingDirection: null, message: 'Ihr seid bereits befreundet.' });
+      }
+
+      if (existing.status === 'pending') {
+        if (existing.initiator_id === viewerId) {
+          return res.json({ status: 'pending', pendingDirection: 'outgoing', message: 'Freundschaftsanfrage bereits gesendet.' });
+        }
+        await dbRunAsync(
+          `UPDATE user_friendships
+             SET status = 'accepted', responded_at = ?
+             WHERE user_low = ? AND user_high = ?`,
+          [now, low, high]
+        );
+        return res.json({ status: 'accepted', pendingDirection: null, message: 'Freundschaftsanfrage angenommen.' });
+      }
+
+      // For any other status (declined/blocked), reset to pending with new initiator
+      await dbRunAsync(
+        `UPDATE user_friendships
+           SET status = 'pending', initiator_id = ?, created_at = ?, responded_at = NULL
+           WHERE user_low = ? AND user_high = ?`,
+        [viewerId, now, low, high]
+      );
+      return res.json({ status: 'pending', pendingDirection: 'outgoing', message: 'Freundschaftsanfrage erneut gesendet.' });
+    } catch (e) {
+      return res.status(500).json({ error: "Datenbankfehler", details: e?.message || String(e) });
+    }
+  });
+
+  router.delete("/users/:id/friendships", isAuthenticated, async (req, res) => {
+    try {
+      const targetId = Number(req.params.id);
+      const viewerId = Number(req.user && req.user.id);
+      if (!Number.isFinite(targetId)) return res.status(400).json({ error: "Ungültige ID" });
+      if (!Number.isFinite(viewerId)) return res.status(401).json({ error: "AUTH_REQUIRED" });
+      if (targetId === viewerId) return res.status(400).json({ error: "SELF_FRIEND" });
+
+      await ensureFriendshipsTable();
+      const [low, high] = normalizePair(viewerId, targetId);
+      const existing = await dbGetAsync(`SELECT * FROM user_friendships WHERE user_low = ? AND user_high = ?`, [low, high]).catch(() => null);
+      if (!existing) return res.status(404).json({ error: "NOT_FRIENDS" });
+      await dbRunAsync(`DELETE FROM user_friendships WHERE user_low = ? AND user_high = ?`, [low, high]);
+      return res.json({ status: 'removed' });
+    } catch (e) {
+      return res.status(500).json({ error: "Datenbankfehler", details: e?.message || String(e) });
+    }
   });
 
     // Upload avatar (simple base64 image) → stores under /uploads/avatars/<id>.png and sets users.avatar_url
@@ -220,22 +485,27 @@ module.exports = function usersRoutes(ctx) {
       const awayName = hasAwayUserId ? k.raw(`(SELECT ${displayExpr('u')} FROM users u WHERE u.id = g.away_user_id) as away`) : (hasAwayText ? k.raw("g.away as away") : k.raw("NULL as away"));
       const tsSelect = tsCol ? k.raw(`g.${tsCol} as kickoff_at`) : k.raw("NULL as kickoff_at");
 
+      const selectColumns = [
+        "g.id",
+        tsSelect,
+        { leagueId: "g.league_id" },
+        { league: "l.name" },
+        k.raw("COALESCE(c.name, '') as city"),
+        k.raw("COALESCE(s.name, '') as sport"),
+        homeName,
+        awayName,
+        "g.home_score",
+        "g.away_score"
+      ];
+
+      if (hasHomeUserId) selectColumns.push(k.raw("g.home_user_id as home_user_id"));
+      if (hasAwayUserId) selectColumns.push(k.raw("g.away_user_id as away_user_id"));
+
       let q = k({ g: table })
         .leftJoin({ l: "leagues" }, "l.id", "g.league_id")
         .leftJoin({ c: "cities" }, "c.id", "l.city_id")
         .leftJoin({ s: "sports" }, "s.id", "l.sport_id")
-        .select(
-          "g.id",
-          tsSelect,
-          { leagueId: "g.league_id" },
-          { league: "l.name" },
-          k.raw("COALESCE(c.name, '') as city"),
-          k.raw("COALESCE(s.name, '') as sport"),
-          homeName,
-          awayName,
-          "g.home_score",
-          "g.away_score"
-        );
+        .select(selectColumns);
 
       if (hasHomeUserId || hasAwayUserId) {
         q = q.where(function () {
