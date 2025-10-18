@@ -562,6 +562,17 @@ export default function UserDetailPage() {
     { label: "Serie", value: stats.longestWinStreak ? `${stats.longestWinStreak} Siege` : "—", detail: "Beste Serie" }
   ];
 
+  // Form calculation - last 5 matches
+  const formLetters = useMemo(() => {
+    return lastMatches.slice(0, 5).map(game => {
+      const outcome = game.analysis?.outcome;
+      return {
+        letter: outcome || "?",
+        color: outcome === "W" ? "#22c55e" : outcome === "L" ? "#ef4444" : outcome === "D" ? "#f59e0b" : "#6b7280"
+      };
+    });
+  }, [lastMatches]);
+
   const feedData = useMemo(() => {
     const friendFeed = (lastMatches || []).map((game) => {
       const outcome = game.analysis?.outcome;
@@ -774,22 +785,6 @@ export default function UserDetailPage() {
                 </div>
               )}
             </div>
-
-            {/* Compact Metrics Grid */}
-            <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))" }}>
-              {heroMetrics.map((item) => (
-                <div key={item.label} style={{ 
-                  padding: "12px", 
-                  borderRadius: 14, 
-                  background: "rgba(7,28,22,0.65)", 
-                  border: "1px solid rgba(74,162,131,0.28)", 
-                  textAlign: "center"
-                }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: "#e6fbf1", marginBottom: 2 }}>{item.value}</div>
-                  <div style={{ fontSize: 11, color: "#8cbfad" }}>{item.label}</div>
-                </div>
-              ))}
-            </div>
           </div>
 
           {/* Action Buttons */}
@@ -958,6 +953,69 @@ export default function UserDetailPage() {
         </div>
       </section>
 
+      {/* Statistiken Container - Kompakt & Stylisch */}
+      <section style={{ ...getBodyCard(isMobile), padding: isMobile ? "12px" : "16px" }}>
+        <header style={{ marginBottom: isMobile ? 12 : 14 }}>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "#e1f5ed" }}>Statistiken</div>
+          <div style={{ color: "#8bbfad", fontSize: 11 }}>Leistung & Form</div>
+        </header>
+
+        {/* 2x2 Grid mit Form als erstes Element */}
+        <div style={{ display: "grid", gap: isMobile ? 10 : 12, gridTemplateColumns: "1fr 1fr" }}>
+          
+          {/* Letzte Form - Erstes Element */}
+          {formLetters.length > 0 && (
+            <div style={{ 
+              padding: isMobile ? "10px" : "12px", 
+              borderRadius: 12, 
+              background: "linear-gradient(135deg, rgba(7,28,22,0.8), rgba(15,40,32,0.6))", 
+              border: "1px solid rgba(74,162,131,0.35)", 
+              textAlign: "center"
+            }}>
+              <div style={{ fontSize: isMobile ? 9 : 10, color: "#8cbfad", fontWeight: 600, marginBottom: isMobile ? 4 : 6 }}>
+                Letzte Form
+              </div>
+              <div style={{ display: "flex", justifyContent: "center", gap: isMobile ? 3 : 4, marginBottom: isMobile ? 2 : 4 }}>
+                {formLetters.slice(0, 5).map((form, index) => (
+                  <div key={index} style={{
+                    width: isMobile ? 18 : 20,
+                    height: isMobile ? 18 : 20,
+                    borderRadius: 4,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    backgroundColor: form.color,
+                    color: "#fff",
+                    fontSize: isMobile ? 10 : 11,
+                    fontWeight: 700
+                  }}>
+                    {form.letter}
+                  </div>
+                ))}
+              </div>
+              <div style={{ fontSize: isMobile ? 7 : 8, color: "#6b9688" }}>
+                Neueste Form
+              </div>
+            </div>
+          )}
+
+          {/* Restliche Statistiken */}
+          {heroMetrics.map((item) => (
+            <div key={item.label} style={{ 
+              padding: isMobile ? "10px" : "12px", 
+              borderRadius: 12, 
+              background: "linear-gradient(135deg, rgba(7,28,22,0.8), rgba(15,40,32,0.6))", 
+              border: "1px solid rgba(74,162,131,0.35)", 
+              textAlign: "center"
+            }}>
+              <div style={{ fontSize: isMobile ? 16 : 18, fontWeight: 800, color: "#e6fbf1", marginBottom: isMobile ? 3 : 4 }}>{item.value}</div>
+              <div style={{ fontSize: isMobile ? 9 : 10, color: "#8cbfad", fontWeight: 600 }}>{item.label}</div>
+              <div style={{ fontSize: isMobile ? 7 : 8, color: "#6b9688", marginTop: 1 }}>{item.detail}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* Main Content Grid - bessere Organisation */}
       <div style={{ display: "grid", gap: 24, gridTemplateColumns: "1fr", maxWidth: "100%" }}>
         
@@ -1000,10 +1058,68 @@ export default function UserDetailPage() {
                           )}
                           <div style={{ fontSize: 11, color: "#94cabb" }}>{formatDateTime(game.kickoff_at)}</div>
                         </div>
-                        <div style={{ fontSize: 13, fontWeight: 600, color: "#d6f8ea", marginBottom: 8 }}>
-                          <span>{analysis.isHome ? <strong>{displayName}</strong> : (game.home || "-")}</span>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#d6f8ea", marginBottom: 8, display: "flex", alignItems: "center", gap: 8 }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            {analysis.isHome ? (
+                              <>
+                                <Avatar userId={game.home_user_id} name={displayName} size={20} />
+                                <div style={{ display: "flex", flexDirection: "column" }}>
+                                  <strong>{displayName}</strong>
+                                  <div style={{ fontSize: 10, color: "#8cbfad" }}>
+                                    {user.first_name} {user.last_name}
+                                    {sportsChips.length > 0 && (
+                                      <span style={{ marginLeft: 8, opacity: 0.7 }}>🏆 {sportsChips.slice(0, 2).join(", ")}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <Avatar userId={game.home_user_id} name={game.home} size={20} />
+                                <div style={{ display: "flex", flexDirection: "column" }}>
+                                  {game.home_user_id ? (
+                                    <Link to={`/user/${game.home_user_id}`} style={{ color: "#d6f8ea", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
+                                      {game.home}
+                                    </Link>
+                                  ) : (
+                                    <span>{game.home || "-"}</span>
+                                  )}
+                                  <div style={{ fontSize: 10, color: "#8cbfad" }}>Profil anzeigen</div>
+                                </div>
+                              </>
+                            )}
+                          </div>
                           <span style={{ opacity: 0.5, margin: "0 6px" }}>vs</span>
-                          <span>{analysis.isAway ? <strong>{displayName}</strong> : (game.away || analysis.opponentName)}</span>
+                          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                            {analysis.isAway ? (
+                              <>
+                                <Avatar userId={game.away_user_id} name={displayName} size={20} />
+                                <div style={{ display: "flex", flexDirection: "column" }}>
+                                  <strong>{displayName}</strong>
+                                  <div style={{ fontSize: 10, color: "#8cbfad" }}>
+                                    {user.first_name} {user.last_name}
+                                    {sportsChips.length > 0 && (
+                                      <span style={{ marginLeft: 8, opacity: 0.7 }}>🏆 {sportsChips.slice(0, 2).join(", ")}</span>
+                                    )}
+                                  </div>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                <Avatar userId={game.away_user_id} name={game.away || analysis.opponentName} size={20} />
+                                <div style={{ display: "flex", flexDirection: "column" }}>
+                                  {game.away_user_id ? (
+                                    <Link to={`/user/${game.away_user_id}`} style={{ color: "#d6f8ea", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
+                                      {game.away || analysis.opponentName}
+                                    </Link>
+                                  ) : (
+                                    <span>{game.away || analysis.opponentName}</span>
+                                  )}
+                                  <div style={{ fontSize: 10, color: "#8cbfad" }}>Profil anzeigen</div>
+                                </div>
+                              </>
+                            )}
+                          </div>
                         </div>
                         <div style={{ display: "flex", gap: 8 }}>
                           {analysis.opponentId && (
@@ -1060,10 +1176,68 @@ export default function UserDetailPage() {
                             fontWeight: 700,
                             fontSize: 11
                           }}>{label}</span>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: "#d6f8ea", flex: 1 }}>
-                            <span>{analysis.isHome ? <strong>{displayName}</strong> : (game.home || "-")}</span>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#d6f8ea", flex: 1, display: "flex", alignItems: "center", gap: 8 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              {analysis.isHome ? (
+                                <>
+                                  <Avatar userId={game.home_user_id} name={displayName} size={20} />
+                                  <div style={{ display: "flex", flexDirection: "column" }}>
+                                    <strong>{displayName}</strong>
+                                    <div style={{ fontSize: 10, color: "#9ca3af" }}>
+                                      {user.first_name} {user.last_name}
+                                      {sportsChips.length > 0 && (
+                                        <span style={{ marginLeft: 8, opacity: 0.7 }}>🏆 {sportsChips.slice(0, 2).join(", ")}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <Avatar userId={game.home_user_id} name={game.home} size={20} />
+                                  <div style={{ display: "flex", flexDirection: "column" }}>
+                                    {game.home_user_id ? (
+                                      <Link to={`/user/${game.home_user_id}`} style={{ color: "#d6f8ea", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
+                                        {game.home}
+                                      </Link>
+                                    ) : (
+                                      <span>{game.home || "-"}</span>
+                                    )}
+                                    <div style={{ fontSize: 10, color: "#9ca3af" }}>Profil anzeigen</div>
+                                  </div>
+                                </>
+                              )}
+                            </div>
                             <span style={{ opacity: 0.5, margin: "0 6px" }}>vs</span>
-                            <span>{analysis.isAway ? <strong>{displayName}</strong> : (game.away || analysis.opponentName)}</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                              {analysis.isAway ? (
+                                <>
+                                  <Avatar userId={game.away_user_id} name={displayName} size={20} />
+                                  <div style={{ display: "flex", flexDirection: "column" }}>
+                                    <strong>{displayName}</strong>
+                                    <div style={{ fontSize: 10, color: "#9ca3af" }}>
+                                      {user.first_name} {user.last_name}
+                                      {sportsChips.length > 0 && (
+                                        <span style={{ marginLeft: 8, opacity: 0.7 }}>🏆 {sportsChips.slice(0, 2).join(", ")}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <Avatar userId={game.away_user_id} name={game.away || analysis.opponentName} size={20} />
+                                  <div style={{ display: "flex", flexDirection: "column" }}>
+                                    {game.away_user_id ? (
+                                      <Link to={`/user/${game.away_user_id}`} style={{ color: "#d6f8ea", textDecoration: "none", fontSize: 13, fontWeight: 600 }}>
+                                        {game.away || analysis.opponentName}
+                                      </Link>
+                                    ) : (
+                                      <span>{game.away || analysis.opponentName}</span>
+                                    )}
+                                    <div style={{ fontSize: 10, color: "#9ca3af" }}>Profil anzeigen</div>
+                                  </div>
+                                </>
+                              )}
+                            </div>
                           </div>
                         </div>
                         <div style={{ display: "flex", gap: 8 }}>
@@ -1085,7 +1259,7 @@ export default function UserDetailPage() {
       {/* Liga-Statistiken Section - Volle Breite */}
       <section style={{ ...getBodyCard(isMobile), padding: isMobile ? "16px" : "28px" }}>
         {/* Liga-Statistiken - kleiner und heller */}
-        <div style={{ marginBottom: isMobile ? 12 : 20, display: "grid", gap: isMobile ? 8 : 12, gridTemplateColumns: isMobile ? "repeat(auto-fit, minmax(120px, 1fr))" : "repeat(auto-fit, minmax(160px, 1fr))" }}>
+        <div style={{ marginBottom: isMobile ? 12 : 20, display: "grid", gap: isMobile ? 8 : 12, gridTemplateColumns: "1fr 1fr" }}>
           {heroTiles.map((tile) => (
             <div key={tile.title} style={{ 
               position: "relative", 
@@ -1105,14 +1279,25 @@ export default function UserDetailPage() {
         <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 16 }}>
           <div>
             <div style={{ fontSize: 18, fontWeight: 700 }}>Liga-Statistiken</div>
-            <div style={{ fontSize: 12, color: "#8bbfad" }}>Deine Platzierungen in den Ligen</div>
+            <div style={{ fontSize: 12, color: "#8bbfad" }}>
+              {isOwnProfile ? "Deine Platzierungen in den Ligen" : `Platzierungen von ${displayName}`}
+            </div>
           </div>
-          {leagues.length > 1 && (
+          {leagues.length > 0 && (
             <select
               value={activeLeagueId || ""}
               onChange={(e) => setActiveLeagueId(e.target.value ? Number(e.target.value) : null)}
-              style={{ background: "rgba(32,74,58,0.7)", border: "1px solid rgba(127,217,186,0.4)", color: "#e1f5ed", borderRadius: 10, padding: "6px 10px", fontSize: 12 }}
+              style={{ 
+                background: "rgba(32,74,58,0.7)", 
+                border: "1px solid rgba(127,217,186,0.4)", 
+                color: "#e1f5ed", 
+                borderRadius: 10, 
+                padding: "6px 10px", 
+                fontSize: 12,
+                minWidth: 120
+              }}
             >
+              <option value="">Alle Ligen</option>
               {leagues.map((league) => (
                 <option key={league.id} value={league.id}>{league.name}</option>
               ))}
@@ -1130,8 +1315,9 @@ export default function UserDetailPage() {
             <div style={{ marginTop: 12, padding: 16, borderRadius: 12, background: "rgba(32,74,58,0.4)", color: "#b8dec9" }}>Keine Tabellendaten verfügbar.</div>
           ) : (
             <div style={{ marginTop: 14 }}>
-              <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 60px 60px 50px 50px", gap: 10, fontSize: 11, color: "#7fd9ba", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "40px 40px 1fr 60px 60px 50px 50px", gap: 10, fontSize: 11, color: "#7fd9ba", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>
                 <div>Platz</div>
+                <div></div>
                 <div>Team</div>
                 <div style={{ textAlign: "center" }}>Sp.</div>
                 <div style={{ textAlign: "center" }}>S-U-N</div>
@@ -1149,7 +1335,7 @@ export default function UserDetailPage() {
                       key={`${row.key || row.name}`}
                       style={{
                         display: "grid",
-                        gridTemplateColumns: "40px 1fr 60px 60px 50px 50px",
+                        gridTemplateColumns: "40px 40px 1fr 60px 60px 50px 50px",
                         gap: 10,
                         alignItems: "center",
                         padding: "8px 10px",
@@ -1160,6 +1346,9 @@ export default function UserDetailPage() {
                       }}
                     >
                       <div style={{ fontWeight: 700, color: isMe ? "#7fd9ba" : "#b8dec9" }}>{row.rank}</div>
+                      <div>
+                        <Avatar userId={userIdMatch} name={row.name} size={24} />
+                      </div>
                       <div style={{ fontWeight: 600, color: isMe ? "#e1f5ed" : "#d6f8ea" }}>
                         {teamLink ? (
                           <Link to={teamLink} style={{ color: isMe ? "#e1f5ed" : "#d6f8ea", textDecoration: "none" }}>{row.name}</Link>

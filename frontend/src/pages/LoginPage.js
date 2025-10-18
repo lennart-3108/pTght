@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 // large hero logo not currently used here
-import smallLogo from "../images/matchleague_logo_4x4.png";
+import smallLogo from "../images/logo.png";
 // dynamically load all images from the background folder
 function importAllBackgrounds(r) {
   // map to { key, src } so we can sort by filename
