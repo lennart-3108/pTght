@@ -1,11 +1,8 @@
 /* Split header: left = nav, right = slanted logo box */
 .ml-header {
   --ml-header-height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   /* respect notches on iOS and avoid being off-screen */
-  padding: max(env(safe-area-inset-top), 0px) 8px 0 0; /* smaller right padding so logo can sit closer left */
+  padding: max(env(safe-area-inset-top), 0px) 0 0 0;
   background: linear-gradient(90deg, #0f2b27 0%, #0b2420 100%);
   color: #e6efe9;
   box-shadow: none;
