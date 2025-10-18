@@ -2,27 +2,30 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { API_BASE } from "../config";
 import Avatar from "../components/Avatar";
+import { useResponsive } from "../hooks/useResponsive";
 
-const pageStyle = {
+// Responsive page styling function (now dynamic)
+const getPageStyle = (isMobile) => ({
   minHeight: "100vh",
   background: "radial-gradient(circle at top, rgba(26,73,59,0.45), rgba(4,17,14,0.95) 55%)",
-  padding: "32px min(6vw, 64px)",
+  padding: isMobile ? "12px 8px" : "32px min(6vw, 64px)",
   color: "#e8efe8",
   fontFamily: "Inter, system-ui, sans-serif"
-};
+});
 
-const baseCard = {
+// Responsive card styling functions
+const getBaseCard = (isMobile) => ({
   background: "linear-gradient(135deg, rgba(9,26,21,0.92), rgba(18,44,37,0.92))",
-  borderRadius: 24,
-  boxShadow: "0 24px 60px rgba(0,0,0,0.45)",
+  borderRadius: isMobile ? 12 : 24,
+  boxShadow: isMobile ? "0 8px 24px rgba(0,0,0,0.3)" : "0 24px 60px rgba(0,0,0,0.45)",
   overflow: "hidden",
   position: "relative"
-};
+});
 
-const bodyCard = {
-  ...baseCard,
-  padding: "28px"
-};
+const getBodyCard = (isMobile) => ({
+  ...getBaseCard(isMobile),
+  padding: isMobile ? "16px" : "28px"
+});
 
 function formatDateTime(value) {
   if (!value) return "Termin tbd";
@@ -184,6 +187,9 @@ export default function UserDetailPage() {
   const { id } = useParams();
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   const viewerId = useMemo(() => extractUserIdFromToken(token), [token]);
+  
+  // Dynamic responsive hook
+  const isMobile = useResponsive(768);
 
   const [user, setUser] = useState(null);
   const [leagues, setLeagues] = useState([]);
@@ -202,7 +208,8 @@ export default function UserDetailPage() {
   const [friendActionBusy, setFriendActionBusy] = useState(false);
   const [socialRefreshKey, setSocialRefreshKey] = useState(0);
   const [toggleBusy, setToggleBusy] = useState(false);
-  const [activeFeed, setActiveFeed] = useState("friends");
+  const [feedFilters, setFeedFilters] = useState({ friends: true, team: true, public: true });
+  const [activeFeedCategory, setActiveFeedCategory] = useState("all"); // "all", "matches", "friends", "public"
 
   const isOwnProfile = user && Number(user.id) === Number(viewerId);
 
@@ -459,8 +466,17 @@ export default function UserDetailPage() {
 
   const stats = useMemo(() => {
     if (!user) return { wins: 0, draws: 0, losses: 0, matches: 0, winRate: 0, goalsFor: 0, goalsAgainst: 0, longestWinStreak: 0 };
-    return calculateStats(games.completed || [], Number(user.id), displayName);
-  }, [games.completed, user, displayName]);
+    
+    // Filter games by active league if one is selected
+    let filteredGames = games.completed || [];
+    if (activeLeagueId) {
+      filteredGames = filteredGames.filter(game => 
+        game.league_id === activeLeagueId || game.leagueId === activeLeagueId
+      );
+    }
+    
+    return calculateStats(filteredGames, Number(user.id), displayName);
+  }, [games.completed, user, displayName, activeLeagueId]);
 
   const opponents = useMemo(() => {
     if (!user) return [];
@@ -471,7 +487,13 @@ export default function UserDetailPage() {
     if (!user || !standings.length) return null;
     const byKey = standings.find((row) => String(row.key || "").includes(`u:${user.id}`));
     if (byKey) return byKey;
-    return standings.find((row) => String(row.name).toLowerCase() === displayName.toLowerCase()) || null;
+    
+    // Only use name-based fallback if the user key exists in standings but key format is different
+    // This prevents showing wrong user data when current user is not in the league standings
+    const exactKeyMatch = standings.find((row) => row.key === `u:${user.id}`);
+    if (exactKeyMatch) return exactKeyMatch;
+    
+    return null; // Don't fallback to name matching to prevent showing wrong user data
   }, [standings, user, displayName]);
 
   const leaderboardSummary = useMemo(() => {
@@ -516,6 +538,8 @@ export default function UserDetailPage() {
         analysis: analyzeGame(game, numericUserId, displayName)
       }));
   }, [games.completed, numericUserId, displayName]);
+  
+  const lastThreeMatches = useMemo(() => lastMatches.slice(0, 3), [lastMatches]);
 
   const standingsWindow = useMemo(() => {
     if (!standings.length) return [];
@@ -537,30 +561,6 @@ export default function UserDetailPage() {
     { label: "Nächstes Match", value: nextMatchTimeText, detail: nextMatchDateText },
     { label: "Serie", value: stats.longestWinStreak ? `${stats.longestWinStreak} Siege` : "—", detail: "Beste Serie" }
   ];
-
-  const socialSection = useMemo(() => {
-    const mutualList = (mutualFriends || []).map((f) => ({
-      id: f.id,
-      name: f.displayName || f.name || "Unbekannt",
-      avatar: f.avatar_url || null
-    }));
-    const friendList = (friends || []).map((f) => ({
-      id: f.id,
-      name: f.displayName || f.name || "Unbekannt",
-      avatar: f.avatar_url || null,
-      since: f.since || null
-    }));
-    const rivalList = (opponents || []).map((opp) => ({
-      id: opp.id || opp.name,
-      name: opp.name,
-      avatar: null,
-      matches: opp.matches
-    }));
-
-    if (mutualList.length) return { title: "Gemeinsame Freunde", items: mutualList.slice(0, 3), kind: "mutual" };
-    if (friendList.length) return { title: isOwnProfile ? "Deine Freunde" : "Freunde", items: friendList.slice(0, 4), kind: "friends" };
-    return { title: "Gemeinsame Gegner", items: rivalList.slice(0, 4), kind: "rivals" };
-  }, [friends, mutualFriends, opponents, isOwnProfile]);
 
   const feedData = useMemo(() => {
     const friendFeed = (lastMatches || []).map((game) => {
@@ -601,8 +601,6 @@ export default function UserDetailPage() {
     };
   }, [lastMatches, leagues, upcomingSlice]);
 
-  const activeFeedItems = feedData[activeFeed] || [];
-
   if (loading) return <div style={{ padding: 24 }}>Lade Profil …</div>;
   if (err) return <div style={{ padding: 24, color: "crimson" }}>Fehler: {err}</div>;
   if (!user) return <div style={{ padding: 24 }}>Benutzer nicht gefunden.</div>;
@@ -616,240 +614,250 @@ export default function UserDetailPage() {
   ];
 
   return (
-    <div style={pageStyle}>
-      <section style={{ ...baseCard, padding: "32px" }}>
+    <div style={getPageStyle(isMobile)}>
+      {/* Hero Section - Kompakter und strukturierter */}
+      <section style={{ ...getBaseCard(isMobile), padding: isMobile ? "16px" : "24px", marginBottom: isMobile ? 16 : 24 }}>
         <div style={{ position: "absolute", inset: 0, background: "radial-gradient(circle at 20% 20%, rgba(31,94,74,0.35), transparent 60%)" }} />
-        <div style={{ position: "relative", display: "grid", gridTemplateColumns: "minmax(220px, 280px) 1fr", gap: 32 }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-            <Avatar userId={user.id} name={displayName} size={128} style={{ border: "3px solid rgba(88,204,171,0.45)", boxShadow: "0 12px 32px rgba(9,23,17,0.6)" }} />
-            <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+        <div style={{ position: "relative", display: "grid", gridTemplateColumns: isMobile ? "1fr" : "auto 1fr auto", gap: isMobile ? 16 : 32, alignItems: "center" }}>
+          
+          {/* Avatar & Sports */}
+          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
+            <Avatar 
+              userId={user.id} 
+              name={displayName} 
+              size={isMobile ? 80 : 120} 
+              style={{ 
+                border: isMobile ? "2px solid rgba(88,204,171,0.45)" : "3px solid rgba(88,204,171,0.45)", 
+                boxShadow: isMobile ? "0 6px 16px rgba(9,23,17,0.6)" : "0 12px 32px rgba(9,23,17,0.6)" 
+              }} 
+            />
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", maxWidth: 160 }}>
               {sportsChips.length ? sportsChips.map((chip) => (
-                <span key={chip} style={{ padding: "6px 12px", borderRadius: 999, border: "1px solid rgba(92,200,165,0.4)", background: "rgba(16,60,46,0.8)", fontSize: 13 }}>{chip}</span>
+                <span key={chip} style={{ 
+                  padding: "4px 8px", 
+                  borderRadius: 12, 
+                  border: "1px solid rgba(92,200,165,0.4)", 
+                  background: "rgba(16,60,46,0.8)", 
+                  fontSize: 11,
+                  fontWeight: 500
+                }}>{chip}</span>
               )) : (
-                <span style={{ padding: "6px 12px", borderRadius: 999, background: "rgba(14,44,34,0.7)", border: "1px solid rgba(92,200,165,0.2)", fontSize: 13 }}>Allrounder</span>
+                <span style={{ 
+                  padding: "4px 8px", 
+                  borderRadius: 12, 
+                  background: "rgba(14,44,34,0.7)", 
+                  border: "1px solid rgba(92,200,165,0.2)", 
+                  fontSize: 11 
+                }}>Allrounder</span>
               )}
             </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span style={{ width: 12, height: 12, borderRadius: 999, background: "#5ccd9b", boxShadow: "0 0 12px #5ccd9b" }} />
-                <span style={{ fontSize: 14, color: "#bfead4" }}>{matchAvailability}</span>
-              </div>
-              <div style={{ display: "grid", gap: 10 }}>
-                {isOwnProfile ? (
-                  <>
-                    <button
-                      onClick={handleToggleMatchRequests}
-                      disabled={toggleBusy}
-                      style={{
-                        fontWeight: 600,
-                        background: user.open_for_matches 
-                          ? "linear-gradient(135deg,#48c9a9,#2f9c7a)" 
-                          : "rgba(10,33,27,0.85)",
-                        border: user.open_for_matches 
-                          ? "none" 
-                          : "1px solid rgba(90,203,165,0.45)",
-                        color: user.open_for_matches ? "#07271f" : "#7be0bb",
-                        padding: "12px 20px",
-                        borderRadius: 14,
-                        textAlign: "center",
-                        cursor: toggleBusy ? "wait" : "pointer",
-                        opacity: toggleBusy ? 0.6 : 1
-                      }}
-                    >
-                      {toggleBusy ? "..." : (user.open_for_matches ? "Match-Anfragen deaktivieren" : "Match-Anfragen aktivieren")}
-                    </button>
-                    <Link
-                      to="/profile/edit"
-                      style={{ 
-                        textDecoration: "none", 
-                        fontWeight: 600, 
-                        background: "rgba(10,33,27,0.85)", 
-                        border: "1px solid rgba(90,203,165,0.45)", 
-                        color: "#7be0bb", 
-                        padding: "11px 20px", 
-                        borderRadius: 14, 
-                        textAlign: "center" 
-                      }}
-                    >
-                      Profil bearbeiten
-                    </Link>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      to={`/chat/user/${user.id}`}
-                      style={{
-                        textDecoration: "none",
-                        fontWeight: 600,
-                        background: friendship.status === "accepted" 
-                          ? "linear-gradient(135deg,#48c9a9,#2f9c7a)"
-                          : friendship.status === "pending" && friendship.pendingDirection === "incoming"
-                            ? "linear-gradient(135deg,#e0c162,#d4a650)"
-                            : "linear-gradient(135deg,#48c9a9,#2f9c7a)",
-                        color: "#07271f",
-                        padding: "12px 20px",
-                        borderRadius: 14,
-                        textAlign: "center"
-                      }}
-                    >
-                      {friendship.status === "accepted" ? "Match anfragen" :
-                       friendship.status === "pending" && friendship.pendingDirection === "incoming" ? "Match anfragen (Anfrage ausstehend)" :
-                       "Match anfragen"}
-                    </Link>
-                    <Link
-                      to={`/chat/user/${user.id}`}
-                      style={{ 
-                        textDecoration: "none", 
-                        fontWeight: 600, 
-                        background: "rgba(10,33,27,0.85)", 
-                        border: "1px solid rgba(90,203,165,0.45)", 
-                        color: "#7be0bb", 
-                        padding: "11px 20px", 
-                        borderRadius: 14, 
-                        textAlign: "center" 
-                      }}
-                    >
-                      Nachricht senden
-                    </Link>
-                  </>
-                )}
-              </div>
+            
+            {/* Abzeichen Widget */}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center", maxWidth: 160 }}>
+              {/* Community League Gold Medaille */}
+              {leagues.some(league => league.name?.toLowerCase().includes('community')) && rankingEntry?.rank === 1 && (
+                <div style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: 4, 
+                  padding: "3px 6px", 
+                  borderRadius: 8, 
+                  background: "linear-gradient(135deg, rgba(255,215,0,0.2), rgba(218,165,32,0.15))", 
+                  border: "1px solid rgba(255,215,0,0.4)",
+                  fontSize: 9,
+                  fontWeight: 600,
+                  color: "#ffd700"
+                }}>
+                  <span>🏆</span>
+                  <span>Community Gold</span>
+                </div>
+              )}
+              
+              {/* Liga-Sieger Abzeichen */}
+              {rankingEntry?.rank === 1 && (
+                <div style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: 3, 
+                  padding: "3px 6px", 
+                  borderRadius: 8, 
+                  background: "linear-gradient(135deg, rgba(127,217,186,0.25), rgba(72,201,169,0.15))", 
+                  border: "1px solid rgba(127,217,186,0.5)",
+                  fontSize: 9,
+                  fontWeight: 600,
+                  color: "#7fd9ba"
+                }}>
+                  <span>👑</span>
+                  <span>Liga-Leader</span>
+                </div>
+              )}
+              
+              {/* Veteran Abzeichen (mehr als 10 Spiele) */}
+              {stats.matches >= 10 && (
+                <div style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: 3, 
+                  padding: "3px 6px", 
+                  borderRadius: 8, 
+                  background: "linear-gradient(135deg, rgba(138,43,226,0.2), rgba(75,0,130,0.15))", 
+                  border: "1px solid rgba(138,43,226,0.4)",
+                  fontSize: 9,
+                  fontWeight: 600,
+                  color: "#ba55d3"
+                }}>
+                  <span>⭐</span>
+                  <span>Veteran</span>
+                </div>
+              )}
+              
+              {/* High-Win-Rate Abzeichen (über 70%) */}
+              {stats.matches >= 5 && stats.winRate >= 70 && (
+                <div style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: 3, 
+                  padding: "3px 6px", 
+                  borderRadius: 8, 
+                  background: "linear-gradient(135deg, rgba(255,140,0,0.2), rgba(255,69,0,0.15))", 
+                  border: "1px solid rgba(255,140,0,0.4)",
+                  fontSize: 9,
+                  fontWeight: 600,
+                  color: "#ff8c00"
+                }}>
+                  <span>🔥</span>
+                  <span>Hot Streak</span>
+                </div>
+              )}
+              
+              {/* Neuling Abzeichen */}
+              {stats.matches <= 2 && (
+                <div style={{ 
+                  display: "flex", 
+                  alignItems: "center", 
+                  gap: 3, 
+                  padding: "3px 6px", 
+                  borderRadius: 8, 
+                  background: "linear-gradient(135deg, rgba(50,205,50,0.2), rgba(34,139,34,0.15))", 
+                  border: "1px solid rgba(50,205,50,0.4)",
+                  fontSize: 9,
+                  fontWeight: 600,
+                  color: "#32cd32"
+                }}>
+                  <span>🌱</span>
+                  <span>Newcomer</span>
+                </div>
+              )}
             </div>
           </div>
 
-          <div style={{ display: "flex", flexDirection: "column", gap: 28 }}>
+          {/* Main Info */}
+          <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 12 : 20, minWidth: 0 }}>
             <div>
-              <div style={{ fontSize: 36, fontWeight: 900, letterSpacing: 0.3 }}>{displayName}</div>
-              <div style={{ marginTop: 6, fontSize: 16, color: "#a9cabd" }}>{primaryCity ? `${primaryCity}, Germany` : "Ort unbekannt"}</div>
+              <div style={{ fontSize: isMobile ? 24 : 32, fontWeight: 900, letterSpacing: 0.2 }}>{displayName}</div>
+              <div style={{ marginTop: 4, fontSize: 14, color: "#a9cabd" }}>
+                {primaryCity ? `${primaryCity}, Germany` : "Ort unbekannt"}
+              </div>
               {heroBadges.length > 0 && (
-                <div style={{ marginTop: 14, display: "flex", gap: 10, flexWrap: "wrap" }}>
+                <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {heroBadges.map((badge) => (
-                    <span key={badge} style={{ padding: "6px 12px", borderRadius: 999, border: "1px solid rgba(120,216,177,0.6)", background: "rgba(12,39,31,0.65)", color: "#c0f0dc", fontSize: 12 }}>{badge}</span>
+                    <span key={badge} style={{ 
+                      padding: "4px 10px", 
+                      borderRadius: 16, 
+                      border: "1px solid rgba(120,216,177,0.6)", 
+                      background: "rgba(12,39,31,0.65)", 
+                      color: "#c0f0dc", 
+                      fontSize: 11,
+                      fontWeight: 500
+                    }}>{badge}</span>
                   ))}
                 </div>
               )}
             </div>
 
-            <div style={{ display: "grid", gap: 14, gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))" }}>
+            {/* Compact Metrics Grid */}
+            <div style={{ display: "grid", gap: 12, gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))" }}>
               {heroMetrics.map((item) => (
-                <div key={item.label} style={{ padding: "14px 16px", borderRadius: 18, background: "rgba(7,28,22,0.65)", border: "1px solid rgba(74,162,131,0.28)", display: "flex", flexDirection: "column", gap: 4 }}>
-                  <span style={{ fontSize: 24, fontWeight: 700, color: "#e6fbf1" }}>{item.value}</span>
-                  <span style={{ fontSize: 13, color: "#8cbfad" }}>{item.label}</span>
-                </div>
-              ))}
-            </div>
-
-            <div style={{ display: "grid", gap: 18, gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))" }}>
-              {heroTiles.map((tile) => (
-                <div key={tile.title} style={{ position: "relative", padding: "18px 20px", borderRadius: 20, background: "linear-gradient(135deg, rgba(13,45,35,0.9), rgba(27,68,53,0.65))", border: "1px solid rgba(88,204,171,0.35)" }}>
-                  <div style={{ fontSize: 13, color: "#91d7bf", textTransform: "uppercase", letterSpacing: 1 }}>{tile.title}</div>
-                  <div style={{ marginTop: 12, fontSize: 32, fontWeight: 800, color: "#f0fff8" }}>{tile.value}</div>
-                  <div style={{ marginTop: 4, fontSize: 12, color: "#9bcfbf" }}>{tile.subtitle}</div>
+                <div key={item.label} style={{ 
+                  padding: "12px", 
+                  borderRadius: 14, 
+                  background: "rgba(7,28,22,0.65)", 
+                  border: "1px solid rgba(74,162,131,0.28)", 
+                  textAlign: "center"
+                }}>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: "#e6fbf1", marginBottom: 2 }}>{item.value}</div>
+                  <div style={{ fontSize: 11, color: "#8cbfad" }}>{item.label}</div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-      </section>
 
-      <div style={{ marginTop: 32, display: "grid", gap: 24, gridTemplateColumns: "minmax(0, 2fr) minmax(0, 1.2fr)" }}>
-        <section style={{ ...bodyCard, padding: "28px" }}>
-          <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16 }}>
-            <div>
-              <div style={{ fontSize: 20, fontWeight: 700 }}>Match Highlights</div>
-              <div style={{ color: "#8bbfad", fontSize: 13 }}>Nächste Begegnungen & aktuelle Form</div>
+          {/* Action Buttons */}
+          <div style={{ display: "flex", flexDirection: "column", gap: isMobile ? 8 : 10, minWidth: isMobile ? "100%" : 180 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+              <span style={{ width: 8, height: 8, borderRadius: 999, background: "#5ccd9b", boxShadow: "0 0 8px #5ccd9b" }} />
+              <span style={{ fontSize: 12, color: "#bfead4" }}>{matchAvailability}</span>
             </div>
-            <Link to="/match-search" style={{ fontSize: 13, color: "#75d4b7" }}>Weitere Matches finden</Link>
-          </header>
-
-          <div style={{ marginTop: 24, display: "grid", gap: 24, gridTemplateColumns: "minmax(0, 1.2fr) minmax(0, 1fr)" }}>
-            <div style={{ display: "grid", gap: 16 }}>
-              <div style={{ fontSize: 15, color: "#8ecab5", letterSpacing: 0.4 }}>Nächste Matches</div>
-              {upcomingSlice.length === 0 ? (
-                <div style={{ padding: "20px", borderRadius: 18, background: "rgba(12,35,27,0.7)", border: "1px dashed rgba(118,215,180,0.3)", color: "#9dcfbf" }}>
-                  Keine kommenden Matches eingetragen.
-                </div>
-              ) : (
-                <div style={{ display: "grid", gap: 14 }}>
-                  {upcomingSlice.map((game) => {
-                    const analysis = analyzeGame(game, numericUserId, displayName);
-                    const leagueLinkId = game.league_id || game.leagueId;
-                    return (
-                      <div key={game.id} style={{ padding: "16px", borderRadius: 18, background: "rgba(9,26,21,0.78)", border: "1px solid rgba(74,162,131,0.18)", display: "grid", gap: 12 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          {leagueLinkId ? (
-                            <Link to={`/league/${leagueLinkId}`} style={{ fontSize: 13, color: "#8ce2c5", textDecoration: "none" }}>{game.league || "Match"}</Link>
-                          ) : (
-                            <span style={{ fontSize: 13, color: "#8ce2c5" }}>{game.league || "Match"}</span>
-                          )}
-                          <div style={{ fontSize: 13, color: "#94cabb" }}>{formatDateTime(game.kickoff_at)}</div>
-                        </div>
-                        <div style={{ fontSize: 16, fontWeight: 600, color: "#d6f8ea", display: "flex", gap: 8, flexWrap: "wrap" }}>
-                          <span>{analysis.isHome ? <strong>{displayName}</strong> : (game.home || "-")}</span>
-                          <span style={{ opacity: 0.5 }}>vs</span>
-                          <span>{analysis.isAway ? <strong>{displayName}</strong> : (game.away || analysis.opponentName)}</span>
-                        </div>
-                        <div style={{ display: "flex", gap: 10 }}>
-                          {analysis.opponentId && (
-                            <Link to={`/user/${analysis.opponentId}`} style={{ fontSize: 12, color: "#7fd9ba" }}>Gegner ansehen</Link>
-                          )}
-                          <Link to={`/matches/${game.id}`} style={{ fontSize: 12, color: "#7fd9ba" }}>Match Details</Link>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            <div style={{ display: "grid", gap: 16 }}>
-              <div style={{ fontSize: 15, color: "#8ecab5", letterSpacing: 0.4 }}>Letzte 3 Spiele</div>
-              {games.completed || [].length === 0 ? (
-                <div style={{ padding: "20px", borderRadius: 18, background: "rgba(12,35,27,0.7)", color: "#9dcfbf" }}>Noch keine Ergebnisse vorhanden.</div>
-              ) : (
-                <div style={{ display: "grid", gap: 12 }}>
-                  {games.completed || [].map((game) => {
-                    const indicator = game.analysis.outcome === "W" ? "#52d49f" : game.analysis.outcome === "L" ? "#d45757" : "#e0c162";
-                    const label = game.analysis.outcome || "-";
-                    const leagueLinkId = game.league_id || game.leagueId;
-                    return (
-                      <div key={game.id} style={{ padding: "14px 16px", borderRadius: 16, background: "rgba(8,28,22,0.78)", border: "1px solid rgba(74,162,131,0.18)", display: "grid", gap: 12 }}>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                          {leagueLinkId ? (
-                            <Link to={`/league/${leagueLinkId}`} style={{ fontSize: 13, color: "#8ce2c5", textDecoration: "none" }}>{game.league || "Liga"}</Link>
-                          ) : (
-                            <span style={{ fontSize: 13, color: "#8ce2c5" }}>{game.league || "Liga"}</span>
-                          )}
-                          <div style={{ fontSize: 12, color: "#94cabb" }}>{formatDateTime(game.kickoff_at)}</div>
-                        </div>
-                        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                          <span style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 32, height: 32, borderRadius: 12, background: indicator, color: "#041410", fontWeight: 700 }}>{label}</span>
-                          <div style={{ fontSize: 15, color: "#d4f7e8", fontWeight: 600 }}>{game.analysis.opponentName}</div>
-                        </div>
-                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 13, color: "#8ecab5" }}>
-                          <div>{game.analysis.isHome ? "Heim" : game.analysis.isAway ? "Auswärts" : "Neutral"}</div>
-                          <div style={{ fontSize: 16, fontWeight: 700 }}>{game.analysis.scoreText}</div>
-                        </div>
-                        <div style={{ display: "flex", gap: 10 }}>
-                          {game.analysis.opponentId && (
-                            <Link to={`/user/${game.analysis.opponentId}`} style={{ fontSize: 12, color: "#7fd9ba" }}>Gegnerprofil</Link>
-                          )}
-                          <Link to={`/matches/${game.id}`} style={{ fontSize: 12, color: "#7fd9ba" }}>Match Details</Link>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div style={{ marginTop: 28 }}>
-            <div style={{ fontSize: 15, color: "#8ecab5", letterSpacing: 0.4, marginBottom: 16 }}>Social</div>
             
-            {/* Friendship Action Buttons */}
-            {!isOwnProfile && (
-              <div style={{ marginBottom: 20, display: "flex", gap: 12, flexWrap: "wrap" }}>
+            {isOwnProfile ? (
+              <>
+                <button
+                  onClick={handleToggleMatchRequests}
+                  disabled={toggleBusy}
+                  style={{
+                    fontWeight: 600,
+                    background: user.open_for_matches 
+                      ? "linear-gradient(135deg,#48c9a9,#2f9c7a)" 
+                      : "rgba(10,33,27,0.85)",
+                    border: user.open_for_matches 
+                      ? "none" 
+                      : "1px solid rgba(90,203,165,0.45)",
+                    color: user.open_for_matches ? "#07271f" : "#7be0bb",
+                    padding: isMobile ? "8px 12px" : "10px 16px",
+                    borderRadius: isMobile ? 10 : 12,
+                    fontSize: isMobile ? 12 : 13,
+                    cursor: toggleBusy ? "wait" : "pointer",
+                    opacity: toggleBusy ? 0.6 : 1
+                  }}
+                >
+                  {toggleBusy ? "..." : (user.open_for_matches ? "Match-Anfragen deaktivieren" : "Match-Anfragen aktivieren")}
+                </button>
+                <Link
+                  to="/profile/edit"
+                  style={{ 
+                    textDecoration: "none", 
+                    fontWeight: 600, 
+                    background: "rgba(10,33,27,0.85)", 
+                    border: "1px solid rgba(90,203,165,0.45)", 
+                    color: "#7be0bb", 
+                    padding: "9px 16px", 
+                    borderRadius: 12, 
+                    textAlign: "center",
+                    fontSize: 13
+                  }}
+                >
+                  Profil bearbeiten
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to={`/chat/user/${user.id}`}
+                  style={{
+                    textDecoration: "none",
+                    fontWeight: 600,
+                    background: "linear-gradient(135deg,#48c9a9,#2f9c7a)",
+                    color: "#07271f",
+                    padding: "10px 16px",
+                    borderRadius: 12,
+                    textAlign: "center",
+                    fontSize: 13
+                  }}
+                >
+                  Match anfragen
+                </Link>
+                
+                {/* Freund hinzufügen Button */}
                 {friendship.status === "accepted" && (
                   <button
                     onClick={handleFriendAction}
@@ -858,9 +866,9 @@ export default function UserDetailPage() {
                       background: "rgba(220,90,90,0.8)",
                       border: "1px solid rgba(220,90,90,0.4)",
                       color: "#ffe5e5",
-                      padding: "8px 16px",
-                      borderRadius: 12,
-                      fontSize: 13,
+                      padding: "6px 12px",
+                      borderRadius: 10,
+                      fontSize: 12,
                       cursor: friendActionBusy ? "wait" : "pointer",
                       opacity: friendActionBusy ? 0.6 : 1
                     }}
@@ -877,9 +885,9 @@ export default function UserDetailPage() {
                       background: "linear-gradient(135deg,#48c9a9,#2f9c7a)",
                       border: "none",
                       color: "#07271f",
-                      padding: "8px 16px",
-                      borderRadius: 12,
-                      fontSize: 13,
+                      padding: "6px 12px",
+                      borderRadius: 10,
+                      fontSize: 12,
                       fontWeight: 600,
                       cursor: friendActionBusy ? "wait" : "pointer",
                       opacity: friendActionBusy ? 0.6 : 1
@@ -897,9 +905,9 @@ export default function UserDetailPage() {
                       background: "rgba(14,44,34,0.7)",
                       border: "1px solid rgba(92,200,165,0.4)",
                       color: "#bfead4",
-                      padding: "8px 16px",
-                      borderRadius: 12,
-                      fontSize: 13,
+                      padding: "6px 12px",
+                      borderRadius: 10,
+                      fontSize: 12,
                       cursor: friendActionBusy ? "wait" : "pointer",
                       opacity: friendActionBusy ? 0.6 : 1
                     }}
@@ -913,12 +921,12 @@ export default function UserDetailPage() {
                     onClick={handleFriendAction}
                     disabled={friendActionBusy}
                     style={{
-                      background: "linear-gradient(135deg,#48c9a9,#2f9c7a)",
+                      background: "linear-gradient(135deg,#e0c162,#d4a650)",
                       border: "none",
-                      color: "#07271f",
-                      padding: "8px 16px",
-                      borderRadius: 12,
-                      fontSize: 13,
+                      color: "#2a2416",
+                      padding: "6px 12px",
+                      borderRadius: 10,
+                      fontSize: 12,
                       fontWeight: 600,
                       cursor: friendActionBusy ? "wait" : "pointer",
                       opacity: friendActionBusy ? 0.6 : 1
@@ -927,296 +935,432 @@ export default function UserDetailPage() {
                     {friendActionBusy ? "..." : "Anfrage annehmen"}
                   </button>
                 )}
-              </div>
-            )}
 
-            {/* Feedback Messages */}
-            {friendActionMsg && (
-              <div style={{ marginBottom: 16, padding: "12px", borderRadius: 12, background: "rgba(48,180,120,0.15)", border: "1px solid rgba(48,180,120,0.3)", color: "#90e5b8", fontSize: 13 }}>
-                {friendActionMsg}
-              </div>
-            )}
-            
-            {friendActionError && (
-              <div style={{ marginBottom: 16, padding: "12px", borderRadius: 12, background: "rgba(220,90,90,0.15)", border: "1px solid rgba(220,90,90,0.3)", color: "#f5a5a5", fontSize: 13 }}>
-                {friendActionError}
-              </div>
-            )}
-
-            {/* Friends List */}
-            {friends.length > 0 && (
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 14, color: "#a9d7c4", marginBottom: 12, fontWeight: 600 }}>
-                  Freunde ({friends.length})
-                </div>
-                <div style={{ display: "grid", gap: 12 }}>
-                  {friends.slice(0, 6).map((friend) => (
-                    <div key={friend.id} style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 12px", borderRadius: 14, background: "rgba(8,28,22,0.78)", border: "1px solid rgba(74,162,131,0.18)" }}>
-                      <Avatar userId={friend.id} name={friend.displayName} size={36} />
-                      <div style={{ flex: 1 }}>
-                        <Link to={`/user/${friend.id}`} style={{ fontWeight: 600, color: "#d6f8ea", textDecoration: "none", fontSize: 14 }}>
-                          {friend.displayName}
-                        </Link>
-                      </div>
-                      <Link 
-                        to={`/chat/user/${friend.id}`} 
-                        style={{ fontSize: 11, color: "#7fd9ba", textDecoration: "none", padding: "4px 8px", borderRadius: 8, background: "rgba(127,217,186,0.1)" }}
-                      >
-                        Chat
-                      </Link>
-                    </div>
-                  ))}
-                  {friends.length > 6 && (
-                    <div style={{ textAlign: "center", padding: "8px", color: "#8ecab5", fontSize: 13 }}>
-                      +{friends.length - 6} weitere Freunde
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Mutual Friends */}
-            {mutualFriends.length > 0 && !isOwnProfile && (
-              <div style={{ marginBottom: 20 }}>
-                <div style={{ fontSize: 14, color: "#a9d7c4", marginBottom: 12, fontWeight: 600 }}>
-                  Gemeinsame Freunde ({mutualFriends.length})
-                </div>
-                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
-                  {mutualFriends.slice(0, 4).map((mutual) => (
-                    <Link 
-                      key={mutual.id} 
-                      to={`/user/${mutual.id}`}
-                      style={{ 
-                        display: "flex", 
-                        alignItems: "center", 
-                        gap: 8, 
-                        padding: "6px 10px", 
-                        borderRadius: 12, 
-                        background: "rgba(8,28,22,0.78)", 
-                        border: "1px solid rgba(74,162,131,0.18)",
-                        textDecoration: "none",
-                        fontSize: 13,
-                        color: "#d6f8ea"
-                      }}
-                    >
-                      <Avatar userId={mutual.id} name={mutual.displayName} size={24} />
-                      {mutual.displayName}
-                    </Link>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Rivals Section */}
-            <div style={{ fontSize: 14, color: "#a9d7c4", marginBottom: 12, fontWeight: 600 }}>Freunde & Rivalen</div>
-            {opponents.length === 0 ? (
-              <div style={{ padding: "18px", borderRadius: 16, background: "rgba(12,35,27,0.7)", color: "#9dcfbf" }}>Noch keine Rivalen – starte ein Match!</div>
-            ) : (
-              <div style={{ display: "grid", gap: 14 }}>
-                {opponents.map((opp) => (
-                  <div key={opp.id ? `u:${opp.id}` : opp.name} style={{ display: "flex", alignItems: "center", gap: 14, padding: "12px 14px", borderRadius: 16, background: "rgba(8,28,22,0.78)", border: "1px solid rgba(74,162,131,0.18)" }}>
-                    <Avatar userId={opp.id || undefined} name={opp.name} size={40} />
-                    <div style={{ flex: 1 }}>
-                      <Link to={opp.id ? `/user/${opp.id}` : "#"} style={{ fontWeight: 600, color: "#d6f8ea", textDecoration: "none" }}>{opp.name}</Link>
-                      <div style={{ fontSize: 12, color: "#8ecab5" }}>{opp.matches} gemeinsame Spiele</div>
-                    </div>
-                    {opp.id && (
-                      <Link to={`/chat/user/${opp.id}`} style={{ fontSize: 12, color: "#7fd9ba" }}>Nachricht</Link>
-                    )}
-                  </div>
-                ))}
-              </div>
+                <Link
+                  to={`/chat/user/${user.id}`}
+                  style={{ 
+                    textDecoration: "none", 
+                    fontWeight: 600, 
+                    background: "rgba(10,33,27,0.85)", 
+                    border: "1px solid rgba(90,203,165,0.45)", 
+                    color: "#7be0bb", 
+                    padding: "9px 16px", 
+                    borderRadius: 12, 
+                    textAlign: "center",
+                    fontSize: 13
+                  }}
+                >
+                  Nachricht senden
+                </Link>
+              </>
             )}
           </div>
-        </section>
+        </div>
+      </section>
 
-        <section style={{ ...bodyCard, padding: "28px" }}>
-          <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+      {/* Main Content Grid - bessere Organisation */}
+      <div style={{ display: "grid", gap: 24, gridTemplateColumns: "1fr", maxWidth: "100%" }}>
+        
+        {/* Match Highlights - Volle Breite */}
+        <section style={{ ...getBodyCard(isMobile), padding: isMobile ? "16px" : "24px" }}>
+          <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: isMobile ? 8 : 16, marginBottom: isMobile ? 12 : 20 }}>
             <div>
-              <div style={{ fontSize: 20, fontWeight: 700 }}>Ligen & Tabelle</div>
-              <div style={{ fontSize: 13, color: "#8bbfad" }}>Wechsle zwischen deinen aktuellen Ligen</div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>Match Highlights</div>
+              <div style={{ color: "#8bbfad", fontSize: 12 }}>Nächste Begegnungen & aktuelle Form</div>
             </div>
-            {leagues.length > 0 && (
-              <select
-                value={activeLeagueId || ""}
-                onChange={(e) => setActiveLeagueId(e.target.value ? Number(e.target.value) : null)}
-                style={{ background: "rgba(9,26,21,0.6)", border: "1px solid rgba(74,162,131,0.35)", color: "#d9f6eb", borderRadius: 12, padding: "6px 10px", fontSize: 13 }}
-              >
-                {leagues.map((league) => (
-                  <option key={league.id} value={league.id}>{league.name}</option>
-                ))}
-              </select>
-            )}
+            <Link to="/match-search" style={{ fontSize: 12, color: "#75d4b7", textDecoration: "none" }}>Weitere Matches finden</Link>
           </header>
 
-          <div style={{ marginTop: 20, display: "grid", gap: 16 }}>
-            {leagues.length === 0 ? (
-              <div style={{ padding: "18px", borderRadius: 16, background: "rgba(12,35,27,0.7)", color: "#9dcfbf" }}>Noch keiner Liga beigetreten.</div>
-            ) : (
-              <div style={{ display: "grid", gap: 12 }}>
-                {leagues.map((league) => (
-                  <div key={league.id} style={{ padding: "14px 18px", borderRadius: 16, background: "rgba(8,28,22,0.78)", border: "1px solid rgba(74,162,131,0.18)", display: "grid", gap: 8 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <Link to={`/league/${league.id}`} style={{ fontSize: 16, fontWeight: 600, color: "#d6f8ea", textDecoration: "none" }}>{league.name}</Link>
-                      {league?.joined_at && (
-                        <div style={{ fontSize: 12, color: "#8ecab5" }}>seit {new Date(league.joined_at).toLocaleDateString("de-DE")}</div>
-                      )}
-                    </div>
-                    <div style={{ fontSize: 13, color: "#8bbfad" }}>{[league.city, league.sport].filter(Boolean).join(" · ")}</div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div style={{ marginTop: 26 }}>
-            <div style={{ fontSize: 15, color: "#8ecab5", letterSpacing: 0.4 }}>Tabellenausschnitt</div>
-            {standingsLoading ? (
-              <div style={{ marginTop: 14, padding: 18, borderRadius: 16, background: "rgba(12,35,27,0.7)", color: "#9dcfbf" }}>Lade Tabelle …</div>
-            ) : standingsErr ? (
-              <div style={{ marginTop: 14, padding: 18, borderRadius: 16, background: "rgba(60,20,20,0.6)", color: "#ffb1b1" }}>Fehler: {standingsErr}</div>
-            ) : standingsWindow.length === 0 ? (
-              <div style={{ marginTop: 14, padding: 18, borderRadius: 16, background: "rgba(12,35,27,0.7)", color: "#9dcfbf" }}>Keine Tabellendaten verfügbar.</div>
-            ) : (
-              <div style={{ marginTop: 16 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "48px 1fr 70px 70px 60px 60px", gap: 12, fontSize: 12, color: "#8bbfad", textTransform: "uppercase", letterSpacing: 0.8 }}>
-                  <div>Platz</div>
-                  <div>Team</div>
-                  <div style={{ textAlign: "center" }}>Sp.</div>
-                  <div style={{ textAlign: "center" }}>S-U-N</div>
-                  <div style={{ textAlign: "center" }}>Diff</div>
-                  <div style={{ textAlign: "center" }}>Pkt.</div>
+          <div style={{ display: "grid", gap: isMobile ? 12 : 20, gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr" }}>
+            
+            {/* Nächste Matches */}
+            <div>
+              <div style={{ fontSize: 14, color: "#8ecab5", letterSpacing: 0.4, marginBottom: 12, fontWeight: 600 }}>Nächste Matches</div>
+              {upcomingSlice.length === 0 ? (
+                <div style={{ padding: "16px", borderRadius: 14, background: "rgba(12,35,27,0.7)", border: "1px dashed rgba(118,215,180,0.3)", color: "#9dcfbf", textAlign: "center", fontSize: 13 }}>
+                  Keine kommenden Matches
                 </div>
-                <div style={{ display: "grid", gap: 8, marginTop: 10 }}>
-                  {standingsWindow.map((row) => {
-                    const isMe = rankingEntry && row === rankingEntry;
-                    const userIdMatch = typeof row.key === "string" && row.key.startsWith("u:") ? Number(row.key.split(":" )[1]) : null;
-                    const teamLink = userIdMatch ? `/user/${userIdMatch}` : undefined;
-                    const diff = typeof row.gd === "number" ? row.gd : (typeof row.gf === "number" && typeof row.ga === "number" ? row.gf - row.ga : "-");
+              ) : (
+                <div style={{ display: "grid", gap: 12 }}>
+                  {upcomingSlice.map((game) => {
+                    const analysis = analyzeGame(game, numericUserId, displayName);
+                    const leagueLinkId = game.league_id || game.leagueId;
                     return (
-                      <div
-                        key={`${row.key || row.name}`}
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "48px 1fr 70px 70px 60px 60px",
-                          gap: 12,
-                          alignItems: "center",
-                          padding: "11px 12px",
-                          borderRadius: 14,
-                          background: isMe ? "rgba(76,184,144,0.25)" : "rgba(8,28,22,0.78)",
-                          border: isMe ? "1px solid rgba(108,225,190,0.6)" : "1px solid rgba(74,162,131,0.18)"
-                        }}
-                      >
-                        <div style={{ fontWeight: 700 }}>{row.rank}</div>
-                        <div style={{ fontWeight: 600 }}>
-                          {teamLink ? (
-                            <Link to={teamLink} style={{ color: "#d6f8ea", textDecoration: "none" }}>{row.name}</Link>
+                      <div key={game.id} style={{ 
+                        padding: "12px", 
+                        borderRadius: 14, 
+                        background: "rgba(9,26,21,0.78)", 
+                        border: "1px solid rgba(74,162,131,0.18)"
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                          {leagueLinkId ? (
+                            <Link to={`/league/${leagueLinkId}`} style={{ fontSize: 11, color: "#8ce2c5", textDecoration: "none" }}>{game.league || "Match"}</Link>
                           ) : (
-                            row.name
+                            <span style={{ fontSize: 11, color: "#8ce2c5" }}>{game.league || "Match"}</span>
                           )}
+                          <div style={{ fontSize: 11, color: "#94cabb" }}>{formatDateTime(game.kickoff_at)}</div>
                         </div>
-                        <div style={{ textAlign: "center" }}>{row.played}</div>
-                        <div style={{ textAlign: "center" }}>{row.won}-{row.drawn}-{row.lost}</div>
-                        <div style={{ textAlign: "center" }}>{diff}</div>
-                        <div style={{ textAlign: "center", fontWeight: 700 }}>{row.points}</div>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: "#d6f8ea", marginBottom: 8 }}>
+                          <span>{analysis.isHome ? <strong>{displayName}</strong> : (game.home || "-")}</span>
+                          <span style={{ opacity: 0.5, margin: "0 6px" }}>vs</span>
+                          <span>{analysis.isAway ? <strong>{displayName}</strong> : (game.away || analysis.opponentName)}</span>
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          {analysis.opponentId && (
+                            <Link to={`/user/${analysis.opponentId}`} style={{ fontSize: 10, color: "#7fd9ba", textDecoration: "none" }}>Gegner</Link>
+                          )}
+                          <Link to={`/matches/${game.id}`} style={{ fontSize: 10, color: "#7fd9ba", textDecoration: "none" }}>Details</Link>
+                        </div>
                       </div>
                     );
                   })}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
+
+            {/* Letzte 3 Spiele */}
+            <div>
+              <div style={{ fontSize: 14, color: "#8ecab5", letterSpacing: 0.4, marginBottom: 12, fontWeight: 600 }}>Letzte 3 Spiele</div>
+              {lastThreeMatches.length === 0 ? (
+                <div style={{ padding: "16px", borderRadius: 14, background: "rgba(12,35,27,0.7)", border: "1px dashed rgba(118,215,180,0.3)", color: "#9dcfbf", textAlign: "center", fontSize: 13 }}>
+                  Noch keine Ergebnisse
+                </div>
+              ) : (
+                <div style={{ display: "grid", gap: 12 }}>
+                  {lastThreeMatches.map((game) => {
+                    const analysis = analyzeGame(game, numericUserId, displayName);
+                    const leagueLinkId = game.league_id || game.leagueId;
+                    const indicator = analysis.outcome === "W" ? "#52d49f" : analysis.outcome === "L" ? "#d45757" : "#e0c162";
+                    const label = analysis.outcome || "-";
+                    return (
+                      <div key={game.id} style={{ 
+                        padding: "12px", 
+                        borderRadius: 14, 
+                        background: "rgba(9,26,21,0.78)", 
+                        border: "1px solid rgba(74,162,131,0.18)"
+                      }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                          {leagueLinkId ? (
+                            <Link to={`/league/${leagueLinkId}`} style={{ fontSize: 11, color: "#8ce2c5", textDecoration: "none" }}>{game.league || "Liga"}</Link>
+                          ) : (
+                            <span style={{ fontSize: 11, color: "#8ce2c5" }}>{game.league || "Liga"}</span>
+                          )}
+                          <div style={{ fontSize: 11, color: "#94cabb" }}>{formatDateTime(game.kickoff_at)}</div>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                          <span style={{ 
+                            display: "inline-flex", 
+                            alignItems: "center", 
+                            justifyContent: "center", 
+                            width: 24, 
+                            height: 24, 
+                            borderRadius: 8, 
+                            background: indicator, 
+                            color: "#041410", 
+                            fontWeight: 700,
+                            fontSize: 11
+                          }}>{label}</span>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#d6f8ea", flex: 1 }}>
+                            <span>{analysis.isHome ? <strong>{displayName}</strong> : (game.home || "-")}</span>
+                            <span style={{ opacity: 0.5, margin: "0 6px" }}>vs</span>
+                            <span>{analysis.isAway ? <strong>{displayName}</strong> : (game.away || analysis.opponentName)}</span>
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", gap: 8 }}>
+                          {analysis.opponentId && (
+                            <Link to={`/user/${analysis.opponentId}`} style={{ fontSize: 10, color: "#7fd9ba", textDecoration: "none" }}>Gegner</Link>
+                          )}
+                          <Link to={`/matches/${game.id}`} style={{ fontSize: 10, color: "#7fd9ba", textDecoration: "none" }}>Details</Link>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         </section>
       </div>
 
-      {/* Activity Feed Section */}
-      <section style={{ ...bodyCard, padding: "28px", marginTop: 24 }}>
-        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, marginBottom: 24 }}>
+      {/* Liga-Statistiken Section - Volle Breite */}
+      <section style={{ ...getBodyCard(isMobile), padding: isMobile ? "16px" : "28px" }}>
+        {/* Liga-Statistiken - kleiner und heller */}
+        <div style={{ marginBottom: isMobile ? 12 : 20, display: "grid", gap: isMobile ? 8 : 12, gridTemplateColumns: isMobile ? "repeat(auto-fit, minmax(120px, 1fr))" : "repeat(auto-fit, minmax(160px, 1fr))" }}>
+          {heroTiles.map((tile) => (
+            <div key={tile.title} style={{ 
+              position: "relative", 
+              padding: "12px 14px", 
+              borderRadius: 12, 
+              background: "linear-gradient(135deg, rgba(32,74,58,0.8), rgba(45,88,73,0.6))", 
+              border: "1px solid rgba(127,217,186,0.4)",
+              textAlign: "center"
+            }}>
+              <div style={{ fontSize: 10, color: "#7fd9ba", textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{tile.title}</div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: "#e1f5ed", marginBottom: 3 }}>{tile.value}</div>
+              <div style={{ fontSize: 10, color: "#a9d7c4" }}>{tile.subtitle}</div>
+            </div>
+          ))}
+        </div>
+
+        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 20, fontWeight: 700 }}>Aktivitäten</div>
-            <div style={{ color: "#8bbfad", fontSize: 13 }}>Neueste Aktivitäten und Updates</div>
+            <div style={{ fontSize: 18, fontWeight: 700 }}>Liga-Statistiken</div>
+            <div style={{ fontSize: 12, color: "#8bbfad" }}>Deine Platzierungen in den Ligen</div>
           </div>
+          {leagues.length > 1 && (
+            <select
+              value={activeLeagueId || ""}
+              onChange={(e) => setActiveLeagueId(e.target.value ? Number(e.target.value) : null)}
+              style={{ background: "rgba(32,74,58,0.7)", border: "1px solid rgba(127,217,186,0.4)", color: "#e1f5ed", borderRadius: 10, padding: "6px 10px", fontSize: 12 }}
+            >
+              {leagues.map((league) => (
+                <option key={league.id} value={league.id}>{league.name}</option>
+              ))}
+            </select>
+          )}
+        </header>
+
+        <div style={{ marginTop: 20 }}>
+          <div style={{ fontSize: 14, color: "#7fd9ba", letterSpacing: 0.4, marginBottom: 12 }}>Tabellenausschnitt</div>
+          {standingsLoading ? (
+            <div style={{ marginTop: 12, padding: 16, borderRadius: 12, background: "rgba(32,74,58,0.4)", color: "#b8dec9" }}>Lade Tabelle …</div>
+          ) : standingsErr ? (
+            <div style={{ marginTop: 12, padding: 16, borderRadius: 12, background: "rgba(80,30,30,0.5)", color: "#ffb3b3" }}>Fehler: {standingsErr}</div>
+          ) : standingsWindow.length === 0 ? (
+            <div style={{ marginTop: 12, padding: 16, borderRadius: 12, background: "rgba(32,74,58,0.4)", color: "#b8dec9" }}>Keine Tabellendaten verfügbar.</div>
+          ) : (
+            <div style={{ marginTop: 14 }}>
+              <div style={{ display: "grid", gridTemplateColumns: "40px 1fr 60px 60px 50px 50px", gap: 10, fontSize: 11, color: "#7fd9ba", textTransform: "uppercase", letterSpacing: 0.6, marginBottom: 8 }}>
+                <div>Platz</div>
+                <div>Team</div>
+                <div style={{ textAlign: "center" }}>Sp.</div>
+                <div style={{ textAlign: "center" }}>S-U-N</div>
+                <div style={{ textAlign: "center" }}>Diff</div>
+                <div style={{ textAlign: "center" }}>Pkt.</div>
+              </div>
+              <div style={{ display: "grid", gap: 6 }}>
+                {standingsWindow.map((row) => {
+                  const isMe = rankingEntry && row === rankingEntry;
+                  const userIdMatch = typeof row.key === "string" && row.key.startsWith("u:") ? Number(row.key.split(":" )[1]) : null;
+                  const teamLink = userIdMatch ? `/user/${userIdMatch}` : undefined;
+                  const diff = typeof row.gd === "number" ? row.gd : (typeof row.gf === "number" && typeof row.ga === "number" ? row.gf - row.ga : "-");
+                  return (
+                    <div
+                      key={`${row.key || row.name}`}
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "40px 1fr 60px 60px 50px 50px",
+                        gap: 10,
+                        alignItems: "center",
+                        padding: "8px 10px",
+                        borderRadius: 10,
+                        background: isMe ? "rgba(127,217,186,0.2)" : "rgba(32,74,58,0.4)",
+                        border: isMe ? "1px solid rgba(127,217,186,0.5)" : "1px solid rgba(127,217,186,0.2)",
+                        fontSize: 12
+                      }}
+                    >
+                      <div style={{ fontWeight: 700, color: isMe ? "#7fd9ba" : "#b8dec9" }}>{row.rank}</div>
+                      <div style={{ fontWeight: 600, color: isMe ? "#e1f5ed" : "#d6f8ea" }}>
+                        {teamLink ? (
+                          <Link to={teamLink} style={{ color: isMe ? "#e1f5ed" : "#d6f8ea", textDecoration: "none" }}>{row.name}</Link>
+                        ) : (
+                          row.name
+                        )}
+                      </div>
+                      <div style={{ textAlign: "center", color: "#a9d7c4" }}>{row.played}</div>
+                      <div style={{ textAlign: "center", color: "#a9d7c4" }}>{row.won}-{row.drawn}-{row.lost}</div>
+                      <div style={{ textAlign: "center", color: "#a9d7c4" }}>{diff}</div>
+                      <div style={{ textAlign: "center", fontWeight: 700, color: isMe ? "#7fd9ba" : "#b8dec9" }}>{row.points}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
           
-          {/* Feed Tabs */}
-          <div style={{ display: "flex", gap: 4, background: "rgba(9,26,21,0.6)", borderRadius: 14, padding: 4 }}>
-            {[
-              { key: "friends", label: "Freunde" },
-              { key: "team", label: "Team" },
-              { key: "public", label: "Öffentlich" }
-            ].map((tab) => (
-              <button
-                key={tab.key}
-                onClick={() => setActiveFeed(tab.key)}
+          {/* Zur Liga Button */}
+          {activeLeagueId && (
+            <div style={{ marginTop: 16, textAlign: "center" }}>
+              <Link 
+                to={`/league/${activeLeagueId}`}
                 style={{
-                  background: activeFeed === tab.key ? "linear-gradient(135deg,#48c9a9,#2f9c7a)" : "transparent",
-                  color: activeFeed === tab.key ? "#07271f" : "#8bbfad",
-                  border: "none",
+                  display: "inline-block",
                   padding: "8px 16px",
-                  borderRadius: 10,
-                  fontSize: 13,
-                  fontWeight: activeFeed === tab.key ? 600 : 500,
-                  cursor: "pointer",
+                  borderRadius: 8,
+                  background: "rgba(127,217,186,0.2)",
+                  border: "1px solid rgba(127,217,186,0.4)",
+                  color: "#7fd9ba",
+                  textDecoration: "none",
+                  fontSize: 12,
+                  fontWeight: 600,
                   transition: "all 0.2s ease"
                 }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = "rgba(127,217,186,0.3)";
+                  e.target.style.borderColor = "rgba(127,217,186,0.6)";
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = "rgba(127,217,186,0.2)";
+                  e.target.style.borderColor = "rgba(127,217,186,0.4)";
+                }}
               >
-                {tab.label}
-              </button>
-            ))}
+                Zur Liga →
+              </Link>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* Activity Feed Section - Heller und kompakter */}
+      <section style={{ ...getBodyCard(isMobile), padding: isMobile ? "12px" : "18px", marginTop: isMobile ? 12 : 20 }}>
+        <header style={{ marginBottom: isMobile ? 10 : 14 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 12, flexWrap: "wrap" }}>
+            <div>
+              <div style={{ fontSize: 16, fontWeight: 700 }}>Aktivitäten</div>
+              <div style={{ color: "#94cabf", fontSize: 11 }}>Neueste Updates</div>
+            </div>
+            
+            {/* Feed Category Buttons */}
+            <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
+              {[
+                { id: "all", label: "Alle", icon: "📋" },
+                { id: "matches", label: "Match-News", icon: "⚽" },
+                { id: "friends", label: "Friends-Feed", icon: "👥" },
+                { id: "public", label: "Public-Feed", icon: "🌐" }
+              ].map((category) => (
+                <button
+                  key={category.id}
+                  onClick={() => setActiveFeedCategory(category.id)}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 4,
+                    padding: "4px 8px",
+                    borderRadius: 8,
+                    border: "1px solid rgba(127,217,186,0.3)",
+                    background: activeFeedCategory === category.id 
+                      ? "rgba(127,217,186,0.25)" 
+                      : "rgba(32,74,58,0.4)",
+                    color: activeFeedCategory === category.id 
+                      ? "#e1f5ed" 
+                      : "#b8dec9",
+                    fontSize: 10,
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease"
+                  }}
+                >
+                  <span>{category.icon}</span>
+                  <span>{category.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </header>
 
-        {/* Feed Content */}
-        <div style={{ display: "grid", gap: 16 }}>
-          {feedData[activeFeed]?.length === 0 ? (
-            <div style={{ padding: "32px 20px", borderRadius: 18, background: "rgba(12,35,27,0.7)", color: "#9dcfbf", textAlign: "center" }}>
-              {activeFeed === "friends" && "Keine Freundes-Aktivitäten verfügbar."}
-              {activeFeed === "team" && "Keine Team-Aktivitäten verfügbar."}
-              {activeFeed === "public" && "Keine öffentlichen Aktivitäten verfügbar."}
-            </div>
-          ) : (
-            feedData[activeFeed]?.slice(0, 8).map((item, idx) => (
+        {/* Feed Content - heller und kompakter */}
+        <div style={{ display: "grid", gap: 10 }}>
+          {(() => {
+            // Kombiniere alle Feeds basierend auf der aktiven Kategorie
+            const combinedFeed = [];
+            
+            if (activeFeedCategory === "all") {
+              combinedFeed.push(...(feedData.friends || []).map(item => ({...item, feedType: 'friends'})));
+              combinedFeed.push(...(feedData.team || []).map(item => ({...item, feedType: 'team'})));
+              combinedFeed.push(...(feedData.public || []).map(item => ({...item, feedType: 'public'})));
+            } else if (activeFeedCategory === "matches") {
+              // Filtere nach Match-bezogenen Aktivitäten aus allen Feeds
+              combinedFeed.push(...(feedData.friends || []).filter(item => item.type === "match").map(item => ({...item, feedType: 'friends'})));
+              combinedFeed.push(...(feedData.team || []).filter(item => item.type === "match").map(item => ({...item, feedType: 'team'})));
+              combinedFeed.push(...(feedData.public || []).filter(item => item.type === "match").map(item => ({...item, feedType: 'public'})));
+            } else if (activeFeedCategory === "friends") {
+              combinedFeed.push(...(feedData.friends || []).map(item => ({...item, feedType: 'friends'})));
+            } else if (activeFeedCategory === "public") {
+              combinedFeed.push(...(feedData.public || []).map(item => ({...item, feedType: 'public'})));
+            }
+            
+            // Sortiere nach Zeitstempel (neueste zuerst)
+            combinedFeed.sort((a, b) => {
+              const timeA = new Date(a.timestamp || 0).getTime();
+              const timeB = new Date(b.timestamp || 0).getTime();
+              return timeB - timeA;
+            });
+
+            if (combinedFeed.length === 0) {
+              const emptyMessages = {
+                all: "Keine Aktivitäten verfügbar.",
+                matches: "Keine Match-News verfügbar.",
+                friends: "Keine Freundes-Aktivitäten verfügbar.",
+                public: "Keine öffentlichen Aktivitäten verfügbar."
+              };
+              
+              return (
+                <div style={{ padding: "20px 14px", borderRadius: 12, background: "rgba(32,74,58,0.4)", color: "#b8dec9", textAlign: "center", fontSize: 11 }}>
+                  {emptyMessages[activeFeedCategory] || emptyMessages.all}
+                </div>
+              );
+            }
+
+            return combinedFeed.slice(0, 8).map((item, idx) => (
               <div 
-                key={`${activeFeed}-${idx}`} 
+                key={`${item.feedType}-${idx}`} 
                 style={{ 
-                  padding: "16px 18px", 
-                  borderRadius: 16, 
-                  background: "rgba(8,28,22,0.78)", 
-                  border: "1px solid rgba(74,162,131,0.18)",
+                  padding: "10px 12px", 
+                  borderRadius: 10, 
+                  background: "rgba(32,74,58,0.5)", 
+                  border: "1px solid rgba(127,217,186,0.25)",
                   display: "flex",
-                  alignItems: "flex-start",
-                  gap: 14
+                  alignItems: "center",
+                  gap: 10
                 }}
               >
-                {/* Activity Icon */}
+                {/* Activity Icon - kleiner und heller */}
                 <div style={{ 
-                  width: 36, 
-                  height: 36, 
-                  borderRadius: 12, 
-                  background: item.type === "match" ? "rgba(72,201,169,0.2)" : 
-                             item.type === "league" ? "rgba(224,193,98,0.2)" : 
-                             "rgba(148,202,187,0.2)",
+                  width: 28, 
+                  height: 28, 
+                  borderRadius: 8, 
+                  background: item.type === "match" ? "rgba(127,217,186,0.25)" : 
+                             item.type === "league" ? "rgba(255,213,107,0.25)" : 
+                             item.feedType === "friends" ? "rgba(161,225,203,0.25)" :
+                             item.feedType === "team" ? "rgba(255,213,107,0.25)" :
+                             "rgba(127,217,186,0.2)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 16,
+                  fontSize: 13,
                   flexShrink: 0
                 }}>
-                  {item.type === "match" ? "⚽" : item.type === "league" ? "🏆" : "👤"}
+                  {item.type === "match" ? "⚽" : 
+                   item.type === "league" ? "🏆" : 
+                   item.feedType === "friends" ? "👥" :
+                   item.feedType === "team" ? "🏆" : "🌐"}
                 </div>
 
-                {/* Activity Content */}
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, color: "#d6f8ea", fontWeight: 600, marginBottom: 4 }}>
+                {/* Activity Content - hellere Farben */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 11, color: "#e1f5ed", fontWeight: 600, marginBottom: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {item.title}
                   </div>
-                  <div style={{ fontSize: 13, color: "#a9d7c4", lineHeight: 1.4 }}>
+                  <div style={{ fontSize: 10, color: "#b8dec9", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {item.description}
                   </div>
                   {item.timestamp && (
-                    <div style={{ fontSize: 11, color: "#8bbfad", marginTop: 8 }}>
+                    <div style={{ fontSize: 8, color: "#94cabf", marginTop: 3 }}>
                       {item.timestamp}
                     </div>
                   )}
+                </div>
+
+                {/* Feed Type Badge - heller */}
+                <div style={{
+                  fontSize: 8,
+                  color: "#7fd9ba",
+                  background: "rgba(127,217,186,0.2)",
+                  padding: "1px 3px",
+                  borderRadius: 4,
+                  flexShrink: 0
+                }}>
+                  {item.feedType === "friends" ? "👥" : item.feedType === "team" ? "🏆" : "🌐"}
                 </div>
 
                 {/* Action Link */}
@@ -1224,38 +1368,42 @@ export default function UserDetailPage() {
                   <Link 
                     to={item.link}
                     style={{ 
-                      fontSize: 12, 
+                      fontSize: 10, 
                       color: "#7fd9ba", 
                       textDecoration: "none",
-                      padding: "4px 8px",
-                      borderRadius: 8,
+                      padding: "3px 6px",
+                      borderRadius: 6,
                       background: "rgba(127,217,186,0.1)",
-                      alignSelf: "flex-start"
+                      flexShrink: 0
                     }}
                   >
                     Details
                   </Link>
                 )}
               </div>
-            ))
-          )}
+            ));
+          })()}
         </div>
 
-        {feedData[activeFeed]?.length > 8 && (
-          <div style={{ textAlign: "center", marginTop: 20 }}>
-            <button style={{
-              background: "rgba(14,44,34,0.7)",
-              border: "1px solid rgba(92,200,165,0.4)",
-              color: "#bfead4",
-              padding: "10px 20px",
-              borderRadius: 12,
-              fontSize: 13,
-              cursor: "pointer"
-            }}>
-              Mehr anzeigen
-            </button>
-          </div>
-        )}
+        {(() => {
+          const totalItems = (feedData.friends || []).length + (feedData.team || []).length + (feedData.public || []).length;
+          
+          return totalItems > 8 ? (
+            <div style={{ textAlign: "center", marginTop: 16 }}>
+              <button style={{
+                background: "rgba(14,44,34,0.7)",
+                border: "1px solid rgba(92,200,165,0.4)",
+                color: "#bfead4",
+                padding: "8px 16px",
+                borderRadius: 10,
+                fontSize: 11,
+                cursor: "pointer"
+              }}>
+                Mehr anzeigen ({totalItems - 8} weitere)
+              </button>
+            </div>
+          ) : null;
+        })()}
       </section>
     </div>
   );

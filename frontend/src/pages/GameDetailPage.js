@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
+import { useResponsive } from "../hooks/useResponsive";
 import MatchChat from "../components/MatchChat";
 import Counter from "../components/Counter";
 import TimeCounter from "../components/TimeCounter";
@@ -8,6 +9,9 @@ import TimeCounter from "../components/TimeCounter";
 export default function GameDetailPage() {
   const { gameId } = useParams();
   const navigate = useNavigate();
+  
+  // Dynamic responsive hook
+  const isMobile = useResponsive(768);
   const [game, setGame] = useState(null);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
@@ -23,6 +27,8 @@ export default function GameDetailPage() {
   const [hasWeeklyMatch, setHasWeeklyMatch] = useState(false);
   const [joinMsg, setJoinMsg] = useState('');
   const [scheduleMsg, setScheduleMsg] = useState('');
+  const [scheduleLoading, setScheduleLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
   // calendar-friendly date+time fields (pop up native calendar/time pickers)
   const [dateStr, setDateStr] = useState(""); // yyyy-mm-dd
   const [timeStr, setTimeStr] = useState(""); // HH:mm
@@ -265,28 +271,59 @@ export default function GameDetailPage() {
   const histA = filterHistoryForPlayer(playerA);
   const histB = filterHistoryForPlayer(playerB);
 
-  // layout styles – hero card like in mockup
-  const containerStyle = { padding: 16, width: '100%', maxWidth: '900px', margin: '0 auto', fontFamily: 'Inter, Roboto, Arial, sans-serif', color: '#e8efe8' };
-  const cardStyle = { background: '#0f2a20', borderRadius: 16, padding: 16, boxShadow: '0 16px 40px rgba(0,0,0,0.55)' };
+  // Mobile responsive layout styles (now using dynamic hook)
+  const containerStyle = { 
+    padding: isMobile ? 8 : 16, 
+    width: '100%', 
+    maxWidth: '900px', 
+    margin: '0 auto', 
+    fontFamily: 'Inter, Roboto, Arial, sans-serif', 
+    color: '#e8efe8' 
+  };
+  const cardStyle = { 
+    background: '#0f2a20', 
+    borderRadius: isMobile ? 12 : 16, 
+    padding: isMobile ? 12 : 16, 
+    boxShadow: isMobile ? '0 8px 24px rgba(0,0,0,0.4)' : '0 16px 40px rgba(0,0,0,0.55)' 
+  };
 
   async function submitResult(e) {
     e.preventDefault();
     setSubmitMsg('');
-    if (!token) { setSubmitMsg('Bitte einloggen.'); return; }
+    setSubmitLoading(true);
+    if (!token) { 
+      setSubmitMsg('Bitte einloggen.'); 
+      setSubmitLoading(false);
+      return; 
+    }
     try {
+      // Add timeout for better UX
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      
       const r = await fetch(`${API_BASE}/matches/${gameId}/result`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ home_score: hScore, away_score: aScore })
+        body: JSON.stringify({ home_score: hScore, away_score: aScore }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
-      setSubmitMsg('Ergebnis gespeichert.');
+      
+      setSubmitMsg('✅ Ergebnis gespeichert!');
       setGame(j);
       // Redirect to league after confirmation
-      setTimeout(() => { window.location.href = `/league/${leagueId || ''}`; }, 800);
+      setTimeout(() => { window.location.href = `/league/${leagueId || ''}`; }, 1200);
     } catch (e) {
-      setSubmitMsg(e.message || 'Fehler beim Speichern.');
+      if (e.name === 'AbortError') {
+        setSubmitMsg('⚠️ Zeitüberschreitung - Versuche es nochmal.');
+      } else {
+        setSubmitMsg('❌ ' + (e.message || 'Fehler beim Speichern.'));
+      }
+    } finally {
+      setSubmitLoading(false);
     }
   }
 
@@ -313,33 +350,72 @@ export default function GameDetailPage() {
   async function scheduleMatch(e) {
     e.preventDefault();
     setScheduleMsg('');
-    if (!token) { setScheduleMsg('Bitte einloggen.'); return; }
-    if (!dateStr || !timeStr) { setScheduleMsg('Bitte Datum und Uhrzeit wählen.'); return; }
+    setScheduleLoading(true);
+    
+    if (!token) { 
+      setScheduleMsg('Bitte einloggen.'); 
+      setScheduleLoading(false);
+      return; 
+    }
+    if (!dateStr || !timeStr) { 
+      setScheduleMsg('Bitte Datum und Uhrzeit wählen.'); 
+      setScheduleLoading(false);
+      return; 
+    }
+    
     const scheduleAt = `${dateStr}T${timeStr}`; // local time string, backend will parse
     try {
+      // Add timeout for better UX
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+      
+      setScheduleMsg('⏳ Speichere Termin...');
+      
       const r = await fetch(`${API_BASE}/matches/${gameId}/schedule`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ kickoff_at: scheduleAt, location: location && location.trim() ? location.trim() : undefined })
+        body: JSON.stringify({ kickoff_at: scheduleAt, location: location && location.trim() ? location.trim() : undefined }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
-      setScheduleMsg('Termin gespeichert.');
-      // reload full match to keep display names and status consistent
-      const fres = await fetch(`${API_BASE}/matches/${gameId}`);
-      const fresh = await fres.json().catch(() => j);
-      setGame(fres.ok ? fresh : j);
-      // re-check permission after scheduling
-      try {
-        if (token) {
-          const cr = await fetch(`${API_BASE}/matches/${gameId}/can-submit`, { headers: { Authorization: `Bearer ${token}` } });
-          const cj = await cr.json().catch(() => ({}));
-          setCanSubmit(!!cj.canSubmit);
-          setCannotReason(cj.reason || '');
-        }
-      } catch {}
+      
+      setScheduleMsg('✅ Termin gespeichert!');
+      
+      // Optimistic update first for instant feedback
+      setGame(prevGame => ({
+        ...prevGame,
+        kickoff_at: scheduleAt,
+        location: location?.trim() || prevGame?.location
+      }));
+      
+      // Then reload data in background (non-blocking)
+      setTimeout(async () => {
+        try {
+          const fres = await fetch(`${API_BASE}/matches/${gameId}`);
+          const fresh = await fres.json().catch(() => j);
+          if (fres.ok) setGame(fresh);
+          
+          // re-check permission after scheduling
+          if (token) {
+            const cr = await fetch(`${API_BASE}/matches/${gameId}/can-submit`, { headers: { Authorization: `Bearer ${token}` } });
+            const cj = await cr.json().catch(() => ({}));
+            setCanSubmit(!!cj.canSubmit);
+            setCannotReason(cj.reason || '');
+          }
+        } catch {}
+      }, 100);
+      
     } catch (e) {
-      setScheduleMsg(e.message || 'Termin setzen fehlgeschlagen.');
+      if (e.name === 'AbortError') {
+        setScheduleMsg('⚠️ Zeitüberschreitung - Versuche es nochmal.');
+      } else {
+        setScheduleMsg('❌ ' + (e.message || 'Termin setzen fehlgeschlagen.'));
+      }
+    } finally {
+      setScheduleLoading(false);
     }
   }
 
@@ -418,14 +494,34 @@ export default function GameDetailPage() {
         </div>
 
         {/* VS Row with integrated counters */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto 1fr', alignItems: 'center', gap: 16, marginTop: 16 }}>
+        <div style={{ 
+          display: 'grid', 
+          gridTemplateColumns: isMobile ? '1fr' : '1fr auto 1fr', 
+          alignItems: 'center', 
+          gap: isMobile ? 12 : 16, 
+          marginTop: isMobile ? 12 : 16 
+        }}>
           <div style={{ textAlign: 'left' }}>
             {playerA.id ? (
               <Link to={`/user/${playerA.id}`} style={{ textDecoration: 'none', color: '#f4fff8', display: 'inline-block' }}>
-                <div style={{ width: 110, height: 110, borderRadius: 110, background: '#173a30', display: 'grid', placeItems: 'center', color: '#6fc89c', fontWeight: 800, fontSize: 28 }}>
+                <div style={{ 
+                  width: isMobile ? 80 : 110, 
+                  height: isMobile ? 80 : 110, 
+                  borderRadius: isMobile ? 80 : 110, 
+                  background: '#173a30', 
+                  display: 'grid', 
+                  placeItems: 'center', 
+                  color: '#6fc89c', 
+                  fontWeight: 800, 
+                  fontSize: isMobile ? 20 : 28 
+                }}>
                   {String(playerA.name || '?').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
                 </div>
-                <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerA.name}</div>
+                <div style={{ 
+                  marginTop: isMobile ? 6 : 10, 
+                  fontSize: isMobile ? 16 : 22, 
+                  fontWeight: 700 
+                }}>{playerA.name}</div>
               </Link>
             ) : (
               <>
@@ -459,18 +555,19 @@ export default function GameDetailPage() {
                     disabled={!canSubmit}
                   />
                 </div>
-                <button disabled={!canSubmit} type="submit" onClick={submitResult} style={{ 
+                <button disabled={!canSubmit || submitLoading} type="submit" onClick={submitResult} style={{ 
                   padding: '10px 20px', 
                   borderRadius: 20, 
                   border: 'none',
-                  background: canSubmit ? 'linear-gradient(135deg, #d4af37, #b8941f)' : 'rgba(100, 100, 100, 0.3)',
-                  color: canSubmit ? '#000' : '#666',
+                  background: (canSubmit && !submitLoading) ? 'linear-gradient(135deg, #d4af37, #b8941f)' : 'rgba(100, 100, 100, 0.3)',
+                  color: (canSubmit && !submitLoading) ? '#000' : '#666',
                   fontSize: 14,
                   fontWeight: 700,
-                  cursor: canSubmit ? 'pointer' : 'not-allowed',
-                  boxShadow: canSubmit ? '0 4px 12px rgba(212, 175, 55, 0.3)' : 'none'
+                  cursor: (canSubmit && !submitLoading) ? 'pointer' : 'not-allowed',
+                  boxShadow: (canSubmit && !submitLoading) ? '0 4px 12px rgba(212, 175, 55, 0.3)' : 'none',
+                  opacity: submitLoading ? 0.7 : 1
                 }}>
-                  Ergebnis speichern
+                  {submitLoading ? '⏳ Speichere...' : 'Ergebnis speichern'}
                 </button>
                 {(!canSubmit && cannotReason) && (
                   <div style={{ color: '#ff9999', fontSize: 12, textAlign: 'center', maxWidth: 200 }}>
@@ -542,6 +639,7 @@ export default function GameDetailPage() {
             location={location}
             setLocation={setLocation}
             message={scheduleMsg}
+            loading={scheduleLoading}
           />
         )}
 
@@ -627,7 +725,7 @@ export default function GameDetailPage() {
 }
 
 // Collapsible schedule section with counter-based time selection
-function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, setHours, setMinutes, onSubmit, onSuggest, location, setLocation, message }) {
+function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, setHours, setMinutes, onSubmit, onSuggest, location, setLocation, message, loading }) {
   return (
     <div style={{ marginTop: 16 }}>
       {!open && (
@@ -676,7 +774,17 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
           
           <div style={{ display: 'flex', gap: 8, marginTop: 28 }}>
             <button type="button" onClick={onSuggest} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe' }}>Nächster freier Platz</button>
-            <button type="submit" style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#1b4b3d', color: '#fff' }}>Speichern</button>
+            <button type="submit" disabled={loading} style={{ 
+              padding: '8px 12px', 
+              borderRadius: 10, 
+              border: '1px solid #2f6b57', 
+              background: loading ? 'rgba(27, 75, 61, 0.5)' : '#1b4b3d', 
+              color: '#fff',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              opacity: loading ? 0.7 : 1
+            }}>
+              {loading ? '⏳ Speichere...' : 'Speichern'}
+            </button>
             <button type="button" onClick={() => setOpen(false)} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: 'transparent', color: '#dfe' }}>Schließen</button>
           </div>
           
