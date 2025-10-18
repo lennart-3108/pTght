@@ -635,18 +635,84 @@ export default function UserDetailPage() {
                 <span style={{ fontSize: 14, color: "#bfead4" }}>{matchAvailability}</span>
               </div>
               <div style={{ display: "grid", gap: 10 }}>
-                <Link
-                  to={`/chat/user/${user.id}`}
-                  style={{ textDecoration: "none", fontWeight: 600, background: "linear-gradient(135deg,#48c9a9,#2f9c7a)", color: "#07271f", padding: "12px 20px", borderRadius: 14, textAlign: "center" }}
-                >
-                  Match anfragen
-                </Link>
-                <Link
-                  to={`/chat/user/${user.id}`}
-                  style={{ textDecoration: "none", fontWeight: 600, background: "rgba(10,33,27,0.85)", border: "1px solid rgba(90,203,165,0.45)", color: "#7be0bb", padding: "11px 20px", borderRadius: 14, textAlign: "center" }}
-                >
-                  Nachricht senden
-                </Link>
+                {isOwnProfile ? (
+                  <>
+                    <button
+                      onClick={handleToggleMatchRequests}
+                      disabled={toggleBusy}
+                      style={{
+                        fontWeight: 600,
+                        background: user.open_for_matches 
+                          ? "linear-gradient(135deg,#48c9a9,#2f9c7a)" 
+                          : "rgba(10,33,27,0.85)",
+                        border: user.open_for_matches 
+                          ? "none" 
+                          : "1px solid rgba(90,203,165,0.45)",
+                        color: user.open_for_matches ? "#07271f" : "#7be0bb",
+                        padding: "12px 20px",
+                        borderRadius: 14,
+                        textAlign: "center",
+                        cursor: toggleBusy ? "wait" : "pointer",
+                        opacity: toggleBusy ? 0.6 : 1
+                      }}
+                    >
+                      {toggleBusy ? "..." : (user.open_for_matches ? "Match-Anfragen deaktivieren" : "Match-Anfragen aktivieren")}
+                    </button>
+                    <Link
+                      to="/profile/edit"
+                      style={{ 
+                        textDecoration: "none", 
+                        fontWeight: 600, 
+                        background: "rgba(10,33,27,0.85)", 
+                        border: "1px solid rgba(90,203,165,0.45)", 
+                        color: "#7be0bb", 
+                        padding: "11px 20px", 
+                        borderRadius: 14, 
+                        textAlign: "center" 
+                      }}
+                    >
+                      Profil bearbeiten
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to={`/chat/user/${user.id}`}
+                      style={{
+                        textDecoration: "none",
+                        fontWeight: 600,
+                        background: friendship.status === "accepted" 
+                          ? "linear-gradient(135deg,#48c9a9,#2f9c7a)"
+                          : friendship.status === "pending" && friendship.pendingDirection === "incoming"
+                            ? "linear-gradient(135deg,#e0c162,#d4a650)"
+                            : "linear-gradient(135deg,#48c9a9,#2f9c7a)",
+                        color: "#07271f",
+                        padding: "12px 20px",
+                        borderRadius: 14,
+                        textAlign: "center"
+                      }}
+                    >
+                      {friendship.status === "accepted" ? "Match anfragen" :
+                       friendship.status === "pending" && friendship.pendingDirection === "incoming" ? "Match anfragen (Anfrage ausstehend)" :
+                       "Match anfragen"}
+                    </Link>
+                    <Link
+                      to={`/chat/user/${user.id}`}
+                      style={{ 
+                        textDecoration: "none", 
+                        fontWeight: 600, 
+                        background: "rgba(10,33,27,0.85)", 
+                        border: "1px solid rgba(90,203,165,0.45)", 
+                        color: "#7be0bb", 
+                        padding: "11px 20px", 
+                        borderRadius: 14, 
+                        textAlign: "center" 
+                      }}
+                    >
+                      Nachricht senden
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -738,11 +804,11 @@ export default function UserDetailPage() {
 
             <div style={{ display: "grid", gap: 16 }}>
               <div style={{ fontSize: 15, color: "#8ecab5", letterSpacing: 0.4 }}>Letzte 3 Spiele</div>
-              {lastThreeMatches.length === 0 ? (
+              {games.completed || [].length === 0 ? (
                 <div style={{ padding: "20px", borderRadius: 18, background: "rgba(12,35,27,0.7)", color: "#9dcfbf" }}>Noch keine Ergebnisse vorhanden.</div>
               ) : (
                 <div style={{ display: "grid", gap: 12 }}>
-                  {lastThreeMatches.map((game) => {
+                  {games.completed || [].map((game) => {
                     const indicator = game.analysis.outcome === "W" ? "#52d49f" : game.analysis.outcome === "L" ? "#d45757" : "#e0c162";
                     const label = game.analysis.outcome || "-";
                     const leagueLinkId = game.league_id || game.leagueId;
@@ -1062,6 +1128,135 @@ export default function UserDetailPage() {
           </div>
         </section>
       </div>
+
+      {/* Activity Feed Section */}
+      <section style={{ ...bodyCard, padding: "28px", marginTop: 24 }}>
+        <header style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 16, marginBottom: 24 }}>
+          <div>
+            <div style={{ fontSize: 20, fontWeight: 700 }}>Aktivitäten</div>
+            <div style={{ color: "#8bbfad", fontSize: 13 }}>Neueste Aktivitäten und Updates</div>
+          </div>
+          
+          {/* Feed Tabs */}
+          <div style={{ display: "flex", gap: 4, background: "rgba(9,26,21,0.6)", borderRadius: 14, padding: 4 }}>
+            {[
+              { key: "friends", label: "Freunde" },
+              { key: "team", label: "Team" },
+              { key: "public", label: "Öffentlich" }
+            ].map((tab) => (
+              <button
+                key={tab.key}
+                onClick={() => setActiveFeed(tab.key)}
+                style={{
+                  background: activeFeed === tab.key ? "linear-gradient(135deg,#48c9a9,#2f9c7a)" : "transparent",
+                  color: activeFeed === tab.key ? "#07271f" : "#8bbfad",
+                  border: "none",
+                  padding: "8px 16px",
+                  borderRadius: 10,
+                  fontSize: 13,
+                  fontWeight: activeFeed === tab.key ? 600 : 500,
+                  cursor: "pointer",
+                  transition: "all 0.2s ease"
+                }}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </header>
+
+        {/* Feed Content */}
+        <div style={{ display: "grid", gap: 16 }}>
+          {feedData[activeFeed]?.length === 0 ? (
+            <div style={{ padding: "32px 20px", borderRadius: 18, background: "rgba(12,35,27,0.7)", color: "#9dcfbf", textAlign: "center" }}>
+              {activeFeed === "friends" && "Keine Freundes-Aktivitäten verfügbar."}
+              {activeFeed === "team" && "Keine Team-Aktivitäten verfügbar."}
+              {activeFeed === "public" && "Keine öffentlichen Aktivitäten verfügbar."}
+            </div>
+          ) : (
+            feedData[activeFeed]?.slice(0, 8).map((item, idx) => (
+              <div 
+                key={`${activeFeed}-${idx}`} 
+                style={{ 
+                  padding: "16px 18px", 
+                  borderRadius: 16, 
+                  background: "rgba(8,28,22,0.78)", 
+                  border: "1px solid rgba(74,162,131,0.18)",
+                  display: "flex",
+                  alignItems: "flex-start",
+                  gap: 14
+                }}
+              >
+                {/* Activity Icon */}
+                <div style={{ 
+                  width: 36, 
+                  height: 36, 
+                  borderRadius: 12, 
+                  background: item.type === "match" ? "rgba(72,201,169,0.2)" : 
+                             item.type === "league" ? "rgba(224,193,98,0.2)" : 
+                             "rgba(148,202,187,0.2)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: 16,
+                  flexShrink: 0
+                }}>
+                  {item.type === "match" ? "⚽" : item.type === "league" ? "🏆" : "👤"}
+                </div>
+
+                {/* Activity Content */}
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14, color: "#d6f8ea", fontWeight: 600, marginBottom: 4 }}>
+                    {item.title}
+                  </div>
+                  <div style={{ fontSize: 13, color: "#a9d7c4", lineHeight: 1.4 }}>
+                    {item.description}
+                  </div>
+                  {item.timestamp && (
+                    <div style={{ fontSize: 11, color: "#8bbfad", marginTop: 8 }}>
+                      {item.timestamp}
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Link */}
+                {item.link && (
+                  <Link 
+                    to={item.link}
+                    style={{ 
+                      fontSize: 12, 
+                      color: "#7fd9ba", 
+                      textDecoration: "none",
+                      padding: "4px 8px",
+                      borderRadius: 8,
+                      background: "rgba(127,217,186,0.1)",
+                      alignSelf: "flex-start"
+                    }}
+                  >
+                    Details
+                  </Link>
+                )}
+              </div>
+            ))
+          )}
+        </div>
+
+        {feedData[activeFeed]?.length > 8 && (
+          <div style={{ textAlign: "center", marginTop: 20 }}>
+            <button style={{
+              background: "rgba(14,44,34,0.7)",
+              border: "1px solid rgba(92,200,165,0.4)",
+              color: "#bfead4",
+              padding: "10px 20px",
+              borderRadius: 12,
+              fontSize: 13,
+              cursor: "pointer"
+            }}>
+              Mehr anzeigen
+            </button>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
