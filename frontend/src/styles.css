@@ -120,7 +120,16 @@ button:hover, .btn:hover {
   padding: 32px 0;
   pointer-events: none;
 }
-.hero-inner { width: min(1400px, 96vw); margin: 0 auto; padding: 0 24px; }
+.hero-inner { 
+  width: min(1400px, 96vw); 
+  margin: 0 auto; 
+  padding: 0 24px; 
+}
+@media (max-width: 768px) {
+  .hero-inner { 
+    padding: 0 16px; 
+  }
+}
 .hero-controls { pointer-events: auto; }
 .hero-stripe {
   display: inline-flex;
@@ -135,14 +144,39 @@ button:hover, .btn:hover {
 .hero-sub { color: rgba(230,239,230,0.9); margin-top: 12px; pointer-events: none; }
 
 /* Mobile tuning */
-@media (max-width: 720px) {
+@media (max-width: 768px) {
   .hero-carousel { height: 240px; }
   .hero-title { font-size: 22px; }
   .hero-stripe { padding: 8px 14px; }
   .hero-stripe .hero-small-logo { width: 36px; height: 36px; }
+  .hero-inner { padding: 0 16px; }
+  .hero-controls { 
+    justify-content: center !important; 
+    gap: 8px !important;
+  }
+  .hero-controls select {
+    min-width: 100px !important;
+    font-size: 14px !important;
+    padding: 8px 10px !important;
+  }
+  .hero-controls button {
+    font-size: 14px !important;
+    padding: 8px 16px !important;
+  }
 }
 
 /* --- Shared components to align visuals across pages --- */
+.ml-container { 
+  width: min(1400px, 96vw); 
+  margin: 0 auto; 
+  padding: 0 24px; 
+}
+@media (max-width: 768px) {
+  .ml-container { 
+    padding: 0 16px; 
+  }
+}
+
 .ml-card { background: #0b1e19; border-radius: 12px; padding: 12px; border: 1px solid #1a3c33; }
 .ml-bordered { border: 1px solid #1a3c33; border-radius: 12px; }
 .ml-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; padding: 4px 8px; border-radius: 999px; background: #0e2a22; color: #cfe; border: 1px solid #2f6b57; }

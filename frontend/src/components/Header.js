@@ -431,13 +431,14 @@ export default function Header() {
 
   return (
     <header className="ml-header" ref={headerRef}>
-      <div className="ml-header__logo">
-        <Link to="/start" className="ml-logo-link" aria-label="Start">
-          <img src={matchLeagueLogo} alt="MatchLeague" className="ml-logo-full" />
-        </Link>
-      </div>
+      <div className="ml-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 0 }}>
+        <div className="ml-header__logo">
+          <Link to="/start" className="ml-logo-link" aria-label="Start">
+            <img src={matchLeagueLogo} alt="MatchLeague" className="ml-logo-full" />
+          </Link>
+        </div>
 
-      <div className={"ml-header__menu" + (open ? " is-open" : "")}>
+        <div className={"ml-header__menu" + (open ? " is-open" : "")}>
         <nav className="ml-nav">
           {!token && (
             <>
@@ -636,6 +637,7 @@ export default function Header() {
           <span />
           <span />
         </button>
+      </div>
       </div>
     </header>
   );
