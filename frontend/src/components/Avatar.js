@@ -34,7 +34,7 @@ export default function Avatar({ userId, name, src, size = 40, style = {}, class
   useEffect(() => {
     let mounted = true;
     const id = userId != null ? String(userId).match(/\d+/)?.[0] : null;
-    if (!id) return;
+    if (!id || id === '0') return; // Skip invalid or zero IDs
     // if cached, use it immediately
     if (avatarCache.has(id)) {
       const v = avatarCache.get(id);

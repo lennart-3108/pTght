@@ -1,10 +1,26 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { API_BASE } from "../config";
 import Avatar from "../components/Avatar";
 
+function extractUserIdFromToken(token) {
+  if (!token) return null;
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    const payload = JSON.parse(atob(parts[1]));
+    const rawId = payload?.user?.id ?? payload?.userId ?? payload?.sub ?? payload?.id ?? null;
+    const numeric = Number(rawId);
+    return Number.isFinite(numeric) ? numeric : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function UserChatPage() {
   const { id } = useParams();
+  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+  const myUserId = useMemo(() => extractUserIdFromToken(token), [token]);
   const [state, setState] = useState({ loading: true, err: "", chatUrl: "", chatId: null });
   const [messages, setMessages] = useState([]);
   const [body, setBody] = useState("");
@@ -17,7 +33,6 @@ export default function UserChatPage() {
     (async () => {
       try {
         setState(s => ({ ...s, loading: true, err: "" }));
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
         // Ask backend for a chat URL placeholder; can be used later to deep-link
         const res = await fetch(`${API_BASE}/users/${id}/start-chat`, {
           method: 'POST',
@@ -46,9 +61,8 @@ export default function UserChatPage() {
 
         // Load my avatar
         try {
-          const myId = Number(localStorage.getItem('userId'));
-          if (Number.isFinite(myId)) {
-            const rMe = await fetch(`${API_BASE}/users/${myId}`, { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
+          if (Number.isFinite(myUserId)) {
+            const rMe = await fetch(`${API_BASE}/users/${myUserId}`, { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
             if (rMe.ok) {
               const u = await rMe.json();
               setMe({ avatar_url: u.avatar_url || '' });
@@ -61,20 +75,20 @@ export default function UserChatPage() {
       }
     })();
     return () => { mounted = false; };
-  }, [id]);
+  }, [id, token, myUserId]);
 
   // Load messages (polling)
   useEffect(() => {
     let mounted = true;
     let stop = false;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
     async function load() {
       try {
         const r = await fetch(`${API_BASE}/users/${id}/messages`, { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
         const d = await r.json().catch(() => ({ messages: [] }));
         if (!mounted) return;
         if (r.ok) {
-          setMessages(Array.isArray(d.messages) ? d.messages : []);
+          const list = Array.isArray(d.messages) ? d.messages : [];
+          setMessages(list);
           // scroll to bottom
           setTimeout(() => {
             if (scrollerRef.current) scrollerRef.current.scrollTop = scrollerRef.current.scrollHeight;
@@ -92,13 +106,12 @@ export default function UserChatPage() {
     }
     load();
     return () => { mounted = false; stop = true; };
-  }, [id]);
+  }, [id, token, state.chatId]);
 
   async function sendMessage(e) {
     e.preventDefault();
     const text = body.trim();
     if (!text) return;
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
     const r = await fetch(`${API_BASE}/users/${id}/messages`, {
       method: 'POST',
       headers: {
@@ -142,18 +155,21 @@ export default function UserChatPage() {
               <div ref={scrollerRef} style={{ height: 420, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 8, padding: 8, background: '#0b1e19', borderRadius: 12 }}>
                 {messages.length === 0 && <div style={small}>Keine Nachrichten</div>}
                 {messages.map(m => {
-                  const isOwn = m.sender_id === Number(localStorage.getItem('userId'));
+                  const senderId = Number(m.sender_id);
+                  const isOwn = Number.isFinite(myUserId) && Number.isFinite(senderId) && senderId === myUserId;
+                  const displayName = isOwn ? 'Ich' : opponent?.name;
+
                   return (
                     <div key={m.id} style={{ display: 'flex', justifyContent: isOwn ? 'flex-end' : 'flex-start', gap: 8, alignItems: 'flex-end' }}>
-                      {!isOwn && (
-                        <Avatar userId={id} name={opponent?.name} src={opponent?.avatar_url} size={36} />
+                      {!isOwn && Number.isFinite(senderId) && (
+                        <Avatar userId={senderId} name={displayName} size={36} />
                       )}
                       <div style={{ background: isOwn ? '#1f5c47' : '#143329', borderRadius: 12, padding: '8px 10px', maxWidth: '75%' }}>
                         <div style={{ whiteSpace: 'pre-wrap' }}>{m.body}</div>
                         <div style={{ ...small, opacity: 0.8 }}>{new Date(m.created_at || Date.now()).toLocaleString('de-DE')}</div>
                       </div>
-                      {isOwn && (
-                        <Avatar userId={Number(localStorage.getItem('userId'))} name={"Ich"} src={me?.avatar_url} size={36} />
+                      {isOwn && Number.isFinite(myUserId) && (
+                        <Avatar userId={myUserId} name="Ich" src={me?.avatar_url} size={36} />
                       )}
                     </div>
                   );
