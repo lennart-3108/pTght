@@ -5,6 +5,7 @@ import { useResponsive } from "../hooks/useResponsive";
 import MatchChat from "../components/MatchChat";
 import Counter from "../components/Counter";
 import TimeCounter from "../components/TimeCounter";
+import Avatar from "../components/Avatar";
 
 export default function GameDetailPage() {
   const { gameId } = useParams();
@@ -12,6 +13,7 @@ export default function GameDetailPage() {
   
   // Dynamic responsive hook
   const isMobile = useResponsive(768);
+  const isTablet = useResponsive(1024);
   const [game, setGame] = useState(null);
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
@@ -504,19 +506,11 @@ export default function GameDetailPage() {
           <div style={{ textAlign: 'left' }}>
             {playerA.id ? (
               <Link to={`/user/${playerA.id}`} style={{ textDecoration: 'none', color: '#f4fff8', display: 'inline-block' }}>
-                <div style={{ 
-                  width: isMobile ? 80 : 110, 
-                  height: isMobile ? 80 : 110, 
-                  borderRadius: isMobile ? 80 : 110, 
-                  background: '#173a30', 
-                  display: 'grid', 
-                  placeItems: 'center', 
-                  color: '#6fc89c', 
-                  fontWeight: 800, 
-                  fontSize: isMobile ? 20 : 28 
-                }}>
-                  {String(playerA.name || '?').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
-                </div>
+                <Avatar 
+                  userId={playerA.id} 
+                  name={playerA.name} 
+                  size={isMobile ? 80 : 110} 
+                />
                 <div style={{ 
                   marginTop: isMobile ? 6 : 10, 
                   fontSize: isMobile ? 16 : 22, 
@@ -525,9 +519,11 @@ export default function GameDetailPage() {
               </Link>
             ) : (
               <>
-                <div style={{ width: 110, height: 110, borderRadius: 110, background: '#173a30', display: 'grid', placeItems: 'center', color: '#6fc89c', fontWeight: 800, fontSize: 28 }}>
-                  {String(playerA.name || '?').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
-                </div>
+                <Avatar 
+                  userId={null} 
+                  name={playerA.name} 
+                  size={110} 
+                />
                 <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerA.name}</div>
               </>
             )}
@@ -536,7 +532,7 @@ export default function GameDetailPage() {
           
           {/* Center section with VS or Counters */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            {(token && (game.home_score == null && game.away_score == null)) ? (
+            {(token && isParticipant && (game.home_score == null && game.away_score == null)) ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                   <Counter
@@ -589,16 +585,22 @@ export default function GameDetailPage() {
           <div style={{ textAlign: 'right' }}>
             {playerB.id ? (
               <Link to={`/user/${playerB.id}`} style={{ textDecoration: 'none', color: '#f4fff8', display: 'inline-block' }}>
-                <div style={{ width: 110, height: 110, borderRadius: 110, background: '#3a1717', display: 'grid', placeItems: 'center', color: '#f3a1a1', fontWeight: 800, fontSize: 28, marginLeft: 'auto' }}>
-                  {String(playerB.name || '?').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
-                </div>
+                <Avatar 
+                  userId={playerB.id} 
+                  name={playerB.name} 
+                  size={isTablet ? 90 : isMobile ? 70 : 110} 
+                  style={{ marginLeft: 'auto' }}
+                />
                 <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerB.name}</div>
               </Link>
             ) : (
               <>
-                <div style={{ width: 110, height: 110, borderRadius: 110, background: '#3a1717', display: 'grid', placeItems: 'center', color: '#f3a1a1', fontWeight: 800, fontSize: 28, marginLeft: 'auto' }}>
-                  {String(playerB.name || '?').split(' ').map(s=>s[0]).join('').slice(0,2).toUpperCase()}
-                </div>
+                <Avatar 
+                  userId={null} 
+                  name={playerB.name} 
+                  size={isTablet ? 90 : isMobile ? 70 : 110} 
+                  style={{ marginLeft: 'auto' }}
+                />
                 <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerB.name}</div>
               </>
             )}
@@ -624,7 +626,7 @@ export default function GameDetailPage() {
         )}
 
         {/* Schedule form (toggled) */}
-        {(token && game && game.home_score == null && game.away_score == null && showSchedule) && (
+        {(token && game && isParticipant && game.home_score == null && game.away_score == null && showSchedule) && (
           <ScheduleSection
             open={showSchedule}
             setOpen={setShowSchedule}

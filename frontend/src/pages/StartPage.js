@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
-import smallLogo from "../images/matchleague_logo_4x4.png";
+import smallLogo from "../images/logo.png";
 import Avatar from "../components/Avatar";
 
 // load background images same as LoginPage

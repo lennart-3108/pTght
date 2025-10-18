@@ -160,8 +160,20 @@ export default function SearchMatchDialog() {
           <div style={{ color: '#9db' }}>Keine offenen Matches gefunden.</div>
         ) : rows.map(m => {
           const aName = m.home || m.home_name || 'A';
-          const bName = m.away || m.away_name || 'B';
+          const bName = m.away || m.away_name || 'Gegner gesucht';
           const status = (m.status || 'Ausstehend');
+          
+          // Format date
+          let dateText = 'Datum: offen';
+          if (m.kickoff_at) {
+            try {
+              const date = new Date(m.kickoff_at);
+              dateText = `Datum: ${date.toLocaleDateString('de-DE')} ${date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
+            } catch (e) {
+              dateText = 'Datum: offen';
+            }
+          }
+          
           return (
             <div key={m.id} className="ml-card" style={{ display: 'grid', gap: 10 }}>
               {/* Header row: league/sport and status */}
@@ -181,9 +193,6 @@ export default function SearchMatchDialog() {
                   <div>
                     <div style={{ fontWeight: 700 }}>{aName}</div>
                     <div style={{ color: '#9db', fontSize: 12 }}>—</div>
-                    <div style={{ marginTop: 6 }}>
-                      <Link to={m.home_id ? `/user/${m.home_id}` : '#'} className="ml-btn-secondary">Team ansehen</Link>
-                    </div>
                   </div>
                 </div>
 
@@ -194,18 +203,18 @@ export default function SearchMatchDialog() {
                 <div className="ml-match__side" style={{ justifyContent: 'end' }}>
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontWeight: 700 }}>{bName}</div>
-                    <div style={{ color: '#9db', fontSize: 12 }}>2. Rang</div>
-                    <div style={{ marginTop: 6 }}>
-                      <Link to={m.away_id ? `/user/${m.away_id}` : '#'} className="ml-btn-secondary">Team ansehen</Link>
-                    </div>
+                    <div style={{ color: '#9db', fontSize: 12 }}>—</div>
                   </div>
                   <Avatar userId={m.away_id} name={bName} size={64} />
                 </div>
               </div>
 
-              {/* Footer: location + details */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center' }}>
-                <div style={{ color: '#9db' }}>{[m.city, m.state, m.country].filter(Boolean).join(' · ')}</div>
+              {/* Footer: date + location + details */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 10 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  <div style={{ color: '#9db', fontSize: 12 }}>{dateText}</div>
+                  <div style={{ color: '#9db' }}>{[m.city, m.state, m.country].filter(Boolean).join(' · ')}</div>
+                </div>
                 <div>
                   <Link to={`/matches/${m.id}`} className="ml-btn-secondary">Details</Link>
                 </div>
@@ -217,7 +226,16 @@ export default function SearchMatchDialog() {
 
       {/* Centered secondary create button as in mock */}
       <div style={{ marginTop: 18, display: 'flex', justifyContent: 'center' }}>
-        <button onClick={openCreate} disabled={!authed} className="ml-btn-secondary" style={{ padding: '12px 18px', background: '#0e2a22' }}>Eigenes Match eröffnen</button>
+        <button onClick={openCreate} disabled={!authed} style={{ 
+          padding: '12px 18px', 
+          background: '#dEBC7C', 
+          color: '#10261f', 
+          borderRadius: '10px', 
+          border: 'none', 
+          cursor: !authed ? 'not-allowed' : 'pointer', 
+          fontWeight: 700,
+          opacity: !authed ? 0.6 : 1
+        }}>Eigenes Match eröffnen</button>
       </div>
 
       {/* Create Match Modal */}

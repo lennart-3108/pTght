@@ -96,7 +96,11 @@ module.exports = function profileRoutes(ctx) {
         this.whereNull('m.league_id');
         if (hasLeagues) this.orWhere('l.name', 'Open Matches');
       });
-      if (hasStatus) base.whereIn('m.status', ['open', 'proposed']).orWhereNull('m.status');
+      if (hasStatus) {
+        base.andWhere(function () {
+          this.whereIn('m.status', ['open', 'proposed']).orWhereNull('m.status');
+        });
+      }
   if (sportId && hasLeagues && hasSports) base.andWhere('s.id', sportId);
   const cityId = req.query.cityId ? Number(req.query.cityId) : null;
   const stateId = req.query.stateId ? Number(req.query.stateId) : null;
@@ -105,16 +109,8 @@ module.exports = function profileRoutes(ctx) {
   if (stateId && hasStates && hasCities) base.andWhere('st.id', stateId);
   if (countryId && hasCountries && hasCities) base.andWhere('co.id', countryId);
 
-      // Without status: keep only rows without opponent
-      if (!hasStatus) {
-        const hasInfoHome = Object.prototype.hasOwnProperty.call(info, 'home_user_id') || Object.prototype.hasOwnProperty.call(info, 'home');
-        const hasInfoAway = Object.prototype.hasOwnProperty.call(info, 'away_user_id') || Object.prototype.hasOwnProperty.call(info, 'away');
-        base.andWhere(function () {
-          if (Object.prototype.hasOwnProperty.call(info, 'away_user_id')) this.whereNull('m.away_user_id');
-          if (Object.prototype.hasOwnProperty.call(info, 'away_team_id')) this.whereNull('m.away_team_id');
-          if (!hasInfoAway) this.whereRaw('1=1');
-        });
-      }
+      // ALWAYS filter to only show matches without opponent (regardless of status column)
+      base.whereNull('m.away_user_id').whereNull('m.away_team_id');
 
       const rows = await base
         .select(
@@ -130,7 +126,88 @@ module.exports = function profileRoutes(ctx) {
         )
         .orderBy('m.id', 'desc');
 
-      return res.json(rows || []);
+      // Enrich with user and team names
+      const enrichedRows = await Promise.all((rows || []).map(async (row) => {
+        const enriched = { ...row };
+        
+        // Fetch home user/team name
+        if (row.home_user_id) {
+          try {
+            const hasUsers = await k.schema.hasTable('users').catch(() => false);
+            if (hasUsers) {
+              const userInfo = await k('users').columnInfo().catch(() => ({}));
+              const selectCols = ['id'];
+              if (userInfo.firstname) selectCols.push('firstname');
+              if (userInfo.lastname) selectCols.push('lastname');
+              if (userInfo.name) selectCols.push('name');
+              if (userInfo.email) selectCols.push('email');
+              
+              const homeUser = await k('users').where('id', row.home_user_id).first(selectCols);
+              if (homeUser) {
+                const parts = [];
+                if (homeUser.firstname) parts.push(homeUser.firstname);
+                if (homeUser.lastname) parts.push(homeUser.lastname);
+                enriched.home = parts.length > 0 ? parts.join(' ').trim() : (homeUser.name || homeUser.email || `User ${homeUser.id}`);
+                enriched.home_id = homeUser.id;
+              }
+            }
+          } catch (e) { /* ignore */ }
+        }
+        
+        if (row.home_team_id) {
+          try {
+            const hasTeams = await k.schema.hasTable('teams').catch(() => false);
+            if (hasTeams) {
+              const homeTeam = await k('teams').where('id', row.home_team_id).first(['id', 'name']);
+              if (homeTeam) {
+                enriched.home = homeTeam.name || `Team ${homeTeam.id}`;
+                enriched.home_id = homeTeam.id;
+              }
+            }
+          } catch (e) { /* ignore */ }
+        }
+        
+        // Fetch away user/team name
+        if (row.away_user_id) {
+          try {
+            const hasUsers = await k.schema.hasTable('users').catch(() => false);
+            if (hasUsers) {
+              const userInfo = await k('users').columnInfo().catch(() => ({}));
+              const selectCols = ['id'];
+              if (userInfo.firstname) selectCols.push('firstname');
+              if (userInfo.lastname) selectCols.push('lastname');
+              if (userInfo.name) selectCols.push('name');
+              if (userInfo.email) selectCols.push('email');
+              
+              const awayUser = await k('users').where('id', row.away_user_id).first(selectCols);
+              if (awayUser) {
+                const parts = [];
+                if (awayUser.firstname) parts.push(awayUser.firstname);
+                if (awayUser.lastname) parts.push(awayUser.lastname);
+                enriched.away = parts.length > 0 ? parts.join(' ').trim() : (awayUser.name || awayUser.email || `User ${awayUser.id}`);
+                enriched.away_id = awayUser.id;
+              }
+            }
+          } catch (e) { /* ignore */ }
+        }
+        
+        if (row.away_team_id) {
+          try {
+            const hasTeams = await k.schema.hasTable('teams').catch(() => false);
+            if (hasTeams) {
+              const awayTeam = await k('teams').where('id', row.away_team_id).first(['id', 'name']);
+              if (awayTeam) {
+                enriched.away = awayTeam.name || `Team ${awayTeam.id}`;
+                enriched.away_id = awayTeam.id;
+              }
+            }
+          } catch (e) { /* ignore */ }
+        }
+        
+        return enriched;
+      }));
+
+      return res.json(enrichedRows);
     } catch (e) {
       console.error('[GET /open-matches] failed', e && (e.stack || e.message || e));
       return res.status(500).json({ error: 'DB_ERROR' });

@@ -584,7 +584,7 @@ export default function Header() {
                           const ts = chat.lastActivityAt || chat.lastMessage?.createdAt;
                           const typeLabel = chat.type === "direct" ? "Privater Chat" : "Match-Chat";
                           return (
-                            <li key={`${chat.type}-${chat.type === "direct" ? chat.chatId : chat.matchId}`} className="ml-popover__item ml-popover__item--link">
+                            <li key={`${chat.type}-${chat.type === "direct" ? chat.chatId : chat.matchId}`} className={`ml-popover__item ml-popover__item--link${chat.unread ? ' ml-popover__item--unread' : ''}`}>
                               <Link to={href} onClick={handleNavigate}>
                                 <div className="ml-popover__itemLinkBody">
                                   <div className="ml-popover__avatar">
