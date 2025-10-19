@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 import smallLogo from "../images/logo.png";
 import Avatar from "../components/Avatar";
-import { useResponsive } from "../hooks/useResponsive";
 
 // load background images same as LoginPage
 function importAllBackgrounds(r) {
@@ -22,7 +21,6 @@ backgrounds.sort((a, b) => {
 
 export default function StartPage() {
   const navigate = useNavigate();
-  const isMobile = useResponsive(768);
   const [leagues, setLeagues] = useState([]);
   const [sports, setSports] = useState([]);
   const [cities, setCities] = useState([]);
@@ -130,39 +128,6 @@ export default function StartPage() {
   if (loading) return <div style={{ padding: 24 }}>Lade Startseite ...</div>;
   if (err) return <div style={{ padding: 24, color: "crimson" }}>Fehler: {err}</div>;
 
-  // Responsive Styles
-  const selectStyle = {
-    padding: isMobile ? '8px 12px' : '12px 16px',
-    borderRadius: 12,
-    border: 'none',
-    background: '#113528',
-    color: '#e8efe8',
-    fontSize: isMobile ? 14 : 16,
-    minWidth: isMobile ? '120px' : '140px',
-    width: isMobile ? 'auto' : 'auto'
-  };
-
-  const buttonStyle = {
-    background: '#debc7c',
-    color: '#10261f',
-    padding: isMobile ? '8px 16px' : '12px 20px',
-    borderRadius: 12,
-    border: 'none',
-    cursor: 'pointer',
-    fontWeight: 800,
-    fontSize: isMobile ? 14 : 16,
-    whiteSpace: 'nowrap'
-  };
-
-  const controlsStyle = {
-    display: 'flex',
-    gap: isMobile ? 8 : 14,
-    alignItems: 'center',
-    marginTop: 14,
-    flexWrap: 'wrap',
-    justifyContent: isMobile ? 'center' : 'flex-start'
-  };
-
   return (
     <div>
       <section className="hero-carousel">
@@ -177,25 +142,25 @@ export default function StartPage() {
               <h1 className="hero-title">Match League</h1>
             </div>
             <p className="hero-sub"><b>Willkommen bei MatchLeague. Connect. Match. Win.</b></p>
-            <div className="hero-controls" style={controlsStyle}>
-              <select value={selectedSport} onChange={(e) => setSelectedSport(e.target.value)} style={selectStyle}>
+            <div className="hero-controls" style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 14, flexWrap: 'wrap' }}>
+              <select value={selectedSport} onChange={(e) => setSelectedSport(e.target.value)} style={{ padding: '12px 16px', borderRadius: 12, border: 'none', background: '#113528', color: '#e8efe8', fontSize: 16 }}>
               <option value="">Sportart</option>
               {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
-              <select value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)} style={selectStyle}>
+              <select value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)} style={{ padding: '12px 16px', borderRadius: 12, border: 'none', background: '#113528', color: '#e8efe8', fontSize: 16 }}>
               <option value="">Land</option>
               {/* countries are available through cities/list joined return in backend/server.js → use city-derived unique list if needed */}
               {[...new Map(cities.filter(c => c.countryId).map(c => [c.countryId, { id: c.countryId, name: c.countryName }])).values()].map(co => (
                 <option key={co.id} value={co.id}>{co.name}</option>
               ))}
             </select>
-              <select value={selectedState} onChange={(e) => setSelectedState(e.target.value)} style={selectStyle}>
+              <select value={selectedState} onChange={(e) => setSelectedState(e.target.value)} style={{ padding: '12px 16px', borderRadius: 12, border: 'none', background: '#113528', color: '#e8efe8', fontSize: 16 }}>
               <option value="">Bundesstaat</option>
               {[...new Map(cities.filter(c => (!selectedCountry || String(c.countryId) === String(selectedCountry)) && c.stateId).map(c => [c.stateId, { id: c.stateId, name: c.stateName }])).values()].map(st => (
                 <option key={st.id} value={st.id}>{st.name}</option>
               ))}
             </select>
-              <select value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} style={selectStyle}>
+              <select value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} style={{ padding: '12px 16px', borderRadius: 12, border: 'none', background: '#113528', color: '#e8efe8', fontSize: 16 }}>
               <option value="">Stadt</option>
               {cities.filter(c => (!selectedCountry || String(c.countryId) === String(selectedCountry)) && (!selectedState || String(c.stateId) === String(selectedState))).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
@@ -208,7 +173,7 @@ export default function StartPage() {
                 if (selectedCountry) qp.set('countryId', selectedCountry);
                 navigate(`/match-search?${qp.toString()}`);
               }}
-              style={buttonStyle}
+              style={{ background: '#debc7c', color: '#10261f', padding: '12px 20px', borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 16 }}
               disabled={searching}
             >{searching ? 'Suche…' : 'Match suchen'}</button>
             </div>
@@ -216,7 +181,7 @@ export default function StartPage() {
         </div>
       </section>
 
-  <div className="ml-container" style={{ paddingTop: isMobile ? 16 : 24, paddingBottom: isMobile ? 16 : 24 }}>
+  <div className="ml-main-container">
       {/* Dashboard Sections */}
       {/* Row 1: Upcoming and Last games, 3 items each, fixed height */}
       <div className="ml-dual">
@@ -559,8 +524,8 @@ export default function StartPage() {
           <div style={{ color: '#9db', fontSize: 12 }}><Link to="/news">Alle</Link></div>
         </div>
 
-        {/* Top strip: Local Game News + Sponsored */}
-        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 12 }}>
+        {/* Top strip: Local Game News + Sponsored - simple stacking */}
+        <div className="ml-news-grid">
           {/* Local Game News */}
           <div className="ml-bordered" style={{ padding: 10 }}>
             <div style={{ fontWeight: 700, marginBottom: 8, color: '#dfe' }}>Local Game News</div>
@@ -620,6 +585,7 @@ export default function StartPage() {
       </section>
 
       {/* Extra Listen (Alle Ligen/Sportarten/Städte) entfernt auf Wunsch */}
+      
       </div>
     </div>
   );
