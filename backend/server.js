@@ -772,7 +772,7 @@ app.post('/open-matches', isAuthenticated, async (req, res) => {
   }
 });
 
-app.get("/news", isAuthenticated, async (req, res) => {
+app.get("/api/news", isAuthenticated, async (req, res) => {
   const started = Date.now();
   const startedIso = new Date(started).toISOString();
   try {
@@ -951,19 +951,22 @@ registerRoutes(app, ctx);
 const meRoutes = require("./src/routes/me");
 const leagueMatchesRoutes = require("./src/routes/leagueMatches");
 
+// API Router for remaining routes
+const apiRouter = require('express').Router();
+
 // Verwende die echte Knex-Instanz für die neuen Routen
-// app.use("/me", meRoutes({ db: knexDirect }));
-// app.use("/leagues", leagueMatchesRoutes({ db: knexDirect }));
+// app.use("/api/me", meRoutes({ db: knexDirect }));
+// app.use("/api/leagues", leagueMatchesRoutes({ db: knexDirect }));
 // pass the same primary knex (adapter preferred) into routes to ensure consistent data source
-app.use("/me", meRoutes({ db: knexDirect || db }));
-app.use("/leagues", leagueMatchesRoutes({ db: knexDirect || db }));
+apiRouter.use("/me", meRoutes({ db: knexDirect || db }));
+apiRouter.use("/leagues", leagueMatchesRoutes({ db: knexDirect || db }));
 
 const sportsRoutes = require("./src/routes/sports");
 const matchesRoutes = require("./routes/matches");
 const chatsRoutes = require("./routes/chats");
 
 // Mount routes BEFORE any 404 handler
-app.use("/sports", sportsRoutes({ db }));
+apiRouter.use("/sports", sportsRoutes({ db }));
 // Ensure we pass a usable knex instance into routes that expect it.
 // Prefer knexDirect (legacy), then adapter's knex, then the adapter object as last resort.
 const resolvedKnexForRoutes = (knexDirect && knexDirect.client)
@@ -977,11 +980,11 @@ if (process.env.DEBUG_BOOT === '1' || canLog('debug')) {
     source: knexDirect && knexDirect.client ? 'knexDirect' : (db && db.knex && db.knex.client) ? 'adapter.knex' : (db ? 'adapter' : 'none')
   });
 }
-app.use("/matches", matchesRoutes({ db: resolvedKnexForRoutes }));
-app.use("/chats", chatsRoutes({ db: resolvedKnexForRoutes }));
+apiRouter.use("/matches", matchesRoutes({ db: resolvedKnexForRoutes }));
+apiRouter.use("/chats", chatsRoutes({ db: resolvedKnexForRoutes }));
 
 // --- ensure root /sports exists (some setups expose only /sports/:id/... but not GET /sports) ---
-app.get("/sports", async (req, res) => {
+apiRouter.get("/sports", async (req, res) => {
   try {
     // prefer direct knex if available
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
@@ -995,7 +998,7 @@ app.get("/sports", async (req, res) => {
 });
 
 // --- new: provide canonical list endpoints used by frontend ---
-app.get("/sports/list", async (req, res) => {
+apiRouter.get("/sports/list", async (req, res) => {
   try {
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
     if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
@@ -1007,7 +1010,7 @@ app.get("/sports/list", async (req, res) => {
   }
 });
 
-app.get("/cities/list", async (req, res) => {
+apiRouter.get("/cities/list", async (req, res) => {
   try {
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
     if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
@@ -1037,7 +1040,7 @@ app.get("/cities/list", async (req, res) => {
 });
 
 // Public list of countries
-app.get('/countries', async (req, res) => {
+apiRouter.get('/countries', async (req, res) => {
   try {
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
     if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
@@ -1300,6 +1303,9 @@ server.on('error', (err) => {
     }
   });
 })();
+
+// Mount all remaining API routes under /api prefix
+app.use('/api', apiRouter);
 
 // export for tests
 module.exports = { app, server };
