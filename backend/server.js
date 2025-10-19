@@ -1236,7 +1236,7 @@ server.on('error', (err) => {
 (() => {
   const cache = { data: null, ts: 0 };
   const TTL_MS = 60 * 1000; // 60s cache
-  app.get('/public/stats', async (req, res) => {
+  app.get('/api/public/stats', async (req, res) => {
     try {
       const now = Date.now();
       if (cache.data && (now - cache.ts) < TTL_MS) {
