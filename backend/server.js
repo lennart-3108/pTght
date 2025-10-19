@@ -1135,8 +1135,8 @@ if (String(process.env.SQL_DEBUG).toLowerCase() === "true" || process.env.SQL_DE
   }
 }
 
-const server = app.listen(PORT, () => {
-  logInfo(`[Server] Listening on http://localhost:${PORT}`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+  logInfo(`[Server] Listening on http://0.0.0.0:${PORT}`);
   const logsDir = ensureLogsDir();
   logInfo(`[Server] Logs directory: ${logsDir} (error.log, info.log, link-tests.log)`);
 
