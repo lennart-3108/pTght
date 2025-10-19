@@ -229,7 +229,7 @@ module.exports = function meRoutes({ db }) {
           tsSelect,
           { leagueId: "g.league_id" },
           { league: "l.name" },
-          k.raw("COALESCE(c.name, l.city) as city"),
+          k.raw("c.name as city"),
           { sport: "s.name" },
           selectHome,
           selectAway,
