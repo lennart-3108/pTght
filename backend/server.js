@@ -1307,6 +1307,9 @@ server.on('error', (err) => {
 // Mount all remaining API routes under /api prefix
 app.use('/api', apiRouter);
 
+// Serve static uploads under /api/uploads as well (proxy to /uploads)
+app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // export for tests
 module.exports = { app, server };
 
