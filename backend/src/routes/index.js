@@ -21,23 +21,29 @@ function registerRoutes(app, ctx) {
   // einmalig nötige Tabellen anlegen
   ensureTables().catch(() => {});
 
-  // Router anhängen
-  app.use(authRoutes(ctx));
-  app.use("/auth", authRoutes(ctx));
-  app.use("/me", meRoutes(ctx));
-  app.use("/leagues", leaguesRoutes(ctx));
-  app.use("/sports", sportsRoutes(ctx));
-  app.use(citiesRoutes(ctx));
-  app.use(profileRoutes(ctx));
-  app.use("/admin", adminRoutes(ctx));
-  // Mount mailer under explicit prefix so endpoints are /mailer/*
-  app.use("/mailer", mailerRoutes(ctx));
-  app.use(healthRoutes(ctx));
-  app.use(users(ctx));
-  app.use(games(ctx));
-  app.use('/teams', teamsRoutes(ctx));
-  app.use('/matches', matchesRoutes(ctx));
-  app.use(messagesRoutes(ctx));
+  // API Router - mount under /api prefix
+  const apiRouter = express.Router();
+
+  // Router anhängen an apiRouter statt app
+  apiRouter.use(authRoutes(ctx));
+  apiRouter.use("/auth", authRoutes(ctx));
+  apiRouter.use("/me", meRoutes(ctx));
+  apiRouter.use("/leagues", leaguesRoutes(ctx));
+  apiRouter.use("/sports", sportsRoutes(ctx));
+  apiRouter.use(citiesRoutes(ctx));
+  apiRouter.use(profileRoutes(ctx));
+  apiRouter.use("/admin", adminRoutes(ctx));
+  // Mount mailer under explicit prefix so endpoints are /api/mailer/*
+  apiRouter.use("/mailer", mailerRoutes(ctx));
+  apiRouter.use(healthRoutes(ctx));
+  apiRouter.use(users(ctx));
+  apiRouter.use(games(ctx));
+  apiRouter.use('/teams', teamsRoutes(ctx));
+  apiRouter.use('/matches', matchesRoutes(ctx));
+  apiRouter.use(messagesRoutes(ctx));
+
+  // Mount all API routes under /api
+  app.use("/api", apiRouter);
 
   // --- Email status + test routes ---
   app.get("/admin/email-status", async (req, res) => {
