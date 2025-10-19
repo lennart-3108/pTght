@@ -431,7 +431,7 @@ export default function Header() {
 
   return (
     <header className="ml-header" ref={headerRef}>
-      <div className="ml-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: 0 }}>
+      <div className="ml-header-container">
         <div className="ml-header__logo">
           <Link to="/start" className="ml-logo-link" aria-label="Start">
             <img src={matchLeagueLogo} alt="MatchLeague" className="ml-logo-full" />
