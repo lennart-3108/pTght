@@ -5,13 +5,21 @@ import { API_BASE } from "../config";
 export default function LeaguesPage() {
   const [leagues, setLeagues] = useState([]);
   const [cities, setCities] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
   const [sports, setSports] = useState([]);
   const [selectedCity, setSelectedCity] = useState("");
+  const [selectedCountry, setSelectedCountry] = useState("");
+  const [selectedState, setSelectedState] = useState("");
   const [selectedSport, setSelectedSport] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showMyLeaguesOnly, setShowMyLeaguesOnly] = useState(false);
+  const [userLeagues, setUserLeagues] = useState([]);
   const [membersCount, setMembersCount] = useState({});
   const [loading, setLoading] = useState(true);
   const [loadingCounts, setLoadingCounts] = useState(false);
   const [err, setErr] = useState("");
+  const [userProfile, setUserProfile] = useState(null);
 
   // Reachability state: { [leagueId]: { ok: boolean, status: number|null, error: string|null } }
   const [reachable, setReachable] = useState({});
@@ -132,16 +140,52 @@ export default function LeaguesPage() {
     let mounted = true;
     setLoading(true);
     setErr("");
+    
+    // Lade Benutzerprofil für Auto-Auswahl der Stadt
+    const token = localStorage.getItem("token");
+    if (token) {
+      // Lade Benutzer-Profil
+      fetch(`${API_BASE}/me`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (mounted && data) {
+            setUserProfile(data);
+            // Auto-select user's city if available
+            if (data.city_id || data.cityId) {
+              setSelectedCity(String(data.city_id || data.cityId));
+            }
+          }
+        })
+        .catch(() => {});
+      
+      // Lade Benutzer-Ligen
+      fetch(`${API_BASE}/me/leagues`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(r => r.ok ? r.json() : [])
+        .then(data => {
+          if (mounted && Array.isArray(data)) {
+            setUserLeagues(data);
+            console.log("[LeaguesPage] User leagues loaded:", data);
+          }
+        })
+        .catch(error => {
+          console.warn("[LeaguesPage] Failed to load user leagues:", error);
+        });
+    }
+
     Promise.all([
       fetch(`${API_BASE}/leagues`).then(r => (r.ok ? r.json() : Promise.reject(new Error(`/leagues ${r.status}`)))),
       fetch(`${API_BASE}/cities/list`).then(r => (r.ok ? r.json() : [])),
       fetch(`${API_BASE}/sports/list`).then(r => (r.ok ? r.json() : [])),
+      fetch(`${API_BASE}/countries/list`).then(r => (r.ok ? r.json() : [])),
+      fetch(`${API_BASE}/states/list`).then(r => (r.ok ? r.json() : [])),
     ])
-      .then(([leaguesData, citiesData, sportsData]) => {
+      .then(([leaguesData, citiesData, sportsData, countriesData, statesData]) => {
         if (!mounted) return;
         setLeagues(Array.isArray(leaguesData) ? leaguesData : []);
         setCities(Array.isArray(citiesData) ? citiesData : []);
         setSports(Array.isArray(sportsData) ? sportsData : []);
+        setCountries(Array.isArray(countriesData) ? countriesData : []);
+        setStates(Array.isArray(statesData) ? statesData : []);
       })
       .catch(e => {
         if (!mounted) return;
@@ -152,18 +196,49 @@ export default function LeaguesPage() {
   }, []);
 
   // visibleLeagues MUST be declared before effects that reference it -> moved here
-  // Show all leagues by default; apply city/sport filters only when set
+  // Filtered cities based on country/state selection
+  const filteredCities = useMemo(() => {
+    return cities.filter(city => {
+      const byCountry = selectedCountry ? String(city.countryId || city.country_id) === String(selectedCountry) : true;
+      const byState = selectedState ? String(city.stateId || city.state_id) === String(selectedState) : true;
+      return byCountry && byState;
+    });
+  }, [cities, selectedCountry, selectedState]);
+
+  // Filtered states based on country selection  
+  const filteredStates = useMemo(() => {
+    return states.filter(state => {
+      return selectedCountry ? String(state.countryId || state.country_id) === String(selectedCountry) : true;
+    });
+  }, [states, selectedCountry]);
+
+  // Show all leagues by default; apply filters
   const visibleLeagues = useMemo(() => {
     return leagues.filter(l => {
+      // City filter
       const byCity = selectedCity ? (selectedCityObj ? leagueMatchesCity(l, selectedCityObj, false) : true) : true;
+      
+      // Sport filter
       const leagueSportId = l.sportId ?? l.sport_id ?? l.sport ?? l.sportName ?? "";
       const bySport = selectedSport ? (
             String(leagueSportId) === String(selectedSportObj?.id)
             || (typeof leagueSportId === "string" && normalize(leagueSportId) === normalize(selectedSportObj?.name || ""))
           ) : true;
-      return byCity && bySport;
+      
+      // Search query filter
+      const bySearch = searchQuery ? (
+        normalize(l.name || "").includes(normalize(searchQuery)) ||
+        normalize(l.city || l.cityName || "").includes(normalize(searchQuery)) ||
+        normalize(l.sport || l.sportName || "").includes(normalize(searchQuery))
+      ) : true;
+      
+      // "Meine Ligen" filter
+      const byMyLeagues = showMyLeaguesOnly ? 
+        userLeagues.some(userLeague => String(userLeague.id) === String(l.id)) : true;
+      
+      return byCity && bySport && bySearch && byMyLeagues;
     });
-  }, [leagues, selectedCity, selectedSport, selectedCityObj, selectedSportObj]);
+  }, [leagues, selectedCity, selectedSport, searchQuery, showMyLeaguesOnly, userLeagues, selectedCityObj, selectedSportObj]);
 
   // Log whenever visibleLeagues changes
   useEffect(() => {
@@ -265,76 +340,469 @@ export default function LeaguesPage() {
   if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
 
   return (
-    <div style={{ padding: 16 }}>
-      <h2>Ligen</h2>
-
-      <div style={{ margin: "12px 0", display: "flex", gap: 12, alignItems: "center" }}>
-        <label>
-          Stadt:
-          <select value={selectedCity} onChange={e => handleCitySelect(e.target.value)} style={{ marginLeft: 8 }}>
-            <option value="">— alle Städte —</option>
-            {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
-        </label>
-
-        <label>
-          Sport:
-          <select value={selectedSport} onChange={e => setSelectedSport(e.target.value)} style={{ marginLeft: 8 }}>
-            <option value="">— alle —</option>
-            {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-          </select>
-        </label>
-
-        <button onClick={() => { setSelectedCity(""); setSelectedSport(""); }}>Zurücksetzen</button>
+    <div className="ml-container" style={{ padding: "32px 24px" }}>
+      <div style={{ marginBottom: 32 }}>
+        <h1 style={{ 
+          margin: "0 0 8px 0", 
+          fontSize: 32, 
+          fontWeight: 700, 
+          color: "#e5e7eb" 
+        }}>
+          Ligen
+        </h1>
+        <p style={{ 
+          margin: 0, 
+          color: "#9ca3af", 
+          fontSize: 16,
+          lineHeight: 1.5 
+        }}>
+          Finde die perfekte Liga für deinen Sport in deiner Region
+        </p>
       </div>
 
-      {/* summary (kept minimal) */}
-      <div style={{ fontSize: 12, color: "#666", marginBottom: 10 }}>
-        <div>Gefundene Ligen: {visibleLeagues.length} (Filter: Stadt={selectedCity || "alle"}, Sport={selectedSport || "alle"})</div>
+      {/* Enhanced Filter Section */}
+      <div style={{ 
+        background: 'linear-gradient(135deg,#071716,#0d2422)',
+        border: '1px solid rgba(255,255,255,0.08)',
+        borderRadius: 16,
+        padding: 24,
+        marginBottom: 32,
+        boxShadow: '0 8px 32px -8px rgba(0,0,0,0.4)'
+      }}>
+        <h3 style={{ 
+          margin: "0 0 20px 0", 
+          fontSize: 18, 
+          fontWeight: 600, 
+          color: "#e5e7eb" 
+        }}>
+          Filter & Suche
+        </h3>
+        
+        {/* Search Field */}
+        <div style={{ marginBottom: 20 }}>
+          <label style={{ 
+            display: 'block',
+            marginBottom: 8,
+            fontWeight: 600,
+            color: '#e5e7eb',
+            fontSize: 14
+          }}>
+            Suche
+          </label>
+          <input
+            type="text"
+            placeholder="Liga, Stadt oder Sport suchen..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              border: '1px solid rgba(255,255,255,0.12)',
+              borderRadius: 8,
+              fontSize: 15,
+              background: 'rgba(255,255,255,0.05)',
+              color: '#e5e7eb',
+              outline: 'none',
+              transition: 'border-color 0.2s'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#48baa6'}
+            onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
+          />
+        </div>
+
+        {/* Filter Grid */}
+        <div style={{ 
+          display: "grid", 
+          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", 
+          gap: 16,
+          marginBottom: 20
+        }}>
+          <div>
+            <label style={{ 
+              display: 'block',
+              marginBottom: 8,
+              fontWeight: 600,
+              color: '#e5e7eb',
+              fontSize: 14
+            }}>
+              Sport
+            </label>
+            <select 
+              value={selectedSport} 
+              onChange={e => setSelectedSport(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 8,
+                background: 'rgba(255,255,255,0.05)',
+                color: '#e5e7eb',
+                fontSize: 14
+              }}
+            >
+              <option value="">— alle Sportarten —</option>
+              {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label style={{ 
+              display: 'block',
+              marginBottom: 8,
+              fontWeight: 600,
+              color: '#e5e7eb',
+              fontSize: 14
+            }}>
+              Land
+            </label>
+            <select 
+              value={selectedCountry} 
+              onChange={e => {
+                setSelectedCountry(e.target.value);
+                setSelectedState("");
+                setSelectedCity("");
+              }}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 8,
+                background: 'rgba(255,255,255,0.05)',
+                color: '#e5e7eb',
+                fontSize: 14
+              }}
+            >
+              <option value="">— alle Länder —</option>
+              {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label style={{ 
+              display: 'block',
+              marginBottom: 8,
+              fontWeight: 600,
+              color: '#e5e7eb',
+              fontSize: 14
+            }}>
+              Bundesland/Region
+            </label>
+            <select 
+              value={selectedState} 
+              onChange={e => {
+                setSelectedState(e.target.value);
+                setSelectedCity("");
+              }}
+              disabled={!selectedCountry}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 8,
+                background: selectedCountry ? 'rgba(255,255,255,0.05)' : 'rgba(100,100,100,0.1)',
+                color: selectedCountry ? '#e5e7eb' : '#666',
+                fontSize: 14
+              }}
+            >
+              <option value="">— alle Regionen —</option>
+              {filteredStates.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            </select>
+          </div>
+
+          <div>
+            <label style={{ 
+              display: 'block',
+              marginBottom: 8,
+              fontWeight: 600,
+              color: '#e5e7eb',
+              fontSize: 14
+            }}>
+              Stadt {userProfile?.city && selectedCity === String(userProfile.city_id || userProfile.cityId) && 
+                <span style={{ color: '#48baa6', fontSize: 12 }}>(deine Stadt)</span>}
+            </label>
+            <select 
+              value={selectedCity} 
+              onChange={e => handleCitySelect(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 8,
+                background: 'rgba(255,255,255,0.05)',
+                color: '#e5e7eb',
+                fontSize: 14
+              }}
+            >
+              <option value="">— alle Städte —</option>
+              {filteredCities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        {/* My Leagues Filter */}
+        {userLeagues.length > 0 && (
+          <div style={{ marginBottom: 20 }}>
+            <label style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+              cursor: 'pointer',
+              fontSize: 14,
+              color: '#e5e7eb'
+            }}>
+              <input
+                type="checkbox"
+                checked={showMyLeaguesOnly}
+                onChange={e => setShowMyLeaguesOnly(e.target.checked)}
+                style={{
+                  width: 18,
+                  height: 18,
+                  accentColor: '#48baa6'
+                }}
+              />
+              <span style={{ fontWeight: 600 }}>
+                Nur meine Ligen anzeigen 
+                <span style={{ 
+                  color: '#9ca3af', 
+                  fontWeight: 400,
+                  marginLeft: 4
+                }}>
+                  ({userLeagues.length})
+                </span>
+              </span>
+            </label>
+          </div>
+        )}
+
+        {/* Action Buttons */}
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <button 
+            onClick={() => { 
+              setSelectedCity(""); 
+              setSelectedCountry("");
+              setSelectedState("");
+              setSelectedSport(""); 
+              setSearchQuery("");
+              setShowMyLeaguesOnly(false);
+            }}
+            className="btn btn-primary"
+            style={{ fontSize: 14 }}
+          >
+            Alle Filter zurücksetzen
+          </button>
+          
+          <div style={{ 
+            padding: "8px 12px",
+            background: "rgba(72,186,170,0.1)",
+            border: "1px solid rgba(72,186,170,0.2)",
+            borderRadius: 6,
+            fontSize: 13,
+            color: "#48baa6"
+          }}>
+            {visibleLeagues.length} Ligen gefunden
+          </div>
+        </div>
       </div>
 
-      {/* Table view of visible leagues */}
+      {/* Enhanced League Cards/Table */}
       {visibleLeagues.length === 0 ? (
-        <div>Keine Ligen gefunden.</div>
+        <div style={{ 
+          textAlign: 'center',
+          padding: 48,
+          background: 'rgba(255,255,255,0.02)',
+          borderRadius: 16,
+          border: '1px solid rgba(255,255,255,0.05)'
+        }}>
+          <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+          <h3 style={{ margin: "0 0 8px", color: "#e5e7eb" }}>Keine Ligen gefunden</h3>
+          <p style={{ margin: 0, color: "#9ca3af" }}>
+            Versuche andere Filter oder erweitere deine Suche
+          </p>
+        </div>
       ) : (
-        <div style={{ overflowX: "auto", marginTop: 8 }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
-            <thead>
-              <tr style={{ textAlign: "left", borderBottom: "2px solid #444" }}>
-                <th style={{ padding: "8px 6px" }}>ID</th>
-                <th style={{ padding: "8px 6px" }}>Name</th>
-                <th style={{ padding: "8px 6px" }}>Stadt</th>
-                <th style={{ padding: "8px 6px" }}>Sport</th>
-                <th style={{ padding: "8px 6px" }}>Mitglieder</th>
-                <th style={{ padding: "8px 6px" }}>Aktion</th>
-              </tr>
-            </thead>
-            <tbody>
-              {visibleLeagues.map(l => {
-                const idKey = l.id;
-                const memberCount = membersCount[idKey] ?? membersCount[String(idKey)] ?? (loadingCounts ? "…" : 0);
-                return (
-                  <tr key={idKey} style={{ borderBottom: "1px solid rgba(255,255,255,0.03)" }}>
-                    <td style={{ padding: "8px 6px", verticalAlign: "middle" }}>{idKey}</td>
-                    <td style={{ padding: "8px 6px", verticalAlign: "middle", fontWeight: 600 }}>
-                      <Link to={`/league/${idKey}`}>{l.name || `Liga ${idKey}`}</Link>
-                      {reachable[idKey] && !reachable[idKey].ok ? (
-                        <span style={{ color: "crimson", marginLeft: 8, fontSize: 12 }}>
-                          (Detail nicht erreichbar)
+        <div style={{ 
+          background: 'rgba(255,255,255,0.02)',
+          borderRadius: 16,
+          border: '1px solid rgba(255,255,255,0.08)',
+          overflow: 'hidden'
+        }}>
+          <div style={{ overflowX: "auto" }}>
+            <table style={{ 
+              width: "100%", 
+              borderCollapse: "collapse",
+              fontSize: 14
+            }}>
+              <thead>
+                <tr style={{ 
+                  background: 'rgba(255,255,255,0.05)',
+                  borderBottom: "1px solid rgba(255,255,255,0.1)"
+                }}>
+                  <th style={{ 
+                    padding: "16px 20px", 
+                    textAlign: "left",
+                    fontWeight: 600,
+                    color: "#e5e7eb",
+                    fontSize: 13,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px"
+                  }}>Liga</th>
+                  <th style={{ 
+                    padding: "16px 20px", 
+                    textAlign: "left",
+                    fontWeight: 600,
+                    color: "#e5e7eb",
+                    fontSize: 13,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px"
+                  }}>Ort</th>
+                  <th style={{ 
+                    padding: "16px 20px", 
+                    textAlign: "left",
+                    fontWeight: 600,
+                    color: "#e5e7eb",
+                    fontSize: 13,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px"
+                  }}>Sport</th>
+                  <th style={{ 
+                    padding: "16px 20px", 
+                    textAlign: "center",
+                    fontWeight: 600,
+                    color: "#e5e7eb",
+                    fontSize: 13,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px"
+                  }}>Mitglieder</th>
+                  <th style={{ 
+                    padding: "16px 20px", 
+                    textAlign: "right",
+                    fontWeight: 600,
+                    color: "#e5e7eb",
+                    fontSize: 13,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.5px"
+                  }}>Aktion</th>
+                </tr>
+              </thead>
+              <tbody>
+                {visibleLeagues.map((l, index) => {
+                  const idKey = l.id;
+                  const memberCount = membersCount[idKey] ?? membersCount[String(idKey)] ?? (loadingCounts ? "…" : 0);
+                  return (
+                    <tr 
+                      key={idKey} 
+                      style={{ 
+                        borderBottom: index < visibleLeagues.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                        transition: "background-color 0.2s",
+                        cursor: "pointer"
+                      }}
+                      onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.03)'}
+                      onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                    >
+                      <td style={{ padding: "20px", verticalAlign: "middle" }}>
+                        <div>
+                          <Link 
+                            to={`/league/${idKey}`}
+                            style={{ 
+                              color: "#e5e7eb",
+                              textDecoration: "none",
+                              fontWeight: 600,
+                              fontSize: 15
+                            }}
+                            onMouseEnter={(e) => e.target.style.color = '#48baa6'}
+                            onMouseLeave={(e) => e.target.style.color = '#e5e7eb'}
+                          >
+                            {l.name || `Liga ${idKey}`}
+                          </Link>
+                          {reachable[idKey] && !reachable[idKey].ok && (
+                            <div style={{ 
+                              color: "#ef4444", 
+                              fontSize: 11,
+                              marginTop: 4,
+                              opacity: 0.8
+                            }}>
+                              Detail nicht verfügbar
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                      <td style={{ padding: "20px", verticalAlign: "middle" }}>
+                        <span style={{ color: "#9ca3af" }}>
+                          {l.city || l.cityName || l.city_id || l.cityId || "-"}
                         </span>
-                      ) : null}
-                    </td>
-                    <td style={{ padding: "8px 6px", verticalAlign: "middle" }}>{l.city || l.cityName || l.city_id || l.cityId || "-"}</td>
-                    <td style={{ padding: "8px 6px", verticalAlign: "middle" }}>{l.sport || l.sportName || l.sport_id || l.sportId || "-"}</td>
-                    <td style={{ padding: "8px 6px", verticalAlign: "middle" }}>{memberCount}</td>
-                    <td style={{ padding: "8px 6px", verticalAlign: "middle" }}>
-                      <Link to={`/league/${idKey}`} style={{ marginRight: 8 }}>Zur Liga</Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+                      </td>
+                      <td style={{ padding: "20px", verticalAlign: "middle" }}>
+                        <span style={{ 
+                          background: "rgba(72,186,170,0.1)",
+                          color: "#48baa6",
+                          padding: "4px 8px",
+                          borderRadius: 4,
+                          fontSize: 12,
+                          fontWeight: 500
+                        }}>
+                          {l.sport || l.sportName || l.sport_id || l.sportId || "-"}
+                        </span>
+                      </td>
+                      <td style={{ padding: "20px", verticalAlign: "middle", textAlign: "center" }}>
+                        <span style={{ 
+                          background: "rgba(255,255,255,0.05)",
+                          color: "#e5e7eb",
+                          padding: "6px 10px",
+                          borderRadius: 12,
+                          fontSize: 13,
+                          fontWeight: 600,
+                          minWidth: 40,
+                          display: "inline-block"
+                        }}>
+                          {memberCount}
+                        </span>
+                      </td>
+                      <td style={{ padding: "20px", verticalAlign: "middle", textAlign: "right" }}>
+                        {(() => {
+                          const isUserMember = userLeagues.some(userLeague => String(userLeague.id) === String(idKey));
+                          
+                          if (isUserMember) {
+                            return (
+                              <Link 
+                                to={`/league/${idKey}`}
+                                className="btn"
+                                style={{ 
+                                  padding: "8px 16px",
+                                  fontSize: 13,
+                                  textDecoration: "none",
+                                  display: "inline-block",
+                                  background: "rgba(72,186,170,0.2)",
+                                  color: "#48baa6",
+                                  border: "1px solid #48baa6"
+                                }}
+                              >
+                                ℹ️ Info
+                              </Link>
+                            );
+                          } else {
+                            return (
+                              <Link 
+                                to={`/league/${idKey}`}
+                                className="btn btn-gold"
+                                style={{ 
+                                  padding: "8px 16px",
+                                  fontSize: 13,
+                                  textDecoration: "none",
+                                  display: "inline-block"
+                                }}
+                              >
+                                Beitreten
+                              </Link>
+                            );
+                          }
+                        })()}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
     </div>

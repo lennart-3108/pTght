@@ -8,8 +8,17 @@ function importAllBackgrounds(r) {
   // map to { key, src } so we can sort by filename
   return r.keys().map((k) => ({ key: k.replace(/^\.\//, ''), src: r(k) }));
 }
-// load all images from folder
-const backgrounds = importAllBackgrounds(require.context("../images/background", false, /\.(png|jpe?g|svg)$/));
+// load all images from sports folder first; fallback to background folder
+let backgrounds = [];
+try {
+  backgrounds = importAllBackgrounds(require.context("../images/sports", false, /\.(png|jpe?g|webp|svg)$/));
+} catch (e) {
+  try {
+    backgrounds = importAllBackgrounds(require.context("../images/background", false, /\.(png|jpe?g|svg)$/));
+  } catch {
+    backgrounds = [];
+  }
+}
 // sort by optional numeric prefix like `1-name.png` -> lower numbers first; then alpha
 backgrounds.sort((a, b) => {
   const re = /^(\d+)-/;
@@ -91,11 +100,6 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
   const [resetUsername, setResetUsername] = useState("");
   const [resetPassword, setResetPassword] = useState("");
   const [resetMsg, setResetMsg] = useState("");
-  
-  // Resend confirmation states
-  const [showResend, setShowResend] = useState(false);
-  const [resendEmail, setResendEmail] = useState("");
-  const [resendMsg, setResendMsg] = useState("");
 
   const API = (typeof API_BASE === 'string' && API_BASE.trim()) ? API_BASE : '/api';
 
@@ -160,6 +164,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
   const slides = backgrounds.map(b => b.src);
   const [index, setIndex] = useState(0);
   React.useEffect(() => {
+    if (!slides.length) return;
     const t = setInterval(() => setIndex(i => (i + 1) % slides.length), 5000);
     return () => clearInterval(t);
   }, [slides.length]);
@@ -214,12 +219,8 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
       </div>
 
       <div style={{
-        maxWidth: 940,
+        maxWidth: 600,
         margin: '20px auto 60px',
-        display: 'grid',
-        gridTemplateColumns: 'minmax(300px,360px) 1fr',
-        gap: 32,
-        alignItems: 'start',
         padding: '32px 36px',
         borderRadius: 20,
         background: 'linear-gradient(135deg,#071716,#0d2422)',
@@ -265,14 +266,14 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
           Passwort vergessen?
         </button>
 
-        {/* Resend confirmation link button */}
+        {/* Register button */}
         <button
-          onClick={() => setShowResend((s) => !s)}
-          className="btn btn-primary"
+          onClick={() => window.location.href = '/register'}
+          className="btn btn-gold"
           style={{ marginTop: 12, width: "100%", fontWeight: 700 }}
           type="button"
         >
-          Bestätigungs-Mail erneut senden
+          Registrieren
         </button>
 
         {/* Reset-Formular */}
@@ -306,45 +307,8 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
           </form>
         )}
 
-        {/* Resend confirmation form */}
-        {showResend && (
-          <form
-            onSubmit={async (e) => {
-              e.preventDefault();
-              setResendMsg("");
-              try {
-                const resp = await fetch(`${API}/resend-confirmation`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ email: resendEmail }),
-                });
-                const data = await resp.json().catch(() => ({}));
-                if (resp.ok && data.success !== false) {
-                  setResendMsg(data.message || "✅ Bestätigungs-Mail versendet.");
-                } else {
-                  setResendMsg(data.error || data.message || "Fehler beim Versenden der Bestätigungs-Mail.");
-                }
-              } catch (e) {
-                setResendMsg("Server nicht erreichbar.");
-              }
-            }}
-            style={{ marginTop: 16, border: "1px solid #eee", padding: 16, borderRadius: 8 }}
-          >
-            <h4 style={{ fontWeight: 700 }}>Bestätigungs-Mail erneut anfordern</h4>
-            <input
-              type="email"
-              placeholder="E-Mail"
-              value={resendEmail}
-              onChange={(e) => setResendEmail(e.target.value)}
-              required
-              style={{ display: "block", marginBottom: 8, width: "100%" }}
-            />
-            <button type="submit" className="btn btn-primary" style={{ width: "100%", fontWeight: 700 }}>Senden</button>
-            {resendMsg && <div style={{ marginTop: 8 }}>{resendMsg}</div>}
-          </form>
-        )}
-        </div>
-        <div style={{ position: 'relative' }}>
+        {/* Community Statistik */}
+        <div style={{ marginTop: 40, paddingTop: 32, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
           <h3 style={{ fontWeight: 700, margin: '0 0 12px' }}>Community Statistik</h3>
           <p style={{ marginTop: 0, lineHeight: 1.4, opacity: 0.85, fontSize: 14 }}>
             Ein schneller Überblick über die Aktivität auf der Plattform – wächst jeden Tag.
@@ -355,6 +319,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
           {stats && stats.generatedAt && (
             <div style={{ marginTop: 8, fontSize: 11, opacity: 0.5 }}>Aktualisiert: {new Date(stats.generatedAt).toLocaleTimeString()}</div>
           )}
+        </div>
         </div>
       </div>
     </div>
