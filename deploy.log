@@ -1,0 +1,323 @@
+🚀 Deploying to Strato Server (82.165.134.166)...
+==================================
+📡 Testing SSH connection...
+ℹ️  Using SSH key: /Users/A105227786/.ssh/strato-dev_ed25519
+Connection OK
+
+📦 Running deployment on server...
+Pseudo-terminal will not be allocated because stdin is not a terminal.
+Welcome to Ubuntu 22.04.5 LTS (GNU/Linux 5.15.0-157-generic x86_64)
+
+ * Documentation:  https://help.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sat Oct 25 02:31:29 UTC 2025
+
+  System load:  0.0                Processes:             99
+  Usage of /:   65.2% of 57.97GB   Users logged in:       0
+  Memory usage: 39%                IPv4 address for ens6: 82.165.134.166
+  Swap usage:   0%                 IPv6 address for ens6: 2a02:2479:3b:eb00::1
+
+ * Strictly confined Kubernetes makes edge and IoT secure. Learn how MicroK8s
+   just raised the bar for easy, resilient and secure K8s cluster deployment.
+
+   https://ubuntu.com/engage/secure-kubernetes-at-the-edge
+
+Expanded Security Maintenance for Applications is not enabled.
+
+9 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+1 additional security update can be applied with ESM Apps.
+Learn more about enabling ESM Apps service at https://ubuntu.com/esm
+
+New release '24.04.3 LTS' available.
+Run 'do-release-upgrade' to upgrade to it.
+
+
+*** System restart required ***
+📂 Working directory: /opt/matchleague
+
+🔄 Pulling latest code from GitHub...
+Fetching origin
+From github.com:lennart-3108/pTght
+ * branch            dev        -> FETCH_HEAD
+Already up to date.
+
+📚 Installing backend dependencies...
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated @npmcli/move-file@1.1.2: This functionality has been moved to @npmcli/fs
+npm warn deprecated npmlog@6.0.2: This package is no longer supported.
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated are-we-there-yet@3.0.1: This package is no longer supported.
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated gauge@4.0.4: This package is no longer supported.
+
+added 287 packages, and audited 288 packages in 3s
+
+35 packages are looking for funding
+  run `npm fund` for details
+
+2 moderate severity vulnerabilities
+
+To address all issues, run:
+  npm audit fix
+
+Run `npm audit` for details.
+
+🗄️  Running database migrations...
+
+> migrate
+> knex --knexfile knexfile.js migrate:latest
+
+migration file "20251025_add_asset_booking_rules.js" failed
+migration failed with error: alter table `assets` add column `min_booking_duration` integer default '60' - SQLITE_ERROR: no such table: assets
+alter table `assets` add column `min_booking_duration` integer default '60' - SQLITE_ERROR: no such table: assets
+Error: alter table `assets` add column `min_booking_duration` integer default '60' - SQLITE_ERROR: no such table: assets
+⚠️  Migration hatte Fehler, aber weiter...
+
+🔄 Restarting backend with PM2...
+[PM2] Spawning PM2 daemon with pm2_home=/root/.pm2
+[PM2] PM2 Successfully daemonized
+[PM2] Starting /opt/matchleague/backend/server.js in fork_mode (1 instance)
+[PM2] Done.
+┌────┬──────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name             │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼──────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ ptght-backend    │ default     │ N/A     │ fork    │ 69438    │ 0s     │ 0    │ online    │ 0%       │ 18.5mb   │ root     │ disabled │
+└────┴──────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+
+🏗️  Building frontend...
+npm warn deprecated inflight@1.0.6: This module is not supported, and leaks memory. Do not use it. Check out lru-cache if you want a good and tested way to coalesce async requests by a key value, which is much more comprehensive and powerful.
+npm warn deprecated stable@0.1.8: Modern JS already guarantees Array#sort() is a stable sort, so this library is deprecated. See the compatibility table on MDN: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/sort#browser_compatibility
+npm warn deprecated @babel/plugin-proposal-private-methods@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-private-methods instead.
+npm warn deprecated @babel/plugin-proposal-numeric-separator@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-numeric-separator instead.
+npm warn deprecated @babel/plugin-proposal-nullish-coalescing-operator@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-nullish-coalescing-operator instead.
+npm warn deprecated @babel/plugin-proposal-class-properties@7.18.6: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-class-properties instead.
+npm warn deprecated rollup-plugin-terser@7.0.2: This package has been deprecated and is no longer maintained. Please use @rollup/plugin-terser
+npm warn deprecated @humanwhocodes/config-array@0.13.0: Use @eslint/config-array instead
+npm warn deprecated rimraf@3.0.2: Rimraf versions prior to v4 are no longer supported
+npm warn deprecated abab@2.0.6: Use your platform's native atob() and btoa() methods instead
+npm warn deprecated @babel/plugin-proposal-optional-chaining@7.21.0: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-optional-chaining instead.
+npm warn deprecated @babel/plugin-proposal-private-property-in-object@7.21.11: This proposal has been merged to the ECMAScript standard and thus this plugin is no longer maintained. Please use @babel/plugin-transform-private-property-in-object instead.
+npm warn deprecated glob@7.2.3: Glob versions prior to v9 are no longer supported
+npm warn deprecated @humanwhocodes/object-schema@2.0.3: Use @eslint/object-schema instead
+npm warn deprecated domexception@2.0.1: Use your platform's native DOMException instead
+npm warn deprecated w3c-hr-time@1.0.2: Use your platform's native performance.now() and performance.timeOrigin.
+npm warn deprecated q@1.5.1: You or someone you depend on is using Q, the JavaScript Promise library that gave JavaScript developers strong feelings about promises. They can almost certainly migrate to the native JavaScript promise now. Thank you literally everyone for joining me in this bet against the odds. Be excellent to each other.
+npm warn deprecated
+npm warn deprecated (For a CapTP with native promises, see @endo/eventual-send and @endo/captp)
+npm warn deprecated sourcemap-codec@1.4.8: Please use @jridgewell/sourcemap-codec instead
+npm warn deprecated workbox-cacheable-response@6.6.0: workbox-background-sync@6.6.0
+npm warn deprecated source-map@0.8.0-beta.0: The work that was done in this beta branch won't be included in future versions
+npm warn deprecated workbox-google-analytics@6.6.0: It is not compatible with newer versions of GA starting with v4, as long as you are using GAv3 it should be ok, but the package is not longer being maintained
+npm warn deprecated svgo@1.3.2: This SVGO version is no longer supported. Upgrade to v2.x.x.
+npm warn deprecated eslint@8.57.1: This version is no longer supported. Please see https://eslint.org/version-support for other options.
+
+added 1345 packages in 32s
+
+> frontend@0.1.0 build
+> react-scripts build
+
+Creating an optimized production build...
+Compiled with warnings.
+
+[eslint] 
+src/App.js
+  Line 2:50:   'Link' is defined but never used                   no-unused-vars
+  Line 24:8:   'matchLeagueLogo' is defined but never used        no-unused-vars
+  Line 31:10:  'isAdmin' is defined but never used                no-unused-vars
+  Line 36:10:  'fetchWithErrorLogging' is defined but never used  no-unused-vars
+  Line 77:9:   'navPages' is assigned a value but never used      no-unused-vars
+
+src/components/BookingConfirmationPopup.js
+  Line 15:24:  'setSimulateMode' is assigned a value but never used  no-unused-vars
+
+src/components/Header.js
+  Line 47:10:  'formatDebugTime' is defined but never used              no-unused-vars
+  Line 70:10:  'notifLastLoadedAt' is assigned a value but never used   no-unused-vars
+  Line 71:10:  'chatsLastLoadedAt' is assigned a value but never used   no-unused-vars
+  Line 72:10:  'notifLastStartedAt' is assigned a value but never used  no-unused-vars
+  Line 73:10:  'chatsLastStartedAt' is assigned a value but never used  no-unused-vars
+  Line 74:10:  'notifLastStatus' is assigned a value but never used     no-unused-vars
+  Line 75:10:  'chatsLastStatus' is assigned a value but never used     no-unused-vars
+  Line 76:10:  'notifDataSource' is assigned a value but never used     no-unused-vars
+  Line 77:10:  'chatsDataSource' is assigned a value but never used     no-unused-vars
+  Line 357:9:  'markChatsRead' is assigned a value but never used       no-unused-vars
+
+src/components/MatchChat.js
+  Line 116:9:  'viewerTeamId' is assigned a value but never used  no-unused-vars
+
+src/pages/AdminPage.js
+  Line 53:6:  React Hook useEffect has a missing dependency: 'loadSchema'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/BookingPage.js
+  Line 34:6:  React Hook useEffect has a missing dependency: 'searchAvailableSlots'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/GameDetailPage.js
+  Line 221:6:  React Hook useEffect has a missing dependency: 'game.location'. Either include it or remove the dependency array. You can also replace multiple useState variables with useReducer if 'setLocation' needs the current value of 'game.location'  react-hooks/exhaustive-deps
+  Line 227:6:  React Hook useEffect has a missing dependency: 'game'. Either include it or remove the dependency array                                                                                                                                         react-hooks/exhaustive-deps
+
+src/pages/LeagueDetailPage.js
+  Line 282:6:   React Hook useEffect has a missing dependency: 'reloadExtras'. Either include it or remove the dependency array                                  react-hooks/exhaustive-deps
+  Line 302:6:   React Hook useEffect has missing dependencies: 'fetchMyOpenMatch' and 'fetchMyWeeklyStatus'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 420:12:  'initialsFor' is defined but never used                                                                                                          no-unused-vars
+
+src/pages/LeaguesPage.js
+  Line 241:6:  React Hook useMemo has a missing dependency: 'leagueMatchesCity'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/LocationDetailsPage.js
+  Line 32:6:  React Hook useEffect has a missing dependency: 'loadData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/LocationManagerPage.js
+  Line 119:6:    React Hook useEffect has missing dependencies: 'loadAllAssets' and 'loadLocations'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 610:10:   'showAddAsset' is assigned a value but never used                                                                                       no-unused-vars
+  Line 704:6:    React Hook useEffect has a missing dependency: 'loadTimeSlots'. Either include it or remove the dependency array                        react-hooks/exhaustive-deps
+  Line 1103:6:   React Hook useEffect has a missing dependency: 'loadStatistics'. Either include it or remove the dependency array                       react-hooks/exhaustive-deps
+  Line 1216:63:  Expected '===' and instead saw '=='                                                                                                     eqeqeq
+  Line 1555:10:  'AssetsManagementTab' is defined but never used                                                                                         no-unused-vars
+  Line 1567:6:   React Hook useEffect has a missing dependency: 'loadAssets'. Either include it or remove the dependency array                           react-hooks/exhaustive-deps
+  Line 1889:10:  'TimeSlotsTab' is defined but never used                                                                                                no-unused-vars
+  Line 1902:6:   React Hook useEffect has a missing dependency: 'loadAssets'. Either include it or remove the dependency array                           react-hooks/exhaustive-deps
+  Line 1908:6:   React Hook useEffect has a missing dependency: 'loadTimeSlots'. Either include it or remove the dependency array                        react-hooks/exhaustive-deps
+
+src/pages/MyBookingsPage.js
+  Line 23:6:  React Hook useEffect has a missing dependency: 'loadBookings'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/ProfilePage.js
+  Line 102:9:  'hRow' is assigned a value but never used  no-unused-vars
+
+src/pages/RegistrationPage.js
+  Line 6:9:  'navigate' is assigned a value but never used  no-unused-vars
+
+src/pages/SearchMatchDialog.js
+  Line 24:10:  'myLeagues' is assigned a value but never used        no-unused-vars
+  Line 102:9:  'leaguesFiltered' is assigned a value but never used  no-unused-vars
+
+src/pages/StartPage.js
+  Line 25:10:   'leagues' is assigned a value but never used                                                                                                                                                                                                                                                                                                                       no-unused-vars
+  Line 32:10:   'openMatches' is assigned a value but never used                                                                                                                                                                                                                                                                                                                   no-unused-vars
+  Line 32:23:   'setOpenMatches' is assigned a value but never used                                                                                                                                                                                                                                                                                                                no-unused-vars
+  Line 33:21:   'setSearching' is assigned a value but never used                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  Line 438:27:  'initialsFor' is assigned a value but never used                                                                                                                                                                                                                                                                                                                   no-unused-vars
+  Line 565:19:  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+  Line 566:19:  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+
+src/pages/TeamDetailPage.js
+  Line 32:6:  React Hook useEffect has a missing dependency: 'team'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/TeamsPage.js
+  Line 29:6:  React Hook useEffect has a missing dependency: 'loadTeams'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/UserDetailPage.js
+  Line 203:10:  'friends' is assigned a value but never used                                                                       no-unused-vars
+  Line 204:10:  'mutualFriends' is assigned a value but never used                                                                 no-unused-vars
+  Line 206:10:  'friendActionMsg' is assigned a value but never used                                                               no-unused-vars
+  Line 207:10:  'friendActionError' is assigned a value but never used                                                             no-unused-vars
+  Line 211:10:  'feedFilters' is assigned a value but never used                                                                   no-unused-vars
+  Line 211:23:  'setFeedFilters' is assigned a value but never used                                                                no-unused-vars
+  Line 481:9:   'opponents' is assigned a value but never used                                                                     no-unused-vars
+  Line 497:6:   React Hook useMemo has an unnecessary dependency: 'displayName'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/WelcomePage.js
+  Line 2:29:  'useNavigate' is defined but never used                                                                                                                                                                                                                                                       no-unused-vars
+  Line 76:6:  React Hook React.useEffect has missing dependencies: 'isAdmin', 'oneTime', 'setIsAdminFlag', 'setToken', and 'token'. Either include them or remove the dependency array. If 'setToken' changes too often, find the parent component that defines it and wrap that definition in useCallback  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  144.5 kB (+25.27 kB)  build/static/js/main.58cc5092.js
+  3.75 kB               build/static/css/main.1a7cc2f2.css
+  1.76 kB               build/static/js/453.8701dc61.chunk.js
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  npm install -g serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+
+
+📋 Copying frontend build to web root...
+
+🔄 Reloading Nginx...
+nginx: [warn] conflicting server name "dev.matchleague.org" on 0.0.0.0:80, ignored
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+✅ Deployment complete!
+
+📊 Backend status:
+┌────┬──────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name             │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼──────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ ptght-backend    │ default     │ N/A     │ fork    │ 70252    │ 0s     │ 60   │ online    │ 0%       │ 4.0kb    │ root     │ disabled │
+└────┴──────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+
+🔍 Backend logs (last 20 lines):
+[TAILING] Tailing last 20 lines for [ptght-backend] process (change the value with --lines option)
+/root/.pm2/logs/ptght-backend-out.log last 20 lines:
+0|ptght-ba | [DB] SQLite file: /opt/matchleague/backend/database.sqlite
+0|ptght-ba | [DB] Migrations dir: /opt/matchleague/backend/migrations
+0|ptght-ba | [INFO] 2025-10-25T02:33:32.839Z [DB] SQLite detected – ensured base tables via db-setup.js {}
+0|ptght-ba | [DB] SQLite file: /opt/matchleague/backend/database.sqlite
+0|ptght-ba | [DB] Migrations dir: /opt/matchleague/backend/migrations
+0|ptght-ba | [INFO] 2025-10-25T02:33:33.994Z [DB] SQLite detected – ensured base tables via db-setup.js {}
+0|ptght-ba | [DB] SQLite file: /opt/matchleague/backend/database.sqlite
+0|ptght-ba | [DB] Migrations dir: /opt/matchleague/backend/migrations
+0|ptght-ba | [INFO] 2025-10-25T02:33:34.935Z [DB] SQLite detected – ensured base tables via db-setup.js {}
+0|ptght-ba | [DB] SQLite file: /opt/matchleague/backend/database.sqlite
+0|ptght-ba | [DB] Migrations dir: /opt/matchleague/backend/migrations
+0|ptght-ba | [INFO] 2025-10-25T02:33:35.658Z [DB] SQLite detected – ensured base tables via db-setup.js {}
+0|ptght-ba | [DB] SQLite file: /opt/matchleague/backend/database.sqlite
+0|ptght-ba | [DB] Migrations dir: /opt/matchleague/backend/migrations
+0|ptght-ba | [INFO] 2025-10-25T02:33:36.546Z [DB] SQLite detected – ensured base tables via db-setup.js {}
+0|ptght-ba | [DB] SQLite file: /opt/matchleague/backend/database.sqlite
+0|ptght-ba | [DB] Migrations dir: /opt/matchleague/backend/migrations
+0|ptght-ba | [INFO] 2025-10-25T02:33:37.339Z [DB] SQLite detected – ensured base tables via db-setup.js {}
+0|ptght-ba | [DB] SQLite file: /opt/matchleague/backend/database.sqlite
+0|ptght-ba | [DB] Migrations dir: /opt/matchleague/backend/migrations
+
+/root/.pm2/logs/ptght-backend-error.log last 20 lines:
+0|ptght-ba |   requireStack: [ '/opt/matchleague/backend/server.js' ]
+0|ptght-ba | }
+0|ptght-ba | WARN: JWT_SECRET not set; using default (dev only).
+0|ptght-ba | Mail-Credentials fehlen. E-Mail-Versand wird übersprungen.
+0|ptght-ba | Error: Cannot find module './routes/locations'
+0|ptght-ba | Require stack:
+0|ptght-ba | - /opt/matchleague/backend/server.js
+0|ptght-ba |     at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+0|ptght-ba |     at Hook._require.Module.require (/usr/lib/node_modules/pm2/node_modules/require-in-the-middle/index.js:81:25)
+0|ptght-ba |     at require (node:internal/modules/helpers:182:18)
+0|ptght-ba |     at Object.<anonymous> (/opt/matchleague/backend/server.js:975:25)
+0|ptght-ba |     at Module._compile (node:internal/modules/cjs/loader:1521:14)
+0|ptght-ba |     at Module._extensions..js (node:internal/modules/cjs/loader:1623:10)
+0|ptght-ba |     at Module.load (node:internal/modules/cjs/loader:1266:32)
+0|ptght-ba |     at Module._load (node:internal/modules/cjs/loader:1091:12)
+0|ptght-ba |     at Object.<anonymous> (/usr/lib/node_modules/pm2/lib/ProcessContainerFork.js:33:23)
+0|ptght-ba |     at Module._compile (node:internal/modules/cjs/loader:1521:14) {
+0|ptght-ba |   code: 'MODULE_NOT_FOUND',
+0|ptght-ba |   requireStack: [ '/opt/matchleague/backend/server.js' ]
+0|ptght-ba | }
+
+
+==================================
+✅ Deployment finished successfully!
+
+🌐 Your app should be available at:
+   https://dev.matchleague.org
+
+📝 To check logs on server:
+   ssh root@82.165.134.166 'pm2 logs ptght-backend'
+

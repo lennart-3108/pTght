@@ -972,7 +972,6 @@ apiRouter.use("/leagues", leagueMatchesRoutes({ db: knexDirect || db }));
 const sportsRoutes = require("./src/routes/sports");
 const matchesRoutes = require("./routes/matches");
 const chatsRoutes = require("./routes/chats");
-const locationsRoutes = require("./routes/locations");
 
 // Mount routes BEFORE any 404 handler
 apiRouter.use("/sports", sportsRoutes({ db }));
