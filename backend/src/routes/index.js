@@ -15,6 +15,9 @@ const teamsRoutes = require("./teams");
 const matchesRoutes = require("./matches");
 const messagesRoutes = require("./messages");
 const profileRoutes = require("./profile");
+const locationsRoutes = require("./locations");
+const assetsRoutes = require("./assets");
+const slotsRoutes = require("./slots");
 
 function registerRoutes(app, ctx) {
   const { ensureTables } = createMiddleware(ctx);
@@ -41,6 +44,11 @@ function registerRoutes(app, ctx) {
   apiRouter.use('/teams', teamsRoutes(ctx));
   apiRouter.use('/matches', matchesRoutes(ctx));
   apiRouter.use(messagesRoutes(ctx));
+  
+  // Location & Booking routes
+  apiRouter.use('/locations', locationsRoutes(ctx));
+  apiRouter.use('/assets', assetsRoutes(ctx));
+  apiRouter.use('/slots', slotsRoutes(ctx));
 
   // Mount all API routes under /api
   app.use("/api", apiRouter);

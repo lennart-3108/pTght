@@ -19,7 +19,9 @@
 
 :root {
   --primary: #cccccc;
-  --primary-600: #0a2221; /* primary button color (RGB 10,34,33) */
+  /* Lighter primary green for buttons */
+  --primary-600: #145a4b; /* was #0a2221 */
+  --primary-600-hover: #0f4a40; /* unified hover color */
   --bg: #081c19; /* darker green background (matches design sample) */
   --surface: #111827;
   --text: #e5e7eb;
@@ -66,7 +68,7 @@ button, .btn {
 }
 
 button:hover, .btn:hover {
-  background: #0e2f2d; /* slightly lighter hover */
+  background: var(--primary-600-hover);
 }
 
 /* Primary button variant used across auth pages */
@@ -80,7 +82,7 @@ button:hover, .btn:hover {
   box-shadow: 0 6px 12px rgba(4, 20, 19, 0.28);
 }
 .btn-primary:hover {
-  background: #0e2f2d;
+  background: var(--primary-600-hover);
   transform: translateY(-2px);
   box-shadow: 0 10px 20px rgba(4, 20, 19, 0.36);
 }
@@ -90,6 +92,30 @@ button:hover, .btn:hover {
 }
 .btn-primary:focus {
   outline: 3px solid rgba(10,34,33,0.18);
+  outline-offset: 2px;
+}
+
+/* Golden/Yellow button variant for register */
+.btn-gold {
+  background: #debc7c;
+  color: #10261f;
+  font-weight: 700;
+  border-radius: 10px;
+  padding: 10px 14px;
+  transition: transform 120ms ease, box-shadow 120ms ease, background 120ms ease;
+  box-shadow: 0 6px 16px rgba(222, 188, 124, 0.4);
+}
+.btn-gold:hover {
+  background: #e8c88d;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 24px rgba(222, 188, 124, 0.5);
+}
+.btn-gold:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(222, 188, 124, 0.35);
+}
+.btn-gold:focus {
+  outline: 3px solid rgba(222, 188, 124, 0.3);
   outline-offset: 2px;
 }
 
