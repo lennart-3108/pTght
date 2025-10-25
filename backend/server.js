@@ -990,7 +990,6 @@ if (process.env.DEBUG_BOOT === '1' || canLog('debug')) {
 }
 apiRouter.use("/matches", matchesRoutes({ db: resolvedKnexForRoutes }));
 apiRouter.use("/chats", chatsRoutes({ db: resolvedKnexForRoutes }));
-apiRouter.use("/locations", locationsRoutes(resolvedKnexForRoutes));
 
 // Also mount some location routes at /assets for convenience
 apiRouter.get("/assets/:id/slots", async (req, res) => {
