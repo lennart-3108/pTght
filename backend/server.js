@@ -1550,10 +1550,7 @@ app.get('/public/stats', async (req, res) => {
   }
 });
 
-// Mount all remaining API routes under /api prefix
-app.use('/api', apiRouter);
-
-// Mount new service-based routes (locations, assets, slots, bookings)
+// Mount new service-based routes (locations, assets, slots, bookings) BEFORE apiRouter
 const locationRoutes = require('./src/routes/locations');
 const assetRoutes = require('./src/routes/assets');
 const slotRoutes = require('./src/routes/slots');
@@ -1561,12 +1558,15 @@ const bookingRoutes = require('./routes/bookings');
 const bookingStatsRoutes = require('./routes/booking-stats');
 const slotGeneratorRoutes = require('./routes/slot-generator');
 
-app.use('/api/locations', locationRoutes({ db }));
-app.use('/api/assets', assetRoutes({ db }));
-app.use('/api/slots', slotRoutes({ db }));
-app.use('/api/bookings', bookingRoutes);
-app.use('/api/booking-stats', bookingStatsRoutes);
-app.use('/api/slot-generator', slotGeneratorRoutes);
+apiRouter.use('/locations', locationRoutes({ db }));
+apiRouter.use('/assets', assetRoutes({ db }));
+apiRouter.use('/slots', slotRoutes({ db }));
+apiRouter.use('/bookings', bookingRoutes);
+apiRouter.use('/booking-stats', bookingStatsRoutes);
+apiRouter.use('/slot-generator', slotGeneratorRoutes);
+
+// Mount all remaining API routes under /api prefix
+app.use('/api', apiRouter);
 
 // Serve static uploads under /api/uploads as well (proxy to /uploads)
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
