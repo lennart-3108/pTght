@@ -6,6 +6,8 @@ import MatchChat from "../components/MatchChat";
 import Counter from "../components/Counter";
 import TimeCounter from "../components/TimeCounter";
 import Avatar from "../components/Avatar";
+import BookingConfirmationPopup from "../components/BookingConfirmationPopup";
+import BookingWidget from "../components/BookingWidget";
 
 export default function GameDetailPage() {
   const { gameId } = useParams();
@@ -32,12 +34,21 @@ export default function GameDetailPage() {
   const [scheduleLoading, setScheduleLoading] = useState(false);
   const [submitLoading, setSubmitLoading] = useState(false);
   // calendar-friendly date+time fields (pop up native calendar/time pickers)
-  const [dateStr, setDateStr] = useState(""); // yyyy-mm-dd
+  // Initialize with tomorrow's date (for demo, since test slots are for tomorrow)
+  const [dateStr, setDateStr] = useState(() => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return tomorrow.toISOString().split('T')[0];
+  });
   const [timeStr, setTimeStr] = useState(""); // HH:mm
   const [location, setLocation] = useState("");
-  // Time counter state (default to 12:00)
-  const [scheduleHours, setScheduleHours] = useState(12);
+  // Time counter state - default to next full hour
+  const [scheduleHours, setScheduleHours] = useState(() => {
+    const now = new Date();
+    return now.getMinutes() > 0 ? (now.getHours() + 1) % 24 : now.getHours();
+  });
   const [scheduleMinutes, setScheduleMinutes] = useState(0);
+  const [booking, setBooking] = useState(null); // Store confirmed booking data
 
   // Layout policy: keep three cards always side-by-side; enable horizontal scrolling on small screens
 
@@ -54,6 +65,18 @@ export default function GameDetailPage() {
       .then(j => mounted && setGame(j))
       .catch(e => mounted && setErr(e.message || "Fehler"))
       .finally(() => mounted && setLoading(false));
+    
+    // Fetch booking data for this match
+    fetch(`${API_BASE}/bookings/match/${gameId}`)
+      .then(async (r) => {
+        if (r.status === 404) return null; // No booking yet
+        const j = await r.json().catch(() => null);
+        if (!r.ok) return null;
+        return j;
+      })
+      .then(bookingData => mounted && setBooking(bookingData))
+      .catch(() => {}); // Silently fail if no booking
+    
     return () => { mounted = false; };
   }, [gameId]);
 
@@ -71,6 +94,20 @@ export default function GameDetailPage() {
     if (Number.isNaN(d.getTime())) return "";
     return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
   }
+
+  // Handle booking cancellation
+  const handleCancelBooking = async () => {
+    setBooking(null); // Clear booking immediately
+    // Reload match data to get updated location/asset info
+    try {
+      const r = await fetch(`${API_BASE}/matches/${gameId}`);
+      const j = await r.json();
+      if (r.ok) setGame(j);
+    } catch (e) {
+      console.error('Failed to reload match:', e);
+    }
+  };
+
   const relativeFromNow = useMemo(() => (when) => {
     if (!when) return "";
     const d = new Date(when);
@@ -474,7 +511,7 @@ export default function GameDetailPage() {
           
           {/* Action buttons moved to top right */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {(token && game && game.home_score == null && game.away_score == null && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
+            {(token && game && game.home_score == null && game.away_score == null && !booking && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
               <button onClick={() => setShowSchedule(s => !s)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', fontSize: 14 }}>
                 {game.kickoff_at ? 'Termin ändern' : 'Termin festlegen'}
               </button>
@@ -625,8 +662,11 @@ export default function GameDetailPage() {
           </div>
         )}
 
-        {/* Schedule form (toggled) */}
-        {(token && game && isParticipant && game.home_score == null && game.away_score == null && showSchedule) && (
+        {/* Booking Widget - Show confirmed booking if exists */}
+        {booking && <BookingWidget booking={booking} onCancel={handleCancelBooking} />}
+
+        {/* Schedule form (toggled) - Hide when booking exists */}
+        {(token && game && isParticipant && game.home_score == null && game.away_score == null && showSchedule && !booking) && (
           <ScheduleSection
             open={showSchedule}
             setOpen={setShowSchedule}
@@ -642,6 +682,15 @@ export default function GameDetailPage() {
             setLocation={setLocation}
             message={scheduleMsg}
             loading={scheduleLoading}
+            game={game}
+            onBookingConfirmed={(bookingData) => {
+              // Update booking state in main component
+              setBooking(bookingData);
+              // Close schedule form
+              setShowSchedule(false);
+              // Reload to show updated booking widget
+              setTimeout(() => window.location.reload(), 1000);
+            }}
           />
         )}
 
@@ -727,71 +776,468 @@ export default function GameDetailPage() {
 }
 
 // Collapsible schedule section with counter-based time selection
-function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, setHours, setMinutes, onSubmit, onSuggest, location, setLocation, message, loading }) {
+function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, setHours, setMinutes, onSubmit, onSuggest, location, setLocation, message, loading, game, onBookingConfirmed }) {
+  const [locationMode, setLocationMode] = useState('booking'); // Default to 'booking' to show slots
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [loadingSlots, setLoadingSlots] = useState(false);
+  const [slotsError, setSlotsError] = useState('');
+  const [searchCity, setSearchCity] = useState(''); // City filter for slot search
+  const [cities, setCities] = useState([]);
+  const [bookingPopup, setBookingPopup] = useState(null); // Selected slot for booking
+
+  // Load cities list
+  useEffect(() => {
+    fetch(`${API_BASE}/cities/list`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setCities(Array.isArray(data) ? data : []))
+      .catch(() => setCities([]));
+  }, []);
+
+  async function searchAvailableSlots() {
+    if (!dateStr) return;
+    
+    setLoadingSlots(true);
+    setSlotsError('');
+    
+    try {
+      const targetTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      // Build datetime parameter: YYYY-MM-DDTHH:MM:SS
+      const datetime = `${dateStr}T${targetTime}:00`;
+      
+      const params = new URLSearchParams({
+        datetime: datetime,
+        duration: 60 // Default 60 minutes, could be made configurable
+      });
+      
+      // Add sport_id from game if available
+      if (game?.sportId) {
+        params.append('sport_id', game.sportId);
+      }
+      
+      // Add city filter - prefer user selection, fallback to game's city
+      const targetCity = searchCity || game?.city || '';
+      if (targetCity) {
+        params.append('city', targetCity);
+      }
+      
+      const res = await fetch(`${API_BASE}/slots/search?${params}`);
+      
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableSlots(Array.isArray(data) ? data : []);
+      } else {
+        setSlotsError('Fehler beim Laden der Slots');
+        setAvailableSlots([]);
+      }
+    } catch (err) {
+      console.error('Failed to search slots:', err);
+      setSlotsError(err.message || 'Netzwerkfehler');
+      setAvailableSlots([]);
+    } finally {
+      setLoadingSlots(false);
+    }
+  }
+
+  // Auto-search slots when date/time changes
+  useEffect(() => {
+    if (locationMode === 'booking' && dateStr && open) {
+      searchAvailableSlots();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dateStr, hours, minutes, locationMode, open, searchCity]);
+
   return (
-    <div style={{ marginTop: 16 }}>
+    <div style={{ marginTop: 16, background: '#0a1c17', padding: 16, borderRadius: 12, border: '1px solid #26493c' }}>
       {!open && (
         <button onClick={() => setOpen(true)} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe' }}>
           Termin bearbeiten
         </button>
       )}
       {open && (
-        <form onSubmit={onSubmit} style={{ display: 'flex', gap: 16, alignItems: 'flex-start', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <label style={{ color: '#9db', fontSize: '14px', fontWeight: '500' }}>Datum</label>
-            <input 
-              type="date" 
-              value={dateStr} 
-              onChange={(e) => setDateStr(e.target.value)} 
-              style={{ 
-                padding: '8px 10px', 
-                borderRadius: 10, 
-                border: '1px solid #26493c', 
-                background: '#0a1c17', 
-                color: '#e8efe8' 
-              }} 
-            />
-          </div>
-          
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <label style={{ color: '#9db', fontSize: '14px', fontWeight: '500' }}>Uhrzeit</label>
-            <TimeCounter
-              hours={hours}
-              minutes={minutes}
-              onHoursChange={setHours}
-              onMinutesChange={setMinutes}
-            />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Step 1: Location Selection Mode */}
+          <div>
+            <h4 style={{ color: '#e8efe8', margin: '0 0 12px 0' }}>1️⃣ Location festlegen</h4>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <button
+                type="button"
+                onClick={() => setLocationMode('manual')}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: 8,
+                  border: locationMode === 'manual' ? '2px solid #2f6b57' : '1px solid #26493c',
+                  background: locationMode === 'manual' ? '#1b4b3d' : '#0a1c17',
+                  color: '#e8efe8',
+                  cursor: 'pointer',
+                  flex: '1 1 200px'
+                }}
+              >
+                📍 Ort manuell eingeben
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => setLocationMode('booking')}
+                style={{
+                  padding: '10px 16px',
+                  borderRadius: 8,
+                  border: locationMode === 'booking' ? '2px solid #2f6b57' : '1px solid #26493c',
+                  background: locationMode === 'booking' ? '#1b4b3d' : '#0a1c17',
+                  color: '#e8efe8',
+                  cursor: 'pointer',
+                  flex: '1 1 200px'
+                }}
+              >
+                🏟️ Platz buchen
+              </button>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, minWidth: 220, flex: '1 1 240px' }}>
-            <label style={{ color: '#9db', fontSize: '14px', fontWeight: '500' }}>Ort / Platz</label>
-            <input
-              type="text"
-              placeholder="z.B. Sportpark Mitte – Platz 3"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              style={{ padding: '8px 10px', borderRadius: 10, border: '1px solid #26493c', background: '#0a1c17', color: '#e8efe8' }}
-            />
-          </div>
+          {/* Manual Location Input */}
+          {locationMode === 'manual' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <label style={{ color: '#9db', fontSize: '14px', fontWeight: '500' }}>Ort / Adresse</label>
+              <input
+                type="text"
+                placeholder="z.B. Sportpark Mitte, Hauptstr. 123, 28195 Bremen"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                style={{ 
+                  padding: '10px 12px', 
+                  borderRadius: 8, 
+                  border: '1px solid #26493c', 
+                  background: '#0f2a20', 
+                  color: '#e8efe8',
+                  fontSize: 14
+                }}
+              />
+            </div>
+          )}
+
+          {/* Booking Mode - Date & Time Selection */}
+          {locationMode === 'booking' && (
+            <>
+              {/* Filters Section - Compact */}
+              <div style={{ 
+                background: '#0f2a20', 
+                padding: '16px', 
+                borderRadius: 10, 
+                border: '1px solid #26493c',
+                marginBottom: 16
+              }}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: '1 1 140px' }}>
+                    <label style={{ color: '#9db', fontSize: '13px', fontWeight: '500' }}>📅 Datum</label>
+                    <input 
+                      type="date" 
+                      value={dateStr} 
+                      onChange={(e) => setDateStr(e.target.value)} 
+                      style={{ 
+                        padding: '8px 10px', 
+                        borderRadius: 8, 
+                        border: '1px solid #26493c', 
+                        background: '#0a1c17', 
+                        color: '#e8efe8',
+                        fontSize: 14
+                      }} 
+                      required
+                    />
+                  </div>
+                  
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: '0 0 auto' }}>
+                    <label style={{ color: '#9db', fontSize: '13px', fontWeight: '500' }}>🕐 Uhrzeit</label>
+                    <TimeCounter
+                      hours={hours}
+                      minutes={minutes}
+                      onHoursChange={(h) => { setHours(h); }}
+                      onMinutesChange={(m) => { setMinutes(m); }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: '1 1 180px' }}>
+                    <label style={{ color: '#9db', fontSize: '13px', fontWeight: '500' }}>
+                      📍 Stadt {game?.city && <span style={{ color: '#6a8', fontSize: '11px' }}>(Standard: {game.city})</span>}
+                    </label>
+                    <select
+                      value={searchCity}
+                      onChange={(e) => setSearchCity(e.target.value)}
+                      style={{
+                        padding: '8px 10px',
+                        borderRadius: 8,
+                        border: '1px solid #26493c',
+                        background: '#0a1c17',
+                        color: '#e8efe8',
+                        cursor: 'pointer',
+                        fontSize: 14
+                      }}
+                    >
+                      <option value="">{game?.city || 'Alle Städte'}</option>
+                      {cities.filter(c => c.name !== game?.city).map(city => (
+                        <option key={city.id} value={city.name}>{city.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Available Slots List */}
+              <div>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'space-between', 
+                  alignItems: 'center',
+                  marginBottom: 12
+                }}>
+                  <h4 style={{ color: '#e8efe8', margin: 0, fontSize: 16 }}>
+                    Verfügbare Plätze
+                    {game?.sport && <span style={{ color: '#6a8', fontSize: 14, fontWeight: 400, marginLeft: 8 }}>· {game.sport}</span>}
+                  </h4>
+                  {!loadingSlots && availableSlots.length > 0 && (
+                    <div style={{ 
+                      padding: '4px 12px', 
+                      background: '#0a2221', 
+                      borderRadius: 6, 
+                      fontSize: 13, 
+                      color: '#6db', 
+                      fontWeight: 600 
+                    }}>
+                      {availableSlots.length} Plätze
+                    </div>
+                  )}
+                </div>
+
+                {loadingSlots ? (
+                  <div style={{ padding: 40, textAlign: 'center', color: '#9db', background: '#0f2a20', borderRadius: 10 }}>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>⏳</div>
+                    <div>Suche verfügbare Plätze...</div>
+                  </div>
+                ) : slotsError ? (
+                  <div style={{ padding: 30, textAlign: 'center', color: '#ff6b6b', background: '#2a0f0f', borderRadius: 10 }}>
+                    <div style={{ fontSize: 32, marginBottom: 8 }}>❌</div>
+                    <div>{slotsError}</div>
+                  </div>
+                ) : availableSlots.length === 0 ? (
+                  <div style={{ padding: 40, textAlign: 'center', color: '#9db', background: '#0f2a20', borderRadius: 10 }}>
+                    <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
+                    <p style={{ margin: '0 0 8px 0', fontSize: 15 }}>Keine verfügbaren Plätze gefunden</p>
+                    <p style={{ fontSize: 13, margin: 0, color: '#789' }}>
+                      für {dateStr} um {hours.toString().padStart(2, '0')}:{minutes.toString().padStart(2, '0')} Uhr
+                    </p>
+                    <p style={{ fontSize: 13, margin: 0, color: '#789' }}>
+                      für {dateStr} um {hours.toString().padStart(2, '0')}:{minutes.toString().padStart(2, '0')} Uhr
+                    </p>
+                    <p style={{ fontSize: 13, marginTop: 12, color: '#789' }}>Versuche ein anderes Datum oder eine andere Uhrzeit.</p>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {availableSlots.map((slot, idx) => {
+                      // Parse time strings from API (format: "HH:MM")
+                      const displayDate = dateStr;
+                      const displayStartTime = slot.start_time || '';
+                      const displayEndTime = slot.end_time || '';
+                      
+                      return (
+                      <div 
+                        key={slot.id || idx}
+                        style={{
+                          padding: 16,
+                          background: idx === 0 ? 'linear-gradient(135deg, #1b4b3d 0%, #0e2a22 100%)' : '#0f2a20',
+                          border: idx === 0 ? '2px solid #2f6b57' : '1px solid #26493c',
+                          borderRadius: 10,
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                          gap: 16,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                          position: 'relative'
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.transform = 'translateX(4px)';
+                          e.currentTarget.style.borderColor = '#2f6b57';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'translateX(0)';
+                          e.currentTarget.style.borderColor = idx === 0 ? '#2f6b57' : '#26493c';
+                        }}
+                      >
+                        {idx === 0 && (
+                          <div style={{
+                            position: 'absolute',
+                            top: -10,
+                            left: 12,
+                            padding: '4px 10px',
+                            background: '#2f6b57',
+                            color: '#fff',
+                            borderRadius: 6,
+                            fontSize: 11,
+                            fontWeight: 600,
+                            letterSpacing: '0.5px'
+                          }}>
+                            NÄCHSTER FREIER PLATZ
+                          </div>
+                        )}
+                        
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontWeight: 600, color: '#e8efe8', fontSize: 16, marginBottom: 6 }}>
+                            {slot.location_name}
+                          </div>
+                          <div style={{ fontSize: 13, color: '#9db', marginBottom: 4 }}>
+                            🏟️ {slot.asset_name}
+                            {slot.asset_type && ` · ${slot.asset_type}`}
+                            {slot.surface && ` · ${slot.surface}`}
+                          </div>
+                          <div style={{ fontSize: 13, color: '#9db', marginBottom: 4 }}>
+                            🕐 {displayStartTime} - {displayEndTime} Uhr
+                          </div>
+                          {slot.city && slot.address && (
+                            <div style={{ fontSize: 12, color: '#789', marginTop: 4 }}>
+                              📍 {slot.address}, {slot.city}
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div style={{ 
+                          display: 'flex', 
+                          flexDirection: 'column', 
+                          alignItems: 'flex-end',
+                          gap: 10
+                        }}>
+                          {slot.base_price > 0 && (
+                            <div style={{ 
+                              fontSize: 22, 
+                              color: '#10b981', 
+                              fontWeight: 700,
+                              lineHeight: 1
+                            }}>
+                              {slot.base_price} {slot.currency || 'EUR'}
+                            </div>
+                          )}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              // Prepare slot data for booking popup
+                              const bookingSlotData = {
+                                id: slot.id,
+                                location_name: slot.location_name,
+                                asset_name: slot.asset_name,
+                                asset_type: slot.asset_type,
+                                surface: slot.surface,
+                                date: displayDate,
+                                start_time: displayStartTime,
+                                end_time: displayEndTime,
+                                base_price: slot.base_price,
+                                currency: slot.currency || 'EUR',
+                                city: slot.city,
+                                address: slot.address
+                              };
+                              setBookingPopup(bookingSlotData);
+                            }}
+                            style={{
+                              padding: '10px 20px',
+                              borderRadius: 8,
+                              border: 'none',
+                              background: idx === 0 ? '#10b981' : '#2f6b57',
+                              color: '#fff',
+                              fontSize: 14,
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                              whiteSpace: 'nowrap',
+                              transition: 'all 0.2s'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = '#10b981';
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = idx === 0 ? '#10b981' : '#2f6b57';
+                              e.currentTarget.style.transform = 'scale(1)';
+                            }}
+                          >
+                            Jetzt buchen →
+                          </button>
+                        </div>
+                      </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+
+          {/* Save/Cancel Buttons */}
+          {(locationMode === 'manual' || (locationMode === 'booking' && location)) && (
+            <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
+              <button 
+                type="button"
+                onClick={onSubmit}
+                disabled={loading || !dateStr || !location}
+                style={{ 
+                  padding: '10px 20px', 
+                  borderRadius: 8, 
+                  border: 'none',
+                  background: loading || !dateStr || !location ? 'rgba(27, 75, 61, 0.5)' : '#1b4b3d', 
+                  color: '#fff',
+                  fontWeight: 600,
+                  cursor: loading || !dateStr || !location ? 'not-allowed' : 'pointer',
+                  opacity: loading || !dateStr || !location ? 0.7 : 1
+                }}
+              >
+                {loading ? '⏳ Speichere...' : '💾 Termin & Ort speichern'}
+              </button>
+              <button 
+                type="button" 
+                onClick={() => setOpen(false)} 
+                style={{ 
+                  padding: '10px 20px', 
+                  borderRadius: 8, 
+                  border: '1px solid #26493c', 
+                  background: 'transparent', 
+                  color: '#9db',
+                  cursor: 'pointer'
+                }}
+              >
+                Abbrechen
+              </button>
+            </div>
+          )}
           
-          <div style={{ display: 'flex', gap: 8, marginTop: 28 }}>
-            <button type="button" onClick={onSuggest} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe' }}>Nächster freier Platz</button>
-            <button type="submit" disabled={loading} style={{ 
-              padding: '8px 12px', 
-              borderRadius: 10, 
-              border: '1px solid #2f6b57', 
-              background: loading ? 'rgba(27, 75, 61, 0.5)' : '#1b4b3d', 
-              color: '#fff',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              opacity: loading ? 0.7 : 1
+          {message && (
+            <div style={{ 
+              padding: '10px 12px', 
+              borderRadius: 8,
+              background: message.includes('gespeichert') ? '#102a22' : '#2a1212',
+              border: `1px solid ${message.includes('gespeichert') ? '#2f6b57' : '#6b2f2f'}`,
+              color: message.includes('gespeichert') ? '#9f9' : '#fcc'
             }}>
-              {loading ? '⏳ Speichere...' : 'Speichern'}
-            </button>
-            <button type="button" onClick={() => setOpen(false)} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: 'transparent', color: '#dfe' }}>Schließen</button>
-          </div>
-          
-          {message && <div style={{ width: '100%', color: message.includes('gespeichert') ? '#9f9' : '#fcc' }}>{message}</div>}
-        </form>
+              {message}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Booking Confirmation Popup */}
+      {bookingPopup && (
+        <BookingConfirmationPopup
+          slot={bookingPopup}
+          match={game}
+          onClose={() => setBookingPopup(null)}
+          onConfirm={async (bookingData) => {
+            setBookingPopup(null);
+            
+            // Update location display in schedule section
+            if (bookingData.location_name && bookingData.asset_name) {
+              setLocation(`${bookingData.location_name} - ${bookingData.asset_name}`);
+            }
+            
+            // Call parent handler to update booking state
+            if (onBookingConfirmed) {
+              onBookingConfirmed(bookingData);
+            }
+          }}
+        />
       )}
     </div>
   );

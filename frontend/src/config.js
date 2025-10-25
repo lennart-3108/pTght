@@ -3,7 +3,7 @@
 // 1) URL query ?api=... or ?apiBase=... (persists to localStorage)
 // 2) localStorage.API_BASE
 // 3) REACT_APP_API_BASE env var
-// 4) Default: if running on localhost, use http://localhost:5002 (matches dev smoke task); else "/api"
+// 4) Default: if running on localhost, use http://localhost:5001/api; else "/api"
 function readQueryApiOverride() {
 	try {
 		const isBrowser = typeof window !== 'undefined' && window.location;
@@ -26,17 +26,35 @@ const envBase = (typeof process !== 'undefined' && process.env && process.env.RE
 	? String(process.env.REACT_APP_API_BASE).trim()
 	: "";
 
+
+function ensureLocalApiSuffix(base) {
+	const trimmed = (base || "").trim().replace(/\/$/, "");
+	if (!trimmed) return trimmed;
+	const lower = trimmed.toLowerCase();
+	const needsApiSuffix = /^(https?:\/\/)?(localhost|127\.0\.0\.1)(:\\d+)?$/.test(lower);
+	if (needsApiSuffix && !lower.endsWith("/api")) {
+		return `${trimmed}/api`;
+	}
+	return trimmed;
+}
+
 function resolveApiBase() {
 	const fromQuery = readQueryApiOverride();
-	if (fromQuery) return fromQuery.replace(/\/$/, "");
+	if (fromQuery) return ensureLocalApiSuffix(fromQuery);
 	const fromLs = readLocalStorageApi();
-	if (fromLs) return String(fromLs).trim().replace(/\/$/, "");
-	if (envBase) return envBase.replace(/\/$/, "");
+	if (fromLs) {
+		const normalized = ensureLocalApiSuffix(String(fromLs));
+		if (normalized !== fromLs) {
+			try { window.localStorage && window.localStorage.setItem('API_BASE', normalized); } catch {}
+		}
+		return normalized;
+	}
+	if (envBase) return ensureLocalApiSuffix(envBase);
 
 	const isBrowser = typeof window !== "undefined" && window.location;
 	const host = isBrowser ? window.location.hostname : "";
 	const isLocal = host === "localhost" || host === "127.0.0.1";
-	const base = isLocal ? "http://localhost:5002" : "/api";
+	const base = isLocal ? "http://localhost:5001/api" : "/api";
 	return base.replace(/\/$/, "");
 }
 

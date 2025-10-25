@@ -772,7 +772,7 @@ app.post('/open-matches', isAuthenticated, async (req, res) => {
   }
 });
 
-app.get("/api/news", isAuthenticated, async (req, res) => {
+async function newsHandler(req, res) {
   const started = Date.now();
   const startedIso = new Date(started).toISOString();
   try {
@@ -943,10 +943,18 @@ app.get("/api/news", isAuthenticated, async (req, res) => {
     console.error("GET /news failed", e && (e.stack || e.message || e));
     return res.status(500).json({ error: "NEWS_FETCH_FAILED" });
   }
-});
+}
+
+// Mount both paths for compatibility (local FE uses /news, docs use /api/news)
+app.get("/api/news", isAuthenticated, newsHandler);
+app.get("/news", isAuthenticated, newsHandler);
 
 // Routes
 registerRoutes(app, ctx);
+
+// Also mount auth routes at root level for local development compatibility
+const authRoutes = require("./src/routes/auth");
+app.use("/", authRoutes(ctx));
 
 const meRoutes = require("./src/routes/me");
 const leagueMatchesRoutes = require("./src/routes/leagueMatches");
@@ -964,6 +972,7 @@ apiRouter.use("/leagues", leagueMatchesRoutes({ db: knexDirect || db }));
 const sportsRoutes = require("./src/routes/sports");
 const matchesRoutes = require("./routes/matches");
 const chatsRoutes = require("./routes/chats");
+const locationsRoutes = require("./routes/locations");
 
 // Mount routes BEFORE any 404 handler
 apiRouter.use("/sports", sportsRoutes({ db }));
@@ -982,6 +991,121 @@ if (process.env.DEBUG_BOOT === '1' || canLog('debug')) {
 }
 apiRouter.use("/matches", matchesRoutes({ db: resolvedKnexForRoutes }));
 apiRouter.use("/chats", chatsRoutes({ db: resolvedKnexForRoutes }));
+apiRouter.use("/locations", locationsRoutes(resolvedKnexForRoutes));
+
+// Also mount some location routes at /assets for convenience
+apiRouter.get("/assets/:id/slots", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { date, duration = 60 } = req.query;
+    
+    if (!date) {
+      return res.status(400).json({ error: 'date parameter required (YYYY-MM-DD)' });
+    }
+    
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    const k = resolvedKnexForRoutes;
+    const slots = await k('slots')
+      .where({ asset_id: id })
+      .whereBetween('start_time', [startOfDay.toISOString(), endOfDay.toISOString()])
+      .whereIn('status', ['available', 'held'])
+      .orderBy('start_time');
+    
+    res.json(slots);
+  } catch (err) {
+    console.error('GET /assets/:id/slots error:', err);
+    res.status(500).json({ error: 'Failed to fetch slots' });
+  }
+});
+
+apiRouter.post("/assets/:assetId/slots", async (req, res) => {
+  try {
+    const { assetId } = req.params;
+    const { start_time, end_time, base_price, status } = req.body;
+    
+    if (!start_time || !end_time) {
+      return res.status(400).json({ error: 'start_time and end_time required' });
+    }
+    
+    const start = new Date(start_time);
+    const end = new Date(end_time);
+    const duration = (end - start) / (1000 * 60);
+    
+    const k = resolvedKnexForRoutes;
+    const [slotId] = await k('slots').insert({
+      asset_id: assetId,
+      start_time: start,
+      end_time: end,
+      duration_minutes: duration,
+      base_price: base_price || 0,
+      currency: 'EUR',
+      status: status || 'available',
+      created_at: new Date()
+    });
+    
+    const slot = await k('slots').where({ id: slotId }).first();
+    res.status(201).json(slot);
+  } catch (err) {
+    console.error('POST /assets/:assetId/slots error:', err);
+    res.status(500).json({ error: 'Failed to create slot' });
+  }
+});
+
+// Slot search endpoint
+apiRouter.get("/slots/search-available", async (req, res) => {
+  try {
+    const { date, time, duration = 60, sport_id, city_id, limit = 10 } = req.query;
+    
+    if (!date || !time) {
+      return res.status(400).json({ error: 'date and time required' });
+    }
+    
+    const searchDateTime = new Date(`${date}T${time}:00`);
+    const durationMin = parseInt(duration);
+    
+    const k = resolvedKnexForRoutes;
+    let query = k('slots')
+      .join('assets', 'slots.asset_id', 'assets.id')
+      .join('locations', 'assets.location_id', 'locations.id')
+      .leftJoin('sports', 'assets.sport_id', 'sports.id')
+      .where('slots.status', 'available')
+      .where('slots.start_time', '>=', searchDateTime)
+      .where('slots.duration_minutes', '>=', durationMin)
+      .where('locations.status', 'active')
+      .select(
+        'slots.*',
+        'assets.name as asset_name',
+        'assets.asset_type',
+        'locations.name as location_name',
+        'locations.city',
+        'locations.address',
+        'sports.name as sport_name'
+      )
+      .orderBy('slots.start_time')
+      .limit(parseInt(limit));
+    
+    if (sport_id) {
+      query = query.where('assets.sport_id', sport_id);
+    }
+    
+    if (city_id) {
+      query = query.where('locations.city', city_id);
+    }
+    
+    const slots = await query;
+    res.json(slots);
+  } catch (err) {
+    console.error('GET /slots/search-available error:', err);
+    res.status(500).json({ error: 'Failed to search slots' });
+  }
+});
+
+// Also expose chats at root for local development compatibility
+app.use("/chats", chatsRoutes({ db: resolvedKnexForRoutes }));
 
 // --- ensure root /sports exists (some setups expose only /sports/:id/... but not GET /sports) ---
 apiRouter.get("/sports", async (req, res) => {
@@ -1006,6 +1130,19 @@ apiRouter.get("/sports/list", async (req, res) => {
     return res.json(rows || []);
   } catch (e) {
     console.error("GET /sports/list failed:", e && (e.stack || e.message || e));
+    return res.status(500).json({ error: "Datenbankfehler", details: (e && e.message) || String(e) });
+  }
+});
+
+// Root synonyms for local FE (without /api prefix)
+app.get("/sports/list", async (req, res) => {
+  try {
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
+    const rows = await k("sports").select("id", "name").orderBy("name");
+    return res.json(rows || []);
+  } catch (e) {
+    console.error("GET /sports/list (root) failed:", e && (e.stack || e.message || e));
     return res.status(500).json({ error: "Datenbankfehler", details: (e && e.message) || String(e) });
   }
 });
@@ -1039,6 +1176,35 @@ apiRouter.get("/cities/list", async (req, res) => {
   }
 });
 
+app.get("/cities/list", async (req, res) => {
+  try {
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
+    const hasCountries = await k.schema.hasTable('countries').catch(() => false);
+    const hasStates = await k.schema.hasTable('states').catch(() => false);
+    const cityCols = await k('cities').columnInfo().catch(() => ({}));
+    const hasCountryId = Object.prototype.hasOwnProperty.call(cityCols, 'country_id');
+    const hasStateId = Object.prototype.hasOwnProperty.call(cityCols, 'state_id');
+
+    let q = k({ c: 'cities' }).select('c.id', 'c.name');
+    if (hasCountryId && hasCountries) {
+      q = q.leftJoin({ co: 'countries' }, 'co.id', 'c.country_id').select({ countryId: 'co.id', countryCode: k.raw('COALESCE(co.iso2, co.code)') , countryName: 'co.name' });
+    } else {
+      q = q.select(k.raw('NULL as countryId'), k.raw("NULL as countryCode"), k.raw("NULL as countryName"));
+    }
+    if (hasStateId && hasStates) {
+      q = q.leftJoin({ st: 'states' }, 'st.id', 'c.state_id').select({ stateId: 'st.id', stateCode: 'st.code', stateName: 'st.name' });
+    } else {
+      q = q.select(k.raw('NULL as stateId'), k.raw('NULL as stateCode'), k.raw('NULL as stateName'));
+    }
+    const rows = await q.orderBy('c.name', 'asc');
+    return res.json(rows || []);
+  } catch (e) {
+    console.error("GET /cities/list (root) failed:", e && (e.stack || e.message || e));
+    return res.status(500).json({ error: "Datenbankfehler", details: (e && e.message) || String(e) });
+  }
+});
+
 // Public list of countries
 apiRouter.get('/countries', async (req, res) => {
   try {
@@ -1052,6 +1218,22 @@ apiRouter.get('/countries', async (req, res) => {
     return res.json(rows || []);
   } catch (e) {
     console.error('GET /countries failed:', e && (e.stack || e.message || e));
+    return res.status(500).json({ error: 'Datenbankfehler' });
+  }
+});
+
+app.get('/countries', async (req, res) => {
+  try {
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+    const hasCountries = await k.schema.hasTable('countries').catch(() => false);
+    if (!hasCountries) return res.json([]);
+    const colInfo = await k('countries').columnInfo().catch(() => ({}));
+    const hasIso2 = Object.prototype.hasOwnProperty.call(colInfo, 'iso2');
+    const rows = await k('countries').select('id', hasIso2 ? { code: 'iso2' } : { code: 'code' }, 'name').orderBy('name');
+    return res.json(rows || []);
+  } catch (e) {
+    console.error('GET /countries (root) failed:', e && (e.stack || e.message || e));
     return res.status(500).json({ error: 'Datenbankfehler' });
   }
 });
@@ -1304,11 +1486,108 @@ server.on('error', (err) => {
   });
 })();
 
+// Expose public stats at root for local FE compatibility
+app.get('/public/stats', async (req, res) => {
+  try {
+    const now = Date.now();
+    const cache = app.locals._publicStatsCache || { data: null, ts: 0 };
+    const TTL_MS = 60 * 1000; // 60s cache
+    if (cache.data && (now - cache.ts) < TTL_MS) {
+      return res.json(cache.data);
+    }
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex && db.knex.client ? db.knex : null);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+
+    const tables = {};
+    const tableNames = ['users','leagues','matches','games','user_leagues','sports','teams','team_members'];
+    for (const t of tableNames) {
+      tables[t] = await k.schema.hasTable(t).catch(() => false);
+    }
+
+    async function countSafe(table) {
+      if (!tables[table]) return null;
+      const r = await k(table).count({ c: '*' }).first().catch(() => null);
+      if (!r) return 0;
+      const val = r.c != null ? r.c : r.C;
+      return Number(val) || 0;
+    }
+
+    const users = await countSafe('users');
+    let confirmedUsers = null;
+    if (tables.users) {
+      const info = await k('users').columnInfo().catch(() => ({}));
+      const confirmationCols = ['confirmed','is_confirmed','email_confirmed','verified','is_verified'];
+      const found = confirmationCols.find(c => Object.prototype.hasOwnProperty.call(info, c));
+      if (found) {
+        confirmedUsers = await k('users').where(found, 1).count({ c: '*' }).first().then(r => Number(r.c || 0)).catch(() => null);
+      }
+    }
+    const leagues = await countSafe('leagues');
+    let matches = null;
+    if (tables.matches) matches = await countSafe('matches');
+    else if (tables.games) matches = await countSafe('games');
+    const memberships = await countSafe('user_leagues');
+    const sports = await countSafe('sports');
+    const teams = await countSafe('teams');
+    const teamMembers = await countSafe('team_members');
+
+    const payload = {
+      users,
+      ...(confirmedUsers != null ? { confirmedUsers } : {}),
+      leagues,
+      matches,
+      teams,
+      teamMembers,
+      memberships,
+      sports,
+      generatedAt: new Date().toISOString()
+    };
+    cache.data = payload;
+    cache.ts = now;
+    app.locals._publicStatsCache = cache;
+    return res.json(payload);
+  } catch (e) {
+    console.error('GET /public/stats (root) failed', e && (e.stack || e.message || e));
+    return res.status(500).json({ error: 'STATS_FAILED' });
+  }
+});
+
 // Mount all remaining API routes under /api prefix
 app.use('/api', apiRouter);
 
+// Mount new service-based routes (locations, assets, slots, bookings)
+const locationRoutes = require('./src/routes/locations');
+const assetRoutes = require('./src/routes/assets');
+const slotRoutes = require('./src/routes/slots');
+const bookingRoutes = require('./routes/bookings');
+const bookingStatsRoutes = require('./routes/booking-stats');
+const slotGeneratorRoutes = require('./routes/slot-generator');
+
+app.use('/api/locations', locationRoutes({ db }));
+app.use('/api/assets', assetRoutes({ db }));
+app.use('/api/slots', slotRoutes({ db }));
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/booking-stats', bookingStatsRoutes);
+app.use('/api/slot-generator', slotGeneratorRoutes);
+
 // Serve static uploads under /api/uploads as well (proxy to /uploads)
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
+
+// Ensure persistent developer test dataset (runs once at startup or reload)
+try {
+  const { ensureTestLocation } = require('./src/jobs/ensureTestLocation');
+  (async () => {
+    try {
+      const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+      if (k) await ensureTestLocation(k);
+      else console.warn('[ensureTestLocation] skipped (no knex)');
+    } catch (e) {
+      console.warn('[ensureTestLocation] failed:', e && (e.message || e));
+    }
+  })();
+} catch (e) {
+  console.warn('[ensureTestLocation] not available:', e && (e.message || e));
+}
 
 // export for tests
 module.exports = { app, server };
