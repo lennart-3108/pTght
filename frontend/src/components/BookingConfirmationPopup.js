@@ -20,32 +20,39 @@ export default function BookingConfirmationPopup({ slot, match, onClose, onConfi
     setProcessing(true);
     
     try {
-      // Simulate PayPal payment with fake data
-      const fakeBooking = {
-        id: Math.floor(Math.random() * 10000),
-        match_id: match.id,
-        slot_id: slot.id,
-        location_name: slot.location_name,
-        asset_name: slot.asset_name,
-        booking_date: slot.date,
-        start_time: slot.start_time,
-        end_time: slot.end_time,
-        base_price: slot.base_price,
-        currency: slot.currency || 'EUR',
-        invoice_number: `INV-SIM-${Date.now()}`,
-        payment_status: 'paid',
-        status: 'confirmed',
-        paypal_transaction_id: `PAYPAL-${Date.now()}-SIMULATED`
-      };
+      // Get auth token
+      const token = localStorage.getItem('token');
+      
+      // Create REAL booking via API with simulated PayPal payment
+      const simulatedTransactionId = `PAYPAL-${Date.now()}-SIMULATED`;
+      
+      const response = await fetch(`${API_BASE}/bookings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          match_id: match.id,
+          slot_id: slot.id,
+          payment_method: 'paypal',
+          paypal_transaction_id: simulatedTransactionId,
+          paypal_payer_email: 'simulated@paypal.com',
+          notes: `Simulated PayPal payment for match booking`
+        })
+      });
 
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Booking failed');
+      }
 
       // Show success message
-      alert(`✅ PayPal-Zahlung simuliert!\n\n💳 Transaction ID: ${fakeBooking.paypal_transaction_id}\n📄 Rechnung: ${fakeBooking.invoice_number}\n💰 Betrag: ${fakeBooking.base_price} ${fakeBooking.currency}\n\n✓ Status: BEZAHLT`);
+      alert(`✅ PayPal-Zahlung simuliert (ECHTE Buchung erstellt)!\n\n💳 Transaction ID: ${simulatedTransactionId}\n📄 Rechnung: ${data.booking.invoice_number || 'N/A'}\n💰 Betrag: ${slot.base_price} ${slot.currency || 'EUR'}\n\n✓ Status: BEZAHLT\n\n⚠️ Dies ist eine echte Buchung in der Datenbank!`);
 
       // Call parent confirmation handler
-      if (onConfirm) await onConfirm(fakeBooking);
+      if (onConfirm) await onConfirm(data.booking);
       
       // Close popup
       onClose();
