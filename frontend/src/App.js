@@ -16,10 +16,16 @@ import UserChatPage from "./pages/UserChatPage"; // neu
 import GameDetailPage from "./pages/GameDetailPage"; // neu
 import SearchMatchDialog from "./pages/SearchMatchDialog"; // neu
 import AdminPage from "./pages/AdminPage"; // neu
+import BookingPage from "./pages/BookingPage"; // booking page
+import MyBookingsPage from "./pages/MyBookingsPage"; // my bookings
+import LocationManagerPage from "./pages/LocationManagerPage"; // location manager
+import LocationDetailsPage from "./pages/LocationDetailsPage"; // location details
+import BookingReportingPage from "./pages/BookingReportingPage"; // booking reporting
 import matchLeagueLogo from "./images/logo.png"; // Import the logo
 import "./styles.css"; // neu
 import Header from "./components/Header";
 import WelcomePage from "./pages/WelcomePage"; // <-- add this import
+import DevSportsImages from "./pages/DevSportsImages"; // dev gallery
 
 // Simpler Adminerkennung (z.B. im Token, sonst im localStorage)
 function isAdmin() {
@@ -199,6 +205,72 @@ function App() {
             element={
               <ProtectedRoute token={token} setToken={setToken}>
                 <SearchMatchDialog />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Booking / Platzbuchung */}
+          <Route
+            path="/booking"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <BookingPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bookings"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <MyBookingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/bookings/:id"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <MyBookingsPage />
+              </ProtectedRoute>
+            }
+          />
+          
+          {/* Dev: Sports Images mini browser */}
+          <Route
+            path="/dev/images/sports"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <DevSportsImages />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Location Manager */}
+          <Route
+            path="/location-manager"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <LocationManagerPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Booking Reporting */}
+          <Route
+            path="/booking-reporting"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <BookingReportingPage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Location Details */}
+          <Route
+            path="/location/:locationId"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <LocationDetailsPage />
               </ProtectedRoute>
             }
           />

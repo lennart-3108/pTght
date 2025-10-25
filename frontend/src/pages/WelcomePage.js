@@ -83,8 +83,8 @@ export default function WelcomePage({ setToken, setIsAdminFlag }) {
   // Use a more visibly green (darker) panel so it doesn't read as white
   const panelBg = '#0f2a20ff'; // slightly darker soft green
   const panelBorder = '1px solid rgba(0,0,0,0.08)';
-  const btnGreen = '#0a2221';
-  const btnGreenHover = '#0e2f2d';
+  const btnGreen = 'var(--primary-600)';
+  const btnGreenHover = 'var(--primary-600-hover)';
 
   return (
     <div style={{ maxWidth: 900, margin: '24px auto', padding: 24 }}>

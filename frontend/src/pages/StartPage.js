@@ -4,11 +4,12 @@ import { API_BASE } from "../config";
 import smallLogo from "../images/logo.png";
 import Avatar from "../components/Avatar";
 
-// load background images same as LoginPage
+// load background images from sports folder and sort
 function importAllBackgrounds(r) {
   return r.keys().map((k) => ({ key: k.replace(/^\.\//, ''), src: r(k) }));
 }
-const backgrounds = importAllBackgrounds(require.context("../images/background", false, /\.(png|jpe?g|svg)$/));
+// Use sports images for hero rotation
+const backgrounds = importAllBackgrounds(require.context("../images/sports", false, /\.(png|jpe?g|webp|svg)$/));
 backgrounds.sort((a, b) => {
   const re = /^(\d+)-/;
   const ma = a.key.match(re);

@@ -453,6 +453,8 @@ export default function Header() {
               <Link to="/profile" className="ml-nav__item" onClick={handleNavigate}>Profil</Link>
               <Link to="/teams" className="ml-nav__item" onClick={handleNavigate}>Teams</Link>
               <Link to="/leagues" className="ml-nav__item" onClick={handleNavigate}>Ligen</Link>
+              <Link to="/booking" className="ml-nav__item" onClick={handleNavigate}>Platz buchen</Link>
+              <Link to="/location-manager" className="ml-nav__item" onClick={handleNavigate}>Location Manager</Link>
               <Link to="/chats" className="ml-nav__item" onClick={handleNavigate}>Chats</Link>
               <Link to="/news" className="ml-nav__item" onClick={handleNavigate}>Neuigkeiten</Link>
             </>
