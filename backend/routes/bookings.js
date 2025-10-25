@@ -172,53 +172,9 @@ router.post('/', authenticateToken, async (req, res) => {
 });
 
 /**
- * GET /api/bookings/:id
- * Get booking details by ID
- */
-router.get('/:id', async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const booking = await db('bookings')
-      .join('slots', 'bookings.slot_id', 'slots.id')
-      .join('locations', 'bookings.location_id', 'locations.id')
-      .join('assets', 'bookings.asset_id', 'assets.id')
-      .join('matches', 'bookings.match_id', 'matches.id')
-      .leftJoin('invoices', 'bookings.id', 'invoices.booking_id')
-      .where('bookings.id', id)
-      .select(
-        'bookings.*',
-        'locations.name as location_name',
-        'locations.address as location_address',
-        'locations.city as location_city',
-        'assets.name as asset_name',
-        'assets.type as asset_type',
-        'assets.surface',
-        'slots.base_price',
-        'slots.currency',
-        'matches.sport_name',
-        'invoices.invoice_number',
-        'invoices.amount as invoice_amount',
-        'invoices.status as invoice_status',
-        'invoices.payment_method',
-        'invoices.paid_at'
-      )
-      .first();
-
-    if (!booking) {
-      return res.status(404).json({ error: 'Booking not found' });
-    }
-
-    res.json(booking);
-  } catch (error) {
-    console.error('Get booking error:', error);
-    res.status(500).json({ error: 'Failed to fetch booking' });
-  }
-});
-
-/**
  * GET /api/bookings/match/:matchId
  * Get booking for a specific match
+ * MUST BE BEFORE /:id route to avoid matching "match" as an ID
  */
 router.get('/match/:matchId', async (req, res) => {
   try {
@@ -252,6 +208,46 @@ router.get('/match/:matchId', async (req, res) => {
     res.json(booking);
   } catch (error) {
     console.error('Get match booking error:', error);
+    res.status(500).json({ error: 'Failed to fetch booking' });
+  }
+});
+
+/**
+ * GET /api/bookings/:id
+ * Get booking details by ID
+ */
+router.get('/:id', async (req, res) => {
+  try {
+    const { matchId } = req.params;
+
+    const booking = await db('bookings')
+      .join('slots', 'bookings.slot_id', 'slots.id')
+      .join('locations', 'bookings.location_id', 'locations.id')
+      .join('assets', 'bookings.asset_id', 'assets.id')
+      .leftJoin('invoices', 'bookings.id', 'invoices.booking_id')
+      .where('bookings.match_id', matchId)
+      .select(
+        'bookings.*',
+        'locations.name as location_name',
+        'locations.address as location_address',
+        'locations.city as location_city',
+        'assets.name as asset_name',
+        'assets.type as asset_type',
+        'assets.surface',
+        'slots.base_price',
+        'slots.currency',
+        'invoices.invoice_number',
+        'invoices.status as invoice_status'
+      )
+      .first();
+
+    if (!booking) {
+      return res.status(404).json({ error: 'No booking found for this match' });
+    }
+
+    res.json(booking);
+  } catch (error) {
+    console.error('Get booking error:', error);
     res.status(500).json({ error: 'Failed to fetch booking' });
   }
 });
