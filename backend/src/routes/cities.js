@@ -5,7 +5,7 @@ module.exports = function citiesRoutes(ctx) {
   const { db } = ctx;
 
   router.get("/cities/list", (_req, res) => {
-    db.all("SELECT id, name FROM cities ORDER BY name", (err, rows) =>
+    db.all("SELECT id, name, state_id AS stateId, country_id AS countryId FROM cities ORDER BY name", (err, rows) =>
       err ? res.status(500).json({ error: "Datenbankfehler" }) : res.json(rows)
     );
   });

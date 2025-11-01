@@ -16,11 +16,14 @@ import UserChatPage from "./pages/UserChatPage"; // neu
 import GameDetailPage from "./pages/GameDetailPage"; // neu
 import SearchMatchDialog from "./pages/SearchMatchDialog"; // neu
 import AdminPage from "./pages/AdminPage"; // neu
+import ProfilePage from "./pages/ProfilePage"; // user profile
+import EditProfilePage from "./pages/EditProfilePage"; // edit profile
 import BookingPage from "./pages/BookingPage"; // booking page
 import MyBookingsPage from "./pages/MyBookingsPage"; // my bookings
 import LocationManagerPage from "./pages/LocationManagerPage"; // location manager
 import LocationDetailsPage from "./pages/LocationDetailsPage"; // location details
 import BookingReportingPage from "./pages/BookingReportingPage"; // booking reporting
+import AssetConfiguratorPage from "./pages/AssetConfiguratorPage"; // asset configurator
 import matchLeagueLogo from "./images/logo.png"; // Import the logo
 import "./styles.css"; // neu
 import Header from "./components/Header";
@@ -275,6 +278,16 @@ function App() {
             }
           />
 
+          {/* Asset Configurator */}
+          <Route
+            path="/location/:locationId/asset/:assetId/configure"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <AssetConfiguratorPage />
+              </ProtectedRoute>
+            }
+          />
+
           {/* Create (nur Admin) */}
           <Route
             path="/create"
@@ -303,16 +316,22 @@ function App() {
             }
           />
 
-          {/* Profil (nur Admin) */}
+          {/* Profil bearbeiten */}
+          <Route
+            path="/profile/edit"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <EditProfilePage />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Profil - eigenes Profil für alle Benutzer */}
           <Route
             path="/profile"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
-                {isAdminFlag ? (
-                  <UserDetailPage />
-                ) : (
-                  <div style={{ padding: 16 }}>403 – Zugriff verweigert. Nur für Admins.</div>
-                )}
+                <ProfilePage />
               </ProtectedRoute>
             }
           />

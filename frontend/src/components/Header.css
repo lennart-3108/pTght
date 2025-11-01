@@ -210,6 +210,15 @@
   display: flex;
   flex-direction: column;
 }
+
+/* Mobile: Ensure popover stays within viewport */
+@media (max-width: 480px) {
+  .ml-actionWrap > .ml-popover {
+    right: -16px; /* Offset to align with screen edge */
+    width: calc(100vw - 16px); /* Full width minus small margin */
+    max-width: 360px;
+  }
+}
 .ml-popover__header {
   display: flex;
   align-items: center;

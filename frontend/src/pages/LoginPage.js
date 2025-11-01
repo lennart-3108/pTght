@@ -127,6 +127,33 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
       // Banner-Flags für App setzen und anschließend weiterleiten
       sessionStorage.setItem("loginSuccessAt", new Date().toISOString());
       sessionStorage.setItem("loginEmail", email);
+      
+      // Request location permission and send to backend
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          async (position) => {
+            const { latitude, longitude } = position.coords;
+            try {
+              await fetch(`${API}/me`, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                  "Authorization": `Bearer ${data.token}`
+                },
+                body: JSON.stringify({ latitude, longitude })
+              });
+              console.log('Location updated:', { latitude, longitude });
+            } catch (err) {
+              console.warn('Failed to update location:', err);
+            }
+          },
+          (error) => {
+            console.warn('Geolocation permission denied or unavailable:', error);
+          },
+          { enableHighAccuracy: false, timeout: 5000, maximumAge: 0 }
+        );
+      }
+      
       navigate("/");
     } catch {
       setLoginMsg("Server nicht erreichbar.");

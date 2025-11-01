@@ -29,14 +29,23 @@ module.exports = function profileRoutes(ctx) {
         if (typeof favRaw === 'string' && favRaw.trim().startsWith('[')) favorite_sports = JSON.parse(favRaw);
         else if (typeof favRaw === 'string') favorite_sports = favRaw.split(',').map(s => s.trim()).filter(Boolean);
       } catch {}
-      return res.json({ id: req.user.id, open_for_matches, favorite_sports });
+      
+      // Include profile fields
+      const result = { id: req.user.id, open_for_matches, favorite_sports };
+      if (Object.prototype.hasOwnProperty.call(info, 'bio')) result.bio = row.bio || null;
+      if (Object.prototype.hasOwnProperty.call(info, 'location')) result.location = row.location || null;
+      if (Object.prototype.hasOwnProperty.call(info, 'phone')) result.phone = row.phone || null;
+      if (Object.prototype.hasOwnProperty.call(info, 'birth_date')) result.birth_date = row.birth_date || null;
+      if (Object.prototype.hasOwnProperty.call(info, 'gender')) result.gender = row.gender || null;
+      
+      return res.json(result);
     } catch (e) {
       console.error('[GET /profile] failed', e && (e.stack || e.message || e));
       return res.status(500).json({ error: 'DB_ERROR' });
     }
   });
 
-  // PUT /profile -> update open_for_matches and favorite_sports
+  // PUT /profile -> update user profile fields
   router.put('/profile', isAuthenticated, async (req, res) => {
     try {
       const k = resolveKnex(db);
@@ -45,12 +54,46 @@ module.exports = function profileRoutes(ctx) {
       if (!hasUsers) return res.status(400).json({ error: 'USERS_TABLE_MISSING' });
       const info = await k('users').columnInfo().catch(() => ({}));
       const patch = {};
+      
+      // Basic account fields
+      if (Object.prototype.hasOwnProperty.call(info, 'firstname') && typeof req.body?.firstname !== 'undefined') {
+        patch.firstname = req.body.firstname ? String(req.body.firstname).trim() : null;
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'lastname') && typeof req.body?.lastname !== 'undefined') {
+        patch.lastname = req.body.lastname ? String(req.body.lastname).trim() : null;
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'username') && req.body?.username) {
+        patch.username = String(req.body.username).trim();
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'email') && req.body?.email) {
+        patch.email = String(req.body.email).trim();
+      }
+      
+      // Existing fields
       if (Object.prototype.hasOwnProperty.call(info, 'open_for_matches') && typeof req.body?.open_for_matches !== 'undefined') {
         patch.open_for_matches = req.body.open_for_matches ? 1 : 0;
       }
       if (Object.prototype.hasOwnProperty.call(info, 'favorite_sports') && Array.isArray(req.body?.favorite_sports)) {
         patch.favorite_sports = JSON.stringify(req.body.favorite_sports);
       }
+      
+      // New profile fields
+      if (Object.prototype.hasOwnProperty.call(info, 'bio') && typeof req.body?.bio !== 'undefined') {
+        patch.bio = req.body.bio ? String(req.body.bio).trim() : null;
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'location') && typeof req.body?.location !== 'undefined') {
+        patch.location = req.body.location ? String(req.body.location).trim() : null;
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'phone') && typeof req.body?.phone !== 'undefined') {
+        patch.phone = req.body.phone ? String(req.body.phone).trim() : null;
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'birth_date') && typeof req.body?.birth_date !== 'undefined') {
+        patch.birth_date = req.body.birth_date ? String(req.body.birth_date).trim() : null;
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'gender') && typeof req.body?.gender !== 'undefined') {
+        patch.gender = req.body.gender ? String(req.body.gender).trim() : null;
+      }
+      
       if (!Object.keys(patch).length) return res.json({ ok: true });
       await k('users').where({ id: req.user.id }).update(patch);
       return res.json({ ok: true });
@@ -215,7 +258,7 @@ module.exports = function profileRoutes(ctx) {
   });
 
   // POST /open-matches -> create an open friendly match in per-sport/city 'Open Matches' league
-  // Body: { sportId, cityId, kickoff_at? }
+  // Body: { sportId, cityId, kickoff_at?, kickoff_end_at?, location_id? }
   router.post('/open-matches', isAuthenticated, async (req, res) => {
     try {
       const k = resolveKnex(db);
@@ -256,6 +299,13 @@ module.exports = function profileRoutes(ctx) {
       if (Object.prototype.hasOwnProperty.call(info, 'kickoff_at')) {
         const when = req.body?.kickoff_at ? new Date(req.body.kickoff_at) : null;
         rec.kickoff_at = when && !isNaN(when) ? when.toISOString() : null;
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'kickoff_end_at')) {
+        const whenEnd = req.body?.kickoff_end_at ? new Date(req.body.kickoff_end_at) : null;
+        rec.kickoff_end_at = whenEnd && !isNaN(whenEnd) ? whenEnd.toISOString() : null;
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'location_id') && req.body?.location_id) {
+        rec.location_id = Number(req.body.location_id);
       }
       if (Object.prototype.hasOwnProperty.call(info, 'status')) rec.status = 'open';
       if (Object.prototype.hasOwnProperty.call(info, 'created_at')) rec.created_at = new Date().toISOString();

@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 import smallLogo from "../images/logo.png";
 import Avatar from "../components/Avatar";
+import LocationSelector from "../components/LocationSelector";
 
 // load background images from sports folder and sort
 function importAllBackgrounds(r) {
@@ -25,14 +26,16 @@ export default function StartPage() {
   const [leagues, setLeagues] = useState([]);
   const [sports, setSports] = useState([]);
   const [cities, setCities] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
   const [selectedSport, setSelectedSport] = useState("");
-  const [selectedCountry, setSelectedCountry] = useState("");
-  const [selectedState, setSelectedState] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
+  const [selectedCityName, setSelectedCityName] = useState("");
   const [openMatches, setOpenMatches] = useState([]);
   const [searching, setSearching] = useState(false);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [gpsLoading, setGpsLoading] = useState(false);
   // dashboard state
   const [myLeagues, setMyLeagues] = useState([]);
   const [myGames, setMyGames] = useState({ upcoming: [], completed: [] });
@@ -69,21 +72,94 @@ export default function StartPage() {
     return () => clearInterval(t);
   }, []);
 
+  // Auto-detect location via GPS
+  const detectLocation = async () => {
+    if (!navigator.geolocation) {
+      console.warn('[StartPage] Geolocation not supported');
+      return;
+    }
+
+    setGpsLoading(true);
+    try {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 300000 // cache for 5 minutes
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      console.log('[StartPage] GPS coords:', { latitude, longitude });
+
+      // Query backend for nearest city
+      const response = await fetch(`${API_BASE}/location/nearest?lat=${latitude}&lon=${longitude}`);
+      if (!response.ok) throw new Error('Location lookup failed');
+
+      const data = await response.json();
+      console.log('[StartPage] Nearest location:', data);
+
+      if (data.city) {
+        // Auto-set filters based on detected location
+        if (data.city.id) {
+          setSelectedCity(String(data.city.id));
+          setSelectedCityName(data.city.name);
+        }
+        console.log(`[StartPage] Auto-set location: ${data.city.name}${data.state ? ', ' + data.state.name : ''}${data.country ? ', ' + data.country.name : ''}`);
+      }
+    } catch (error) {
+      console.warn('[StartPage] Location detection failed:', error.message);
+      // Silently fail - user can manually select location
+    } finally {
+      setGpsLoading(false);
+    }
+  };
+
   useEffect(() => {
     let mounted = true;
     setLoading(true);
     setErr("");
+    const safeJson = async (r) => {
+      try {
+        if (!r || !r.ok) return [];
+        const ct = (r.headers && typeof r.headers.get === 'function') ? (r.headers.get('content-type') || '') : '';
+        if (ct.includes('text/html')) return [];
+        return await r.json();
+      } catch { return []; }
+    };
+
     Promise.all([
-      fetch(`${API_BASE}/leagues`).then(r => r.ok ? r.json() : []),
-      fetch(`${API_BASE}/sports/list`).then(r => r.ok ? r.json() : []),
-      fetch(`${API_BASE}/cities/list`).then(r => r.ok ? r.json() : []),
-      fetch(`${API_BASE}/countries`).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/leagues`).then(safeJson),
+      fetch(`${API_BASE}/sports/list`).then(safeJson),
+      fetch(`${API_BASE}/cities/list`).then(safeJson),
+      fetch(`${API_BASE}/countries/list`).then(safeJson),
+      fetch(`${API_BASE}/states/list`).then(safeJson),
     ])
-      .then(([ls, ss, cs, countries]) => {
+      .then(([ls, ss, cs, co, sts]) => {
         if (!mounted) return;
         setLeagues(Array.isArray(ls) ? ls : []);
         setSports(Array.isArray(ss) ? ss : []);
         setCities(Array.isArray(cs) ? cs : []);
+        const initialCountries = Array.isArray(co) ? co : [];
+        setCountries(initialCountries);
+        setStates(Array.isArray(sts) ? sts : []);
+        // Fallback: if countries are empty (e.g., missing /api proxy on non-local host),
+        // try talking directly to localhost:5001
+        if (!initialCountries.length) {
+          const fallbackBase = 'http://localhost:5001/api';
+          // Avoid duplicate fetch if API_BASE already points to localhost
+          const isAlreadyLocalhost = String(API_BASE).startsWith('http://localhost:5001');
+          if (!isAlreadyLocalhost) {
+            fetch(`${fallbackBase}/countries/list`).then(safeJson)
+              .then(list => {
+                if (!mounted) return;
+                if (Array.isArray(list) && list.length) {
+                  try { console.log('[StartPage] Using localhost API fallback for countries'); } catch {}
+                  setCountries(list);
+                }
+              }).catch(() => {});
+          }
+        }
         // auto-select user's city from /me/leagues (first league city)
         (async () => {
           try {
@@ -91,7 +167,11 @@ export default function StartPage() {
             if (!token) return;
             const meLeagues = await fetch(`${API_BASE}/me/leagues`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : []);
             const firstCity = (meLeagues || []).find(l => l.cityId)?.cityId;
-            if (firstCity) setSelectedCity(String(firstCity));
+            if (firstCity) {
+              setSelectedCity(String(firstCity));
+              const cityObj = Array.isArray(cs) && cs.find(c => String(c.id) === String(firstCity));
+              if (cityObj) setSelectedCityName(cityObj.name);
+            }
             // store for dashboard
             setMyLeagues(Array.isArray(meLeagues) ? meLeagues : []);
             const myGamesResp = await fetch(`${API_BASE}/me/games`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : { upcoming: [], completed: [] });
@@ -120,6 +200,12 @@ export default function StartPage() {
         })();
         // store countries for state filtering fallback via cities list (if needed)
         // Note: states are exposed via cities/list response entries
+
+        // Auto-detect location via GPS for logged-in users
+        const token = localStorage.getItem('token');
+        if (token) {
+          detectLocation();
+        }
       })
       .catch(e => { if (mounted) setErr(e.message || "Fehler beim Laden."); })
       .finally(() => { if (mounted) setLoading(false); });
@@ -143,40 +229,36 @@ export default function StartPage() {
               <h1 className="hero-title">Match League</h1>
             </div>
             <p className="hero-sub"><b>Willkommen bei MatchLeague. Connect. Match. Win.</b></p>
-            <div className="hero-controls" style={{ display: 'flex', gap: 14, alignItems: 'center', marginTop: 14, flexWrap: 'wrap' }}>
-              <select value={selectedSport} onChange={(e) => setSelectedSport(e.target.value)} style={{ padding: '12px 16px', borderRadius: 12, border: 'none', background: '#113528', color: '#e8efe8', fontSize: 16 }}>
-              <option value="">Sportart</option>
-              {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-              <select value={selectedCountry} onChange={(e) => setSelectedCountry(e.target.value)} style={{ padding: '12px 16px', borderRadius: 12, border: 'none', background: '#113528', color: '#e8efe8', fontSize: 16 }}>
-              <option value="">Land</option>
-              {/* countries are available through cities/list joined return in backend/server.js → use city-derived unique list if needed */}
-              {[...new Map(cities.filter(c => c.countryId).map(c => [c.countryId, { id: c.countryId, name: c.countryName }])).values()].map(co => (
-                <option key={co.id} value={co.id}>{co.name}</option>
-              ))}
-            </select>
-              <select value={selectedState} onChange={(e) => setSelectedState(e.target.value)} style={{ padding: '12px 16px', borderRadius: 12, border: 'none', background: '#113528', color: '#e8efe8', fontSize: 16 }}>
-              <option value="">Bundesstaat</option>
-              {[...new Map(cities.filter(c => (!selectedCountry || String(c.countryId) === String(selectedCountry)) && c.stateId).map(c => [c.stateId, { id: c.stateId, name: c.stateName }])).values()].map(st => (
-                <option key={st.id} value={st.id}>{st.name}</option>
-              ))}
-            </select>
-              <select value={selectedCity} onChange={(e) => setSelectedCity(e.target.value)} style={{ padding: '12px 16px', borderRadius: 12, border: 'none', background: '#113528', color: '#e8efe8', fontSize: 16 }}>
-              <option value="">Stadt</option>
-              {cities.filter(c => (!selectedCountry || String(c.countryId) === String(selectedCountry)) && (!selectedState || String(c.stateId) === String(selectedState))).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+            <div className="hero-controls" style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 12, flexWrap: 'wrap', position: 'relative', zIndex: 100, overflow: 'visible' }}>
+              <select value={selectedSport} onChange={(e) => setSelectedSport(e.target.value)} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#113528', color: '#e8efe8', fontSize: 15, position: 'relative', minWidth: 200, zIndex: 1 }}>
+                <option value="">Sportart</option>
+                {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+              </select>
+              
+              <div style={{ minWidth: 200, position: 'relative' }}>
+                <LocationSelector
+                  cities={cities}
+                  countries={countries}
+                  states={states}
+                  value={selectedCityName}
+                  onChange={(cityName, cityId) => {
+                    setSelectedCityName(cityName);
+                    setSelectedCity(String(cityId));
+                  }}
+                  placeholder="Stadt"
+                />
+              </div>
+              
               <button
-              onClick={() => {
-                const qp = new URLSearchParams();
-                if (selectedSport) qp.set('sportId', selectedSport);
-                if (selectedCity) qp.set('cityId', selectedCity);
-                if (selectedState) qp.set('stateId', selectedState);
-                if (selectedCountry) qp.set('countryId', selectedCountry);
-                navigate(`/match-search?${qp.toString()}`);
-              }}
-              style={{ background: '#debc7c', color: '#10261f', padding: '12px 20px', borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 16 }}
-              disabled={searching}
-            >{searching ? 'Suche…' : 'Match suchen'}</button>
+                onClick={() => {
+                  const qp = new URLSearchParams();
+                  if (selectedSport) qp.set('sportId', selectedSport);
+                  if (selectedCity) qp.set('cityId', selectedCity);
+                  navigate(`/match-search?${qp.toString()}`);
+                }}
+                style={{ background: '#debc7c', color: '#10261f', padding: '10px 18px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 15 }}
+                disabled={searching}
+              >{searching ? 'Suche…' : 'Match suchen'}</button>
             </div>
           </div>
         </div>
