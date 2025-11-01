@@ -23,12 +23,21 @@ export default function SearchMatchDialog() {
   const [showCreate, setShowCreate] = useState(false);
   const [myLeagues, setMyLeagues] = useState([]);
   const [cmSportId, setCmSportId] = useState('');
+  const [cmCountryId, setCmCountryId] = useState('');
+  const [cmStateId, setCmStateId] = useState('');
   const [cmCityId, setCmCityId] = useState('');
-  // no league for friendly open matches
-  const [cmWhen, setCmWhen] = useState(''); // ISO for datetime-local
+  const [cmWhenType, setCmWhenType] = useState(''); // 'exact' | 'range' | 'fixed'
+  const [cmExactDate, setCmExactDate] = useState('');
+  const [cmExactTime, setCmExactTime] = useState('14:00');
+  const [cmRangeDays, setCmRangeDays] = useState(7);
+  const [cmFixedStart, setCmFixedStart] = useState('');
+  const [cmFixedEnd, setCmFixedEnd] = useState('');
+  const [cmWhen, setCmWhen] = useState(''); // ISO for datetime-local (computed)
   const [cmType, setCmType] = useState('Liga'); // Liga | Freundschaft | Herausforderung
   const [creating, setCreating] = useState(false);
   const [createErr, setCreateErr] = useState('');
+  const [availableLocations, setAvailableLocations] = useState([]);
+  const [loadingLocations, setLoadingLocations] = useState(false);
 
   useEffect(() => {
     let mounted = true;
@@ -43,6 +52,43 @@ export default function SearchMatchDialog() {
     return () => { mounted = false; };
   }, []);
 
+  // Load available locations when sport, city, and datetime are selected
+  useEffect(() => {
+    if (!cmSportId || !cmCityId || !cmWhen) {
+      setAvailableLocations([]);
+      return;
+    }
+
+    let mounted = true;
+    setLoadingLocations(true);
+
+    const params = new URLSearchParams({
+      sport_id: cmSportId,
+      city_id: cmCityId,
+      datetime: cmWhen,
+      duration: 60 // Default 60 minutes
+    });
+
+    fetch(`${API_BASE}/locations/availability?${params.toString()}`)
+      .then(r => {
+        if (!r.ok) throw new Error('Failed to load availability');
+        return r.json();
+      })
+      .then(data => {
+        if (!mounted) return;
+        setAvailableLocations(Array.isArray(data) ? data : []);
+        setLoadingLocations(false);
+      })
+      .catch(err => {
+        console.error('Availability error:', err);
+        if (!mounted) return;
+        setAvailableLocations([]);
+        setLoadingLocations(false);
+      });
+
+    return () => { mounted = false; };
+  }, [cmSportId, cmCityId, cmWhen]);
+
   const countries = useMemo(() => {
     return [...new Map(cities.filter(c => c.countryId).map(c => [c.countryId, { id: c.countryId, name: c.countryName }])).values()];
   }, [cities]);
@@ -52,6 +98,17 @@ export default function SearchMatchDialog() {
   const filteredCities = useMemo(() => {
     return cities.filter(c => (!countryId || String(c.countryId) === String(countryId)) && (!stateId || String(c.stateId) === String(stateId)));
   }, [cities, countryId, stateId]);
+
+  // For create match modal
+  const cmCountries = useMemo(() => {
+    return [...new Map(cities.filter(c => c.countryId).map(c => [c.countryId, { id: c.countryId, name: c.countryName }])).values()];
+  }, [cities]);
+  const cmStates = useMemo(() => {
+    return [...new Map(cities.filter(c => (!cmCountryId || String(c.countryId) === String(cmCountryId)) && c.stateId).map(c => [c.stateId, { id: c.stateId, name: c.stateName }])).values()];
+  }, [cities, cmCountryId]);
+  const cmFilteredCities = useMemo(() => {
+    return cities.filter(c => (!cmCountryId || String(c.countryId) === String(cmCountryId)) && (!cmStateId || String(c.stateId) === String(cmStateId)));
+  }, [cities, cmCountryId, cmStateId]);
 
   async function runSearch(paramsOverride) {
     const qp = new URLSearchParams({
@@ -240,50 +297,416 @@ export default function SearchMatchDialog() {
 
       {/* Create Match Modal */}
       {showCreate && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', display: 'grid', placeItems: 'center', zIndex: 1000 }}>
-          <div className="ml-card" style={{ width: 520, maxWidth: '94vw' }}>
-            <h2 style={{ marginTop: 0 }}>Neues Match erstellen</h2>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-              {[1,2,3].map((n,i) => (
-                <div key={n} className="ml-chip" style={{ opacity: i===0?1:0.6 }}><span className="ml-status-dot" /> Schritt {n}</div>
-              ))}
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'grid', placeItems: 'center', zIndex: 1000, padding: '20px' }} onClick={closeCreate}>
+          <div className="ml-card" style={{ width: 600, maxWidth: '100%', maxHeight: '90vh', overflowY: 'auto' }} onClick={(e) => e.stopPropagation()}>
+            {/* Header */}
+            <div style={{ marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid #1a3c33' }}>
+              <h2 style={{ margin: '0 0 6px 0', fontSize: 22, fontWeight: 700 }}>Öffentliches Match erstellen</h2>
+              <p style={{ margin: 0, color: '#9db', fontSize: 14, lineHeight: 1.4 }}>
+                Erstelle ein öffentliches Match, das andere Spieler finden und beitreten können.
+              </p>
             </div>
 
-            <div style={{ display: 'grid', gap: 10 }}>
-              <label style={{ display: 'grid', gap: 6 }}>
-                <span>Sportart</span>
-                <select value={cmSportId} onChange={(e)=>setCmSportId(e.target.value)} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#e8efe8' }}>
-                  <option value="">Bitte wählen</option>
-                  {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-              </label>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                <label style={{ display: 'grid', gap: 6 }}>
-                  <span>Ort</span>
-                  <select value={cmCityId} onChange={(e)=>setCmCityId(e.target.value)} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#e8efe8' }}>
-                    <option value="">Stadt wählen</option>
-                    {cities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+            <div style={{ display: 'grid', gap: 20 }}>
+              {/* 1. Sport und Ort */}
+              <div style={{ display: 'grid', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ 
+                    width: 28, 
+                    height: 28, 
+                    borderRadius: '50%', 
+                    background: cmSportId && cmCityId ? '#debc7c' : '#2f6b57', 
+                    color: cmSportId && cmCityId ? '#10261f' : '#e8efe8',
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    fontWeight: 700,
+                    fontSize: 14
+                  }}>1</div>
+                  <span style={{ fontWeight: 700, fontSize: 16, color: '#debc7c' }}>Sport und Ort</span>
+                </div>
+                
+                <div style={{ display: 'grid', gap: 10, marginLeft: 36 }}>
+                  <select value={cmSportId} onChange={(e)=>setCmSportId(e.target.value)} style={{ padding: '12px 14px', borderRadius: 10, border: '2px solid #2f6b57', background: '#0e2a22', color: '#e8efe8', fontSize: 14, fontWeight: 500 }}>
+                    <option value="">🏃 Sportart wählen</option>
+                    {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
-                </label>
-                <label style={{ display: 'grid', gap: 6 }}>
-                  <span>Datum/Zeit</span>
-                  <input type="datetime-local" value={cmWhen} onChange={(e)=>setCmWhen(e.target.value)} style={{ padding: '10px 14px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#e8efe8' }} />
-                </label>
+                  
+                  <select value={cmCountryId} onChange={(e)=>{setCmCountryId(e.target.value); setCmStateId(''); setCmCityId('');}} style={{ padding: '12px 14px', borderRadius: 10, border: '2px solid #2f6b57', background: '#0e2a22', color: '#e8efe8', fontSize: 14, fontWeight: 500 }}>
+                    <option value="">🌍 Land wählen</option>
+                    {cmCountries.map(co => <option key={co.id} value={co.id}>{co.name}</option>)}
+                  </select>
+
+                  {cmCountryId && (
+                    <select value={cmStateId} onChange={(e)=>{setCmStateId(e.target.value); setCmCityId('');}} style={{ padding: '12px 14px', borderRadius: 10, border: '2px solid #2f6b57', background: '#0e2a22', color: '#e8efe8', fontSize: 14, fontWeight: 500 }}>
+                      <option value="">📍 Bundesstaat wählen</option>
+                      {cmStates.map(st => <option key={st.id} value={st.id}>{st.name}</option>)}
+                    </select>
+                  )}
+
+                  {(cmCountryId || cmStateId) && (
+                    <select value={cmCityId} onChange={(e)=>setCmCityId(e.target.value)} style={{ padding: '12px 14px', borderRadius: 10, border: '2px solid #2f6b57', background: '#0e2a22', color: '#e8efe8', fontSize: 14, fontWeight: 500 }}>
+                      <option value="">🏙️ Stadt wählen</option>
+                      {cmFilteredCities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                    </select>
+                  )}
+                </div>
               </div>
 
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                {['Liga','Freundschaft','Herausforderung'].map(t => (
-                  <button key={t} type="button" onClick={()=>setCmType(t)} className="ml-btn-secondary" style={{ background: cmType===t?'#10352a':'#0e2a22' }}>{t}</button>
-                ))}
+              {/* 2. Level */}
+              <div style={{ display: 'grid', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ 
+                    width: 28, 
+                    height: 28, 
+                    borderRadius: '50%', 
+                    background: cmType ? '#debc7c' : '#2f6b57', 
+                    color: cmType ? '#10261f' : '#e8efe8',
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    fontWeight: 700,
+                    fontSize: 14
+                  }}>2</div>
+                  <span style={{ fontWeight: 700, fontSize: 16, color: '#debc7c' }}>Level</span>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginLeft: 36 }}>
+                  {['Liga','Freundschaft','Herausforderung'].map(t => (
+                    <button key={t} type="button" onClick={()=>setCmType(t)} style={{ 
+                      padding: '12px 10px', 
+                      borderRadius: 8, 
+                      border: cmType===t ? '2px solid #debc7c' : '2px solid #2f6b57', 
+                      background: cmType===t ? '#1a3c33' : '#0e2a22',
+                      color: cmType===t ? '#debc7c' : '#e8efe8',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: 13,
+                      transition: 'all 0.2s'
+                    }}>{t}</button>
+                  ))}
+                </div>
               </div>
 
-              {/* No league selection for friendly open matches */}
+              {/* 3. Gewünschter Zeitpunkt */}
+              <div style={{ display: 'grid', gap: 10 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ 
+                    width: 28, 
+                    height: 28, 
+                    borderRadius: '50%', 
+                    background: cmWhenType ? '#debc7c' : '#2f6b57', 
+                    color: cmWhenType ? '#10261f' : '#e8efe8',
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'center', 
+                    fontWeight: 700,
+                    fontSize: 14
+                  }}>3</div>
+                  <span style={{ fontWeight: 700, fontSize: 16, color: '#debc7c' }}>Gewünschter Zeitpunkt</span>
+                </div>
+                
+                {/* Wann-Typ Auswahl */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginLeft: 36 }}>
+                  <button 
+                    type="button"
+                    onClick={() => setCmWhenType('exact')}
+                    style={{
+                      padding: '14px 8px',
+                      borderRadius: 10,
+                      border: cmWhenType === 'exact' ? '2px solid #debc7c' : '2px solid #2f6b57',
+                      background: cmWhenType === 'exact' ? '#1a3c33' : '#0e2a22',
+                      color: cmWhenType === 'exact' ? '#debc7c' : '#e8efe8',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: 13,
+                      textAlign: 'center',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4
+                    }}
+                  >
+                    <div style={{ fontSize: 20 }}>📅</div>
+                    <div>Exakt</div>
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setCmWhenType('range')}
+                    style={{
+                      padding: '14px 8px',
+                      borderRadius: 10,
+                      border: cmWhenType === 'range' ? '2px solid #debc7c' : '2px solid #2f6b57',
+                      background: cmWhenType === 'range' ? '#1a3c33' : '#0e2a22',
+                      color: cmWhenType === 'range' ? '#debc7c' : '#e8efe8',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: 13,
+                      textAlign: 'center',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4
+                    }}
+                  >
+                    <div style={{ fontSize: 20 }}>📆</div>
+                    <div>Zeitraum</div>
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => setCmWhenType('fixed')}
+                    style={{
+                      padding: '14px 8px',
+                      borderRadius: 10,
+                      border: cmWhenType === 'fixed' ? '2px solid #debc7c' : '2px solid #2f6b57',
+                      background: cmWhenType === 'fixed' ? '#1a3c33' : '#0e2a22',
+                      color: cmWhenType === 'fixed' ? '#debc7c' : '#e8efe8',
+                      cursor: 'pointer',
+                      fontWeight: 600,
+                      fontSize: 13,
+                      textAlign: 'center',
+                      transition: 'all 0.2s',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 4
+                    }}
+                  >
+                    <div style={{ fontSize: 20 }}>🗓️</div>
+                    <div>Zeitfenster</div>
+                  </button>
+                </div>
 
-              {createErr ? <div style={{ color: 'salmon' }}>{createErr}</div> : null}
+                {/* Option 1: Exaktes Datum & Uhrzeit */}
+                {cmWhenType === 'exact' && (
+                  <div style={{ marginLeft: 36, padding: 14, background: 'rgba(26, 60, 51, 0.3)', borderRadius: 10, border: '1px solid #2f6b57' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 12, color: '#9db', marginBottom: 6, fontWeight: 600 }}>Datum</label>
+                        <input 
+                          type="date" 
+                          value={cmExactDate} 
+                          onChange={(e) => setCmExactDate(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          style={{ padding: '10px 12px', borderRadius: 8, border: '2px solid #2f6b57', background: '#0e2a22', color: '#e8efe8', fontSize: 14, width: '100%' }} 
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 12, color: '#9db', marginBottom: 6, fontWeight: 600 }}>Uhrzeit</label>
+                        <input 
+                          type="time" 
+                          value={cmExactTime} 
+                          onChange={(e) => setCmExactTime(e.target.value)}
+                          style={{ padding: '10px 12px', borderRadius: 8, border: '2px solid #2f6b57', background: '#0e2a22', color: '#e8efe8', fontSize: 14, width: '100%' }} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: 6 }}>
-                <button onClick={closeCreate} className="ml-btn-secondary">Abbrechen</button>
-                <button onClick={handleCreate} disabled={creating} style={{ background: '#debc7c', color: '#10261f', padding: '10px 14px', borderRadius: 10, border: 'none', fontWeight: 800 }}>{creating ? 'Erstelle…' : 'Match erstellen'}</button>
+                {/* Option 2: Zeitraum */}
+                {cmWhenType === 'range' && (
+                  <div style={{ marginLeft: 36, padding: 14, background: 'rgba(26, 60, 51, 0.3)', borderRadius: 10, border: '1px solid #2f6b57' }}>
+                    <div style={{ fontSize: 12, color: '#9db', marginBottom: 10, fontWeight: 600 }}>In den nächsten:</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+                      {[
+                        { label: '3 Tage', days: 3 },
+                        { label: '7 Tage', days: 7 },
+                        { label: '14 Tage', days: 14 },
+                        { label: '1 Monat', days: 30 },
+                        { label: '2 Monate', days: 60 },
+                        { label: '3 Monate', days: 90 },
+                      ].map(opt => (
+                        <button
+                          key={opt.days}
+                          type="button"
+                          onClick={() => setCmRangeDays(opt.days)}
+                          style={{
+                            padding: '10px 8px',
+                            borderRadius: 8,
+                            border: cmRangeDays === opt.days ? '2px solid #debc7c' : '2px solid #2f6b57',
+                            background: cmRangeDays === opt.days ? '#1a3c33' : '#0e2a22',
+                            color: cmRangeDays === opt.days ? '#debc7c' : '#e8efe8',
+                            cursor: 'pointer',
+                            fontSize: 13,
+                            fontWeight: 600,
+                            transition: 'all 0.2s'
+                          }}
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Option 3: Zeitfenster */}
+                {cmWhenType === 'fixed' && (
+                  <div style={{ marginLeft: 36, padding: 14, background: 'rgba(26, 60, 51, 0.3)', borderRadius: 10, border: '1px solid #2f6b57' }}>
+                    <div style={{ display: 'grid', gap: 10 }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 12, color: '#9db', marginBottom: 6, fontWeight: 600 }}>Von (Start-Datum)</label>
+                        <input 
+                          type="date" 
+                          value={cmFixedStart} 
+                          onChange={(e) => setCmFixedStart(e.target.value)}
+                          min={new Date().toISOString().split('T')[0]}
+                          style={{ padding: '10px 12px', borderRadius: 8, border: '2px solid #2f6b57', background: '#0e2a22', color: '#e8efe8', fontSize: 14, width: '100%' }} 
+                        />
+                      </div>
+                      <div>
+                        <label style={{ display: 'block', fontSize: 12, color: '#9db', marginBottom: 6, fontWeight: 600 }}>Bis (End-Datum)</label>
+                        <input 
+                          type="date" 
+                          value={cmFixedEnd} 
+                          onChange={(e) => setCmFixedEnd(e.target.value)}
+                          min={cmFixedStart || new Date().toISOString().split('T')[0]}
+                          style={{ padding: '10px 12px', borderRadius: 8, border: '2px solid #2f6b57', background: '#0e2a22', color: '#e8efe8', fontSize: 14, width: '100%' }} 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Available Locations */}
+              {cmSportId && cmCityId && cmWhen && (
+                <div style={{ marginTop: 8 }}>
+                  <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#debc7c' }}>
+                    Verfügbare Plätze
+                  </h3>
+
+                  {loadingLocations && (
+                    <div style={{ padding: 16, textAlign: 'center', color: '#9db', fontSize: 14 }}>
+                      Suche verfügbare Plätze...
+                    </div>
+                  )}
+
+                  {!loadingLocations && availableLocations.length === 0 && (
+                    <div style={{ padding: 16, textAlign: 'center', color: '#9db', fontSize: 14 }}>
+                      Keine freien Plätze für diese Auswahl verfügbar
+                    </div>
+                  )}
+
+                  {!loadingLocations && availableLocations.length > 0 && (
+                    <div style={{ display: 'grid', gap: 10 }}>
+                      {availableLocations.map(loc => {
+                        const photos = loc.photos ? (typeof loc.photos === 'string' ? JSON.parse(loc.photos) : loc.photos) : [];
+                        const firstPhoto = photos.length > 0 ? photos[0] : null;
+                        const priceText = loc.hourly_rate ? `${loc.hourly_rate}€/h` : 'Preis auf Anfrage';
+
+                        return (
+                          <div 
+                            key={loc.id}
+                            style={{
+                              padding: 12,
+                              border: '2px solid #2f6b57',
+                              borderRadius: 10,
+                              background: '#0b1e19',
+                              display: 'flex',
+                              gap: 12,
+                              alignItems: 'center'
+                            }}
+                          >
+                            {firstPhoto && (
+                              <img 
+                                src={firstPhoto} 
+                                alt={loc.name}
+                                style={{
+                                  width: 50,
+                                  height: 50,
+                                  borderRadius: 8,
+                                  objectFit: 'cover',
+                                  border: '1px solid #2f6b57'
+                                }}
+                              />
+                            )}
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontWeight: 700, fontSize: 14, color: '#e8efe8', marginBottom: 3 }}>
+                                {loc.name}
+                              </div>
+                              {loc.address && (
+                                <div style={{ fontSize: 12, color: '#9db', marginBottom: 4 }}>
+                                  {loc.address}
+                                </div>
+                              )}
+                              <div style={{ fontSize: 13, color: '#debc7c', fontWeight: 600 }}>
+                                {loc.available_slots} {loc.available_slots === 1 ? 'freier Platz' : 'freie Plätze'} • {priceText}
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => {
+                                // TODO: Implement booking logic
+                                alert(`Platz bei ${loc.name} buchen`);
+                              }}
+                              style={{
+                                background: '#debc7c',
+                                color: '#0e2a22',
+                                border: 'none',
+                                padding: '8px 16px',
+                                borderRadius: 8,
+                                fontWeight: 700,
+                                cursor: 'pointer',
+                                fontSize: 13,
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              Platz buchen
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Error Message */}
+              {createErr && (
+                <div style={{ padding: 12, background: '#4a1a1a', border: '1px solid #8a2a2a', borderRadius: 10, color: '#ffa5a5', fontSize: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <span style={{ fontSize: 18 }}>⚠️</span>
+                  <span>{createErr}</span>
+                </div>
+              )}
+
+              {/* Footer Buttons */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, paddingTop: 16, borderTop: '1px solid #1a3c33' }}>
+                <button 
+                  onClick={closeCreate} 
+                  style={{ 
+                    padding: '12px 20px', 
+                    borderRadius: 10, 
+                    border: '2px solid #2f6b57', 
+                    background: 'transparent', 
+                    color: '#e8efe8', 
+                    cursor: 'pointer', 
+                    fontWeight: 600,
+                    fontSize: 14,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Abbrechen
+                </button>
+                <button 
+                  onClick={handleCreate} 
+                  disabled={creating || !cmSportId || !cmCityId || !cmWhenType} 
+                  style={{ 
+                    background: (!cmSportId || !cmCityId || !cmWhenType) ? '#5a5a5a' : '#debc7c', 
+                    color: (!cmSportId || !cmCityId || !cmWhenType) ? '#9a9a9a' : '#10261f', 
+                    padding: '12px 24px', 
+                    borderRadius: 10, 
+                    border: 'none', 
+                    fontWeight: 700,
+                    fontSize: 14,
+                    cursor: creating || !cmSportId || !cmCityId || !cmWhenType ? 'not-allowed' : 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 8
+                  }}
+                >
+                  {creating && <span>⏳</span>}
+                  <span>{creating ? 'Erstelle Match...' : 'Match erstellen'}</span>
+                </button>
               </div>
             </div>
           </div>

@@ -115,11 +115,11 @@ export default function GameDetailPage() {
     const now = new Date();
     const diff = d.getTime() - now.getTime();
     const abs = Math.abs(diff);
-    const days = Math.round(abs / (24*60*60*1000));
+    const days = Math.floor(abs / (24*60*60*1000));
     if (days >= 2) return diff >= 0 ? `in ${days} Tagen` : `vor ${days} Tagen`;
-    const hours = Math.round(abs / (60*60*1000));
-    if (hours >= 2) return diff >= 0 ? `in ${hours} Stunden` : `vor ${hours} Stunden`;
-    const mins = Math.max(1, Math.round(abs / (60*1000)));
+    const hours = Math.floor(abs / (60*60*1000));
+    if (hours >= 1) return diff >= 0 ? `in ${hours} Stunden` : `vor ${hours} Stunden`;
+    const mins = Math.max(1, Math.floor(abs / (60*1000)));
     return diff >= 0 ? `in ${mins} Minuten` : `vor ${mins} Minuten`;
   }, []);
   // fetch league games to build player histories
@@ -524,13 +524,70 @@ export default function GameDetailPage() {
 
         {/* Date + status in one line */}
         <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 20 }}>{formatDate(game.kickoff_at) || 'Termin N.N.'}</div>
+          <div style={{ fontSize: 20 }}>
+            {game.kickoff_at && game.kickoff_end_at ? (
+              <span>Von {formatDate(game.kickoff_at)} bis {formatDate(game.kickoff_end_at)}</span>
+            ) : game.kickoff_at ? (
+              formatDate(game.kickoff_at)
+            ) : game.kickoff_end_at ? (
+              'Zeitraum flexibel'
+            ) : (
+              'Termin offen'
+            )}
+          </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ width: 8, height: 8, background: '#ffd35d', borderRadius: 999 }} />
             <span style={{ color: '#ffd35d' }}>{isCompleted ? 'Beendet' : 'Ausstehend'}</span>
           </div>
-          <div style={{ color: '#9db', fontSize: 14 }}>{game.kickoff_at ? relativeFromNow(game.kickoff_at) : '—'}</div>
+          {game.kickoff_at && (
+            <div style={{ color: '#9db', fontSize: 14 }}>{relativeFromNow(game.kickoff_at)}</div>
+          )}
+          {game.kickoff_end_at && !game.kickoff_at && (
+            <div style={{ color: '#9db', fontSize: 14 }}>Bis {formatDate(game.kickoff_end_at)}</div>
+          )}
         </div>
+        
+        {/* Date mode indicator when not yet assigned opponent */}
+        {(game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away)) && (
+          <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {game.kickoff_at && game.kickoff_end_at && (
+              <div style={{ 
+                padding: '6px 12px', 
+                background: 'rgba(47, 107, 87, 0.2)', 
+                border: '1px solid rgba(47, 107, 87, 0.4)',
+                borderRadius: 8,
+                fontSize: 13,
+                color: '#9db'
+              }}>
+                � Zeitraum
+              </div>
+            )}
+            {game.kickoff_at && !game.kickoff_end_at && (
+              <div style={{ 
+                padding: '6px 12px', 
+                background: 'rgba(47, 107, 87, 0.2)', 
+                border: '1px solid rgba(47, 107, 87, 0.4)',
+                borderRadius: 8,
+                fontSize: 13,
+                color: '#9db'
+              }}>
+                � Festes Datum
+              </div>
+            )}
+            {!game.kickoff_at && !game.kickoff_end_at && (
+              <div style={{ 
+                padding: '6px 12px', 
+                background: 'rgba(47, 107, 87, 0.2)', 
+                border: '1px solid rgba(47, 107, 87, 0.4)',
+                borderRadius: 8,
+                fontSize: 13,
+                color: '#9db'
+              }}>
+                🕐 Datum offen
+              </div>
+            )}
+          </div>
+        )}
 
         {/* VS Row with integrated counters */}
         <div style={{ 
@@ -602,10 +659,20 @@ export default function GameDetailPage() {
                 }}>
                   {submitLoading ? '⏳ Speichere...' : 'Ergebnis speichern'}
                 </button>
-                {(!canSubmit && cannotReason) && (
-                  <div style={{ color: '#ff9999', fontSize: 12, textAlign: 'center', maxWidth: 200 }}>
-                    {cannotReason === 'KICKOFF_NOT_SET' ? 'Termin noch nicht festgelegt' : 
-                     cannotReason === 'LEAGUE_MEMBERS_ONLY' ? 'Nur Liga-Mitglieder' : cannotReason}
+                {(!canSubmit && cannotReason && cannotReason !== 'OPPONENT_NOT_ASSIGNED') && (
+                  <div style={{ 
+                    marginTop: 12,
+                    padding: '10px 16px',
+                    background: 'rgba(255, 200, 100, 0.1)',
+                    border: '1px solid rgba(255, 200, 100, 0.3)',
+                    borderRadius: 8,
+                    fontSize: 13,
+                    color: '#ffc864',
+                    textAlign: 'center',
+                    fontWeight: 500
+                  }}>
+                    {cannotReason === 'KICKOFF_NOT_SET' ? '📅 Termin noch nicht festgelegt' : 
+                     cannotReason === 'LEAGUE_MEMBERS_ONLY' ? '🔒 Nur Liga-Mitglieder' : cannotReason}
                   </div>
                 )}
                 {submitMsg && (
@@ -695,19 +762,118 @@ export default function GameDetailPage() {
         )}
 
         {/* Join match when opponent not yet assigned */}
-        {(token && game && !isParticipant && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away)) && (
-          <div style={{ marginTop: 12 }}>
+        {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away)) && (
+          <div style={{ marginTop: 16 }}>
             {(() => {
               // Check if this is an Open Match (friendly match) - these don't have weekly limits
               const isOpenMatch = game.league === 'Open Matches' || (game.league && game.league.includes('Open Matches'));
               const canJoin = isOpenMatch || !hasWeeklyMatch;
+              
+              // Check if viewer is the match creator
+              const isCreator = viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId);
+              
+              if (isCreator) {
+                // Message for match creator
+                return (
+                  <div style={{ 
+                    padding: '20px', 
+                    background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.2), rgba(47, 107, 87, 0.1))',
+                    border: '2px solid rgba(222, 188, 124, 0.4)',
+                    borderRadius: 14,
+                    textAlign: 'center',
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
+                  }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: '#debc7c', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 24 }}>⏳</span>
+                      Warte auf Gegner...
+                    </div>
+                    <div style={{ color: '#c5d9ce', fontSize: 14, lineHeight: 1.6, marginBottom: 10 }}>
+                      Dein Match ist veröffentlicht und für alle Spieler sichtbar.
+                    </div>
+                    <div style={{ 
+                      display: 'inline-block',
+                      padding: '6px 14px',
+                      background: 'rgba(222, 188, 124, 0.15)',
+                      border: '1px solid rgba(222, 188, 124, 0.3)',
+                      borderRadius: 20,
+                      fontSize: 12,
+                      color: '#debc7c',
+                      fontWeight: 600
+                    }}>
+                      🎯 Spiel aktiv
+                    </div>
+                  </div>
+                );
+              }
+              
+              // Invitation for other players
               return (
                 <>
-                  <button onClick={joinMatch} disabled={!canJoin} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: canJoin ? '#1b4b3d' : '#24463c', color: '#fff', cursor: canJoin ? 'pointer' : 'not-allowed' }}>
-                    {isOpenMatch ? 'Anfrage zum Beitreten senden' : 'Diesem Match beitreten'}
-                  </button>
-                  {!canJoin && !isOpenMatch && <div style={{ marginTop: 6, color: '#ccc' }}>Du hast diese Woche bereits ein Match in dieser Liga.</div>}
-                  {joinMsg && <div style={{ marginTop: 6, color: joinMsg.includes('Beigetreten') ? '#9f9' : '#fcc' }}>{joinMsg}</div>}
+                  <div style={{ 
+                    padding: '20px', 
+                    background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.25), rgba(47, 107, 87, 0.15))',
+                    border: '2px solid rgba(222, 188, 124, 0.5)',
+                    borderRadius: 14,
+                    marginBottom: 12,
+                    boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
+                  }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: '#debc7c', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 24 }}>🏆</span>
+                      Mitspieler gesucht!
+                    </div>
+                    <div style={{ color: '#e8efe8', fontSize: 14, marginBottom: 16, lineHeight: 1.5 }}>
+                      {playerA.name} sucht einen Gegner für dieses Match. Tritt bei und fordere ihn heraus!
+                    </div>
+                    <button 
+                      onClick={joinMatch} 
+                      disabled={!canJoin} 
+                      style={{ 
+                        padding: '14px 24px', 
+                        borderRadius: 12, 
+                        border: 'none',
+                        background: canJoin ? 'linear-gradient(135deg, #debc7c, #c9a75f)' : 'rgba(58, 74, 69, 0.5)', 
+                        color: canJoin ? '#10261f' : '#666',
+                        cursor: canJoin ? 'pointer' : 'not-allowed',
+                        fontWeight: 700,
+                        fontSize: 15,
+                        width: '100%',
+                        boxShadow: canJoin ? '0 6px 16px rgba(222, 188, 124, 0.4)' : 'none',
+                        transition: 'all 0.3s ease',
+                        transform: canJoin ? 'scale(1)' : 'scale(0.98)'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (canJoin) {
+                          e.target.style.transform = 'scale(1.02)';
+                          e.target.style.boxShadow = '0 8px 20px rgba(222, 188, 124, 0.5)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (canJoin) {
+                          e.target.style.transform = 'scale(1)';
+                          e.target.style.boxShadow = '0 6px 16px rgba(222, 188, 124, 0.4)';
+                        }
+                      }}
+                    >
+                      {isOpenMatch ? '✨ Jetzt beitreten' : '⚔️ Challenge annehmen'}
+                    </button>
+                    {!canJoin && !isOpenMatch && (
+                      <div style={{ marginTop: 10, color: '#ccc', fontSize: 13, textAlign: 'center' }}>
+                        Du hast diese Woche bereits ein Match in dieser Liga.
+                      </div>
+                    )}
+                  </div>
+                  {joinMsg && (
+                    <div style={{ 
+                      marginTop: 8, 
+                      padding: '10px',
+                      borderRadius: 8,
+                      background: joinMsg.includes('Beigetreten') ? 'rgba(153, 255, 153, 0.1)' : 'rgba(255, 153, 153, 0.1)',
+                      color: joinMsg.includes('Beigetreten') ? '#9f9' : '#fcc',
+                      textAlign: 'center'
+                    }}>
+                      {joinMsg}
+                    </div>
+                  )}
                 </>
               );
             })()}

@@ -759,6 +759,13 @@ app.post('/open-matches', isAuthenticated, async (req, res) => {
       const when = req.body?.kickoff_at ? new Date(req.body.kickoff_at) : null;
       rec.kickoff_at = when && !isNaN(when) ? when.toISOString() : null;
     }
+    if (Object.prototype.hasOwnProperty.call(info, 'kickoff_end_at')) {
+      const whenEnd = req.body?.kickoff_end_at ? new Date(req.body.kickoff_end_at) : null;
+      rec.kickoff_end_at = whenEnd && !isNaN(whenEnd) ? whenEnd.toISOString() : null;
+    }
+    if (Object.prototype.hasOwnProperty.call(info, 'location_id') && req.body?.location_id) {
+      rec.location_id = Number(req.body.location_id);
+    }
     if (Object.prototype.hasOwnProperty.call(info, 'status')) rec.status = 'open';
     if (Object.prototype.hasOwnProperty.call(info, 'created_at')) rec.created_at = new Date().toISOString();
 
@@ -1149,24 +1156,23 @@ apiRouter.get("/cities/list", async (req, res) => {
   try {
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
     if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
-    const hasCountries = await k.schema.hasTable('countries').catch(() => false);
-    const hasStates = await k.schema.hasTable('states').catch(() => false);
-    const cityCols = await k('cities').columnInfo().catch(() => ({}));
-    const hasCountryId = Object.prototype.hasOwnProperty.call(cityCols, 'country_id');
-    const hasStateId = Object.prototype.hasOwnProperty.call(cityCols, 'state_id');
 
-    let q = k({ c: 'cities' }).select('c.id', 'c.name');
-    if (hasCountryId && hasCountries) {
-      q = q.leftJoin({ co: 'countries' }, 'co.id', 'c.country_id').select({ countryId: 'co.id', countryCode: k.raw('COALESCE(co.iso2, co.code)') , countryName: 'co.name' });
-    } else {
-      q = q.select(k.raw('NULL as countryId'), k.raw("NULL as countryCode"), k.raw("NULL as countryName"));
-    }
-    if (hasStateId && hasStates) {
-      q = q.leftJoin({ st: 'states' }, 'st.id', 'c.state_id').select({ stateId: 'st.id', stateCode: 'st.code', stateName: 'st.name' });
-    } else {
-      q = q.select(k.raw('NULL as stateId'), k.raw('NULL as stateCode'), k.raw('NULL as stateName'));
-    }
-    const rows = await q.orderBy('c.name', 'asc');
+    // Simplified query: directly select the columns we need
+    const rows = await k('cities as c')
+      .leftJoin('countries as co', 'co.id', 'c.country_id')
+      .leftJoin('states as st', 'st.id', 'c.state_id')
+      .select(
+        'c.id',
+        'c.name',
+        'c.country_id as countryId',
+        'c.state_id as stateId',
+        'co.name as countryName',
+        'co.code as countryCode',
+        'st.name as stateName',
+        'st.code as stateCode'
+      )
+      .orderBy('c.name', 'asc');
+    
     return res.json(rows || []);
   } catch (e) {
     console.error("GET /cities/list failed:", e && (e.stack || e.message || e));
@@ -1178,24 +1184,23 @@ app.get("/cities/list", async (req, res) => {
   try {
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
     if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
-    const hasCountries = await k.schema.hasTable('countries').catch(() => false);
-    const hasStates = await k.schema.hasTable('states').catch(() => false);
-    const cityCols = await k('cities').columnInfo().catch(() => ({}));
-    const hasCountryId = Object.prototype.hasOwnProperty.call(cityCols, 'country_id');
-    const hasStateId = Object.prototype.hasOwnProperty.call(cityCols, 'state_id');
 
-    let q = k({ c: 'cities' }).select('c.id', 'c.name');
-    if (hasCountryId && hasCountries) {
-      q = q.leftJoin({ co: 'countries' }, 'co.id', 'c.country_id').select({ countryId: 'co.id', countryCode: k.raw('COALESCE(co.iso2, co.code)') , countryName: 'co.name' });
-    } else {
-      q = q.select(k.raw('NULL as countryId'), k.raw("NULL as countryCode"), k.raw("NULL as countryName"));
-    }
-    if (hasStateId && hasStates) {
-      q = q.leftJoin({ st: 'states' }, 'st.id', 'c.state_id').select({ stateId: 'st.id', stateCode: 'st.code', stateName: 'st.name' });
-    } else {
-      q = q.select(k.raw('NULL as stateId'), k.raw('NULL as stateCode'), k.raw('NULL as stateName'));
-    }
-    const rows = await q.orderBy('c.name', 'asc');
+    // Simplified query: directly select the columns we need
+    const rows = await k('cities as c')
+      .leftJoin('countries as co', 'co.id', 'c.country_id')
+      .leftJoin('states as st', 'st.id', 'c.state_id')
+      .select(
+        'c.id',
+        'c.name',
+        'c.country_id as countryId',
+        'c.state_id as stateId',
+        'co.name as countryName',
+        'co.code as countryCode',
+        'st.name as stateName',
+        'st.code as stateCode'
+      )
+      .orderBy('c.name', 'asc');
+    
     return res.json(rows || []);
   } catch (e) {
     console.error("GET /cities/list (root) failed:", e && (e.stack || e.message || e));
@@ -1232,6 +1237,161 @@ app.get('/countries', async (req, res) => {
     return res.json(rows || []);
   } catch (e) {
     console.error('GET /countries (root) failed:', e && (e.stack || e.message || e));
+    return res.status(500).json({ error: 'Datenbankfehler' });
+  }
+});
+
+// Canonical list endpoints expected by frontend
+apiRouter.get('/countries/list', async (req, res) => {
+  try {
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+    const hasCountries = await k.schema.hasTable('countries').catch(() => false);
+    if (!hasCountries) return res.json([]);
+    const colInfo = await k('countries').columnInfo().catch(() => ({}));
+    const hasIso2 = Object.prototype.hasOwnProperty.call(colInfo, 'iso2');
+    const rows = await k('countries').select('id', hasIso2 ? { code: 'iso2' } : { code: 'code' }, 'name').orderBy('name');
+    return res.json(rows || []);
+  } catch (e) {
+    console.error('GET /countries/list failed', e && (e.stack || e.message || e));
+    return res.status(500).json({ error: 'Datenbankfehler' });
+  }
+});
+
+app.get('/countries/list', async (req, res) => {
+  try {
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+    const hasCountries = await k.schema.hasTable('countries').catch(() => false);
+    if (!hasCountries) return res.json([]);
+    const colInfo = await k('countries').columnInfo().catch(() => ({}));
+    const hasIso2 = Object.prototype.hasOwnProperty.call(colInfo, 'iso2');
+    const rows = await k('countries').select('id', hasIso2 ? { code: 'iso2' } : { code: 'code' }, 'name').orderBy('name');
+    return res.json(rows || []);
+  } catch (e) {
+    console.error('GET /countries/list (root) failed', e && (e.stack || e.message || e));
+    return res.status(500).json({ error: 'Datenbankfehler' });
+  }
+});
+
+// Location nearest city endpoint (GPS-based)
+apiRouter.get('/location/nearest', async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+    if (!lat || !lon) return res.status(400).json({ error: 'Missing lat or lon parameter' });
+    
+    const latitude = parseFloat(lat);
+    const longitude = parseFloat(lon);
+    if (isNaN(latitude) || isNaN(longitude)) {
+      return res.status(400).json({ error: 'Invalid coordinates' });
+    }
+
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+    
+    const hasCities = await k.schema.hasTable('cities').catch(() => false);
+    if (!hasCities) return res.json({ city: null });
+
+    // Get all cities with coordinates and calculate distance
+    // Using Haversine formula approximation
+    const cities = await k('cities')
+      .select('cities.id', 'cities.name', 'cities.latitude', 'cities.longitude',
+              { countryId: 'cities.country_id' }, { stateId: 'cities.state_id' })
+      .whereNotNull('cities.latitude')
+      .whereNotNull('cities.longitude');
+
+    if (!cities || cities.length === 0) {
+      return res.json({ city: null });
+    }
+
+    // Calculate distances and find nearest
+    let nearest = null;
+    let minDistance = Infinity;
+
+    for (const city of cities) {
+      const cityLat = parseFloat(city.latitude);
+      const cityLon = parseFloat(city.longitude);
+      if (isNaN(cityLat) || isNaN(cityLon)) continue;
+
+      // Haversine distance in km
+      const R = 6371; // Earth radius in km
+      const dLat = (cityLat - latitude) * Math.PI / 180;
+      const dLon = (cityLon - longitude) * Math.PI / 180;
+      const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                Math.cos(latitude * Math.PI / 180) * Math.cos(cityLat * Math.PI / 180) *
+                Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      const distance = R * c;
+
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearest = city;
+      }
+    }
+
+    if (!nearest) {
+      return res.json({ city: null });
+    }
+
+    // Get country and state info if available
+    let country = null;
+    let state = null;
+
+    if (nearest.countryId) {
+      country = await k('countries').where('id', nearest.countryId).first().catch(() => null);
+    }
+
+    if (nearest.stateId) {
+      state = await k('states').where('id', nearest.stateId).first().catch(() => null);
+    }
+
+    return res.json({
+      city: {
+        id: nearest.id,
+        name: nearest.name,
+        countryId: nearest.countryId,
+        stateId: nearest.stateId,
+        distance: Math.round(minDistance * 10) / 10 // rounded to 1 decimal
+      },
+      country: country ? { id: country.id, code: country.code || country.iso2, name: country.name } : null,
+      state: state ? { id: state.id, code: state.code, name: state.name } : null
+    });
+
+  } catch (e) {
+    console.error('GET /location/nearest failed', e && (e.stack || e.message || e));
+    return res.status(500).json({ error: 'Datenbankfehler' });
+  }
+});
+
+// States list endpoints (for regions / Bundesländer)
+apiRouter.get('/states/list', async (req, res) => {
+  try {
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+    const hasStates = await k.schema.hasTable('states').catch(() => false);
+    if (!hasStates) return res.json([]);
+    const rows = await k('states')
+      .select('id', { countryId: 'country_id' }, 'code', 'name', 'type')
+      .orderBy('name');
+    return res.json(rows || []);
+  } catch (e) {
+    console.error('GET /states/list failed', e && (e.stack || e.message || e));
+    return res.status(500).json({ error: 'Datenbankfehler' });
+  }
+});
+
+app.get('/states/list', async (req, res) => {
+  try {
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+    const hasStates = await k.schema.hasTable('states').catch(() => false);
+    if (!hasStates) return res.json([]);
+    const rows = await k('states')
+      .select('id', { countryId: 'country_id' }, 'code', 'name', 'type')
+      .orderBy('name');
+    return res.json(rows || []);
+  } catch (e) {
+    console.error('GET /states/list (root) failed', e && (e.stack || e.message || e));
     return res.status(500).json({ error: 'Datenbankfehler' });
   }
 });
@@ -1557,6 +1717,7 @@ const slotRoutes = require('./src/routes/slots');
 const bookingRoutes = require('./routes/bookings');
 const bookingStatsRoutes = require('./routes/booking-stats');
 const slotGeneratorRoutes = require('./routes/slot-generator');
+const bookingSubscriptionsRoutes = require('./routes/booking-subscriptions');
 
 apiRouter.use('/locations', locationRoutes({ db }));
 apiRouter.use('/assets', assetRoutes({ db }));
@@ -1564,6 +1725,7 @@ apiRouter.use('/slots', slotRoutes({ db }));
 apiRouter.use('/bookings', bookingRoutes);
 apiRouter.use('/booking-stats', bookingStatsRoutes);
 apiRouter.use('/slot-generator', slotGeneratorRoutes);
+apiRouter.use('/booking-subscriptions', bookingSubscriptionsRoutes);
 
 // Mount all remaining API routes under /api prefix
 app.use('/api', apiRouter);

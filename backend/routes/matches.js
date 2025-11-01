@@ -527,6 +527,8 @@ module.exports = function matchesRoutes({ db }) {
         .select(
           'm.id',
           'm.kickoff_at',
+          ...(Object.prototype.hasOwnProperty.call(info, 'kickoff_end_at') ? ['m.kickoff_end_at'] : []),
+          ...(Object.prototype.hasOwnProperty.call(info, 'location_id') ? ['m.location_id'] : []),
           'm.location',
           'm.home_user_id',
           'm.away_user_id',

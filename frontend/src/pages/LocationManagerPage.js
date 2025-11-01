@@ -231,6 +231,12 @@ export default function LocationManagerPage() {
           🏟️ Meine Assets
         </button>
         <button
+          onClick={() => setActiveTab('bookings')}
+          style={{...styles.tab, ...(activeTab === 'bookings' ? styles.tabActive : {})}}
+        >
+          🎫 Platz buchen & Abos
+        </button>
+        <button
           onClick={() => setActiveTab('reporting')}
           style={{...styles.tab, ...(activeTab === 'reporting' ? styles.tabActive : {})}}
         >
@@ -256,6 +262,13 @@ export default function LocationManagerPage() {
             setSelectedAsset={setSelectedAsset}
             locations={locations}
             onUpdate={() => { loadLocations(); loadAllAssets(); }}
+            token={token}
+          />
+        )}
+        {activeTab === 'bookings' && (
+          <BookingsAndSubscriptionsTab 
+            locations={locations}
+            assets={assets}
             token={token}
           />
         )}
@@ -1080,6 +1093,683 @@ function SlotForm({ assetId, date, onClose, onSave, token }) {
 }
 
 /**
+ * Tab: Bookings and Subscriptions - Create manual bookings and recurring subscriptions
+ */
+function BookingsAndSubscriptionsTab({ locations, assets, token }) {
+  const [mode, setMode] = useState('single'); // 'single' or 'subscription'
+  const [formData, setFormData] = useState({
+    locationId: '',
+    assetId: '',
+    userId: '',
+    date: '',
+    startTime: '',
+    endTime: '',
+    price: '',
+    // Subscription fields
+    frequency: 'weekly', // 'weekly', 'monthly'
+    dayOfWeek: 1, // 1=Monday, 7=Sunday
+    dayOfMonth: 1, // 1-31
+    startDate: '',
+    endDate: '',
+    duration: 60 // minutes
+  });
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [subscriptions, setSubscriptions] = useState([]);
+  const [recentBookings, setRecentBookings] = useState([]);
+
+  useEffect(() => {
+    loadSubscriptions();
+    loadRecentBookings();
+  }, []);
+
+  async function loadSubscriptions() {
+    try {
+      const res = await fetch(`${API_BASE}/booking-subscriptions/list`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setSubscriptions(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Failed to load subscriptions:', err);
+    }
+  }
+
+  async function loadRecentBookings() {
+    try {
+      const res = await fetch(`${API_BASE}/bookings?limit=10`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setRecentBookings(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Failed to load bookings:', err);
+    }
+  }
+
+  const handleChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Auto-fill asset list when location changes
+    if (field === 'locationId') {
+      setFormData(prev => ({ ...prev, assetId: '' }));
+    }
+  };
+
+  const availableAssets = formData.locationId 
+    ? assets.filter(a => String(a.location_id) === String(formData.locationId))
+    : assets;
+
+  async function handleSubmitSingleBooking(e) {
+    e.preventDefault();
+    if (!formData.locationId || !formData.assetId || !formData.date || !formData.startTime || !formData.endTime) {
+      setMessage('❌ Bitte alle Pflichtfelder ausfüllen');
+      return;
+    }
+
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const startDateTime = `${formData.date}T${formData.startTime}:00`;
+      const endDateTime = `${formData.date}T${formData.endTime}:00`;
+
+      const res = await fetch(`${API_BASE}/bookings/manual`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          asset_id: parseInt(formData.assetId),
+          user_id: formData.userId ? parseInt(formData.userId) : null,
+          start_time: startDateTime,
+          end_time: endDateTime,
+          price: formData.price ? parseFloat(formData.price) : null,
+          status: 'confirmed'
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Buchung fehlgeschlagen');
+      }
+
+      setMessage('✅ Buchung erfolgreich erstellt!');
+      setFormData(prev => ({ ...prev, date: '', startTime: '', endTime: '', userId: '', price: '' }));
+      loadRecentBookings();
+    } catch (err) {
+      setMessage(`❌ ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleSubmitSubscription(e) {
+    e.preventDefault();
+    if (!formData.locationId || !formData.assetId || !formData.startDate || !formData.endDate || !formData.startTime) {
+      setMessage('❌ Bitte alle Pflichtfelder ausfüllen');
+      return;
+    }
+
+    setLoading(true);
+    setMessage('');
+
+    try {
+      const res = await fetch(`${API_BASE}/booking-subscriptions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          asset_id: parseInt(formData.assetId),
+          user_id: formData.userId ? parseInt(formData.userId) : null,
+          frequency: formData.frequency,
+          day_of_week: formData.frequency === 'weekly' ? parseInt(formData.dayOfWeek) : null,
+          day_of_month: formData.frequency === 'monthly' ? parseInt(formData.dayOfMonth) : null,
+          start_time: formData.startTime,
+          duration: parseInt(formData.duration),
+          start_date: formData.startDate,
+          end_date: formData.endDate,
+          price: formData.price ? parseFloat(formData.price) : null
+        })
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Abo-Erstellung fehlgeschlagen');
+      }
+
+      setMessage('✅ Abo erfolgreich erstellt! Buchungen werden automatisch generiert.');
+      setFormData(prev => ({ 
+        ...prev, 
+        startDate: '', 
+        endDate: '', 
+        startTime: '', 
+        userId: '', 
+        price: '',
+        duration: 60
+      }));
+      loadSubscriptions();
+      loadRecentBookings();
+    } catch (err) {
+      setMessage(`❌ ${err.message}`);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function deleteSubscription(subId) {
+    if (!window.confirm('Abo wirklich löschen? Zukünftige Buchungen werden entfernt.')) return;
+    
+    try {
+      const res = await fetch(`${API_BASE}/booking-subscriptions/${subId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+
+      if (!res.ok) throw new Error('Löschen fehlgeschlagen');
+
+      setMessage('✅ Abo gelöscht');
+      loadSubscriptions();
+    } catch (err) {
+      setMessage(`❌ ${err.message}`);
+    }
+  }
+
+  const weekDays = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
+
+  return (
+    <div style={styles.tabContent}>
+      <h2 style={styles.sectionTitle}>🎫 Platz buchen & Abos</h2>
+      <p style={{color: '#9ca3af', marginBottom: 24}}>
+        Erstelle manuelle Buchungen oder richte wiederkehrende Abos ein
+      </p>
+
+      {/* Mode Toggle */}
+      <div style={{display: 'flex', gap: 12, marginBottom: 24}}>
+        <button
+          onClick={() => setMode('single')}
+          style={{
+            padding: '12px 24px',
+            borderRadius: 8,
+            border: mode === 'single' ? '2px solid #10b981' : '1px solid #374151',
+            background: mode === 'single' ? '#064e3b' : '#1f2937',
+            color: '#e5e7eb',
+            fontWeight: 600,
+            cursor: 'pointer'
+          }}
+        >
+          📅 Einzelbuchung
+        </button>
+        <button
+          onClick={() => setMode('subscription')}
+          style={{
+            padding: '12px 24px',
+            borderRadius: 8,
+            border: mode === 'subscription' ? '2px solid #3b82f6' : '1px solid #374151',
+            background: mode === 'subscription' ? '#1e3a8a' : '#1f2937',
+            color: '#e5e7eb',
+            fontWeight: 600,
+            cursor: 'pointer'
+          }}
+        >
+          🔄 Abo-Buchung
+        </button>
+      </div>
+
+      {/* Single Booking Form */}
+      {mode === 'single' && (
+        <form onSubmit={handleSubmitSingleBooking} style={{
+          background: '#1f2937',
+          padding: 24,
+          borderRadius: 12,
+          border: '1px solid #374151',
+          marginBottom: 32
+        }}>
+          <h3 style={{color: '#e5e7eb', marginBottom: 20}}>Neue Einzelbuchung</h3>
+          
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16}}>
+            <div>
+              <label style={styles.formLabel}>Location *</label>
+              <select
+                value={formData.locationId}
+                onChange={(e) => handleChange('locationId', e.target.value)}
+                style={styles.formInput}
+                required
+              >
+                <option value="">Wählen...</option>
+                {locations.map(loc => (
+                  <option key={loc.id} value={loc.id}>{loc.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={styles.formLabel}>Asset *</label>
+              <select
+                value={formData.assetId}
+                onChange={(e) => handleChange('assetId', e.target.value)}
+                style={styles.formInput}
+                required
+                disabled={!formData.locationId}
+              >
+                <option value="">Wählen...</option>
+                {availableAssets.map(asset => (
+                  <option key={asset.id} value={asset.id}>{asset.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={styles.formLabel}>User ID (optional)</label>
+              <input
+                type="number"
+                value={formData.userId}
+                onChange={(e) => handleChange('userId', e.target.value)}
+                style={styles.formInput}
+                placeholder="Leer für anonyme Buchung"
+              />
+            </div>
+
+            <div>
+              <label style={styles.formLabel}>Datum *</label>
+              <input
+                type="date"
+                value={formData.date}
+                onChange={(e) => handleChange('date', e.target.value)}
+                style={styles.formInput}
+                required
+              />
+            </div>
+
+            <div>
+              <label style={styles.formLabel}>Startzeit *</label>
+              <input
+                type="time"
+                value={formData.startTime}
+                onChange={(e) => handleChange('startTime', e.target.value)}
+                style={styles.formInput}
+                required
+              />
+            </div>
+
+            <div>
+              <label style={styles.formLabel}>Endzeit *</label>
+              <input
+                type="time"
+                value={formData.endTime}
+                onChange={(e) => handleChange('endTime', e.target.value)}
+                style={styles.formInput}
+                required
+              />
+            </div>
+
+            <div>
+              <label style={styles.formLabel}>Preis (€)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => handleChange('price', e.target.value)}
+                style={styles.formInput}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              marginTop: 20,
+              padding: '12px 24px',
+              borderRadius: 8,
+              border: 'none',
+              background: loading ? '#6b7280' : 'linear-gradient(135deg, #10b981, #059669)',
+              color: '#fff',
+              fontWeight: 700,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontSize: 15
+            }}
+          >
+            {loading ? '⏳ Erstelle...' : '✅ Buchung erstellen'}
+          </button>
+        </form>
+      )}
+
+      {/* Subscription Form */}
+      {mode === 'subscription' && (
+        <form onSubmit={handleSubmitSubscription} style={{
+          background: '#1f2937',
+          padding: 24,
+          borderRadius: 12,
+          border: '1px solid #374151',
+          marginBottom: 32
+        }}>
+          <h3 style={{color: '#e5e7eb', marginBottom: 20}}>Neues Abo erstellen</h3>
+          
+          <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16}}>
+            <div>
+              <label style={styles.formLabel}>Location *</label>
+              <select
+                value={formData.locationId}
+                onChange={(e) => handleChange('locationId', e.target.value)}
+                style={styles.formInput}
+                required
+              >
+                <option value="">Wählen...</option>
+                {locations.map(loc => (
+                  <option key={loc.id} value={loc.id}>{loc.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={styles.formLabel}>Asset *</label>
+              <select
+                value={formData.assetId}
+                onChange={(e) => handleChange('assetId', e.target.value)}
+                style={styles.formInput}
+                required
+                disabled={!formData.locationId}
+              >
+                <option value="">Wählen...</option>
+                {availableAssets.map(asset => (
+                  <option key={asset.id} value={asset.id}>{asset.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={styles.formLabel}>User ID (optional)</label>
+              <input
+                type="number"
+                value={formData.userId}
+                onChange={(e) => handleChange('userId', e.target.value)}
+                style={styles.formInput}
+                placeholder="Leer für anonyme Buchung"
+              />
+            </div>
+
+            <div>
+              <label style={styles.formLabel}>Frequenz *</label>
+              <select
+                value={formData.frequency}
+                onChange={(e) => handleChange('frequency', e.target.value)}
+                style={styles.formInput}
+                required
+              >
+                <option value="weekly">Wöchentlich</option>
+                <option value="monthly">Monatlich</option>
+              </select>
+            </div>
+
+            {formData.frequency === 'weekly' && (
+              <div>
+                <label style={styles.formLabel}>Wochentag *</label>
+                <select
+                  value={formData.dayOfWeek}
+                  onChange={(e) => handleChange('dayOfWeek', e.target.value)}
+                  style={styles.formInput}
+                  required
+                >
+                  {weekDays.map((day, idx) => (
+                    <option key={idx} value={idx + 1}>{day}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {formData.frequency === 'monthly' && (
+              <div>
+                <label style={styles.formLabel}>Tag im Monat *</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="31"
+                  value={formData.dayOfMonth}
+                  onChange={(e) => handleChange('dayOfMonth', e.target.value)}
+                  style={styles.formInput}
+                  required
+                />
+              </div>
+            )}
+
+            <div>
+              <label style={styles.formLabel}>Startzeit *</label>
+              <input
+                type="time"
+                value={formData.startTime}
+                onChange={(e) => handleChange('startTime', e.target.value)}
+                style={styles.formInput}
+                required
+              />
+            </div>
+
+            <div>
+              <label style={styles.formLabel}>Dauer (Minuten) *</label>
+              <input
+                type="number"
+                min="15"
+                step="15"
+                value={formData.duration}
+                onChange={(e) => handleChange('duration', e.target.value)}
+                style={styles.formInput}
+                required
+              />
+            </div>
+
+            <div>
+              <label style={styles.formLabel}>Startdatum *</label>
+              <input
+                type="date"
+                value={formData.startDate}
+                onChange={(e) => handleChange('startDate', e.target.value)}
+                style={styles.formInput}
+                required
+              />
+            </div>
+
+            <div>
+              <label style={styles.formLabel}>Enddatum *</label>
+              <input
+                type="date"
+                value={formData.endDate}
+                onChange={(e) => handleChange('endDate', e.target.value)}
+                style={styles.formInput}
+                required
+              />
+            </div>
+
+            <div>
+              <label style={styles.formLabel}>Preis pro Buchung (€)</label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => handleChange('price', e.target.value)}
+                style={styles.formInput}
+                placeholder="0.00"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            style={{
+              marginTop: 20,
+              padding: '12px 24px',
+              borderRadius: 8,
+              border: 'none',
+              background: loading ? '#6b7280' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
+              color: '#fff',
+              fontWeight: 700,
+              cursor: loading ? 'not-allowed' : 'pointer',
+              fontSize: 15
+            }}
+          >
+            {loading ? '⏳ Erstelle...' : '🔄 Abo erstellen'}
+          </button>
+        </form>
+      )}
+
+      {/* Message */}
+      {message && (
+        <div style={{
+          padding: 16,
+          borderRadius: 8,
+          marginBottom: 24,
+          background: message.includes('✅') ? '#064e3b' : '#7f1d1d',
+          border: message.includes('✅') ? '1px solid #10b981' : '1px solid #ef4444',
+          color: '#e5e7eb'
+        }}>
+          {message}
+        </div>
+      )}
+
+      {/* Active Subscriptions */}
+      {subscriptions.length > 0 && (
+        <div style={{marginBottom: 32}}>
+          <h3 style={{color: '#e5e7eb', marginBottom: 16}}>🔄 Aktive Abos</h3>
+          <div style={{
+            background: '#1f2937',
+            borderRadius: 8,
+            overflow: 'hidden',
+            border: '1px solid #374151'
+          }}>
+            {subscriptions.map((sub, idx) => (
+              <div
+                key={sub.id}
+                style={{
+                  padding: 16,
+                  borderTop: idx > 0 ? '1px solid #374151' : 'none',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <div>
+                  <div style={{fontWeight: 600, color: '#e5e7eb', marginBottom: 4}}>
+                    {sub.location_name} - {sub.asset_name}
+                  </div>
+                  <div style={{fontSize: 13, color: '#9ca3af'}}>
+                    {sub.frequency === 'weekly' ? `📅 Wöchentlich - ${weekDays[(sub.day_of_week || 1) - 1]}` : `📅 Monatlich - Tag ${sub.day_of_month}`} · 
+                    🕐 {sub.start_time} ({sub.duration}min) · 
+                    📆 {new Date(sub.start_date).toLocaleDateString('de-DE')} - {new Date(sub.end_date).toLocaleDateString('de-DE')}
+                  </div>
+                  {sub.user_id && (
+                    <div style={{fontSize: 13, color: '#9ca3af', marginTop: 2}}>
+                      👤 User ID: {sub.user_id}
+                    </div>
+                  )}
+                </div>
+                <div style={{display: 'flex', gap: 12, alignItems: 'center'}}>
+                  <span style={{color: '#10b981', fontWeight: 600}}>
+                    {sub.price ? `€${sub.price}` : 'Gratis'}
+                  </span>
+                  <span style={{
+                    padding: '6px 12px',
+                    borderRadius: 6,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    background: sub.status === 'active' ? '#064e3b' : '#7f1d1d',
+                    color: '#e5e7eb'
+                  }}>
+                    {sub.status === 'active' ? '✅ AKTIV' : '❌ INAKTIV'}
+                  </span>
+                  <button
+                    onClick={() => deleteSubscription(sub.id)}
+                    style={{
+                      padding: '6px 12px',
+                      borderRadius: 6,
+                      border: '1px solid #dc2626',
+                      background: '#7f1d1d',
+                      color: '#e5e7eb',
+                      cursor: 'pointer',
+                      fontSize: 13
+                    }}
+                  >
+                    Löschen
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Recent Bookings */}
+      {recentBookings.length > 0 && (
+        <div>
+          <h3 style={{color: '#e5e7eb', marginBottom: 16}}>📋 Letzte Buchungen</h3>
+          <div style={{
+            background: '#1f2937',
+            borderRadius: 8,
+            overflow: 'hidden',
+            border: '1px solid #374151'
+          }}>
+            {recentBookings.slice(0, 5).map((booking, idx) => (
+              <div
+                key={booking.id}
+                style={{
+                  padding: 16,
+                  borderTop: idx > 0 ? '1px solid #374151' : 'none',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center'
+                }}
+              >
+                <div>
+                  <div style={{fontWeight: 600, color: '#e5e7eb', marginBottom: 4}}>
+                    {booking.location_name} - {booking.asset_name}
+                  </div>
+                  <div style={{fontSize: 13, color: '#9ca3af'}}>
+                    📅 {new Date(booking.start_time).toLocaleString('de-DE', {
+                      dateStyle: 'medium',
+                      timeStyle: 'short'
+                    })}
+                    {booking.subscription_id && ' · 🔄 Abo-Buchung'}
+                  </div>
+                  {booking.user_id && (
+                    <div style={{fontSize: 13, color: '#9ca3af', marginTop: 2}}>
+                      👤 User ID: {booking.user_id}
+                    </div>
+                  )}
+                </div>
+                <div style={{display: 'flex', gap: 16, alignItems: 'center'}}>
+                  <span style={{color: '#10b981', fontWeight: 600, fontSize: 16}}>
+                    €{booking.price || 0}
+                  </span>
+                  <span style={{
+                    padding: '6px 12px',
+                    borderRadius: 6,
+                    fontSize: 13,
+                    fontWeight: 600,
+                    background: 
+                      booking.status === 'paid' || booking.status === 'confirmed' ? '#064e3b' :
+                      booking.status === 'cancelled' ? '#7f1d1d' : '#1f2937',
+                    color: '#e5e7eb'
+                  }}>
+                    {booking.status?.toUpperCase()}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/**
  * Tab 3: Reporting - Booking reports and statistics
  */
 function ReportingTab({ locations, assets, token }) {
@@ -1262,45 +1952,122 @@ function ReportingTab({ locations, assets, token }) {
 
       {/* Overview Stats Cards */}
       {overviewStats && (
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: 16,
-          marginBottom: 32
-        }}>
-          <div style={styles.statCard}>
-            <div style={styles.statValue}>{overviewStats?.totalBookings || 0}</div>
-            <div style={styles.statLabel}>📅 Gesamt Buchungen</div>
-          </div>
-          <div style={styles.statCard}>
-            <div style={styles.statValue}>
-              €{Number(overviewStats?.totalRevenue || 0).toFixed(2)}
+        <>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: 16,
+            marginBottom: 24
+          }}>
+            <div style={{
+              ...styles.statCard,
+              background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)',
+              border: '1px solid #3b82f6'
+            }}>
+              <div style={styles.statValue}>{overviewStats?.totalBookings || 0}</div>
+              <div style={styles.statLabel}>📅 Gesamt Buchungen</div>
             </div>
-            <div style={styles.statLabel}>💰 Gesamtumsatz</div>
-          </div>
-          <div style={styles.statCard}>
-            <div style={styles.statValue}>
-              €{Number(overviewStats?.averageBookingValue || 0).toFixed(2)}
+            <div style={{
+              ...styles.statCard,
+              background: 'linear-gradient(135deg, #065f46 0%, #047857 100%)',
+              border: '1px solid #10b981'
+            }}>
+              <div style={styles.statValue}>
+                €{Number(overviewStats?.totalRevenue || 0).toFixed(2)}
+              </div>
+              <div style={styles.statLabel}>💰 Gesamtumsatz</div>
             </div>
-            <div style={styles.statLabel}>📊 Ø Buchungswert</div>
-          </div>
-          <div style={styles.statCard}>
-            <div style={styles.statValue}>
-              {utilization?.utilizationRate != null ? `${utilization.utilizationRate.toFixed(1)}%` : 'N/A'}
+            <div style={{
+              ...styles.statCard,
+              background: 'linear-gradient(135deg, #7c2d12 0%, #9a3412 100%)',
+              border: '1px solid #f97316'
+            }}>
+              <div style={styles.statValue}>
+                €{Number(overviewStats?.averageBookingValue || 0).toFixed(2)}
+              </div>
+              <div style={styles.statLabel}>📊 Ø Buchungswert</div>
             </div>
-            <div style={styles.statLabel}>⚡ Auslastung</div>
+            <div style={{
+              ...styles.statCard,
+              background: utilization?.utilizationRate > 70 ? 
+                'linear-gradient(135deg, #065f46 0%, #047857 100%)' : 
+                utilization?.utilizationRate > 40 ?
+                'linear-gradient(135deg, #92400e 0%, #b45309 100%)' :
+                'linear-gradient(135deg, #7f1d1d 0%, #991b1b 100%)',
+              border: utilization?.utilizationRate > 70 ? '1px solid #10b981' : 
+                     utilization?.utilizationRate > 40 ? '1px solid #f59e0b' : '1px solid #ef4444'
+            }}>
+              <div style={styles.statValue}>
+                {utilization?.utilizationRate != null ? `${utilization.utilizationRate.toFixed(1)}%` : 'N/A'}
+              </div>
+              <div style={styles.statLabel}>⚡ Auslastung</div>
+            </div>
           </div>
-        </div>
+
+          {/* Additional Metrics Row */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+            gap: 12,
+            marginBottom: 32,
+            padding: 16,
+            background: '#1f2937',
+            borderRadius: 8
+          }}>
+            <div style={{textAlign: 'center'}}>
+              <div style={{fontSize: 20, fontWeight: 700, color: '#10b981'}}>
+                {utilization?.bookedSlots || 0}
+              </div>
+              <div style={{fontSize: 12, color: '#9ca3af', marginTop: 4}}>Gebuchte Slots</div>
+            </div>
+            <div style={{textAlign: 'center'}}>
+              <div style={{fontSize: 20, fontWeight: 700, color: '#6b7280'}}>
+                {utilization?.availableSlots || 0}
+              </div>
+              <div style={{fontSize: 12, color: '#9ca3af', marginTop: 4}}>Verfügbare Slots</div>
+            </div>
+            <div style={{textAlign: 'center'}}>
+              <div style={{fontSize: 20, fontWeight: 700, color: '#3b82f6'}}>
+                {utilization?.totalSlots || 0}
+              </div>
+              <div style={{fontSize: 12, color: '#9ca3af', marginTop: 4}}>Gesamt Slots</div>
+            </div>
+            <div style={{textAlign: 'center'}}>
+              <div style={{fontSize: 20, fontWeight: 700, color: '#debc7c'}}>
+                €{((overviewStats?.totalRevenue || 0) / (utilization?.bookedSlots || 1)).toFixed(2)}
+              </div>
+              <div style={{fontSize: 12, color: '#9ca3af', marginTop: 4}}>Ø Preis/Slot</div>
+            </div>
+            <div style={{textAlign: 'center'}}>
+              <div style={{fontSize: 20, fontWeight: 700, color: '#ec4899'}}>
+                {locationStats?.length || 0}
+              </div>
+              <div style={{fontSize: 12, color: '#9ca3af', marginTop: 4}}>Aktive Locations</div>
+            </div>
+            <div style={{textAlign: 'center'}}>
+              <div style={{fontSize: 20, fontWeight: 700, color: '#8b5cf6'}}>
+                {assetStats?.length || 0}
+              </div>
+              <div style={{fontSize: 12, color: '#9ca3af', marginTop: 4}}>Gebuchte Assets</div>
+            </div>
+          </div>
+        </>
       )}
 
       {/* Location Stats Table */}
       {locationStats.length > 0 && (
         <div style={{marginBottom: 32}}>
-          <h3 style={{color: '#e5e7eb', marginBottom: 16}}>📍 Statistik nach Location</h3>
+          <h3 style={{color: '#e5e7eb', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8}}>
+            📍 Statistik nach Location
+            <span style={{fontSize: 13, color: '#9ca3af', fontWeight: 400}}>
+              ({locationStats.length} {locationStats.length === 1 ? 'Location' : 'Locations'})
+            </span>
+          </h3>
           <div style={{
             background: '#1f2937',
             borderRadius: 8,
-            overflow: 'hidden'
+            overflow: 'hidden',
+            border: '1px solid #374151'
           }}>
             <table style={{width: '100%', borderCollapse: 'collapse'}}>
               <thead>
@@ -1309,21 +2076,40 @@ function ReportingTab({ locations, assets, token }) {
                   <th style={{...styles.tableHeader, textAlign: 'right'}}>Stadt</th>
                   <th style={{...styles.tableHeader, textAlign: 'right'}}>Buchungen</th>
                   <th style={{...styles.tableHeader, textAlign: 'right'}}>Umsatz</th>
+                  <th style={{...styles.tableHeader, textAlign: 'right'}}>Ø Wert</th>
                 </tr>
               </thead>
               <tbody>
-                {locationStats.map((stat, idx) => (
-                  <tr key={idx} style={{borderTop: '1px solid #374151'}}>
-                    <td style={styles.tableCell}>{stat.location_name}</td>
-                    <td style={{...styles.tableCell, textAlign: 'right'}}>{stat.city}</td>
-                    <td style={{...styles.tableCell, textAlign: 'right', fontWeight: 600}}>
-                      {stat.total_bookings}
-                    </td>
-                    <td style={{...styles.tableCell, textAlign: 'right', color: '#10b981'}}>
-                      €{parseFloat(stat.total_revenue || 0).toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
+                {locationStats.map((stat, idx) => {
+                  const avgValue = stat.total_bookings > 0 ? stat.total_revenue / stat.total_bookings : 0;
+                  return (
+                    <tr key={idx} style={{borderTop: '1px solid #374151'}}>
+                      <td style={styles.tableCell}>
+                        <div style={{fontWeight: 600}}>{stat.location_name}</div>
+                      </td>
+                      <td style={{...styles.tableCell, textAlign: 'right', color: '#9ca3af'}}>
+                        {stat.city}
+                      </td>
+                      <td style={{...styles.tableCell, textAlign: 'right'}}>
+                        <span style={{
+                          padding: '4px 12px',
+                          background: '#1e40af',
+                          borderRadius: 6,
+                          fontWeight: 600,
+                          fontSize: 14
+                        }}>
+                          {stat.total_bookings}
+                        </span>
+                      </td>
+                      <td style={{...styles.tableCell, textAlign: 'right', color: '#10b981', fontWeight: 700, fontSize: 16}}>
+                        €{parseFloat(stat.total_revenue || 0).toFixed(2)}
+                      </td>
+                      <td style={{...styles.tableCell, textAlign: 'right', color: '#debc7c', fontSize: 14}}>
+                        €{avgValue.toFixed(2)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -1333,46 +2119,92 @@ function ReportingTab({ locations, assets, token }) {
       {/* Asset Stats Table */}
       {assetStats.length > 0 && (
         <div style={{marginBottom: 32}}>
-          <h3 style={{color: '#e5e7eb', marginBottom: 16}}>🎯 Statistik nach Asset</h3>
+          <h3 style={{color: '#e5e7eb', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8}}>
+            🎯 Statistik nach Asset
+            <span style={{fontSize: 13, color: '#9ca3af', fontWeight: 400}}>
+              ({assetStats.length} {assetStats.length === 1 ? 'Asset' : 'Assets'})
+            </span>
+          </h3>
           <div style={{
             background: '#1f2937',
             borderRadius: 8,
-            overflow: 'hidden'
+            overflow: 'hidden',
+            border: '1px solid #374151'
           }}>
             <table style={{width: '100%', borderCollapse: 'collapse'}}>
               <thead>
                 <tr style={{background: '#111827'}}>
                   <th style={{...styles.tableHeader, textAlign: 'left'}}>Asset</th>
-                  <th style={{...styles.tableHeader, textAlign: 'right'}}>Typ</th>
+                  <th style={{...styles.tableHeader, textAlign: 'left'}}>Typ</th>
                   <th style={{...styles.tableHeader, textAlign: 'right'}}>Buchungen</th>
                   <th style={{...styles.tableHeader, textAlign: 'right'}}>Umsatz</th>
+                  <th style={{...styles.tableHeader, textAlign: 'right'}}>Ø Wert</th>
                   <th style={{...styles.tableHeader, textAlign: 'right'}}>Auslastung</th>
                 </tr>
               </thead>
               <tbody>
-                {assetStats.map((stat, idx) => (
-                  <tr key={idx} style={{borderTop: '1px solid #374151'}}>
-                    <td style={styles.tableCell}>{stat.asset_name}</td>
-                    <td style={{...styles.tableCell, textAlign: 'right'}}>{stat.asset_type}</td>
-                    <td style={{...styles.tableCell, textAlign: 'right', fontWeight: 600}}>
-                      {stat.total_bookings}
-                    </td>
-                    <td style={{...styles.tableCell, textAlign: 'right', color: '#10b981'}}>
-                      €{parseFloat(stat.total_revenue || 0).toFixed(2)}
-                    </td>
-                    <td style={{...styles.tableCell, textAlign: 'right'}}>
-                      <span style={{
-                        padding: '4px 8px',
-                        borderRadius: 4,
-                        background: stat.utilization_rate > 70 ? '#064e3b' : 
-                                   stat.utilization_rate > 40 ? '#854d0e' : '#7f1d1d',
-                        fontSize: 13
-                      }}>
-                        {stat.utilization_rate != null ? `${stat.utilization_rate.toFixed(1)}%` : 'N/A'}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
+                {assetStats.map((stat, idx) => {
+                  const avgValue = stat.total_bookings > 0 ? stat.total_revenue / stat.total_bookings : 0;
+                  const utilRate = stat.utilization_rate || 0;
+                  return (
+                    <tr key={idx} style={{borderTop: '1px solid #374151'}}>
+                      <td style={styles.tableCell}>
+                        <div style={{fontWeight: 600}}>{stat.asset_name}</div>
+                      </td>
+                      <td style={{...styles.tableCell, color: '#9ca3af', fontSize: 13}}>
+                        {stat.asset_type}
+                      </td>
+                      <td style={{...styles.tableCell, textAlign: 'right'}}>
+                        <span style={{
+                          padding: '4px 12px',
+                          background: '#1e40af',
+                          borderRadius: 6,
+                          fontWeight: 600,
+                          fontSize: 14
+                        }}>
+                          {stat.total_bookings}
+                        </span>
+                      </td>
+                      <td style={{...styles.tableCell, textAlign: 'right', color: '#10b981', fontWeight: 700, fontSize: 16}}>
+                        €{parseFloat(stat.total_revenue || 0).toFixed(2)}
+                      </td>
+                      <td style={{...styles.tableCell, textAlign: 'right', color: '#debc7c', fontSize: 14}}>
+                        €{avgValue.toFixed(2)}
+                      </td>
+                      <td style={{...styles.tableCell, textAlign: 'right'}}>
+                        <div style={{display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 8}}>
+                          <div style={{
+                            flex: '0 0 60px',
+                            height: 8,
+                            background: '#374151',
+                            borderRadius: 4,
+                            overflow: 'hidden'
+                          }}>
+                            <div style={{
+                              width: `${Math.min(100, utilRate)}%`,
+                              height: '100%',
+                              background: utilRate > 70 ? '#10b981' : 
+                                        utilRate > 40 ? '#f59e0b' : '#ef4444',
+                              transition: 'width 0.3s'
+                            }} />
+                          </div>
+                          <span style={{
+                            padding: '4px 8px',
+                            borderRadius: 4,
+                            background: utilRate > 70 ? '#064e3b' : 
+                                       utilRate > 40 ? '#854d0e' : '#7f1d1d',
+                            fontSize: 13,
+                            fontWeight: 600,
+                            minWidth: 50,
+                            textAlign: 'center'
+                          }}>
+                            {utilRate != null ? `${utilRate.toFixed(1)}%` : 'N/A'}
+                          </span>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -1382,49 +2214,115 @@ function ReportingTab({ locations, assets, token }) {
       {/* Monthly Trend Chart */}
       {monthlyStats.length > 0 && (
         <div style={{marginBottom: 32}}>
-          <h3 style={{color: '#e5e7eb', marginBottom: 16}}>📈 Monatlicher Trend</h3>
+          <h3 style={{color: '#e5e7eb', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 8}}>
+            📈 Monatlicher Trend
+            <span style={{fontSize: 13, color: '#9ca3af', fontWeight: 400}}>
+              (Letzte {monthlyStats.length} Monate)
+            </span>
+          </h3>
           <div style={{
             background: '#1f2937',
             borderRadius: 8,
-            padding: 20
+            padding: 20,
+            border: '1px solid #374151'
           }}>
-            <div style={{display: 'flex', alignItems: 'flex-end', gap: 8, height: 200}}>
+            {/* Chart Legend */}
+            <div style={{display: 'flex', gap: 16, marginBottom: 16, justifyContent: 'center'}}>
+              <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
+                <div style={{width: 12, height: 12, background: '#10b981', borderRadius: 2}} />
+                <span style={{fontSize: 13, color: '#9ca3af'}}>Buchungen</span>
+              </div>
+              <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
+                <div style={{width: 12, height: 12, background: '#3b82f6', borderRadius: 2}} />
+                <span style={{fontSize: 13, color: '#9ca3af'}}>Umsatz (€100)</span>
+              </div>
+            </div>
+            
+            <div style={{display: 'flex', alignItems: 'flex-end', gap: 8, height: 220}}>
               {monthlyStats.map((stat, idx) => {
-                const maxBookings = Math.max(...monthlyStats.map(s => s.total_bookings));
-                const height = maxBookings > 0 ? (stat.total_bookings / maxBookings) * 180 : 0;
+                const maxBookings = Math.max(...monthlyStats.map(s => s.total_bookings), 1);
+                const maxRevenue = Math.max(...monthlyStats.map(s => parseFloat(s.total_revenue || 0)), 1);
+                const bookingHeight = (stat.total_bookings / maxBookings) * 180;
+                const revenueHeight = (parseFloat(stat.total_revenue || 0) / maxRevenue) * 180;
+                
                 return (
-                  <div key={idx} style={{flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
-                    <div
-                      style={{
-                        width: '100%',
-                        background: '#10b981',
-                        height: `${height}px`,
-                        borderRadius: '4px 4px 0 0',
-                        position: 'relative',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s'
-                      }}
-                      title={`${stat.month_name}: ${stat.total_bookings} Buchungen, €${stat.total_revenue}`}
-                    >
-                      <div style={{
-                        position: 'absolute',
-                        top: -20,
-                        left: 0,
-                        right: 0,
-                        textAlign: 'center',
-                        fontSize: 12,
-                        color: '#9ca3af'
-                      }}>
-                        {stat.total_bookings}
+                  <div key={idx} style={{flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4}}>
+                    <div style={{
+                      position: 'relative',
+                      width: '100%',
+                      height: 180,
+                      display: 'flex',
+                      alignItems: 'flex-end',
+                      justifyContent: 'center',
+                      gap: 4
+                    }}>
+                      {/* Bookings bar */}
+                      <div
+                        style={{
+                          width: '45%',
+                          background: 'linear-gradient(180deg, #10b981 0%, #059669 100%)',
+                          height: `${bookingHeight}px`,
+                          borderRadius: '4px 4px 0 0',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s',
+                          boxShadow: '0 -2px 8px rgba(16, 185, 129, 0.3)',
+                          position: 'relative'
+                        }}
+                        title={`${stat.month_name}: ${stat.total_bookings} Buchungen`}
+                      >
+                        {stat.total_bookings > 0 && (
+                          <div style={{
+                            position: 'absolute',
+                            top: -20,
+                            left: 0,
+                            right: 0,
+                            textAlign: 'center',
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: '#10b981'
+                          }}>
+                            {stat.total_bookings}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {/* Revenue bar */}
+                      <div
+                        style={{
+                          width: '45%',
+                          background: 'linear-gradient(180deg, #3b82f6 0%, #2563eb 100%)',
+                          height: `${revenueHeight}px`,
+                          borderRadius: '4px 4px 0 0',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s',
+                          boxShadow: '0 -2px 8px rgba(59, 130, 246, 0.3)',
+                          position: 'relative'
+                        }}
+                        title={`${stat.month_name}: €${parseFloat(stat.total_revenue || 0).toFixed(2)}`}
+                      >
+                        {parseFloat(stat.total_revenue || 0) > 0 && (
+                          <div style={{
+                            position: 'absolute',
+                            top: -20,
+                            left: 0,
+                            right: 0,
+                            textAlign: 'center',
+                            fontSize: 11,
+                            fontWeight: 600,
+                            color: '#3b82f6'
+                          }}>
+                            €{parseFloat(stat.total_revenue || 0).toFixed(0)}
+                          </div>
+                        )}
                       </div>
                     </div>
+                    
                     <div style={{
-                      marginTop: 8,
-                      fontSize: 12,
-                      color: '#6b7280',
-                      transform: 'rotate(-45deg)',
-                      transformOrigin: 'center',
-                      width: 40
+                      fontSize: 11,
+                      color: '#9ca3af',
+                      fontWeight: 600,
+                      textAlign: 'center',
+                      marginTop: 4
                     }}>
                       {stat.month_name?.substring(0, 3)}
                     </div>
@@ -1444,32 +2342,100 @@ function ReportingTab({ locations, assets, token }) {
             background: '#1f2937',
             borderRadius: 8,
             padding: 20,
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
-            gap: 16
+            border: '1px solid #374151'
           }}>
-            <div>
-              <div style={{fontSize: 13, color: '#9ca3af', marginBottom: 4}}>Gesamtslots</div>
-              <div style={{fontSize: 24, fontWeight: 600, color: '#e5e7eb'}}>
-                {utilization.totalSlots || 0}
+            {/* Visual Progress Bar */}
+            <div style={{marginBottom: 24}}>
+              <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: 8}}>
+                <span style={{fontSize: 14, color: '#9ca3af'}}>Gesamtauslastung</span>
+                <span style={{fontSize: 16, fontWeight: 700, color: '#e5e7eb'}}>
+                  {utilization.utilizationRate != null ? `${utilization.utilizationRate.toFixed(1)}%` : 'N/A'}
+                </span>
+              </div>
+              <div style={{
+                width: '100%',
+                height: 24,
+                background: '#374151',
+                borderRadius: 12,
+                overflow: 'hidden',
+                position: 'relative'
+              }}>
+                <div style={{
+                  width: `${Math.min(100, utilization.utilizationRate || 0)}%`,
+                  height: '100%',
+                  background: utilization.utilizationRate > 70 ? 
+                    'linear-gradient(90deg, #10b981 0%, #059669 100%)' : 
+                    utilization.utilizationRate > 40 ?
+                    'linear-gradient(90deg, #f59e0b 0%, #d97706 100%)' :
+                    'linear-gradient(90deg, #ef4444 0%, #dc2626 100%)',
+                  transition: 'width 0.5s ease-in-out',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  paddingRight: 12
+                }}>
+                  <span style={{fontSize: 12, fontWeight: 700, color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.3)'}}>
+                    {utilization.bookedSlots} / {utilization.totalSlots}
+                  </span>
+                </div>
               </div>
             </div>
-            <div>
-              <div style={{fontSize: 13, color: '#9ca3af', marginBottom: 4}}>Gebucht</div>
-              <div style={{fontSize: 24, fontWeight: 600, color: '#10b981'}}>
-                {utilization.bookedSlots || 0}
+
+            {/* Stats Grid */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+              gap: 16
+            }}>
+              <div style={{
+                padding: 16,
+                background: '#111827',
+                borderRadius: 8,
+                border: '1px solid #1e40af'
+              }}>
+                <div style={{fontSize: 13, color: '#9ca3af', marginBottom: 8}}>📊 Gesamtslots</div>
+                <div style={{fontSize: 28, fontWeight: 700, color: '#3b82f6'}}>
+                  {utilization.totalSlots || 0}
+                </div>
               </div>
-            </div>
-            <div>
-              <div style={{fontSize: 13, color: '#9ca3af', marginBottom: 4}}>Verfügbar</div>
-              <div style={{fontSize: 24, fontWeight: 600, color: '#6b7280'}}>
-                {utilization.availableSlots || 0}
+              <div style={{
+                padding: 16,
+                background: '#111827',
+                borderRadius: 8,
+                border: '1px solid #059669'
+              }}>
+                <div style={{fontSize: 13, color: '#9ca3af', marginBottom: 8}}>✅ Gebucht</div>
+                <div style={{fontSize: 28, fontWeight: 700, color: '#10b981'}}>
+                  {utilization.bookedSlots || 0}
+                </div>
               </div>
-            </div>
-            <div>
-              <div style={{fontSize: 13, color: '#9ca3af', marginBottom: 4}}>Auslastungsrate</div>
-              <div style={{fontSize: 24, fontWeight: 600, color: '#3b82f6'}}>
-                {utilization.utilizationRate != null ? `${utilization.utilizationRate.toFixed(1)}%` : 'N/A'}
+              <div style={{
+                padding: 16,
+                background: '#111827',
+                borderRadius: 8,
+                border: '1px solid #6b7280'
+              }}>
+                <div style={{fontSize: 13, color: '#9ca3af', marginBottom: 8}}>⏳ Verfügbar</div>
+                <div style={{fontSize: 28, fontWeight: 700, color: '#9ca3af'}}>
+                  {utilization.availableSlots || 0}
+                </div>
+              </div>
+              <div style={{
+                padding: 16,
+                background: '#111827',
+                borderRadius: 8,
+                border: utilization.utilizationRate > 70 ? '1px solid #059669' : 
+                       utilization.utilizationRate > 40 ? '1px solid #d97706' : '1px solid #dc2626'
+              }}>
+                <div style={{fontSize: 13, color: '#9ca3af', marginBottom: 8}}>⚡ Rate</div>
+                <div style={{
+                  fontSize: 28, 
+                  fontWeight: 700, 
+                  color: utilization.utilizationRate > 70 ? '#10b981' : 
+                         utilization.utilizationRate > 40 ? '#f59e0b' : '#ef4444'
+                }}>
+                  {utilization.utilizationRate != null ? `${utilization.utilizationRate.toFixed(1)}%` : 'N/A'}
+                </div>
               </div>
             </div>
           </div>

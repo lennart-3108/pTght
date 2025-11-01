@@ -11,6 +11,11 @@ export default function ProfilePage() {
   const [games, setGames] = useState({ upcoming: [], completed: [] });
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(true);
+  const [locationLoading, setLocationLoading] = useState(false);
+  // Location confirmation state
+  const [detectedLocation, setDetectedLocation] = useState(null);
+  const [showLocationConfirm, setShowLocationConfirm] = useState(false);
+  const [showLocationBanner, setShowLocationBanner] = useState(true);
   // avatar cropper state
   const [cropSrc, setCropSrc] = useState(null);
   const [cropScale, setCropScale] = useState(1.2);
@@ -38,7 +43,14 @@ export default function ProfilePage() {
           const r2 = await fetch(`${API_BASE}/users/${j.id}`, { headers: { Authorization: `Bearer ${token}` } });
           const u = await r2.json().catch(() => ({}));
           if (u && u.avatar_url) {
-            const url = String(u.avatar_url || '');
+            let url = String(u.avatar_url || '');
+            
+            // Fix hardcoded localhost:5002 references
+            if (url.includes('localhost:5002')) {
+              const match = url.match(/\/uploads\/avatars\/[^?#]+/);
+              if (match) url = match[0];
+            }
+            
             const abs = /^(https?:)?\/\//i.test(url)
               ? url
               : `${API_BASE.replace(/\/$/, '')}/${url.replace(/^\//, '')}`;
@@ -51,10 +63,11 @@ export default function ProfilePage() {
 
     // load profile preferences
     fetch(`${API_BASE}/profile`, { headers: { Authorization: `Bearer ${token}` } })
-      .then(r => r.ok ? r.json() : { open_for_matches: false, favorite_sports: [] })
+      .then(r => r.ok ? r.json() : { open_for_matches: false, favorite_sports: [], location: null })
       .then(j => mounted && setProfile({
         open_for_matches: !!j.open_for_matches,
-        favorite_sports: Array.isArray(j.favorite_sports) ? j.favorite_sports : []
+        favorite_sports: Array.isArray(j.favorite_sports) ? j.favorite_sports : [],
+        location: j.location || null
       }))
       .catch(() => {});
 
@@ -92,6 +105,109 @@ export default function ProfilePage() {
   if (loading) return <div style={{ padding: 16 }}>Lade Profil ...</div>;
   if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
   if (!data) return <div style={{ padding: 16 }}>Keine Daten.</div>;
+
+  // Handler to detect and confirm location
+  const detectLocation = async () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation wird von deinem Browser nicht unterstützt');
+      return;
+    }
+
+    setLocationLoading(true);
+    try {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 0
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      setDetectedLocation({ latitude, longitude });
+      setShowLocationConfirm(true);
+      setLocationLoading(false);
+    } catch (error) {
+      console.error('Location detection error:', error);
+      alert('Standort konnte nicht ermittelt werden: ' + (error.message || 'Berechtigung verweigert oder Timeout'));
+      setLocationLoading(false);
+    }
+  };
+
+  // Handler to save location after confirmation
+  const saveLocation = async () => {
+    if (!detectedLocation) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${API_BASE}/me`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify(detectedLocation)
+      });
+
+      if (!response.ok) {
+        throw new Error('Fehler beim Speichern des Standorts');
+      }
+
+      const updated = await response.json();
+      setData(updated);
+      setShowLocationConfirm(false);
+      setShowLocationBanner(false);
+      setDetectedLocation(null);
+      alert('Standort erfolgreich gespeichert!');
+    } catch (error) {
+      console.error('Location save error:', error);
+      alert('Standort konnte nicht gespeichert werden: ' + (error.message || 'Unbekannter Fehler'));
+    }
+  };
+
+  // Handler to update location (existing)
+  const updateLocation = async () => {
+    if (!navigator.geolocation) {
+      alert('Geolocation wird von deinem Browser nicht unterstützt');
+      return;
+    }
+
+    setLocationLoading(true);
+    try {
+      const position = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 0
+        });
+      });
+
+      const { latitude, longitude } = position.coords;
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(`${API_BASE}/me`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({ latitude, longitude })
+      });
+
+      if (!response.ok) {
+        throw new Error('Fehler beim Aktualisieren des Standorts');
+      }
+
+      const updated = await response.json();
+      setData(updated);
+      alert('Standort erfolgreich aktualisiert!');
+    } catch (error) {
+      console.error('Location update error:', error);
+      alert('Standort konnte nicht aktualisiert werden: ' + (error.message || 'Unbekannter Fehler'));
+    } finally {
+      setLocationLoading(false);
+    }
+  };
 
   // UI helpers
   const wrap = { padding: 16, color: '#e8efe8', fontFamily: 'Inter, system-ui, sans-serif' };
@@ -174,50 +290,147 @@ export default function ProfilePage() {
 
   return (
     <div style={wrap}>
-      {/* Preferences card */}
-      <div style={{ ...card, marginBottom: 16 }}>
-        <div style={{ ...pad }}>
-          <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>Einstellungen</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-            <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <input type="checkbox" checked={!!profile.open_for_matches} onChange={(e) => setProfile(p => ({ ...p, open_for_matches: e.target.checked }))} />
-              Offen für Matches (Anfragen erlauben)
-            </label>
+      {/* Location Banner - show if no location is set */}
+      {showLocationBanner && !profile.location && !data.latitude && !data.longitude && (
+        <div style={{
+          background: 'linear-gradient(135deg, #2d5a4a 0%, #195642 100%)',
+          border: '1px solid #2f6b57',
+          borderRadius: 12,
+          padding: 16,
+          marginBottom: 16,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 12,
+          flexWrap: 'wrap',
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+        }}>
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 4 }}>
+              📍 Standort nicht festgelegt
+            </div>
+            <div style={{ fontSize: 14, color: '#bcd' }}>
+              Erlauben Sie den Zugriff auf Ihren Standort, um lokale Matches und Ligen zu finden.
+            </div>
           </div>
-          <div style={{ marginBottom: 8 }}>
-            <div style={{ marginBottom: 6, ...small, color: '#cfe' }}>Favorisierte Sportarten (Komma-getrennt)</div>
-            <input
-              type="text"
-              value={(profile.favorite_sports || []).join(', ')}
-              onChange={(e) => setProfile(p => ({ ...p, favorite_sports: e.target.value.split(',').map(s => s.trim()).filter(Boolean) }))}
-              style={{ width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0b1e19', color: '#e8efe8' }}
-              placeholder="z.B. Tennis, Fußball"
-            />
-          </div>
-          <div>
+          <div style={{ display: 'flex', gap: 8 }}>
             <button
-              onClick={async () => {
-                try {
-                  const token = localStorage.getItem('token');
-                  const resp = await fetch(`${API_BASE}/profile`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-                    body: JSON.stringify({
-                      open_for_matches: !!profile.open_for_matches,
-                      favorite_sports: Array.isArray(profile.favorite_sports) ? profile.favorite_sports : []
-                    })
-                  });
-                  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-                  alert('Profil gespeichert');
-                } catch (e) {
-                  alert('Konnte Profil nicht speichern: ' + (e.message || e));
-                }
+              onClick={detectLocation}
+              disabled={locationLoading}
+              style={{
+                padding: '10px 20px',
+                borderRadius: 8,
+                border: 'none',
+                background: locationLoading ? '#0e2521' : '#debc7c',
+                color: '#0a2221',
+                cursor: locationLoading ? 'not-allowed' : 'pointer',
+                fontSize: 14,
+                fontWeight: 700,
+                whiteSpace: 'nowrap'
               }}
-              style={{ ...pill, cursor: 'pointer', background: '#195642' }}
-            >Speichern</button>
+            >
+              {locationLoading ? '⌛ Ermittle...' : '📍 Lokalisiere mich'}
+            </button>
+            <button
+              onClick={() => setShowLocationBanner(false)}
+              style={{
+                padding: '10px 16px',
+                borderRadius: 8,
+                border: '1px solid rgba(255,255,255,0.2)',
+                background: 'transparent',
+                color: '#e8efe8',
+                cursor: 'pointer',
+                fontSize: 14
+              }}
+            >
+              ✕
+            </button>
           </div>
         </div>
-      </div>
+      )}
+
+      {/* Location Confirmation Modal */}
+      {showLocationConfirm && detectedLocation && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.75)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: 16
+        }}>
+          <div style={{
+            background: '#0f2a20',
+            border: '1px solid #2f6b57',
+            borderRadius: 14,
+            width: 'min(92vw, 480px)',
+            maxWidth: '100%',
+            padding: 24,
+            color: '#e8efe8'
+          }}>
+            <div style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>
+              📍 Standort erkannt
+            </div>
+            <div style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 14, color: '#a6bfb3', marginBottom: 12 }}>
+                Ihr Standort wurde erfolgreich ermittelt:
+              </div>
+              <div style={{
+                background: '#0b1e19',
+                borderRadius: 8,
+                padding: 12,
+                fontFamily: 'monospace',
+                fontSize: 13
+              }}>
+                <div>Breitengrad: {detectedLocation.latitude.toFixed(6)}</div>
+                <div>Längengrad: {detectedLocation.longitude.toFixed(6)}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 14, marginBottom: 20, color: '#bcd' }}>
+              Möchten Sie diesen Standort in Ihrem Profil speichern? 
+              Dies hilft uns, Ihnen relevante Matches und Ligen in Ihrer Nähe anzuzeigen.
+            </div>
+            <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => {
+                  setShowLocationConfirm(false);
+                  setDetectedLocation(null);
+                }}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: 8,
+                  border: '1px solid #2f6b57',
+                  background: 'transparent',
+                  color: '#e8efe8',
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  fontWeight: 600
+                }}
+              >
+                Nein, abbrechen
+              </button>
+              <button
+                onClick={saveLocation}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: '#debc7c',
+                  color: '#0a2221',
+                  cursor: 'pointer',
+                  fontSize: 14,
+                  fontWeight: 700
+                }}
+              >
+                Ja, speichern
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header with avatar, name, role, sport badges and stats summary */}
       <div style={{ ...card, paddingBottom: 0 }}>
         <div style={{ ...pad, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
@@ -229,9 +442,56 @@ export default function ProfilePage() {
           <div style={{ flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 28, fontWeight: 900 }}>{data.firstname} {data.lastname}</div>
             <div style={small}>Einzelspieler</div>
+            {(profile.location || (data.latitude && data.longitude)) && (
+              <div style={{...small, marginTop: 4}}>
+                📍 {profile.location && <span style={{ fontWeight: 600 }}>{profile.location}</span>}
+                {profile.location && (data.latitude || data.longitude) && <span> · </span>}
+                {data.latitude && data.longitude && (
+                  <span style={{ color: '#9ca3af' }}>
+                    {data.latitude.toFixed(4)}, {data.longitude.toFixed(4)}
+                  </span>
+                )}
+                {data.location_updated_at && (
+                  <span> · Aktualisiert: {new Date(data.location_updated_at).toLocaleDateString('de-DE')}</span>
+                )}
+              </div>
+            )}
           </div>
           {/* Avatar upload with cropper */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexDirection: 'column' }}>
+            <button
+              onClick={() => navigate('/profile/edit')}
+              style={{ 
+                padding: '8px 16px', 
+                borderRadius: 8, 
+                border: '1px solid #2f6b57', 
+                background: '#113528', 
+                color: '#e8efe8', 
+                cursor: 'pointer',
+                fontSize: 14,
+                fontWeight: 600,
+                width: '100%'
+              }}
+            >
+              Bearbeiten
+            </button>
+            <button
+              onClick={updateLocation}
+              disabled={locationLoading}
+              style={{ 
+                padding: '8px 16px', 
+                borderRadius: 8, 
+                border: '1px solid #2f6b57', 
+                background: locationLoading ? '#0e2521' : '#113528', 
+                color: '#e8efe8', 
+                cursor: locationLoading ? 'not-allowed' : 'pointer',
+                fontSize: 14,
+                fontWeight: 600,
+                width: '100%'
+              }}
+            >
+              {locationLoading ? '📍 Lädt...' : '📍 Standort aktualisieren'}
+            </button>
             <label style={{ ...pill, cursor: 'pointer', background: '#143329' }}>
               Bild wählen
               <input

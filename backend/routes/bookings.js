@@ -290,4 +290,136 @@ router.patch('/:id/cancel', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/bookings/manual
+ * Create a manual booking (for location managers)
+ */
+router.post('/manual', authenticateToken, async (req, res) => {
+  try {
+    const { asset_id, user_id, start_time, end_time, price, notes } = req.body;
+
+    // Validate input
+    if (!asset_id || !user_id || !start_time || !end_time) {
+      return res.status(400).json({ error: 'Asset, User, Start- und Endzeit sind erforderlich' });
+    }
+
+    // Verify location manager permissions
+    const asset = await db('assets')
+      .join('locations', 'assets.location_id', 'locations.id')
+      .where('assets.id', asset_id)
+      .select('locations.owner_id', 'assets.id', 'assets.name')
+      .first();
+
+    if (!asset) {
+      return res.status(404).json({ error: 'Asset nicht gefunden' });
+    }
+
+    if (asset.owner_id !== req.user.id) {
+      return res.status(403).json({ error: 'Nur Location Manager können manuelle Buchungen erstellen' });
+    }
+
+    // Verify user exists
+    const user = await db('users').where('id', user_id).first();
+    if (!user) {
+      return res.status(404).json({ error: 'Benutzer nicht gefunden' });
+    }
+
+    // Check for conflicts
+    const conflict = await db('bookings')
+      .where('asset_id', asset_id)
+      .where('status', '!=', 'cancelled')
+      .where(function() {
+        this.whereBetween('start_time', [start_time, end_time])
+          .orWhereBetween('end_time', [start_time, end_time])
+          .orWhere(function() {
+            this.where('start_time', '<=', start_time)
+              .where('end_time', '>=', end_time);
+          });
+      })
+      .first();
+
+    if (conflict) {
+      return res.status(409).json({ error: 'Zeitslot bereits gebucht' });
+    }
+
+    // Create booking
+    const [bookingId] = await db('bookings').insert({
+      asset_id,
+      user_id,
+      start_time,
+      end_time,
+      price: price || 0,
+      status: 'confirmed',
+      booking_type: 'manual',
+      notes,
+      created_at: new Date(),
+      updated_at: new Date()
+    });
+
+    const booking = await db('bookings')
+      .where('bookings.id', bookingId)
+      .join('assets', 'bookings.asset_id', 'assets.id')
+      .join('users', 'bookings.user_id', 'users.id')
+      .select(
+        'bookings.*',
+        'assets.name as asset_name',
+        'users.username',
+        'users.email'
+      )
+      .first();
+
+    res.status(201).json({ 
+      success: true, 
+      message: 'Manuelle Buchung erstellt',
+      booking 
+    });
+  } catch (error) {
+    console.error('Manual booking error:', error);
+    res.status(500).json({ error: 'Fehler beim Erstellen der Buchung' });
+  }
+});
+
+/**
+ * GET /api/bookings/list
+ * List bookings for location manager
+ */
+router.get('/list', authenticateToken, async (req, res) => {
+  try {
+    const { location_id, limit = 50 } = req.query;
+
+    // Verify ownership
+    if (location_id) {
+      const location = await db('locations').where('id', location_id).first();
+      if (!location || location.owner_id !== req.user.id) {
+        return res.status(403).json({ error: 'Keine Berechtigung' });
+      }
+    }
+
+    const bookings = await db('bookings')
+      .join('assets', 'bookings.asset_id', 'assets.id')
+      .join('locations', 'assets.location_id', 'locations.id')
+      .join('users', 'bookings.user_id', 'users.id')
+      .where('locations.owner_id', req.user.id)
+      .modify((qb) => {
+        if (location_id) {
+          qb.where('locations.id', location_id);
+        }
+      })
+      .select(
+        'bookings.*',
+        'assets.name as asset_name',
+        'locations.name as location_name',
+        'users.username',
+        'users.email'
+      )
+      .orderBy('bookings.start_time', 'desc')
+      .limit(limit);
+
+    res.json({ bookings });
+  } catch (error) {
+    console.error('List bookings error:', error);
+    res.status(500).json({ error: 'Fehler beim Laden der Buchungen' });
+  }
+});
+
 module.exports = router;

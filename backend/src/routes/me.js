@@ -55,13 +55,16 @@ module.exports = function meRoutes({ db }) {
       }
       const info = await k("users").columnInfo();
 
-      // Dynamisch passende Spalten whlen
+      // Dynamisch passende Spalten whlen
       const has = (c) => Object.prototype.hasOwnProperty.call(info, c);
       const cols = ["id", "email"]; // immer selektieren
       if (has("firstname")) cols.push({ firstname: "firstname" });
       if (has("lastname")) cols.push({ lastname: "lastname" });
       if (!has("firstname") && !has("lastname") && has("name")) cols.push({ name: "name" });
       if (has("is_admin")) cols.push({ isAdmin: "is_admin" });
+      if (has("latitude")) cols.push({ latitude: "latitude" });
+      if (has("longitude")) cols.push({ longitude: "longitude" });
+      if (has("location_updated_at")) cols.push({ location_updated_at: "location_updated_at" });
 
       const row = await k("users")
         .select(cols)
@@ -92,6 +95,11 @@ module.exports = function meRoutes({ db }) {
         out.lastname = "";
       }
 
+      // Add location fields if available
+      if (row.latitude !== undefined) out.latitude = row.latitude;
+      if (row.longitude !== undefined) out.longitude = row.longitude;
+      if (row.location_updated_at !== undefined) out.location_updated_at = row.location_updated_at;
+
       return res.json(out);
     } catch (e) {
       const msg = e && (e.message || "").toLowerCase();
@@ -106,6 +114,76 @@ module.exports = function meRoutes({ db }) {
         });
       }
       console.error("/me failed:", {
+        msg: e && (e.message || e.toString()),
+        stack: e && e.stack,
+        userIdTried: req.user && req.user.id,
+      });
+      return res.status(500).json({ error: "DB_ERROR" });
+    }
+  });
+
+  // PUT /me -> Update user profile (including location)
+  router.put("/", isAuthenticated, async (req, res) => {
+    try {
+      k = k || resolveKnex(db);
+      if (!(await tableExists(k, "users"))) {
+        return res.status(400).json({ error: "Users table does not exist" });
+      }
+
+      const { latitude, longitude } = req.body;
+      const updateData = {};
+
+      // Validate and add location data if provided
+      if (latitude !== undefined && longitude !== undefined) {
+        const lat = parseFloat(latitude);
+        const lng = parseFloat(longitude);
+        
+        // Basic validation: latitude between -90 and 90, longitude between -180 and 180
+        if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+          return res.status(400).json({ error: "Invalid coordinates" });
+        }
+
+        updateData.latitude = lat;
+        updateData.longitude = lng;
+        updateData.location_updated_at = new Date().toISOString();
+      }
+
+      if (Object.keys(updateData).length === 0) {
+        return res.status(400).json({ error: "No valid fields to update" });
+      }
+
+      await k("users")
+        .where({ id: req.user.id })
+        .update(updateData);
+
+      // Return updated user data
+      const info = await k("users").columnInfo();
+      const has = (c) => Object.prototype.hasOwnProperty.call(info, c);
+      const cols = ["id", "email"];
+      if (has("firstname")) cols.push({ firstname: "firstname" });
+      if (has("lastname")) cols.push({ lastname: "lastname" });
+      if (has("is_admin")) cols.push({ isAdmin: "is_admin" });
+      if (has("latitude")) cols.push({ latitude: "latitude" });
+      if (has("longitude")) cols.push({ longitude: "longitude" });
+      if (has("location_updated_at")) cols.push({ location_updated_at: "location_updated_at" });
+
+      const row = await k("users")
+        .select(cols)
+        .where({ id: req.user.id })
+        .first();
+
+      let out = { id: req.user.id, email: row.email, isAdmin: !!row.isAdmin };
+      if (row.firstname || row.lastname) {
+        out.firstname = row.firstname || "";
+        out.lastname = row.lastname || "";
+      }
+      if (row.latitude !== undefined) out.latitude = row.latitude;
+      if (row.longitude !== undefined) out.longitude = row.longitude;
+      if (row.location_updated_at !== undefined) out.location_updated_at = row.location_updated_at;
+
+      return res.json(out);
+    } catch (e) {
+      console.error("/me PUT failed:", {
         msg: e && (e.message || e.toString()),
         stack: e && e.stack,
         userIdTried: req.user && req.user.id,
