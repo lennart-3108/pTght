@@ -410,13 +410,67 @@ module.exports = function leaguesRoutes(ctx) {
         const rows = await q2;
         const stats = new Map();
         const nameCache = new Map();
+        
+        // Pre-load all league members to map names to user IDs (prevent duplicates)
+        const userIdByName = new Map();
+        try {
+          const hasUserLeagues = await k.schema.hasTable('user_leagues');
+          const hasUserSeasons = await k.schema.hasTable('user_seasons');
+          
+          let members = [];
+          
+          if (hasUserSeasons && seasonId) {
+            members = await k('user_seasons as us')
+              .join('users as u', 'u.id', 'us.user_id')
+              .where({ 'us.season_id': seasonId })
+              .select('u.id', 'u.firstname', 'u.lastname', 'u.email')
+              .distinct();
+          } else if (hasUserLeagues) {
+            members = await k('user_leagues as ul')
+              .join('users as u', 'u.id', 'ul.user_id')
+              .where({ 'ul.league_id': leagueId })
+              .select('u.id', 'u.firstname', 'u.lastname', 'u.email')
+              .distinct();
+          }
+
+          // Build mapping: normalize name -> user ID
+          for (const m of members) {
+            const uid = m.id;
+            // Use EXACT same logic as resolveUserName to ensure consistency
+            let fullName;
+            if (m.firstname || m.lastname) {
+              fullName = `${m.firstname || ''} ${m.lastname || ''}`.trim();
+            } else if (m.email) {
+              fullName = m.email;
+            } else {
+              fullName = String(uid);
+            }
+            
+            // Map all possible name variants to this user ID
+            const normalize = (s) => String(s || '').toLowerCase().trim();
+            userIdByName.set(normalize(fullName), uid);
+            if (m.email) userIdByName.set(normalize(m.email), uid);
+            if (m.firstname) userIdByName.set(normalize(m.firstname), uid);
+            const combined = `${m.firstname || ''} ${m.lastname || ''}`.trim();
+            if (combined) userIdByName.set(normalize(combined), uid);
+            
+            // Pre-create entry with 0 stats for all members AND cache the name
+            const key = `u:${uid}`;
+            stats.set(key, { key, name: fullName, played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, gd: 0, points: 0 });
+            nameCache.set(key, fullName); // Cache the name to prevent resolveUserName from returning different name
+          }
+        } catch (e) {
+          console.error('Error loading league members:', e.message);
+        }
+        
         async function resolveUserName(uid) {
           const key = `u:${uid}`;
+          // Use cached name if available (from pre-loading)
           if (nameCache.has(key)) return nameCache.get(key);
           let nm = String(uid);
           try {
             const u = await k('users').where({ id: uid }).first();
-            if (u) nm = (u.firstname || u.lastname) ? `${u.firstname || ''} ${u.lastname || ''}`.trim() : (u.name || u.email || nm);
+            if (u) nm = (u.firstname || u.lastname) ? `${u.firstname || ''} ${u.lastname || ''}`.trim() : (u.email || nm);
           } catch {}
           nameCache.set(key, nm);
           return nm;
@@ -439,17 +493,49 @@ module.exports = function leaguesRoutes(ctx) {
         for (const r of rows) {
           const hs = Number(r.home_score || 0);
           const as = Number(r.away_score || 0);
-          // Best available identity per side: team_id -> user_id -> name
+          // Best available identity per side: team_id -> user_id -> name (with name->id lookup)
           let hk, hn;
-          if (r.home_team_id != null) { hk = `t:${r.home_team_id}`; hn = await resolveTeamName(r.home_team_id); }
-          else if (r.home_user_id != null) { hk = `u:${r.home_user_id}`; hn = await resolveUserName(r.home_user_id); }
-          else { hk = `n:${r.home_name || '-'}`; hn = String(r.home_name || '-'); }
+          if (r.home_team_id != null) { 
+            hk = `t:${r.home_team_id}`; 
+            hn = await resolveTeamName(r.home_team_id); 
+          } else if (r.home_user_id != null) { 
+            hk = `u:${r.home_user_id}`; 
+            hn = await resolveUserName(r.home_user_id); 
+          } else {
+            // Try to map name to user ID first
+            const normalize = (s) => String(s || '').toLowerCase().trim();
+            const possibleUid = userIdByName.get(normalize(r.home_name || ''));
+            if (possibleUid) {
+              hk = `u:${possibleUid}`;
+              hn = await resolveUserName(possibleUid);
+            } else {
+              hk = `n:${r.home_name || '-'}`; 
+              hn = String(r.home_name || '-');
+            }
+          }
 
           let ak, an;
-          if (r.away_team_id != null) { ak = `t:${r.away_team_id}`; an = await resolveTeamName(r.away_team_id); }
-          else if (r.away_user_id != null) { ak = `u:${r.away_user_id}`; an = await resolveUserName(r.away_user_id); }
-          else { ak = `n:${r.away_name || '-'}`; an = String(r.away_name || '-'); }
-          const H = ensure(hk, hn); const A = ensure(ak, an);
+          if (r.away_team_id != null) { 
+            ak = `t:${r.away_team_id}`; 
+            an = await resolveTeamName(r.away_team_id); 
+          } else if (r.away_user_id != null) { 
+            ak = `u:${r.away_user_id}`; 
+            an = await resolveUserName(r.away_user_id); 
+          } else {
+            // Try to map name to user ID first
+            const normalize = (s) => String(s || '').toLowerCase().trim();
+            const possibleUid = userIdByName.get(normalize(r.away_name || ''));
+            if (possibleUid) {
+              ak = `u:${possibleUid}`;
+              an = await resolveUserName(possibleUid);
+            } else {
+              ak = `n:${r.away_name || '-'}`; 
+              an = String(r.away_name || '-');
+            }
+          }
+          
+          const H = ensure(hk, hn); 
+          const A = ensure(ak, an);
           H.played++; A.played++;
           H.gf += hs; H.ga += as; H.gd = H.gf - H.ga;
           A.gf += as; A.ga += hs; A.gd = A.gf - A.ga;
@@ -457,7 +543,11 @@ module.exports = function leaguesRoutes(ctx) {
           else if (hs < as) { A.won++; A.points += winPts; H.lost++; }
           else { H.drawn++; A.drawn++; H.points += drawPts; A.points += drawPts; }
         }
-        const arr = Array.from(stats.values()).sort((x,y) => (y.points - x.points) || (y.gd - x.gd) || (y.gf - x.gf) || String(x.name).localeCompare(String(y.name)));
+
+        // Filter: only show players who have actually played games (played > 0)
+        const arr = Array.from(stats.values())
+          .filter(row => row.played > 0)
+          .sort((x,y) => (y.points - x.points) || (y.gd - x.gd) || (y.gf - x.gf) || String(x.name).localeCompare(String(y.name)));
         arr.forEach((row, idx) => { row.rank = idx + 1; });
         return res.json(arr);
       }

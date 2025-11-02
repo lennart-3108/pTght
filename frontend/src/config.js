@@ -39,21 +39,29 @@ function ensureLocalApiSuffix(base) {
 }
 
 function resolveApiBase() {
-	const fromQuery = readQueryApiOverride();
-	if (fromQuery) return ensureLocalApiSuffix(fromQuery);
-	const fromLs = readLocalStorageApi();
-	if (fromLs) {
-		const normalized = ensureLocalApiSuffix(String(fromLs));
-		if (normalized !== fromLs) {
-			try { window.localStorage && window.localStorage.setItem('API_BASE', normalized); } catch {}
-		}
-		return normalized;
-	}
-	if (envBase) return ensureLocalApiSuffix(envBase);
-
+	// Check if running on production domain - if so, ignore localStorage to prevent stale values
 	const isBrowser = typeof window !== "undefined" && window.location;
 	const host = isBrowser ? window.location.hostname : "";
-	const isLocal = host === "localhost" || host === "127.0.0.1";
+	const isLocal = host === "localhost" || host === "127.0.0.1" || host === "";
+	const isProduction = !isLocal;
+
+	const fromQuery = readQueryApiOverride();
+	if (fromQuery) return ensureLocalApiSuffix(fromQuery);
+	
+	// On production domains, skip localStorage check to avoid stale localhost values
+	if (!isProduction) {
+		const fromLs = readLocalStorageApi();
+		if (fromLs) {
+			const normalized = ensureLocalApiSuffix(String(fromLs));
+			if (normalized !== fromLs) {
+				try { window.localStorage && window.localStorage.setItem('API_BASE', normalized); } catch {}
+			}
+			return normalized;
+		}
+	}
+	
+	if (envBase) return ensureLocalApiSuffix(envBase);
+
 	const base = isLocal ? "http://localhost:5001/api" : "/api";
 	return base.replace(/\/$/, "");
 }

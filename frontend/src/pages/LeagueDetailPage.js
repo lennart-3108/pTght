@@ -134,14 +134,20 @@ export default function LeagueDetailPage() {
 
   const standingsWithMembers = useMemo(() => {
     const baseRows = (standings || []).map((row, idx) => {
-      const uid = String(
-        row.user_id ??
-        row.userId ??
-        row.member_id ??
-        row.memberId ??
-        ((row.user || {}).id) ??
-        (row.key != null ? row.key : idx)
-      );
+      // Extract user ID from key (e.g., "u:1" -> "1") or use other ID fields
+      let uid;
+      if (row.key && row.key.startsWith('u:')) {
+        uid = row.key.substring(2);
+      } else {
+        uid = String(
+          row.user_id ??
+          row.userId ??
+          row.member_id ??
+          row.memberId ??
+          ((row.user || {}).id) ??
+          (row.key != null ? row.key : idx)
+        );
+      }
       return {
         ...row,
         _uid: uid,
@@ -587,38 +593,6 @@ export default function LeagueDetailPage() {
         </div>
       </div>
 
-      {amMember && !myOpenMatch && !hasWeeklyMatch && (
-        <div style={{ ...card, marginTop: 12 }}>
-          <div style={{ ...pad, paddingBottom: 0 }}>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>Neues Match starten</div>
-            <div style={{ marginTop: 6, color: '#9db' }}>
-              Wähle einen Gegner und den Kickoff – wir legen das Match direkt an.
-            </div>
-          </div>
-          <form onSubmit={createMatch} style={{ 
-            ...pad, 
-            display: 'grid', 
-            gap: isMobile ? 8 : 12, 
-            gridTemplateColumns: isMobile ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))' 
-          }}>
-            <label style={{ display: 'grid', gap: 6 }}>
-              Gegner
-              <select value={opponentId} onChange={(e) => setOpponentId(e.target.value)}>
-                <option value="">– wählen –</option>
-                {opponents.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
-              </select>
-            </label>
-            <label style={{ display: 'grid', gap: 6 }}>
-              Datum &amp; Uhrzeit
-              <input type="datetime-local" value={kickoffLocal} onChange={(e) => setKickoffLocal(e.target.value)} />
-            </label>
-            <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-              <button type="submit" disabled={hasWeeklyMatch || !!myOpenMatch} style={{ ...pill, width: '100%', justifyContent: 'center' }}>Match erstellen</button>
-            </div>
-          </form>
-        </div>
-      )}
-
       {amMember && (myOpenMatch || hasWeeklyMatch) && (
         <div style={{ marginTop: 8, color: '#ccc' }}>
           Du kannst nur ein offenes Match gleichzeitig haben und nur ein Match pro Woche spielen.
@@ -773,20 +747,59 @@ export default function LeagueDetailPage() {
                 {games.upcoming.length === 0 ? (
                   <div style={small}>Keine kommenden Spiele.</div>
                 ) : (
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {games.upcoming.map(g => (
-                      <div key={g.id} style={{ background: '#0b1e19', borderRadius: 12, padding: 12, display: 'grid', gridTemplateColumns: '1fr auto 1fr auto', alignItems: 'center', gap: 10 }}>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 600 }}>{formatKickoff(g)}</div>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    {games.upcoming.map(g => {
+                      const toId = (v) => {
+                        if (v == null) return null;
+                        if (typeof v === 'number') return String(v);
+                        const m = String(v).match(/\d+/);
+                        return m ? m[0] : null;
+                      };
+                      const hId = g.home_user_id || g.homeUserId || g.home_id || g.homeId || toId(g.home);
+                      const aId = g.away_user_id || g.awayUserId || g.away_id || g.awayId || toId(g.away);
+                      const kx = g.kickoff_at || g.kickoffAt || g.date || null;
+                      const when = kx ? new Date(kx).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
+                      return (
+                        <div key={g.id} className="ml-match" style={{ padding: '10px 2px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                          <div className="ml-match__side">
+                            {hId ? (
+                              <Link to={`/user/${hId}`} style={{ display: 'contents' }}>
+                                <Avatar userId={hId} name={g.home} size={44} title={g.home} />
+                                <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.home}</span>
+                              </Link>
+                            ) : (
+                              <>
+                                <Avatar userId={hId} name={g.home} size={44} />
+                                <span>{g.home}</span>
+                              </>
+                            )}
+                          </div>
+                          <div className="ml-vs">VS</div>
+                          <div className="ml-match__side" style={{ justifyContent: 'flex-end' }}>
+                            {aId ? (
+                              <Link to={`/user/${aId}`} style={{ display: 'contents' }}>
+                                <Avatar userId={aId} name={g.away} size={44} title={g.away} />
+                                <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.away}</span>
+                              </Link>
+                            ) : (
+                              <>
+                                <Avatar userId={aId} name={g.away} size={44} />
+                                <span>{g.away}</span>
+                              </>
+                            )}
+                          </div>
+                          <div style={{ gridColumn: '1 / -1', color: '#9db', fontSize: 12, display: 'flex', justifyContent: 'space-between' }}>
+                            <span>{formatKickoff(g)}</span>
+                            <span>{when}</span>
+                          </div>
+                          {g?.id ? (
+                            <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end' }}>
+                              <Link to={`/matches/${g.id}`} style={{ color: '#debc7c', fontWeight: 700, textDecoration: 'none' }}>Details</Link>
+                            </div>
+                          ) : null}
                         </div>
-                        <div style={{ textAlign: 'right', color: '#9db' }}>{g.home}</div>
-                        <div style={{ textAlign: 'center', fontWeight: 700 }}>VS</div>
-                        <div style={{ color: '#9db' }}>{g.away}</div>
-                        <div style={{ gridColumn: '1 / -1', marginTop: 8 }}>
-                          <Link to={`/matches/${g.id}`} style={pill}>Details</Link>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -800,20 +813,62 @@ export default function LeagueDetailPage() {
                 {games.completed.length === 0 ? (
                   <div style={small}>Keine abgeschlossenen Spiele.</div>
                 ) : (
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {games.completed.map(g => (
-                      <div key={g.id} style={{ background: '#0b1e19', borderRadius: 12, padding: 12, display: 'grid', gridTemplateColumns: '1fr auto 1fr auto', alignItems: 'center', gap: 10 }}>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontWeight: 600 }}>{formatKickoff(g)}</div>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    {games.completed.map(g => {
+                      const toId = (v) => {
+                        if (v == null) return null;
+                        if (typeof v === 'number') return String(v);
+                        const m = String(v).match(/\d+/);
+                        return m ? m[0] : null;
+                      };
+                      const hId = g.home_user_id || g.homeUserId || g.home_id || g.homeId || toId(g.home);
+                      const aId = g.away_user_id || g.awayUserId || g.away_id || g.awayId || toId(g.away);
+                      const kx = g.kickoff_at || g.kickoffAt || g.date || null;
+                      const when = kx ? new Date(kx).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
+                      const score = (g.home_score != null && g.away_score != null) 
+                        ? `${g.home_score}:${g.away_score}` 
+                        : 'VS';
+                      return (
+                        <div key={g.id} className="ml-match" style={{ padding: '10px 2px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                          <div className="ml-match__side">
+                            {hId ? (
+                              <Link to={`/user/${hId}`} style={{ display: 'contents' }}>
+                                <Avatar userId={hId} name={g.home} size={44} title={g.home} />
+                                <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.home}</span>
+                              </Link>
+                            ) : (
+                              <>
+                                <Avatar userId={hId} name={g.home} size={44} />
+                                <span>{g.home}</span>
+                              </>
+                            )}
+                          </div>
+                          <div className="ml-vs">{score}</div>
+                          <div className="ml-match__side" style={{ justifyContent: 'flex-end' }}>
+                            {aId ? (
+                              <Link to={`/user/${aId}`} style={{ display: 'contents' }}>
+                                <Avatar userId={aId} name={g.away} size={44} title={g.away} />
+                                <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.away}</span>
+                              </Link>
+                            ) : (
+                              <>
+                                <Avatar userId={aId} name={g.away} size={44} />
+                                <span>{g.away}</span>
+                              </>
+                            )}
+                          </div>
+                          <div style={{ gridColumn: '1 / -1', color: '#9db', fontSize: 12, display: 'flex', justifyContent: 'space-between' }}>
+                            <span>{formatKickoff(g)}</span>
+                            <span>{when}</span>
+                          </div>
+                          {g?.id ? (
+                            <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end' }}>
+                              <Link to={`/matches/${g.id}`} style={{ color: '#debc7c', fontWeight: 700, textDecoration: 'none' }}>Details</Link>
+                            </div>
+                          ) : null}
                         </div>
-                        <div style={{ textAlign: 'right', color: '#9db' }}>{g.home}</div>
-                        <div style={{ textAlign: 'center', fontWeight: 700 }}>{(g.home_score!=null && g.away_score!=null) ? `${g.home_score}:${g.away_score}` : '— : —'}</div>
-                        <div style={{ color: '#9db' }}>{g.away}</div>
-                        <div style={{ gridColumn: '1 / -1', marginTop: 8 }}>
-                          <Link to={`/matches/${g.id}`} style={pill}>Details</Link>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
