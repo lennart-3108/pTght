@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { API_BASE } from '../config';
 import Avatar from '../components/Avatar';
+import LocationSelector from '../components/LocationSelector';
 
 export default function SearchMatchDialog() {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ export default function SearchMatchDialog() {
   const [cmFixedStart, setCmFixedStart] = useState('');
   const [cmFixedEnd, setCmFixedEnd] = useState('');
   const [cmWhen, setCmWhen] = useState(''); // ISO for datetime-local (computed)
-  const [cmType, setCmType] = useState('Liga'); // Liga | Freundschaft | Herausforderung
+  const [cmType, setCmType] = useState('Beginner'); // Beginner | Experienced | Athlete
   const [creating, setCreating] = useState(false);
   const [createErr, setCreateErr] = useState('');
   const [availableLocations, setAvailableLocations] = useState([]);
@@ -44,10 +45,15 @@ export default function SearchMatchDialog() {
     Promise.all([
       fetch(`${API_BASE}/sports/list`).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/cities/list`).then(r => r.ok ? r.json() : []),
-    ]).then(([ss, cs]) => {
+      fetch(`${API_BASE}/countries/list`).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/states/list`).then(r => r.ok ? r.json() : []),
+    ]).then(([ss, cs, cos, sts]) => {
       if (!mounted) return;
       setSports(Array.isArray(ss) ? ss : []);
       setCities(Array.isArray(cs) ? cs : []);
+      // Store in window for LocationSelector
+      window.__countriesData = Array.isArray(cos) ? cos : [];
+      window.__statesData = Array.isArray(sts) ? sts : [];
     });
     return () => { mounted = false; };
   }, []);
@@ -191,22 +197,28 @@ export default function SearchMatchDialog() {
     <div style={{ maxWidth: 1000, margin: '20px auto', padding: 16 }}>
       <h1 style={{ marginTop: 0 }}>Match suchen</h1>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
-        <select value={sportId} onChange={(e) => setSportId(e.target.value)} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#113528', color: '#e8efe8' }}>
+        <select value={sportId} onChange={(e) => setSportId(e.target.value)} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#113528', color: '#e8efe8', minWidth: 200 }}>
           <option value="">Sportart</option>
           {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
         </select>
-        <select value={countryId} onChange={(e) => setCountryId(e.target.value)} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#113528', color: '#e8efe8' }}>
-          <option value="">Land</option>
-          {countries.map(co => <option key={co.id} value={co.id}>{co.name}</option>)}
-        </select>
-        <select value={stateId} onChange={(e) => setStateId(e.target.value)} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#113528', color: '#e8efe8' }}>
-          <option value="">Bundesstaat</option>
-          {states.map(st => <option key={st.id} value={st.id}>{st.name}</option>)}
-        </select>
-        <select value={cityId} onChange={(e) => setCityId(e.target.value)} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#113528', color: '#e8efe8' }}>
-          <option value="">Stadt</option>
-          {filteredCities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-        </select>
+        
+        <div style={{ minWidth: 200, position: 'relative' }}>
+          <LocationSelector
+            cities={cities}
+            countries={window.__countriesData || []}
+            states={window.__statesData || []}
+            value={cityId ? (cities.find(c => String(c.id) === String(cityId))?.name || '') : ''}
+            onChange={(cityName, cityIdVal) => {
+              setCityId(cityIdVal);
+              const selectedCity = cities.find(c => String(c.id) === String(cityIdVal));
+              if (selectedCity) {
+                setCountryId(selectedCity.countryId || '');
+                setStateId(selectedCity.stateId || '');
+              }
+            }}
+            placeholder="Stadt"
+          />
+        </div>
         <button onClick={() => runSearch()} disabled={searching} style={{ background: '#debc7c', color: '#10261f', padding: '10px 18px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 700 }}>{searching ? 'Suche…' : 'Suchen'}</button>
         <span style={{ flex: 1 }} />
         <button onClick={openCreate} disabled={!authed} className="btn-primary" style={{ background: '#0e2f2d', border: '1px solid #2f6b57' }}>{authed ? 'Match erstellen' : 'Einloggen um zu erstellen'}</button>
@@ -332,24 +344,21 @@ export default function SearchMatchDialog() {
                     {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                   </select>
                   
-                  <select value={cmCountryId} onChange={(e)=>{setCmCountryId(e.target.value); setCmStateId(''); setCmCityId('');}} style={{ padding: '12px 14px', borderRadius: 10, border: '2px solid #2f6b57', background: '#0e2a22', color: '#e8efe8', fontSize: 14, fontWeight: 500 }}>
-                    <option value="">🌍 Land wählen</option>
-                    {cmCountries.map(co => <option key={co.id} value={co.id}>{co.name}</option>)}
-                  </select>
-
-                  {cmCountryId && (
-                    <select value={cmStateId} onChange={(e)=>{setCmStateId(e.target.value); setCmCityId('');}} style={{ padding: '12px 14px', borderRadius: 10, border: '2px solid #2f6b57', background: '#0e2a22', color: '#e8efe8', fontSize: 14, fontWeight: 500 }}>
-                      <option value="">📍 Bundesstaat wählen</option>
-                      {cmStates.map(st => <option key={st.id} value={st.id}>{st.name}</option>)}
-                    </select>
-                  )}
-
-                  {(cmCountryId || cmStateId) && (
-                    <select value={cmCityId} onChange={(e)=>setCmCityId(e.target.value)} style={{ padding: '12px 14px', borderRadius: 10, border: '2px solid #2f6b57', background: '#0e2a22', color: '#e8efe8', fontSize: 14, fontWeight: 500 }}>
-                      <option value="">🏙️ Stadt wählen</option>
-                      {cmFilteredCities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                    </select>
-                  )}
+                  <LocationSelector
+                    cities={cities}
+                    countries={window.__countriesData || []}
+                    states={window.__statesData || []}
+                    value={cmCityId ? (cities.find(c => String(c.id) === String(cmCityId))?.name || '') : ''}
+                    onChange={(cityName, cityId) => {
+                      setCmCityId(cityId);
+                      const selectedCity = cities.find(c => String(c.id) === String(cityId));
+                      if (selectedCity) {
+                        setCmCountryId(selectedCity.countryId || '');
+                        setCmStateId(selectedCity.stateId || '');
+                      }
+                    }}
+                    placeholder="Stadt wählen"
+                  />
                 </div>
               </div>
 
@@ -372,7 +381,7 @@ export default function SearchMatchDialog() {
                 </div>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginLeft: 36 }}>
-                  {['Liga','Freundschaft','Herausforderung'].map(t => (
+                  {['Beginner','Experienced','Athlete'].map(t => (
                     <button key={t} type="button" onClick={()=>setCmType(t)} style={{ 
                       padding: '12px 10px', 
                       borderRadius: 8, 

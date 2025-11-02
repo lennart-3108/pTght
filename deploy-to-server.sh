@@ -85,6 +85,11 @@ echo ""
 echo "🔍 Backend logs (last 20 lines):"
 pm2 logs ptght-backend --lines 20 --nostream
 
+echo ""
+echo "🔎 Running post-deploy verification..."
+cd "$APP_PATH"
+bash scripts/verify-server.sh || echo "⚠️  verify-server reported issues (see above)"
+
 ENDSSH
 
 echo ""

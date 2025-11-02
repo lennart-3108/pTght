@@ -280,11 +280,13 @@ export default function StartPage() {
             <div style={{ display: 'grid', gap: 8 }}>
               {myGames.upcoming.slice(0, 3).map(g => {
                 const toId = (v) => {
-                  const m = String(v ?? '').match(/\d+/);
+                  if (v == null) return null;
+                  if (typeof v === 'number') return String(v);
+                  const m = String(v).match(/\d+/);
                   return m ? m[0] : null;
                 };
-                const hId = toId(g.home_id ?? g.homeId ?? g.home);
-                const aId = toId(g.away_id ?? g.awayId ?? g.away);
+                const hId = g.home_user_id || g.homeUserId || g.home_id || g.homeId || toId(g.home);
+                const aId = g.away_user_id || g.awayUserId || g.away_id || g.awayId || toId(g.away);
                 const Name = ({ name, uid }) => uid ? (
                   <Link to={`/user/${uid}`} style={{ color: '#cfe', textDecoration: 'none' }}>{name}</Link>
                 ) : (<span>{name}</span>);
@@ -293,13 +295,31 @@ export default function StartPage() {
                 return (
                   <div key={g.id} className="ml-match" style={{ padding: '10px 2px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                     <div className="ml-match__side">
-                      <Avatar userId={hId} name={g.home} size={44} />
-                      <Name name={g.home} uid={hId} />
+                      {hId ? (
+                        <Link to={`/user/${hId}`} style={{ display: 'contents' }}>
+                          <Avatar userId={hId} name={g.home} size={44} title={g.home} />
+                          <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.home}</span>
+                        </Link>
+                      ) : (
+                        <>
+                          <Avatar userId={hId} name={g.home} size={44} />
+                          <span>{g.home}</span>
+                        </>
+                      )}
                     </div>
                     <div className="ml-vs">VS</div>
                     <div className="ml-match__side" style={{ justifyContent: 'flex-end' }}>
-                      <Avatar userId={aId} name={g.away} size={44} />
-                      <Name name={g.away} uid={aId} />
+                      {aId ? (
+                        <Link to={`/user/${aId}`} style={{ display: 'contents' }}>
+                          <Avatar userId={aId} name={g.away} size={44} title={g.away} />
+                          <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.away}</span>
+                        </Link>
+                      ) : (
+                        <>
+                          <Avatar userId={aId} name={g.away} size={44} />
+                          <span>{g.away}</span>
+                        </>
+                      )}
                     </div>
                     <div style={{ gridColumn: '1 / -1', color: '#9db', fontSize: 12, display: 'flex', justifyContent: 'space-between' }}>
                       <span>{[g.sport, g.league, g.city].filter(Boolean).join(' · ')}</span>
@@ -328,11 +348,13 @@ export default function StartPage() {
             <div style={{ display: 'grid', gap: 8 }}>
               {myGames.completed.slice(0, 3).map(g => {
                 const toId = (v) => {
-                  const m = String(v ?? '').match(/\d+/);
+                  if (v == null) return null;
+                  if (typeof v === 'number') return String(v);
+                  const m = String(v).match(/\d+/);
                   return m ? m[0] : null;
                 };
-                const hId = toId(g.home_id ?? g.homeId ?? g.home);
-                const aId = toId(g.away_id ?? g.awayId ?? g.away);
+                const hId = g.home_user_id || g.homeUserId || g.home_id || g.homeId || toId(g.home);
+                const aId = g.away_user_id || g.awayUserId || g.away_id || g.awayId || toId(g.away);
                 const Name = ({ name, uid }) => uid ? (
                   <Link to={`/user/${uid}`} style={{ color: '#cfe', textDecoration: 'none' }}>{name}</Link>
                 ) : (<span>{name}</span>);
@@ -340,13 +362,31 @@ export default function StartPage() {
                 return (
                   <div key={g.id} className="ml-match" style={{ padding: '10px 2px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                     <div className="ml-match__side">
-                      <Avatar userId={hId} name={g.home} size={44} />
-                      <Name name={g.home} uid={hId} />
+                      {hId ? (
+                        <Link to={`/user/${hId}`} style={{ display: 'contents' }}>
+                          <Avatar userId={hId} name={g.home} size={44} title={g.home} />
+                          <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.home}</span>
+                        </Link>
+                      ) : (
+                        <>
+                          <Avatar userId={hId} name={g.home} size={44} />
+                          <span>{g.home}</span>
+                        </>
+                      )}
                     </div>
                     <div className="ml-vs" style={{ fontSize: 24 }}>{score}</div>
                     <div className="ml-match__side" style={{ justifyContent: 'flex-end' }}>
-                      <Avatar userId={aId} name={g.away} size={44} />
-                      <Name name={g.away} uid={aId} />
+                      {aId ? (
+                        <Link to={`/user/${aId}`} style={{ display: 'contents' }}>
+                          <Avatar userId={aId} name={g.away} size={44} title={g.away} />
+                          <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.away}</span>
+                        </Link>
+                      ) : (
+                        <>
+                          <Avatar userId={aId} name={g.away} size={44} />
+                          <span>{g.away}</span>
+                        </>
+                      )}
                     </div>
                     <div style={{ gridColumn: '1 / -1', color: '#9db', fontSize: 12, display: 'flex', justifyContent: 'space-between' }}>
                       <span>{[g.sport, g.league, g.city].filter(Boolean).join(' · ')}</span>
