@@ -4,87 +4,61 @@ module.exports = function sportsRoutes(ctx) {
   const router = express.Router();
   const { db } = ctx;
 
-  // Liste aller Sportarten
+  // Liste aller Sportarten mit Kategorie-Info
   router.get("/list", (_req, res) => {
-    db.all(`SELECT id, name FROM sports ORDER BY name`, [], (err, rows) => {
-      if (err) return res.status(500).json({ error: "Datenbankfehler" });
-      res.json(rows || []);
-    });
-  });
-
-  // Hierarchische Liste aller Sportarten (Parent-Child Struktur)
-  router.get("/hierarchy", (_req, res) => {
-    const sql = `
+    db.all(`
       SELECT 
         s.id, 
-        s.name, 
-        s.parent_id,
-        s.category,
-        p.name as parent_name
+        s.name,
+        s.category_id,
+        s.parent_sport_id,
+        s.variant_type,
+        s.type,
+        sc.name as category_name
       FROM sports s
-      LEFT JOIN sports p ON s.parent_id = p.id
-      ORDER BY 
-        CASE WHEN s.parent_id IS NULL THEN s.name ELSE p.name END,
-        s.parent_id IS NULL DESC,
-        s.name
-    `;
-    db.all(sql, [], (err, rows) => {
-      if (err) return res.status(500).json({ error: "Datenbankfehler" });
-      
-      // Organisiere Daten in hierarchische Struktur
-      const parentSports = {};
-      const childSports = {};
-      
-      rows.forEach(row => {
-        if (row.parent_id === null) {
-          parentSports[row.id] = {
-            id: row.id,
-            name: row.name,
-            children: []
-          };
-        } else {
-          if (!childSports[row.parent_id]) {
-            childSports[row.parent_id] = [];
-          }
-          childSports[row.parent_id].push({
-            id: row.id,
-            name: row.name,
-            category: row.category,
-            parent_id: row.parent_id,
-            parent_name: row.parent_name
-          });
-        }
-      });
-      
-      // Füge Children zu Parents hinzu
-      Object.keys(childSports).forEach(parentId => {
-        if (parentSports[parentId]) {
-          parentSports[parentId].children = childSports[parentId];
-        }
-      });
-      
-      res.json(Object.values(parentSports));
-    });
-  });
-
-  // Alle Child-Sportarten einer Parent-Sportart
-  router.get("/:id/children", (req, res) => {
-    const parentId = Number(req.params.id);
-    if (!Number.isInteger(parentId)) {
-      return res.status(400).json({ error: "Ungültige ID" });
-    }
-    
-    const sql = `
-      SELECT id, name, category, parent_id
-      FROM sports 
-      WHERE parent_id = ?
-      ORDER BY name
-    `;
-    db.all(sql, [parentId], (err, rows) => {
+      LEFT JOIN sport_categories sc ON s.category_id = sc.id
+      ORDER BY s.sort_order, s.name
+    `, [], (err, rows) => {
       if (err) return res.status(500).json({ error: "Datenbankfehler" });
       res.json(rows || []);
     });
   });
+
+  // Kategorien mit ihren Sportarten (hierarchisch)
+  router.get("/categories", (_req, res) => {
+    // Erst Kategorien holen
+    db.all(`SELECT id, name, slug, icon, sort_order FROM sport_categories ORDER BY sort_order`, [], (err, categories) => {
+      if (err) return res.status(500).json({ error: "Datenbankfehler" });
+      
+      // Dann alle Sportarten
+      db.all(`
+        SELECT 
+          s.id, 
+          s.name,
+          s.category_id,
+          s.parent_sport_id,
+          s.variant_type,
+          s.type
+        FROM sports s
+        ORDER BY s.sort_order, s.name
+      `, [], (err2, sports) => {
+        if (err2) return res.status(500).json({ error: "Datenbankfehler" });
+        
+        // Organisiere hierarchisch
+        const result = categories.map(cat => ({
+          ...cat,
+          sports: sports.filter(s => s.category_id === cat.id && !s.parent_sport_id).map(sport => ({
+            ...sport,
+            variants: sports.filter(v => v.parent_sport_id === sport.id)
+          }))
+        }));
+        
+        res.json(result);
+      });
+    });
+  });
+
+
 
   // Einzelne Sportart
   router.get("/:id", (req, res) => {

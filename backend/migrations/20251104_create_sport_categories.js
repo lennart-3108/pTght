@@ -1,0 +1,143 @@
+exports.up = function(knex) {
+  return knex.schema
+    // 1. Create sport_categories table
+    .createTable('sport_categories', function(table) {
+      table.increments('id').primary();
+      table.string('name', 100).notNullable().unique();
+      table.string('slug', 50).notNullable().unique();
+      table.text('description');
+      table.string('icon', 10);
+      table.integer('sort_order').defaultTo(0);
+      table.timestamps(true, true);
+    })
+    // 2. Backup current sports data
+    .then(() => {
+      return knex.schema.renameTable('sports', 'sports_backup');
+    })
+    // 3. Create new sports table with proper structure
+    .then(() => {
+      return knex.schema.createTable('sports', function(table) {
+        table.increments('id').primary();
+        table.string('name', 100).notNullable();
+        table.integer('category_id').unsigned();
+        table.integer('parent_sport_id').unsigned();
+        table.string('variant_type', 50);
+        table.integer('is_approved').defaultTo(1);
+        table.string('type', 50).defaultTo('Single');
+        table.text('description');
+        table.integer('sort_order').defaultTo(0);
+        table.timestamps(true, true);
+        
+        // Foreign keys
+        table.foreign('category_id').references('sport_categories.id').onDelete('SET NULL');
+        table.foreign('parent_sport_id').references('sports.id').onDelete('CASCADE');
+        
+        // Indexes
+        table.index('category_id');
+        table.index('parent_sport_id');
+      });
+    })
+    // 4. Insert categories
+    .then(() => {
+      return knex('sport_categories').insert([
+        { name: 'Ballsport', slug: 'ballsport', icon: '⚽', sort_order: 1, description: 'Teamsportarten mit Ball' },
+        { name: 'Racket Sports', slug: 'racket', icon: '🎾', sort_order: 2, description: 'Rückschlagsportarten' },
+        { name: 'Watersports', slug: 'water', icon: '🏊', sort_order: 3, description: 'Wassersportarten' },
+        { name: 'Bar & Fun Games', slug: 'fun', icon: '🎯', sort_order: 4, description: 'Freizeit- und Kneipensportarten' }
+      ]);
+    })
+    // 5. Migrate existing sports with category assignments
+    .then(() => {
+      return knex.raw(`
+        INSERT INTO sports (id, name, category_id, is_approved, type, sort_order)
+        SELECT 
+          s.id,
+          s.name,
+          CASE 
+            WHEN s.name IN ('Tennis', 'Badminton', 'Tischtennis') THEN (SELECT id FROM sport_categories WHERE slug = 'racket')
+            WHEN s.name IN ('Fußball', 'Basketball', 'Volleyball', 'Handball') THEN (SELECT id FROM sport_categories WHERE slug = 'ballsport')
+            WHEN s.name IN ('Schwimmen', 'Laufen') THEN (SELECT id FROM sport_categories WHERE slug = 'water')
+            ELSE NULL
+          END,
+          s.is_approved,
+          s.type,
+          s.id
+        FROM sports_backup s
+        WHERE s.name != 'test'
+      `);
+    })
+    // 6. Add Tennis variants
+    .then(() => {
+      return knex.raw(`
+        INSERT INTO sports (name, category_id, parent_sport_id, variant_type, is_approved, type, sort_order)
+        SELECT 
+          'Tennis Einzel',
+          (SELECT id FROM sport_categories WHERE slug = 'racket'),
+          (SELECT id FROM sports WHERE name = 'Tennis'),
+          'Einzel',
+          1,
+          'Single',
+          101
+        UNION ALL
+        SELECT 
+          'Tennis Doppel',
+          (SELECT id FROM sport_categories WHERE slug = 'racket'),
+          (SELECT id FROM sports WHERE name = 'Tennis'),
+          'Doppel',
+          1,
+          'Team',
+          102
+        UNION ALL
+        SELECT 
+          'Tennis Mixed',
+          (SELECT id FROM sport_categories WHERE slug = 'racket'),
+          (SELECT id FROM sports WHERE name = 'Tennis'),
+          'Mixed',
+          1,
+          'Team',
+          103
+      `);
+    })
+    // 7. Add Fußball variants
+    .then(() => {
+      return knex.raw(`
+        INSERT INTO sports (name, category_id, parent_sport_id, variant_type, is_approved, type, sort_order)
+        SELECT 
+          'Fußball 11 vs 11',
+          (SELECT id FROM sport_categories WHERE slug = 'ballsport'),
+          (SELECT id FROM sports WHERE name = 'Fußball'),
+          '11v11',
+          1,
+          'Team',
+          201
+        UNION ALL
+        SELECT 
+          'Fußball 7 vs 7',
+          (SELECT id FROM sport_categories WHERE slug = 'ballsport'),
+          (SELECT id FROM sports WHERE name = 'Fußball'),
+          '7v7',
+          1,
+          'Team',
+          202
+        UNION ALL
+        SELECT 
+          'Fußball 5 vs 5',
+          (SELECT id FROM sport_categories WHERE slug = 'ballsport'),
+          (SELECT id FROM sports WHERE name = 'Fußball'),
+          '5v5',
+          1,
+          'Team',
+          203
+      `);
+    })
+    // 8. Drop backup table
+    .then(() => {
+      return knex.schema.dropTable('sports_backup');
+    });
+};
+
+exports.down = function(knex) {
+  return knex.schema
+    .dropTable('sports')
+    .dropTable('sport_categories');
+};
