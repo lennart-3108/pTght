@@ -4,6 +4,7 @@ import { API_BASE } from "../config";
 import smallLogo from "../images/logo.png";
 import Avatar from "../components/Avatar";
 import LocationSelector from "../components/LocationSelector";
+import SportSelector from "../components/SportSelector";
 
 // load background images from sports folder and sort
 function importAllBackgrounds(r) {
@@ -29,6 +30,7 @@ export default function StartPage() {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [selectedSport, setSelectedSport] = useState("");
+  const [selectedSportName, setSelectedSportName] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedCityName, setSelectedCityName] = useState("");
   const [openMatches, setOpenMatches] = useState([]);
@@ -230,10 +232,17 @@ export default function StartPage() {
             </div>
             <p className="hero-sub"><b>Willkommen bei MatchLeague. Connect. Match. Win.</b></p>
             <div className="hero-controls" style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 12, flexWrap: 'wrap', position: 'relative', zIndex: 100, overflow: 'visible' }}>
-              <select value={selectedSport} onChange={(e) => setSelectedSport(e.target.value)} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#113528', color: '#e8efe8', fontSize: 15, position: 'relative', minWidth: 200, zIndex: 1 }}>
-                <option value="">Sportart</option>
-                {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-              </select>
+              <div style={{ minWidth: 200, position: 'relative' }}>
+                <SportSelector
+                  sports={sports}
+                  value={selectedSportName}
+                  onChange={(sportName, sportId) => {
+                    setSelectedSportName(sportName);
+                    setSelectedSport(String(sportId));
+                  }}
+                  placeholder="Sportart"
+                />
+              </div>
               
               <div style={{ minWidth: 200, position: 'relative' }}>
                 <LocationSelector
@@ -267,7 +276,18 @@ export default function StartPage() {
                   if (selectedCity) qp.set('cityId', selectedCity);
                   navigate(`/ligen?${qp.toString()}`);
                 }}
-                style={{ background: '#10b981', color: '#10261f', padding: '10px 18px', borderRadius: 10, border: '2px solid #debc7c', cursor: 'pointer', fontWeight: 800, fontSize: 15, marginLeft: 10 }}
+                style={{ 
+                  padding: '10px 18px', 
+                  borderRadius: 8, 
+                  border: '2px solid #debc7c', 
+                  background: '#1a3c33', 
+                  color: '#debc7c', 
+                  cursor: 'pointer', 
+                  fontWeight: 600, 
+                  fontSize: 15, 
+                  marginLeft: 10,
+                  transition: 'all 0.2s'
+                }}
               >Liga suchen</button>
             </div>
           </div>
