@@ -496,8 +496,7 @@ export default function LeaguesPage() {
           <button 
             onClick={() => { 
               setSelectedCity(""); 
-              setSelectedCountry("");
-              setSelectedState("");
+              setSelectedCityName("");
               setSelectedSport(""); 
               setSearchQuery("");
               setShowMyLeaguesOnly(false);
