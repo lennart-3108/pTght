@@ -267,7 +267,7 @@ export default function StartPage() {
                   if (selectedCity) qp.set('cityId', selectedCity);
                   navigate(`/ligen?${qp.toString()}`);
                 }}
-                style={{ background: '#48baa6', color: '#10261f', padding: '10px 18px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 15, marginLeft: 10 }}
+                style={{ background: '#10b981', color: '#10261f', padding: '10px 18px', borderRadius: 10, border: '2px solid #debc7c', cursor: 'pointer', fontWeight: 800, fontSize: 15, marginLeft: 10 }}
               >Liga suchen</button>
             </div>
           </div>
