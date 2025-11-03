@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { API_BASE } from "../config";
+import LocationSelector from "../components/LocationSelector";
 
 export default function LeaguesPage() {
   const [searchParams] = useSearchParams();
@@ -12,8 +13,7 @@ export default function LeaguesPage() {
   
   // Initialize filters from URL params
   const [selectedCity, setSelectedCity] = useState(searchParams.get('cityId') || "");
-  const [selectedCountry, setSelectedCountry] = useState("");
-  const [selectedState, setSelectedState] = useState("");
+  const [selectedCityName, setSelectedCityName] = useState("");
   const [selectedSport, setSelectedSport] = useState(searchParams.get('sportId') || "");
   const [searchQuery, setSearchQuery] = useState("");
   const [showMyLeaguesOnly, setShowMyLeaguesOnly] = useState(false);
@@ -197,23 +197,6 @@ export default function LeaguesPage() {
       .finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
   }, []);
-
-  // visibleLeagues MUST be declared before effects that reference it -> moved here
-  // Filtered cities based on country/state selection
-  const filteredCities = useMemo(() => {
-    return cities.filter(city => {
-      const byCountry = selectedCountry ? String(city.countryId || city.country_id) === String(selectedCountry) : true;
-      const byState = selectedState ? String(city.stateId || city.state_id) === String(selectedState) : true;
-      return byCountry && byState;
-    });
-  }, [cities, selectedCountry, selectedState]);
-
-  // Filtered states based on country selection  
-  const filteredStates = useMemo(() => {
-    return states.filter(state => {
-      return selectedCountry ? String(state.countryId || state.country_id) === String(selectedCountry) : true;
-    });
-  }, [states, selectedCountry]);
 
   // Show all leagues by default; apply filters
   const visibleLeagues = useMemo(() => {
@@ -413,10 +396,10 @@ export default function LeaguesPage() {
           />
         </div>
 
-        {/* Filter Grid */}
+        {/* Filter Grid - 2 columns: Sport + Stadt */}
         <div style={{ 
           display: "grid", 
-          gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", 
+          gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))", 
           gap: 16,
           marginBottom: 20
         }}>
@@ -456,89 +439,20 @@ export default function LeaguesPage() {
               color: '#e5e7eb',
               fontSize: 14
             }}>
-              Land
+              Stadt
             </label>
-            <select 
-              value={selectedCountry} 
-              onChange={e => {
-                setSelectedCountry(e.target.value);
-                setSelectedState("");
-                setSelectedCity("");
+            <LocationSelector
+              cities={cities}
+              countries={countries}
+              states={states}
+              value={selectedCityName}
+              onChange={(cityName, cityId) => {
+                setSelectedCityName(cityName);
+                setSelectedCity(String(cityId));
+                handleCitySelect(String(cityId));
               }}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 8,
-                background: 'rgba(255,255,255,0.05)',
-                color: '#e5e7eb',
-                fontSize: 14
-              }}
-            >
-              <option value="">— alle Länder —</option>
-              {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label style={{ 
-              display: 'block',
-              marginBottom: 8,
-              fontWeight: 600,
-              color: '#e5e7eb',
-              fontSize: 14
-            }}>
-              Bundesland/Region
-            </label>
-            <select 
-              value={selectedState} 
-              onChange={e => {
-                setSelectedState(e.target.value);
-                setSelectedCity("");
-              }}
-              disabled={!selectedCountry}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 8,
-                background: selectedCountry ? 'rgba(255,255,255,0.05)' : 'rgba(100,100,100,0.1)',
-                color: selectedCountry ? '#e5e7eb' : '#666',
-                fontSize: 14
-              }}
-            >
-              <option value="">— alle Regionen —</option>
-              {filteredStates.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
-          </div>
-
-          <div>
-            <label style={{ 
-              display: 'block',
-              marginBottom: 8,
-              fontWeight: 600,
-              color: '#e5e7eb',
-              fontSize: 14
-            }}>
-              Stadt {userProfile?.city && selectedCity === String(userProfile.city_id || userProfile.cityId) && 
-                <span style={{ color: '#48baa6', fontSize: 12 }}>(deine Stadt)</span>}
-            </label>
-            <select 
-              value={selectedCity} 
-              onChange={e => handleCitySelect(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 8,
-                background: 'rgba(255,255,255,0.05)',
-                color: '#e5e7eb',
-                fontSize: 14
-              }}
-            >
-              <option value="">— alle Städte —</option>
-              {filteredCities.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-            </select>
+              placeholder="Stadt wählen..."
+            />
           </div>
         </div>
 
