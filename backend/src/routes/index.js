@@ -50,11 +50,8 @@ function registerRoutes(app, ctx) {
   apiRouter.use('/assets', assetsRoutes(ctx));
   apiRouter.use('/slots', slotsRoutes(ctx));
 
-  // Mount all API routes under /api
-  app.use("/api", apiRouter);
-
   // --- Email status + test routes ---
-  app.get("/admin/email-status", async (req, res) => {
+  apiRouter.get("/admin/email-status", async (req, res) => {
     const t = ctx.transporter;
     const state = ctx.mailerState || {};
     res.json({
@@ -69,7 +66,7 @@ function registerRoutes(app, ctx) {
     });
   });
 
-  app.post("/admin/test-email", async (req, res) => {
+  apiRouter.post("/admin/test-email", async (req, res) => {
     try {
       const t = ctx.transporter;
       if (!t) return res.status(503).json({ error: "Mailer not configured" });
@@ -87,7 +84,7 @@ function registerRoutes(app, ctx) {
   });
 
   // --- Admin: delete record by id from selected table ---
-  app.delete("/admin/table/:table/:id", (req, res) => {
+  apiRouter.delete("/admin/table/:table/:id", (req, res) => {
     const table = String(req.params.table || "");
     const id = Number(req.params.id);
     if (!Number.isFinite(id)) return res.status(400).json({ error: "Invalid id" });
@@ -107,6 +104,9 @@ function registerRoutes(app, ctx) {
       return res.json({ success: true, deleted: this.changes, id });
     });
   });
+
+  // Mount all API routes under /api
+  app.use("/api", apiRouter);
 }
 
 module.exports = { registerRoutes };
