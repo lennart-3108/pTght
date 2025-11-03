@@ -135,6 +135,7 @@ function App() {
 
           {/* Leagues-Übersicht (public) */}
           <Route path="/leagues" element={<LeaguesPage />} />
+          <Route path="/ligen" element={<LeaguesPage />} />
 
           {/* Teams */}
 

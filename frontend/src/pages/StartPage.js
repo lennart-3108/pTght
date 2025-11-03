@@ -259,6 +259,16 @@ export default function StartPage() {
                 style={{ background: '#debc7c', color: '#10261f', padding: '10px 18px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 15 }}
                 disabled={searching}
               >{searching ? 'Suche…' : 'Match suchen'}</button>
+
+              <button
+                onClick={() => {
+                  const qp = new URLSearchParams();
+                  if (selectedSport) qp.set('sportId', selectedSport);
+                  if (selectedCity) qp.set('cityId', selectedCity);
+                  navigate(`/ligen?${qp.toString()}`);
+                }}
+                style={{ background: '#10b981', color: '#fff', padding: '10px 18px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 15, marginLeft: 10 }}
+              >Liga suchen</button>
             </div>
           </div>
         </div>

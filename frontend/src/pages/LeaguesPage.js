@@ -1,17 +1,20 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { API_BASE } from "../config";
 
 export default function LeaguesPage() {
+  const [searchParams] = useSearchParams();
   const [leagues, setLeagues] = useState([]);
   const [cities, setCities] = useState([]);
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [sports, setSports] = useState([]);
-  const [selectedCity, setSelectedCity] = useState("");
+  
+  // Initialize filters from URL params
+  const [selectedCity, setSelectedCity] = useState(searchParams.get('cityId') || "");
   const [selectedCountry, setSelectedCountry] = useState("");
   const [selectedState, setSelectedState] = useState("");
-  const [selectedSport, setSelectedSport] = useState("");
+  const [selectedSport, setSelectedSport] = useState(searchParams.get('sportId') || "");
   const [searchQuery, setSearchQuery] = useState("");
   const [showMyLeaguesOnly, setShowMyLeaguesOnly] = useState(false);
   const [userLeagues, setUserLeagues] = useState([]);
