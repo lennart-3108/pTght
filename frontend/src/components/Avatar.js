@@ -17,9 +17,9 @@ function toAbsolute(url) {
   let s = String(url);
   
   // Fix hardcoded localhost:5002 references - replace with current API_BASE
-  if (s.includes('localhost:5002')) {
+  if (s.includes('localhost:5002') || s.includes('localhost:5001')) {
     // Extract just the path part (e.g., /uploads/avatars/3.jpg)
-    const match = s.match(/\/uploads\/avatars\/[^?#]+/);
+    const match = s.match(/\/uploads\/[^?#]+/);
     if (match) {
       s = match[0]; // Now it's a relative path
     }
@@ -28,7 +28,23 @@ function toAbsolute(url) {
   // If already absolute, return as-is
   if (/^(https?:)?\/\//i.test(s)) return s;
   
-  // Convert relative to absolute using API_BASE
+  // Special handling for /uploads paths - these should go to server root, not API_BASE
+  if (s.startsWith('/uploads/')) {
+    // Get the protocol and host from API_BASE or window.location
+    const base = API_BASE.replace(/\/api$/, ''); // Remove /api suffix if present
+    if (base.startsWith('http')) {
+      // API_BASE is absolute (e.g., http://localhost:5001/api)
+      return base + s;
+    } else {
+      // API_BASE is relative (e.g., /api), use current origin
+      if (typeof window !== 'undefined') {
+        return window.location.origin + s;
+      }
+      return s;
+    }
+  }
+  
+  // For other paths, use API_BASE normally
   return `${API_BASE.replace(/\/$/, '')}/${s.replace(/^\//, '')}`;
 }
 
