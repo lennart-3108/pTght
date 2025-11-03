@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { API_BASE } from "../config";
 import LocationSelector from "../components/LocationSelector";
+import SportSelector from "../components/SportSelector";
 
 export default function LeaguesPage() {
   const [searchParams] = useSearchParams();
@@ -15,6 +16,7 @@ export default function LeaguesPage() {
   const [selectedCity, setSelectedCity] = useState(searchParams.get('cityId') || "");
   const [selectedCityName, setSelectedCityName] = useState("");
   const [selectedSport, setSelectedSport] = useState(searchParams.get('sportId') || "");
+  const [selectedSportName, setSelectedSportName] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [showMyLeaguesOnly, setShowMyLeaguesOnly] = useState(false);
   const [userLeagues, setUserLeagues] = useState([]);
@@ -413,22 +415,15 @@ export default function LeaguesPage() {
             }}>
               Sport
             </label>
-            <select 
-              value={selectedSport} 
-              onChange={e => setSelectedSport(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '10px 12px',
-                border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 8,
-                background: 'rgba(255,255,255,0.05)',
-                color: '#e5e7eb',
-                fontSize: 14
+            <SportSelector
+              sports={sports}
+              value={selectedSportName}
+              onChange={(sportName, sportId) => {
+                setSelectedSportName(sportName);
+                setSelectedSport(String(sportId));
               }}
-            >
-              <option value="">— alle Sportarten —</option>
-              {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-            </select>
+              placeholder="Sportart wählen..."
+            />
           </div>
 
           <div>
@@ -498,6 +493,7 @@ export default function LeaguesPage() {
               setSelectedCity(""); 
               setSelectedCityName("");
               setSelectedSport(""); 
+              setSelectedSportName("");
               setSearchQuery("");
               setShowMyLeaguesOnly(false);
             }}
