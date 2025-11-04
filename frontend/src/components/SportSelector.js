@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
  * Hierarchical Sport Selector Component
  * Shows: Category → Sport → Variant
  * Props:
- *   - sports: array of sport objects with {id, name, parent_id, level, category}
+ *   - sports: array of categories from /api/sports/categories with nested sports and variants
  *   - value: currently selected sport name
  *   - onChange: callback(sportName, sportId)
  *   - placeholder: optional placeholder text (default: "Sportart wählen")
@@ -27,47 +27,30 @@ export default function SportSelector({ sports = [], value = '', onChange, place
   // Auto-expand category/sport when value is set
   useEffect(() => {
     if (value && sports.length > 0 && showDropdown) {
-      const selectedSport = sports.find(s => s.name === value);
-      if (selectedSport) {
-        // If it's a variant (level 3), expand its parent sport
-        if (selectedSport.level === 3 && selectedSport.parent_id) {
-          const parentSport = sports.find(s => s.id === selectedSport.parent_id);
-          if (parentSport) {
-            setExpandedSports(prev => ({ ...prev, [parentSport.id]: true }));
-            // Also expand the category
-            if (parentSport.parent_id) {
-              setExpandedCategories(prev => ({ ...prev, [parentSport.parent_id]: true }));
+      // Find the selected sport in the hierarchy
+      for (const category of sports) {
+        for (const sport of category.sports || []) {
+          if (sport.name === value) {
+            setExpandedCategories(prev => ({ ...prev, [category.id]: true }));
+            return;
+          }
+          for (const variant of sport.variants || []) {
+            if (variant.name === value) {
+              setExpandedCategories(prev => ({ ...prev, [category.id]: true }));
+              setExpandedSports(prev => ({ ...prev, [sport.id]: true }));
+              return;
             }
           }
-        }
-        // If it's a sport (level 2), expand its category
-        else if (selectedSport.level === 2 && selectedSport.parent_id) {
-          setExpandedCategories(prev => ({ ...prev, [selectedSport.parent_id]: true }));
         }
       }
     }
   }, [value, sports, showDropdown]);
 
-  // Organize sports by hierarchy
-  const categories = sports.filter(s => s.level === 1 || (s.parent_id === null && !s.level)); // Categories
-  const sportsByCategory = {};
-  const variantsBySport = {};
-
-  sports.forEach(sport => {
-    if (sport.level === 2 && sport.parent_id) {
-      if (!sportsByCategory[sport.parent_id]) sportsByCategory[sport.parent_id] = [];
-      sportsByCategory[sport.parent_id].push(sport);
-    } else if (sport.level === 3 && sport.parent_id) {
-      if (!variantsBySport[sport.parent_id]) variantsBySport[sport.parent_id] = [];
-      variantsBySport[sport.parent_id].push(sport);
-    }
-  });
-
   // Filter by search query
-  const matchesSearch = (sport) => {
+  const matchesSearch = (name) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
-    return sport.name.toLowerCase().includes(query);
+    return name.toLowerCase().includes(query);
   };
 
   const handleSportSelect = (sport) => {
@@ -157,16 +140,16 @@ export default function SportSelector({ sports = [], value = '', onChange, place
 
           {/* Hierarchical list */}
           <div style={{ padding: '4px 0' }}>
-            {categories
+            {sports
               .filter(category => {
                 // Show category if it matches search or any of its children match
-                if (matchesSearch(category)) return true;
-                const childSports = sportsByCategory[category.id] || [];
-                return childSports.some(s => matchesSearch(s)) || 
-                       childSports.some(s => (variantsBySport[s.id] || []).some(v => matchesSearch(v)));
+                if (matchesSearch(category.name)) return true;
+                const childSports = category.sports || [];
+                return childSports.some(s => matchesSearch(s.name)) || 
+                       childSports.some(s => (s.variants || []).some(v => matchesSearch(v.name)));
               })
               .map(category => {
-                const childSports = (sportsByCategory[category.id] || []).filter(matchesSearch);
+                const childSports = (category.sports || []).filter(s => matchesSearch(s.name));
                 const isExpanded = expandedCategories[category.id];
 
                 return (
@@ -192,7 +175,7 @@ export default function SportSelector({ sports = [], value = '', onChange, place
                       onMouseEnter={(e) => e.currentTarget.style.background = '#0d2422'}
                       onMouseLeave={(e) => e.currentTarget.style.background = isExpanded ? '#0d2422' : 'transparent'}
                     >
-                      <span>📁 {category.name}</span>
+                      <span>{category.icon || '📁'} {category.name}</span>
                       <span style={{ fontSize: 11, color: '#9ca3af' }}>
                         {isExpanded ? '▼' : '▶'}
                       </span>
@@ -200,7 +183,7 @@ export default function SportSelector({ sports = [], value = '', onChange, place
 
                     {/* Sports in category */}
                     {isExpanded && childSports.map(sport => {
-                      const variants = (variantsBySport[sport.id] || []).filter(matchesSearch);
+                      const variants = (sport.variants || []).filter(v => matchesSearch(v.name));
                       const hasVariants = variants.length > 0;
                       const isSportExpanded = expandedSports[sport.id];
 
@@ -273,31 +256,6 @@ export default function SportSelector({ sports = [], value = '', onChange, place
                   </div>
                 );
               })}
-
-            {/* Sports without category (fallback for level 2 sports with no parent) */}
-            {sports
-              .filter(s => (s.level === 2 || !s.level) && !s.parent_id && matchesSearch(s))
-              .map(sport => (
-                <div
-                  key={sport.id}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSportSelect(sport);
-                  }}
-                  style={{
-                    padding: '8px 16px',
-                    cursor: 'pointer',
-                    background: value === sport.name ? '#2f6b57' : 'transparent',
-                    borderLeft: '3px solid transparent',
-                    color: '#e8efe8',
-                    fontSize: 13
-                  }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = value === sport.name ? '#2f6b57' : '#0d2422'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = value === sport.name ? '#2f6b57' : 'transparent'}
-                >
-                  🏃 {sport.name}
-                </div>
-              ))}
           </div>
         </div>
       )}

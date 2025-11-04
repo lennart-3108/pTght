@@ -29,6 +29,7 @@ export default function StartPage() {
   const [cities, setCities] = useState([]);
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
+  const [districts, setDistricts] = useState([]);
   const [selectedSport, setSelectedSport] = useState("");
   const [selectedSportName, setSelectedSportName] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
@@ -78,6 +79,7 @@ export default function StartPage() {
   const detectLocation = async () => {
     if (!navigator.geolocation) {
       console.warn('[StartPage] Geolocation not supported');
+      alert('Dein Browser unterstützt keine Standortermittlung.');
       return;
     }
 
@@ -85,9 +87,9 @@ export default function StartPage() {
     try {
       const position = await new Promise((resolve, reject) => {
         navigator.geolocation.getCurrentPosition(resolve, reject, {
-          enableHighAccuracy: false,
+          enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 300000 // cache for 5 minutes
+          maximumAge: 0 // Don't use cached position
         });
       });
 
@@ -96,22 +98,34 @@ export default function StartPage() {
 
       // Query backend for nearest city
       const response = await fetch(`${API_BASE}/location/nearest?lat=${latitude}&lon=${longitude}`);
-      if (!response.ok) throw new Error('Location lookup failed');
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        console.warn('[StartPage] Location API error:', errorData);
+        throw new Error('Die Standortermittlung ist aktuell nicht verfügbar. Bitte wähle deine Stadt manuell aus.');
+      }
 
       const data = await response.json();
       console.log('[StartPage] Nearest location:', data);
 
-      if (data.city) {
-        // Auto-set filters based on detected location
-        if (data.city.id) {
-          setSelectedCity(String(data.city.id));
-          setSelectedCityName(data.city.name);
-        }
+      if (data.city && data.city.id) {
+        setSelectedCity(String(data.city.id));
+        setSelectedCityName(data.city.name);
         console.log(`[StartPage] Auto-set location: ${data.city.name}${data.state ? ', ' + data.state.name : ''}${data.country ? ', ' + data.country.name : ''}`);
+      } else {
+        alert('Keine Stadt in deiner Nähe gefunden. Bitte wähle deine Stadt manuell aus.');
       }
     } catch (error) {
-      console.warn('[StartPage] Location detection failed:', error.message);
-      // Silently fail - user can manually select location
+      console.warn('[StartPage] Location detection failed:', error);
+      if (error.code === 1) {
+        alert('Standortfreigabe wurde verweigert. Bitte erlaube den Zugriff in deinen Browser-Einstellungen.');
+      } else if (error.code === 2) {
+        alert('Standort konnte nicht ermittelt werden.');
+      } else if (error.code === 3) {
+        alert('Zeitüberschreitung bei der Standortermittlung.');
+      } else {
+        alert(error.message || 'Fehler bei der Standortermittlung. Bitte wähle deine Stadt manuell aus.');
+      }
     } finally {
       setGpsLoading(false);
     }
@@ -132,12 +146,13 @@ export default function StartPage() {
 
     Promise.all([
       fetch(`${API_BASE}/leagues`).then(safeJson),
-      fetch(`${API_BASE}/sports/list`).then(safeJson),
+      fetch(`${API_BASE}/sports/categories`).then(safeJson),
       fetch(`${API_BASE}/cities/list`).then(safeJson),
       fetch(`${API_BASE}/countries/list`).then(safeJson),
       fetch(`${API_BASE}/states/list`).then(safeJson),
+      fetch(`${API_BASE}/districts/list`).then(safeJson),
     ])
-      .then(([ls, ss, cs, co, sts]) => {
+      .then(([ls, ss, cs, co, sts, dists]) => {
         if (!mounted) return;
         setLeagues(Array.isArray(ls) ? ls : []);
         setSports(Array.isArray(ss) ? ss : []);
@@ -145,6 +160,7 @@ export default function StartPage() {
         const initialCountries = Array.isArray(co) ? co : [];
         setCountries(initialCountries);
         setStates(Array.isArray(sts) ? sts : []);
+        setDistricts(Array.isArray(dists) ? dists : []);
         // Fallback: if countries are empty (e.g., missing /api proxy on non-local host),
         // try talking directly to localhost:5001
         if (!initialCountries.length) {
@@ -249,10 +265,12 @@ export default function StartPage() {
                   cities={cities}
                   countries={countries}
                   states={states}
+                  districts={districts}
                   value={selectedCityName}
-                  onChange={(cityName, cityId) => {
-                    setSelectedCityName(cityName);
+                  onChange={(locationName, cityId, stateId, countryId, districtId) => {
+                    setSelectedCityName(locationName);
                     setSelectedCity(String(cityId));
+                    console.log('[StartPage] Location selected:', { locationName, cityId, stateId, countryId, districtId });
                   }}
                   placeholder="Stadt"
                 />
