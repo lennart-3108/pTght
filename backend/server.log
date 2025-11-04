@@ -1,0 +1,301 @@
+[DB] SQLITE_FILE not set; using sportsplatform.db
+[INFO] 2025-11-04T00:13:32.583Z [DB] SQLite detected – ensured base tables via db-setup.js {}
+[DB] SQLite file: /Users/A105227786/Documents/projects/sL/pTght/backend/sportsplatform.db
+[DB] Migrations dir: /Users/A105227786/Documents/projects/sL/pTght/backend/migrations
+[2025-11-04 00:13:32] DEBUG Creating transport: nodemailer (7.0.10; +https://nodemailer.com/; SMTP/7.0.10[client:7.0.10])
+[Mailer] Transport konfiguriert smtp.hostinger.com:465 secure=true
+[Mailer] Verifiziere SMTP-Verbindung ...
+[INFO] 2025-11-04T00:13:32.756Z [Server] Listening on http://0.0.0.0:5001 {}
+[INFO] 2025-11-04T00:13:32.757Z [Server] Logs directory: /Users/A105227786/Documents/projects/sL/pTght/backend/logs (error.log, info.log, link-tests.log) {}
+[2025-11-04 00:13:32] DEBUG [vfOMNw596os] Resolved smtp.hostinger.com as 172.65.255.143 [cache miss]
+🛠️ Admin erstellt: admin121 (admin121@example.com) / Passwort: test1234
+[ensureTestLocation] failed: insert into `locations` (`address`, `city`, `country`, `created_at`, `description`, `is_verified`, `name`, `owner_id`, `postal_code`, `status`, `timezone`, `updated_at`) values ('Osterdeich 54', 'Bremen', 'Deutschland', CURRENT_TIMESTAMP, 'Der center court an der Weser', 1, 'center courts', 1, '28203', 'active', 'Europe/Berlin', CURRENT_TIMESTAMP) - SQLITE_ERROR: table locations has no column named is_verified
+[2025-11-04 00:13:32] INFO  [vfOMNw596os] Secure connection established to 172.65.255.143:465
+[2025-11-04 00:13:32] DEBUG [vfOMNw596os] S: 220 ESMTP smtp.hostinger.com
+[2025-11-04 00:13:32] DEBUG [vfOMNw596os] C: EHLO [127.0.0.1]
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] S: 250-smtp.hostinger.com
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] S: 250-PIPELINING
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] S: 250-SIZE 48811212
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] S: 250-ETRN
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] S: 250-AUTH PLAIN LOGIN
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] S: 250-ENHANCEDSTATUSCODES
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] S: 250-8BITMIME
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] S: 250-DSN
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] S: 250 CHUNKING
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] SMTP handshake finished
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] C: AUTH PLAIN AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAvKiBzZWNyZXQgKi8=
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] S: 235 2.7.0 Authentication successful
+[2025-11-04 00:13:33] INFO  [vfOMNw596os] User "info@dev.matchleague.org" authenticated
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] C: QUIT
+[Mailer] Verify OK in 343ms. Sende Acceptance-Mail ...
+[2025-11-04 00:13:33] DEBUG Sending mail using SMTP/7.0.10[client:7.0.10]
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] Resolved smtp.hostinger.com as 172.65.255.143 [cache hit]
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] S: 221 2.0.0 Bye
+[2025-11-04 00:13:33] DEBUG [vfOMNw596os] Closing connection to the server using "end"
+[2025-11-04 00:13:33] INFO  [vfOMNw596os] Connection closed
+[2025-11-04 00:13:33] INFO  [QscgJpSFhVU] Secure connection established to 172.65.255.143:465
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 220 ESMTP smtp.hostinger.com
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] C: EHLO [127.0.0.1]
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 250-smtp.hostinger.com
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 250-PIPELINING
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 250-SIZE 48811212
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 250-ETRN
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 250-AUTH PLAIN LOGIN
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 250-ENHANCEDSTATUSCODES
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 250-8BITMIME
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 250-DSN
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 250 CHUNKING
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] SMTP handshake finished
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] C: AUTH PLAIN AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAvKiBzZWNyZXQgKi8=
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 235 2.7.0 Authentication successful
+[2025-11-04 00:13:33] INFO  [QscgJpSFhVU] User "info@dev.matchleague.org" authenticated
+[2025-11-04 00:13:33] INFO  Sending message 1762215213084-12787fe1ffcf@matchleague.org to <info@dev.matchleague.org>
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] C: MAIL FROM:<info@dev.matchleague.org>
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 250 2.1.0 Ok
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] C: RCPT TO:<info@dev.matchleague.org>
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 250 2.1.5 Ok
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] C: DATA
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 354 End data with <CR><LF>.<CR><LF>
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] X-Mailer: MatchLeague
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] Auto-Submitted: auto-generated
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] From: MatchLeague <info@dev.matchleague.org>
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] To: info@dev.matchleague.org
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] Reply-To: info@dev.matchleague.org
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] Subject: Mailer verified
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] Message-ID: <1762215213084-12787fe1ffcf@matchleague.org>
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] Date: Tue, 04 Nov 2025 00:13:33 +0000
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] MIME-Version: 1.0
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] Content-Type: multipart/alternative;
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU]  boundary="--_NmP-3bea4d6ff8344b52-Part_1"
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] 
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] ----_NmP-3bea4d6ff8344b52-Part_1
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] Content-Type: text/plain; charset=utf-8
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] Content-Transfer-Encoding: 7bit
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] 
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] SMTP connection accepted at 2025-11-04T00:13:33.084Z
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] ----_NmP-3bea4d6ff8344b52-Part_1
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] Content-Type: text/html; charset=utf-8
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] Content-Transfer-Encoding: 7bit
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] 
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] <p>SMTP connection accepted at <b>2025-11-04T00:13:33.084Z</b></p>
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] ----_NmP-3bea4d6ff8344b52-Part_1--
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] .
+[2025-11-04 00:13:33] INFO  [QscgJpSFhVU] <773 bytes encoded mime message (source size 770 bytes)>
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] S: 250 2.0.0 Ok: queued as 4d0pp5368hz1xmN
+[2025-11-04 00:13:33] DEBUG [QscgJpSFhVU] Closing connection to the server using "end"
+📧 E-Mail gesendet: 1762215213084-12787fe1ffcf@matchleague.org
+[2025-11-04 00:13:33] INFO  [QscgJpSFhVU] Connection closed
+{"level":30,"time":1762215213838,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"connection","msg":"Established secure TCP connection","cid":"lxhc8l4e4mnqag8u3gf3","secure":true,"host":"imap.hostinger.com","servername":"imap.hostinger.com","port":993,"address":"2606:4700:90:0:4bc4:2557:ca17:2529","localAddress":"2003:f5:ff4d:f061:3981:a406:6a21:fc6f","localPort":65366,"authorized":true,"algo":"TLS_AES_256_GCM_SHA384","version":"TLSv1.3"}
+{"level":20,"time":1762215213872,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Server ready.","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215213874,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"c","msg":"1 ID (\"name\" \"imapflow\" \"version\" \"1.1.0\" \"vendor\" \"Postal Systems\" \"support-url\" \"https://github.com/postalsys/imapflow/issues\")","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215213901,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* ID (\"name\" \"Dovecot\")","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215213902,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"1 OK ID completed.","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215213903,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"c","msg":"2 AUTHENTICATE PLAIN","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215213928,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"+","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215213928,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"c","msg":"AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAoKiB2YWx1ZSBoaWRkZW4gKik=","comment":"Encoded response for AUTH=PLAIN"}
+{"level":20,"time":1762215214050,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"2 OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE SORT SORT=DISPLAY THREAD=REFERENCES THREAD=REFS THREAD=ORDEREDSUBJECT MULTIAPPEND URL-PARTIAL CATENATE UNSELECT CHILDREN NAMESPACE UIDPLUS LIST-EXTENDED I18NLEVEL=1 CONDSTORE QRESYNC ESEARCH ESORT SEARCHRES WITHIN CONTEXT=SEARCH LIST-STATUS BINARY MOVE SNIPPET=FUZZY PREVIEW=FUZZY PREVIEW STATUS=SIZE SAVEDATE LITERAL+ NOTIFY SPECIAL-USE COMPRESS=DEFLATE QUOTA] Logged in","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":30,"time":1762215214052,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"auth","msg":"User authenticated","cid":"lxhc8l4e4mnqag8u3gf3","user":"info@dev.matchleague.org"}
+{"level":20,"time":1762215214053,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"c","msg":"3 ID (\"name\" \"imapflow\" \"version\" \"1.1.0\" \"vendor\" \"Postal Systems\" \"support-url\" \"https://github.com/postalsys/imapflow/issues\")","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214088,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* ID (\"name\" \"Dovecot\")","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214089,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"3 OK ID completed (0.001 + 0.000 secs).","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214089,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"c","msg":"4 NAMESPACE","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214125,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* NAMESPACE ((\"INBOX.\" \".\")) NIL NIL","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214126,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"4 OK Namespace completed (0.001 + 0.000 secs).","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214127,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"c","msg":"5 COMPRESS DEFLATE","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214164,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"5 OK Begin compression (0.001 + 0.000 secs).","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214166,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"c","msg":"6 ENABLE CONDSTORE","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214202,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* ENABLED CONDSTORE","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214203,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"6 OK Enabled (0.001 + 0.000 secs).","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214205,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"c","msg":"7 LIST \"INBOX.\" \"INBOX.Sent\"","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214242,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"7 OK List completed (0.001 + 0.000 secs).","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214242,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"c","msg":"8 LIST \"\" \"INBOX\"","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214278,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* LIST (\\HasChildren) \".\" INBOX","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214279,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"8 OK List completed (0.001 + 0.000 secs).","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214279,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"c","msg":"9 LSUB \"INBOX.\" \"INBOX.Sent\"","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214314,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"9 OK Lsub completed (0.002 + 0.000 + 0.001 secs).","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214315,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"c","msg":"A SELECT INBOX.Sent","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214355,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214355,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* OK [PERMANENTFLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft \"\\\\*\")] Flags permitted.","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214356,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* 471 EXISTS","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214356,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* 0 RECENT","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214356,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* OK [UNSEEN 1] First unseen.","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214356,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* OK [UIDVALIDITY 1758917061] UIDs valid","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214356,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* OK [UIDNEXT 472] Predicted next UID","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214356,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* OK [HIGHESTMODSEQ 474] Highest","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214356,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"A OK [READ-WRITE] Select completed (0.003 + 0.000 + 0.002 secs).","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214357,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"c","msg":"B APPEND INBOX.Sent \"(* 770B literal *)\"","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214408,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* 472 EXISTS","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214409,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"* 1 RECENT","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214409,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"s","msg":"B OK [APPENDUID 1758917061 472] Append completed (0.013 + 0.000 + 0.012 secs).","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":20,"time":1762215214409,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","src":"c","msg":"C LOGOUT","cid":"lxhc8l4e4mnqag8u3gf3"}
+{"level":10,"time":1762215214448,"pid":73946,"hostname":"T0010cc902","component":"imap-connection","cid":"lxhc8l4e4mnqag8u3gf3","msg":"Connection closed","cid":"lxhc8l4e4mnqag8u3gf3"}
+✉️  Kopie im IMAP-Ordner abgelegt (Sent)
+📧 Acceptance-Mail gesendet (sendMail): 1762215213084-12787fe1ffcf@matchleague.org
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:13:44.150Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:13:49.094Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:14:09.136Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:14:34.110Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:14:34.110Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] done { user: 2, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:14:59.112Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:15:19.109Z' }
+[news] done { user: 2, tookMs: 2, items: 0 }
+GET /states/list failed Error: select `id`, `country_id` as `countryId`, `code`, `name`, `type` from `states` order by `name` asc - SQLITE_ERROR: no such column: type
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:15:24.089Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:15:49.113Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:16:04.104Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:16:14.090Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:16:39.131Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:16:49.091Z' }
+[news] done { user: 2, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:17:04.451Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 23, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:17:06.424Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:17:06.431Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 107, items: 0 }
+[news] done { user: 4, tookMs: 115, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:17:06.541Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:17:06.541Z' }
+[chats] done { user: 4, tookMs: 2, items: 0 }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:17:29.396Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 16, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:17:31.242Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:17:34.115Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:17:51.216Z' }
+[news] done { user: 4, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:17:54.137Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:17:56.181Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:18:19.135Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:18:19.138Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:18:21.174Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:18:36.174Z' }
+[news] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:18:44.124Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:18:46.171Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:19:04.137Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:19:09.100Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:19:11.169Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:19:21.171Z' }
+[news] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:19:34.119Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:19:36.171Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:19:49.121Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:19:59.105Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:20:01.184Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 1, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:20:06.178Z' }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:20:24.116Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:20:25.332Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:20:25.333Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 13, items: 0 }
+[news] done { user: 4, tookMs: 14, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:20:25.350Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:20:25.353Z' }
+[chats] done { user: 4, tookMs: 25, items: 0 }
+[news] done { user: 4, tookMs: 35, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:20:32.842Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:20:32.845Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:20:32.853Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:20:32.853Z' }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:20:50.365Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:20:57.842Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 12, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:21:10.315Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:21:12.511Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:21:12.543Z' }
+[chats] query.begin { user: 4 }
+[news] done { user: 4, tookMs: 124, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:21:12.742Z' }
+[chats] done { user: 4, tookMs: 213, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:21:12.842Z' }
+[chats] query.begin { user: 4 }
+[news] done { user: 4, tookMs: 102, items: 0 }
+[chats] done { user: 4, tookMs: 56, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:21:17.834Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:21:22.836Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:21:37.491Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:21:47.863Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:21:57.538Z' }
+[news] done { user: 4, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:22:02.513Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 20, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:22:03.132Z' }
+[news] done { user: 2, tookMs: 12, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:22:12.849Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }

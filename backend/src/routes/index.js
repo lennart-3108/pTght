@@ -18,6 +18,7 @@ const profileRoutes = require("./profile");
 const locationsRoutes = require("./locations");
 const assetsRoutes = require("./assets");
 const slotsRoutes = require("./slots");
+const districtsRoutes = require("./districts");
 
 function registerRoutes(app, ctx) {
   const { ensureTables } = createMiddleware(ctx);
@@ -49,6 +50,7 @@ function registerRoutes(app, ctx) {
   apiRouter.use('/locations', locationsRoutes(ctx));
   apiRouter.use('/assets', assetsRoutes(ctx));
   apiRouter.use('/slots', slotsRoutes(ctx));
+  apiRouter.use('/districts', districtsRoutes(ctx));
 
   // --- Email status + test routes ---
   apiRouter.get("/admin/email-status", async (req, res) => {

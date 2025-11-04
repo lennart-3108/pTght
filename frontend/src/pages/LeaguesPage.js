@@ -180,7 +180,7 @@ export default function LeaguesPage() {
     Promise.all([
       fetch(`${API_BASE}/leagues`).then(r => (r.ok ? r.json() : Promise.reject(new Error(`/leagues ${r.status}`)))),
       fetch(`${API_BASE}/cities/list`).then(r => (r.ok ? r.json() : [])),
-      fetch(`${API_BASE}/sports/list`).then(r => (r.ok ? r.json() : [])),
+      fetch(`${API_BASE}/sports/categories`).then(r => (r.ok ? r.json() : [])),
       fetch(`${API_BASE}/countries/list`).then(r => (r.ok ? r.json() : [])),
       fetch(`${API_BASE}/states/list`).then(r => (r.ok ? r.json() : [])),
     ])
