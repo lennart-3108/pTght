@@ -145,7 +145,7 @@ export default function LocationSelector({ cities = [], countries = [], states =
   };
 
   return (
-    <div style={{ position: 'relative', zIndex: showDropdown ? 9999 : 1 }}>
+    <div style={{ position: 'relative', zIndex: showDropdown ? 99999 : 1 }}>
       {/* Display field */}
       <div
         onClick={() => setShowDropdown(!showDropdown)}
@@ -179,7 +179,7 @@ export default function LocationSelector({ cities = [], countries = [], states =
           borderRadius: 10,
           maxHeight: 400,
           overflowY: 'auto',
-          zIndex: 10000,
+          zIndex: 100000,
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
         }}>
           {regionOrder.map(region => {

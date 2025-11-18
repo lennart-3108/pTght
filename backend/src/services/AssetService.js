@@ -37,17 +37,19 @@ class AssetService {
       name: data.name,
       description: data.description || null,
       type: data.type,
-      supported_sports: data.supported_sports ? JSON.stringify(data.supported_sports) : null,
+      sports_json: typeof data.sports_json === 'string' ? data.sports_json : JSON.stringify(data.sports_json || null),
       surface: data.surface || null,
-      indoor: data.indoor !== undefined ? data.indoor : false,
       capacity: data.capacity || null,
-      equipment: data.equipment ? JSON.stringify(data.equipment) : null,
-      amenities: data.amenities ? JSON.stringify(data.amenities) : null,
       length: data.length || null,
       width: data.width || null,
       status: data.status || 'active',
-      display_order: data.display_order || 0,
-      photos: data.photos ? JSON.stringify(data.photos) : null,
+      slot_duration: data.slot_duration || 60,
+      slot_pause: data.slot_pause || 0,
+      min_booking_duration: data.min_booking_duration || 60,
+      max_booking_duration: data.max_booking_duration || 120,
+      slot_interval: data.slot_interval || 15,
+      advance_booking_days: data.advance_booking_days || 30,
+      cancellation_hours: data.cancellation_hours || 24
     };
 
     const [id] = await this.db('assets').insert(assetData);
@@ -111,8 +113,10 @@ class AssetService {
     // Prepare update data
     const updateData = {};
     const allowedFields = [
-      'name', 'description', 'type', 'surface', 'indoor', 'capacity',
-      'length', 'width', 'status', 'display_order'
+      'name', 'description', 'type', 'surface', 'capacity',
+      'length', 'width', 'status',
+      'min_booking_duration', 'max_booking_duration', 'slot_interval',
+      'advance_booking_days', 'cancellation_hours'
     ];
 
     allowedFields.forEach(field => {
@@ -121,17 +125,8 @@ class AssetService {
       }
     });
 
-    if (data.supported_sports) {
-      updateData.supported_sports = JSON.stringify(data.supported_sports);
-    }
-    if (data.equipment) {
-      updateData.equipment = JSON.stringify(data.equipment);
-    }
-    if (data.amenities) {
-      updateData.amenities = JSON.stringify(data.amenities);
-    }
-    if (data.photos) {
-      updateData.photos = JSON.stringify(data.photos);
+    if (data.sports_json !== undefined) {
+      updateData.sports_json = typeof data.sports_json === 'string' ? data.sports_json : JSON.stringify(data.sports_json);
     }
 
     await this.db('assets')

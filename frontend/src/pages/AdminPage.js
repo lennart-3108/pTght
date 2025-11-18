@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 // use native fetch instead of axios to avoid axios vulnerability
 import { API_BASE } from "../config";
+import { useNavigate } from "react-router-dom";
 
 export default function AdminPage() {
   const [stats, setStats] = useState(null);
@@ -16,8 +17,10 @@ export default function AdminPage() {
   const [testMessage, setTestMessage] = useState("");
   const [deletingId, setDeletingId] = useState(null);
   const [editingRow, setEditingRow] = useState(null); // State für den zu bearbeitenden Datensatz
+  const [logoutAllStatus, setLogoutAllStatus] = useState(null);
 
   const token = localStorage.getItem("token");
+  const navigate = useNavigate();
 
   // Stats laden
   useEffect(() => {
@@ -173,6 +176,57 @@ export default function AdminPage() {
   return (
     <div style={{ padding: 16 }}>
       <h2>Admin</h2>
+
+      {/* Global Logout */}
+      <div style={{ marginBottom: 16, padding: 12, border: "1px solid #ddd", borderRadius: 8 }}>
+        <div style={{ marginBottom: 8, fontWeight: 600 }}>Sicherheit</div>
+        <button
+          onClick={async () => {
+            setLogoutAllStatus(null);
+            try {
+              const r = await fetch(`${API_BASE}/admin/logout-all`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+              });
+              const text = await r.text();
+              let json;
+              try { json = JSON.parse(text); } catch { json = null; }
+              if (!r.ok || !json?.success) {
+                throw new Error(json?.error || `HTTP ${r.status}`);
+              }
+
+              // Direkt auch diesen Admin-Client ausloggen
+              try {
+                if (typeof localStorage !== "undefined") {
+                  localStorage.removeItem("token");
+                  localStorage.setItem("authNotice", "Du wurdest automatisch ausgeloggt.");
+                }
+              } catch (e) {
+                // non-fatal
+              }
+
+              setLogoutAllStatus({ ok: true, message: "Alle aktiven Logins wurden beendet." });
+              // Zur Login-Seite wechseln
+              navigate("/login");
+            } catch (e) {
+              setLogoutAllStatus({ ok: false, message: e?.message || "Fehler beim Beenden aller Logins" });
+            }
+          }}
+        >
+          Alle aktiven Logins beenden
+        </button>
+        {logoutAllStatus && (
+          <div
+            style={{
+              marginTop: 8,
+              color: logoutAllStatus.ok ? "#066e3c" : "crimson",
+              fontSize: 14,
+            }}
+          >
+            {logoutAllStatus.message}
+          </div>
+        )}
+      </div>
 
       {/* Stats */}
       {!stats ? (

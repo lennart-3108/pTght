@@ -5,6 +5,7 @@ import smallLogo from "../images/logo.png";
 import Avatar from "../components/Avatar";
 import LocationSelector from "../components/LocationSelector";
 import SportSelector from "../components/SportSelector";
+import AuthNoticeBanner from "../components/AuthNoticeBanner";
 
 // load background images from sports folder and sort
 function importAllBackgrounds(r) {
@@ -74,6 +75,7 @@ export default function StartPage() {
     const t = setInterval(() => setIndex((i) => (i + 1) % backgrounds.length), 5000);
     return () => clearInterval(t);
   }, []);
+
 
   // Auto-detect location via GPS
   const detectLocation = async () => {
@@ -235,7 +237,8 @@ export default function StartPage() {
 
   return (
     <div>
-      <section className="hero-carousel">
+      <AuthNoticeBanner />
+      <section className="hero-carousel" style={{ marginBottom: 24 }}>
         {backgrounds.map((b, i) => (
           <div key={i} className={`hero-slide ${i === index ? 'active' : ''}`} style={{ backgroundImage: `url(${b.src})` }} />
         ))}
@@ -247,8 +250,8 @@ export default function StartPage() {
               <h1 className="hero-title">Match League</h1>
             </div>
             <p className="hero-sub"><b>Willkommen bei MatchLeague. Connect. Match. Win.</b></p>
-            <div className="hero-controls" style={{ display: 'flex', gap: 10, alignItems: 'center', marginTop: 12, flexWrap: 'wrap', position: 'relative', zIndex: 100, overflow: 'visible' }}>
-              <div style={{ minWidth: 200, position: 'relative' }}>
+            <div className="hero-controls" style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 18, flexWrap: 'wrap', position: 'relative', zIndex: 20 }}>
+              <div style={{ minWidth: 220, position: 'relative' }}>
                 <SportSelector
                   sports={sports}
                   value={selectedSportName}
@@ -260,7 +263,7 @@ export default function StartPage() {
                 />
               </div>
               
-              <div style={{ minWidth: 200, position: 'relative' }}>
+              <div style={{ minWidth: 220, position: 'relative' }}>
                 <LocationSelector
                   cities={cities}
                   countries={countries}
@@ -283,7 +286,7 @@ export default function StartPage() {
                   if (selectedCity) qp.set('cityId', selectedCity);
                   navigate(`/match-search?${qp.toString()}`);
                 }}
-                style={{ background: '#debc7c', color: '#10261f', padding: '10px 18px', borderRadius: 10, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 15 }}
+                style={{ background: '#debc7c', color: '#10261f', padding: '11px 22px', borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 15, boxShadow: '0 8px 20px rgba(0,0,0,0.28)' }}
                 disabled={searching}
               >{searching ? 'Suche…' : 'Match suchen'}</button>
 
@@ -295,16 +298,17 @@ export default function StartPage() {
                   navigate(`/ligen?${qp.toString()}`);
                 }}
                 style={{ 
-                  padding: '10px 18px', 
-                  borderRadius: 8, 
+                  padding: '11px 22px', 
+                  borderRadius: 12, 
                   border: '2px solid #debc7c', 
-                  background: '#1a3c33', 
+                  background: 'rgba(8,28,25,0.96)', 
                   color: '#debc7c', 
                   cursor: 'pointer', 
-                  fontWeight: 600, 
+                  fontWeight: 700, 
                   fontSize: 15, 
-                  marginLeft: 10,
-                  transition: 'all 0.2s'
+                  marginLeft: 4,
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.28)',
+                  transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease'
                 }}
               >Liga suchen</button>
             </div>
@@ -312,7 +316,7 @@ export default function StartPage() {
         </div>
       </section>
 
-  <div className="ml-main-container">
+  <div className="ml-main-container" style={{ marginTop: 16, paddingBottom: 32 }}>
       {/* Dashboard Sections */}
       {/* Row 1: Upcoming and Last games, 3 items each, fixed height */}
       <div className="ml-dual">

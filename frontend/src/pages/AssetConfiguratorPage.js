@@ -21,7 +21,6 @@ export default function AssetConfiguratorPage() {
     description: '',
     type: 'court',
     surface: '',
-    indoor: false,
     capacity: '',
     min_booking_duration: 60,
     max_booking_duration: 180,
@@ -57,7 +56,6 @@ export default function AssetConfiguratorPage() {
         description: assetData.description || '',
         type: assetData.type || 'court',
         surface: assetData.surface || '',
-        indoor: assetData.indoor || false,
         capacity: assetData.capacity || '',
         min_booking_duration: assetData.min_booking_duration || 60,
         max_booking_duration: assetData.max_booking_duration || 180,
@@ -318,19 +316,6 @@ export default function AssetConfiguratorPage() {
                 style={styles.input}
                 placeholder="z.B. Hardcourt, Rasen, Sand"
               />
-            </div>
-
-            <div style={styles.formGroup}>
-              <label style={styles.checkboxLabel}>
-                <input
-                  type="checkbox"
-                  name="indoor"
-                  checked={formData.indoor}
-                  onChange={handleInputChange}
-                  style={styles.checkbox}
-                />
-                Indoor
-              </label>
             </div>
 
             <div style={styles.formGroup}>

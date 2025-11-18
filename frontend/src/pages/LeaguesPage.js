@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
+import { handleInvalidToken } from "../utils/auth";
 import LocationSelector from "../components/LocationSelector";
 import SportSelector from "../components/SportSelector";
 
 export default function LeaguesPage() {
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [leagues, setLeagues] = useState([]);
   const [cities, setCities] = useState([]);
@@ -324,8 +326,42 @@ export default function LeaguesPage() {
     return () => { mounted = false; };
   }, [visibleLeagues]);
 
+  // Format league name: special logic for community leagues
+  function formatLeagueName(l) {
+    const rawName = String(l.name || "").trim();
+
+    // heuristics or flags for community leagues
+    const isCommunity =
+      Boolean(l.is_community || l.community || l.isCommunity || l.type === "community") ||
+      /community/i.test(rawName);
+
+    if (!isCommunity) {
+      return rawName || `Liga ${l.id}`;
+    }
+
+    const sport = l.sportName || l.sport || l.sport_id || l.sportId || "";
+    const city = l.cityName || l.city || l.city_id || l.cityId || "";
+
+    const sportPart = String(sport || "").trim();
+    const cityPart = String(city || "").trim();
+
+    if (sportPart && cityPart) {
+      return `${cityPart} ${sportPart} Match League`;
+    }
+    if (sportPart) {
+      return `${sportPart} Community League`;
+    }
+    if (cityPart) {
+      return `${cityPart} Community League`;
+    }
+    return rawName || `Community League ${l.id}`;
+  }
+
   if (loading) return <div style={{ padding: 16 }}>Lade Ligen …</div>;
-  if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+  if (err) {
+    if (handleInvalidToken(err, navigate)) return null;
+    return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+  }
 
   return (
     <div className="ml-container" style={{ padding: "32px 24px" }}>
@@ -624,7 +660,7 @@ export default function LeaguesPage() {
                             onMouseEnter={(e) => e.target.style.color = '#48baa6'}
                             onMouseLeave={(e) => e.target.style.color = '#e5e7eb'}
                           >
-                            {l.name || `Liga ${idKey}`}
+                            {formatLeagueName(l)}
                           </Link>
                           {reachable[idKey] && !reachable[idKey].ok && (
                             <div style={{ 

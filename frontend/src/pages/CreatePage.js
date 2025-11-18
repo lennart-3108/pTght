@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
+import { handleInvalidToken } from "../utils/auth";
 
 export default function CreatePage() {
+  const navigate = useNavigate();
   const [schema, setSchema] = useState(null);
   const [table, setTable] = useState("");
   const [form, setForm] = useState({});
@@ -205,7 +208,10 @@ export default function CreatePage() {
   const hasAutoId = useMemo(() => (columns || []).some(c => c.pk && c.name === "id"), [columns]);
 
   if (loading) return <div style={{ padding: 16 }}>Lade Schema ...</div>;
-  if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+  if (err) {
+    if (handleInvalidToken(err, navigate)) return null;
+    return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+  }
   if (!schema) return <div style={{ padding: 16 }}>Keine Schemainformation verfügbar.</div>;
 
   return (

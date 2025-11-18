@@ -1,10 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 import Avatar from "../components/Avatar";
+import { handleInvalidToken } from "../utils/auth";
 
 export default function SportsDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [sport, setSport] = useState(null);
   const [leagues, setLeagues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,7 +53,10 @@ export default function SportsDetailPage() {
   }), [leagues]);
 
   if (loading) return <div style={{ padding: 16 }}>Lade Sportart ...</div>;
-  if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+  if (err) {
+    if (handleInvalidToken(err, navigate)) return null;
+    return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+  }
   if (!sport) return <div style={{ padding: 16 }}>Keine Daten.</div>;
 
   const title = sport.name || 'Sport';

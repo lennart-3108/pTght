@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
+import { handleInvalidToken } from "../utils/auth";
 import AvatarEditor from "react-avatar-editor";
 
 export default function ProfilePage() {
@@ -103,7 +104,10 @@ export default function ProfilePage() {
   }
 
   if (loading) return <div style={{ padding: 16 }}>Lade Profil ...</div>;
-  if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+  if (err) {
+    if (handleInvalidToken(err, navigate)) return null;
+    return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+  }
   if (!data) return <div style={{ padding: 16 }}>Keine Daten.</div>;
 
   // Handler to detect and confirm location

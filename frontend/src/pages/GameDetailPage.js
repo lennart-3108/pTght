@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
+import { handleInvalidToken } from "../utils/auth";
 import { useResponsive } from "../hooks/useResponsive";
 import MatchChat from "../components/MatchChat";
 import Counter from "../components/Counter";
@@ -239,7 +240,10 @@ export default function GameDetailPage() {
   }, [scheduleHours, scheduleMinutes]);
 
   if (loading) return <div style={{ padding: 16 }}>Lade Spiel ...</div>;
-  if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+  if (err) {
+    if (handleInvalidToken(err, navigate)) return null;
+    return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+  }
   if (!game) return <div style={{ padding: 16 }}>Kein Spiel gefunden.</div>;
 
   const playerA = { name: game.home_user_name || game.home || "-", id: game.home_user_id || null };

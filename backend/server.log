@@ -299,3 +299,2591 @@ GET /states/list failed Error: select `id`, `country_id` as `countryId`, `code`,
 [chats] GET /chats start { user: 2, at: '2025-11-04T00:22:12.849Z' }
 [chats] query.begin { user: 2 }
 [chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:22:27.520Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 88, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:22:38.099Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:22:42.494Z' }
+[news] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:22:47.856Z' }
+[news] done { user: 2, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:22:52.498Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:23:02.878Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:23:17.528Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 15, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:23:27.516Z' }
+[news] done { user: 4, tookMs: 17, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:23:27.858Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:23:32.828Z' }
+[news] done { user: 2, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:23:42.514Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 15, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:23:52.880Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:24:07.509Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:24:12.492Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:24:17.863Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:24:17.865Z' }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:24:32.493Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:24:42.850Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:24:57.495Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:24:57.498Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] done { user: 4, tookMs: 9, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:25:02.855Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:25:07.839Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:25:22.494Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:25:32.861Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:25:42.494Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:25:47.492Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:25:47.853Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:25:57.834Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:26:12.507Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 18, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:26:22.878Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:26:27.492Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:26:32.833Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:26:37.491Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:26:47.873Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:27:02.498Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 2, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:27:12.501Z' }
+[news] done { user: 4, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:27:12.872Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:27:17.835Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:27:27.499Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:27:37.862Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:27:52.498Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:27:57.493Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:28:02.857Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:28:02.858Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:28:17.505Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:28:27.866Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:28:42.509Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:28:42.513Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] done { user: 4, tookMs: 13, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:28:47.869Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:28:52.843Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:29:07.592Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 101, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:29:17.854Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:29:27.495Z' }
+[news] done { user: 4, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:29:32.488Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 1, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:29:32.830Z' }
+[news] done { user: 2, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:29:42.835Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:29:57.489Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:30:07.863Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:30:12.492Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:30:17.834Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:30:22.488Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:30:32.831Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:30:47.497Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 2, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:30:57.517Z' }
+[news] done { user: 4, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:30:57.865Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:31:02.839Z' }
+[news] done { user: 2, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:31:12.502Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:31:22.865Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:31:37.493Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:31:42.493Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:31:47.858Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:31:47.859Z' }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:32:02.545Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:32:12.917Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 11, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:32:27.501Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:32:27.504Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] done { user: 4, tookMs: 9, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:32:32.862Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:32:37.836Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:32:52.498Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:33:02.868Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:33:12.507Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:33:17.489Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:33:17.860Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:33:27.854Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:33:42.508Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:33:52.884Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:33:57.498Z' }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:34:02.856Z' }
+[news] done { user: 2, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:34:07.500Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:34:17.869Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 12, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:34:32.494Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:34:42.512Z' }
+[news] done { user: 4, tookMs: 14, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:34:42.846Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:34:47.870Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:34:57.497Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:35:07.873Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 13, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:35:22.502Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 11, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:35:27.497Z' }
+[news] done { user: 4, tookMs: 7, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:35:32.848Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:35:32.851Z' }
+[chats] query.begin { user: 2 }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] done { user: 2, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:35:47.491Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:35:57.849Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:36:12.498Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:36:12.500Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:36:17.865Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:36:22.850Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:36:37.494Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:36:47.859Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:36:57.499Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:37:02.495Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:37:02.836Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:37:12.838Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:37:27.495Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:37:37.864Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:37:42.492Z' }
+[news] done { user: 4, tookMs: 1, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:37:47.843Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:37:52.499Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:38:02.842Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:38:17.504Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 7, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:38:27.491Z' }
+[news] done { user: 4, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:38:27.854Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 1, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:38:32.837Z' }
+[news] done { user: 2, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:38:42.491Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:38:52.861Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:39:07.502Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:39:12.509Z' }
+[news] done { user: 4, tookMs: 10, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:39:17.852Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:39:17.853Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:39:32.498Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:39:42.853Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 1, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:39:57.500Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:39:57.502Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] done { user: 4, tookMs: 8, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:40:02.863Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:40:07.840Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:40:22.499Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:40:32.872Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:40:42.497Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:40:47.496Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:40:47.856Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:40:50.950Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:40:50.953Z' }
+[chats] done { user: 4, tookMs: 64, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:40:51.023Z' }
+[chats] query.begin { user: 4 }
+[news] done { user: 4, tookMs: 72, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:40:51.032Z' }
+[chats] done { user: 4, tookMs: 17, items: 0 }
+[news] done { user: 4, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:40:57.881Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:41:16.009Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:41:22.904Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:41:32.852Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:41:35.950Z' }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:41:40.962Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:41:47.877Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:42:05.977Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:42:12.875Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:42:17.835Z' }
+[news] done { user: 2, tookMs: 1, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:42:20.944Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:42:30.941Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:42:37.859Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:42:55.957Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:43:02.889Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:43:02.890Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:43:05.967Z' }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:43:20.943Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:43:27.860Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:43:45.941Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 1, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:43:47.857Z' }
+[news] done { user: 2, tookMs: 1, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:43:50.948Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:43:52.844Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:44:10.967Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 16, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:44:17.847Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:44:32.844Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:44:35.948Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:44:35.950Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] done { user: 4, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:44:42.850Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:45:00.949Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:45:07.930Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:45:17.855Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:45:20.949Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:45:25.946Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:45:32.841Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:45:50.949Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:45:57.863Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:46:02.843Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:46:05.950Z' }
+[news] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:46:15.958Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:46:22.868Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:46:40.975Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:46:47.901Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:46:47.904Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] done { user: 2, tookMs: 10, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:46:50.961Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:47:05.961Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 14, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:47:12.867Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:47:30.973Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 10, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:47:32.882Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:47:35.948Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:47:37.836Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:47:56.031Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:48:02.988Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 10, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:48:17.906Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:48:20.948Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:48:20.950Z' }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:48:27.853Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:48:45.948Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:48:52.881Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:49:02.865Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:49:05.948Z' }
+[news] done { user: 4, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:49:10.957Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:49:17.875Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:49:35.950Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:49:42.862Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:49:47.844Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:49:50.948Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:50:00.948Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:50:07.945Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:50:25.963Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 8, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:50:32.859Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:50:32.860Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:50:35.949Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:50:50.955Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:50:57.885Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:51:15.952Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:51:17.863Z' }
+[news] done { user: 2, tookMs: 1, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:51:20.949Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:51:22.846Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:51:40.950Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:51:47.868Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:52:02.846Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:52:05.952Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:52:05.952Z' }
+[chats] done { user: 4, tookMs: 2, items: 0 }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:52:12.883Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:52:30.990Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:52:37.876Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:52:47.842Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:52:50.950Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:52:55.949Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:53:02.844Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:53:20.959Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:53:27.875Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:53:32.839Z' }
+[news] done { user: 2, tookMs: 2, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:53:35.948Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:53:45.951Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:53:52.871Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:54:10.963Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:54:17.932Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:54:17.933Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 13, items: 0 }
+[news] done { user: 2, tookMs: 15, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:54:20.951Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:54:35.950Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:54:42.867Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:55:00.950Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:55:02.868Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:55:05.984Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:55:07.868Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:55:25.952Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:55:32.869Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:55:47.858Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:55:50.952Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:55:50.956Z' }
+[chats] done { user: 4, tookMs: 8, items: 0 }
+[news] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:55:57.841Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:56:15.971Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 12, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:56:22.882Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T00:56:32.842Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T00:56:35.954Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T00:56:40.951Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T00:56:47.867Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T01:32:19.639Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T01:48:23.416Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T01:49:35.700Z' }
+[news] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T01:49:38.118Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T01:49:41.871Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T02:39:19.938Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T02:39:19.940Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T02:39:22.760Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 12, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T02:57:59.517Z' }
+[news] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T02:58:08.644Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T03:47:41.074Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T03:58:56.835Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T04:59:55.994Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T04:59:59.434Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T04:59:59.440Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 10, items: 0 }
+[news] done { user: 4, tookMs: 16, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T05:17:33.767Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T05:51:38.647Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T06:35:32.598Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T06:45:32.679Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T06:45:36.061Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T06:45:36.062Z' }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T07:02:01.378Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T08:03:00.983Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T08:18:58.730Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T08:36:12.081Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T08:36:12.083Z' }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:04:00.357Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:13:55.601Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 43, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:14:02.539Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:14:02.547Z' }
+[chats] done { user: 2, tookMs: 30, items: 0 }
+[news] done { user: 2, tookMs: 26, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:14:03.898Z' }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:14:28.958Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 34, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:14:34.851Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 20, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:14:45.810Z' }
+[news] done { user: 2, tookMs: 20, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:14:50.610Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:15:15.672Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:15:30.631Z' }
+[news] done { user: 2, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:15:40.628Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:16:05.647Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:16:15.609Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:16:30.609Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:16:55.806Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:17:00.624Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:17:20.635Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:17:23.591Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 18, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:17:45.645Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:17:45.648Z' }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:18:10.635Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:18:23.648Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:18:23.650Z' }
+[chats] done { user: 4, tookMs: 43, items: 0 }
+[news] done { user: 4, tookMs: 42, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:18:30.634Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:18:35.610Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:19:00.653Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:19:15.633Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:19:23.424Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:19:23.426Z' }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:19:25.633Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:19:50.635Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:20:00.632Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:20:15.634Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:20:23.430Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:20:23.442Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:20:40.634Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:20:45.610Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:21:05.662Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 16, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:21:23.720Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:21:23.770Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:21:30.635Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:21:30.637Z' }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:21:55.640Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:22:15.640Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:22:20.611Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:22:23.428Z' }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:22:23.442Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:22:45.631Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:23:00.630Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:23:10.613Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:23:23.416Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:23:23.429Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:23:35.635Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:23:45.614Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:24:00.633Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:24:23.430Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:24:23.448Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:24:25.641Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:24:30.610Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:24:50.636Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:25:15.643Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:25:15.646Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] done { user: 2, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:25:23.415Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:25:23.417Z' }
+[chats] done { user: 4, tookMs: 7, items: 0 }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:25:40.633Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 13, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:26:00.648Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:26:05.615Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:26:23.419Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:26:23.441Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:26:30.649Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:26:45.633Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:26:55.623Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:27:20.688Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:27:23.423Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:27:23.438Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:27:30.614Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:27:45.661Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:28:10.654Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:28:15.615Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:28:23.836Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:28:23.838Z' }
+[chats] done { user: 4, tookMs: 11, items: 0 }
+[news] done { user: 4, tookMs: 21, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:28:35.629Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:29:00.695Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:29:00.702Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 9, items: 0 }
+[news] done { user: 2, tookMs: 25, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:29:23.988Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 8, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:29:24.034Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:29:25.643Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:29:45.631Z' }
+[news] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:29:50.613Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:30:15.646Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:30:23.879Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:30:23.925Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:30:30.618Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:30:40.614Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:31:05.698Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:31:15.615Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:31:23.478Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:31:23.482Z' }
+[chats] done { user: 4, tookMs: 19, items: 0 }
+[news] done { user: 4, tookMs: 24, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:31:30.618Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:31:55.640Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:32:00.636Z' }
+[news] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:32:20.637Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:32:23.933Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:32:23.963Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:32:45.638Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:32:45.640Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:33:10.644Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:33:23.416Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:33:23.431Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:33:30.635Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:33:35.617Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:34:00.780Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:34:15.648Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:34:23.564Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:34:23.566Z' }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:34:25.617Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:34:50.636Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:35:00.632Z' }
+[news] done { user: 2, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:35:15.637Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:35:23.434Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:35:23.451Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:35:40.646Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:35:45.613Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:36:05.641Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:36:23.459Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:36:23.476Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:36:30.636Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:36:30.638Z' }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:36:55.639Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:37:15.704Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:37:20.617Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:37:23.880Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:37:23.911Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:37:45.637Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:38:00.635Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:38:10.616Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:38:23.422Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:38:23.438Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:38:35.641Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:38:45.618Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:39:00.638Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:39:23.426Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:39:23.440Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:39:25.657Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:39:30.619Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:39:50.642Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:40:15.650Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:40:15.653Z' }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:40:23.427Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:40:23.429Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] done { user: 4, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:40:40.692Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:41:00.661Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:41:05.625Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 35, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:41:23.427Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:41:23.459Z' }
+[news] done { user: 4, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:41:30.640Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:41:45.759Z' }
+[news] done { user: 2, tookMs: 17, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:50:59.030Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 319, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:51:16.022Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 25, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:51:20.055Z' }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:51:20.100Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:51:25.855Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:51:40.849Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:52:05.894Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:52:10.847Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:52:19.076Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:52:19.082Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 7, items: 0 }
+[news] done { user: 4, tookMs: 15, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:52:30.891Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:52:55.930Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:52:55.933Z' }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:53:19.270Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:53:19.326Z' }
+[news] done { user: 4, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:53:20.884Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:53:40.874Z' }
+[news] done { user: 2, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:53:45.847Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:54:11.193Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:54:19.114Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:54:19.149Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:54:25.849Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:54:35.843Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:55:00.894Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:55:10.847Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:55:18.784Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:55:18.795Z' }
+[chats] query.begin { user: 4 }
+[news] done { user: 4, tookMs: 13, items: 0 }
+[chats] done { user: 4, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:55:25.870Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 96, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:55:50.869Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:55:55.876Z' }
+[news] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:56:15.878Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:56:19.058Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:56:19.104Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:56:40.887Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:56:40.889Z' }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[news] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:57:05.869Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:57:18.884Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 10, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:57:18.947Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:57:25.873Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:57:30.851Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:57:55.909Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:58:10.850Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T09:58:18.885Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T09:58:18.888Z' }
+[chats] done { user: 4, tookMs: 8, items: 0 }
+[news] done { user: 4, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:58:20.871Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:58:46.076Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 15, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:58:56.100Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:59:10.852Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T09:59:35.931Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 20, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T09:59:40.899Z' }
+[news] done { user: 2, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:00:01.057Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 19, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:00:20.344Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:00:25.893Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:00:25.895Z' }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:00:51.043Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:01:10.924Z' }
+[news] done { user: 2, tookMs: 13, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:01:15.844Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:01:40.864Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:01:56.024Z' }
+[news] done { user: 2, tookMs: 51, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:02:05.853Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:02:30.868Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:02:40.854Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:02:55.884Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:03:18.882Z' }
+[news] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:03:19.035Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:03:20.879Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:03:25.846Z' }
+[news] done { user: 2, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:03:45.865Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:04:10.873Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:04:10.876Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] done { user: 2, tookMs: 14, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:04:18.869Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:04:18.871Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] done { user: 4, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:04:35.864Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:04:55.924Z' }
+[news] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:05:00.848Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:05:18.788Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:05:18.808Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:05:25.869Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:05:40.863Z' }
+[news] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:05:50.901Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 14, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:06:15.873Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:06:18.890Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:06:18.929Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 8, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:06:25.860Z' }
+[news] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:06:40.847Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:07:05.903Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:07:10.850Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:07:18.831Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:07:18.833Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 7, items: 0 }
+[news] done { user: 4, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:07:30.861Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:07:55.943Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:07:55.951Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 11, items: 0 }
+[news] done { user: 2, tookMs: 21, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:08:18.692Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:08:18.744Z' }
+[news] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:08:20.871Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:08:40.862Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:08:45.852Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:09:10.885Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:09:18.942Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:09:18.981Z' }
+[news] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:09:25.891Z' }
+[news] done { user: 2, tookMs: 18, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:09:35.856Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:10:00.898Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 12, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:10:10.846Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:10:18.947Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:10:18.949Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] done { user: 4, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:10:25.877Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:10:50.861Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:10:55.879Z' }
+[news] done { user: 2, tookMs: 12, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:11:15.871Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:11:18.877Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:11:18.926Z' }
+[news] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:11:41.310Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:11:41.318Z' }
+[chats] done { user: 2, tookMs: 28, items: 0 }
+[news] done { user: 2, tookMs: 23, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:12:06.017Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 17, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:12:19.458Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 13, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:12:19.529Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:12:25.887Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:12:30.864Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:13:00.010Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 30, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:13:10.885Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:13:19.225Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:13:19.228Z' }
+[chats] done { user: 4, tookMs: 11, items: 0 }
+[news] done { user: 4, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:13:20.877Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:13:45.877Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:13:55.930Z' }
+[news] done { user: 2, tookMs: 91, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:14:10.869Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:14:18.942Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:14:18.990Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:14:35.895Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:14:40.853Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:15:02.121Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 37, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:15:26.024Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:15:26.030Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 11, items: 0 }
+[news] done { user: 2, tookMs: 18, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:15:50.922Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:16:11.038Z' }
+[news] done { user: 2, tookMs: 124, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:16:15.869Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:16:29.680Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:16:40.883Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:16:55.917Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:17:05.865Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:17:18.883Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:17:30.887Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:17:40.853Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:17:56.174Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 16, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:18:19.021Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 8, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:18:19.063Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:18:20.885Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:18:25.852Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:18:45.896Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:19:11.095Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:19:11.100Z' }
+[chats] done { user: 2, tookMs: 27, items: 0 }
+[news] done { user: 2, tookMs: 23, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:19:19.220Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:19:19.224Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 8, items: 0 }
+[news] done { user: 4, tookMs: 14, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:19:35.873Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:19:55.876Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:20:00.960Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 259, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:20:18.703Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:20:18.725Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:20:25.878Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:20:40.856Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:20:50.859Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:21:16.107Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 15, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:21:19.328Z' }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:21:19.419Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:21:25.889Z' }
+[news] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:21:40.857Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:22:05.892Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 10, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:22:10.872Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:22:19.069Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:22:19.077Z' }
+[chats] done { user: 4, tookMs: 13, items: 0 }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:22:30.876Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:22:55.881Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:22:55.884Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] done { user: 2, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:23:19.178Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:23:19.216Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:23:20.913Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:23:40.888Z' }
+[news] done { user: 2, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:23:45.838Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:24:10.848Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:24:26.110Z' }
+[news] done { user: 2, tookMs: 14, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:24:35.816Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:25:00.834Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:25:10.820Z' }
+[news] done { user: 2, tookMs: 15, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:25:25.835Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:25:50.826Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:25:55.812Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:26:15.905Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:26:19.467Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:26:40.840Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:26:40.842Z' }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:27:05.832Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:27:18.870Z' }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:27:25.840Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:27:30.811Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:27:55.925Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:28:10.822Z' }
+[news] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:28:18.991Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:28:18.994Z' }
+[chats] done { user: 4, tookMs: 9, items: 0 }
+[news] done { user: 4, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:28:20.834Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:28:45.848Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:28:55.811Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:29:10.840Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:29:35.980Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 17, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:29:40.832Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:30:00.844Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:30:26.062Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:30:26.070Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 17, items: 0 }
+[news] done { user: 2, tookMs: 27, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:30:50.863Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:31:11.013Z' }
+[news] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:31:15.828Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:31:40.844Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 11, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:31:55.833Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:32:05.808Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:32:33.236Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 21, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:32:40.908Z' }
+[news] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:32:55.852Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:33:22.382Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 25, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:33:25.837Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:33:45.900Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:34:10.854Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:34:10.859Z' }
+[chats] done { user: 2, tookMs: 16, items: 0 }
+[news] done { user: 2, tookMs: 12, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:34:35.843Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:34:55.841Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:35:00.812Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:35:25.848Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 9, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:35:40.810Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:35:50.811Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:36:15.839Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:36:25.808Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:36:40.809Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:37:05.833Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:37:10.807Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:37:30.828Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:37:55.844Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:37:55.846Z' }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:38:21.072Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 19, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:38:40.842Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:38:45.865Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:39:10.834Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:39:25.841Z' }
+[news] done { user: 2, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:39:35.810Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:40:01.001Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:40:10.829Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:40:25.915Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 14, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:40:50.837Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:40:55.815Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:41:15.818Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 12, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:41:40.822Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:41:40.825Z' }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:42:05.823Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:42:25.824Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:42:30.807Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:42:55.843Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:43:10.807Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:43:13.339Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:43:20.955Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:43:45.867Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:43:55.804Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:44:10.808Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:44:13.940Z' }
+[news] done { user: 4, tookMs: 19, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:44:35.975Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 20, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:44:40.804Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:45:03.206Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 13, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:45:19.152Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 25, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:45:19.195Z' }
+[news] done { user: 4, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:45:26.214Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:45:26.224Z' }
+[chats] done { user: 2, tookMs: 36, items: 0 }
+[news] done { user: 2, tookMs: 30, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:45:51.018Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:46:10.833Z' }
+[news] done { user: 2, tookMs: 18, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:46:15.852Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:46:18.884Z' }
+[news] done { user: 4, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:46:18.936Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:46:40.930Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 20, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:46:55.848Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:47:05.803Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:47:18.901Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 9, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:47:18.941Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:47:30.831Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:47:40.805Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:47:55.831Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:48:18.938Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 23, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:48:18.985Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:48:20.951Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 1, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:48:25.830Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:48:45.824Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:49:10.819Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:49:10.821Z' }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:49:18.701Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:49:18.704Z' }
+[chats] done { user: 4, tookMs: 7, items: 0 }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:49:35.828Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:49:55.815Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:50:00.797Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:50:18.743Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 9, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:50:18.761Z' }
+[news] done { user: 4, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:50:25.823Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:50:40.800Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:50:50.805Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:51:15.824Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:51:18.792Z' }
+[news] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:51:18.807Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:51:25.807Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:51:40.798Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:52:05.817Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:52:10.798Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:52:18.662Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:52:18.666Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 8, items: 0 }
+[news] done { user: 4, tookMs: 13, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:52:30.827Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:52:55.815Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:52:55.817Z' }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:53:18.609Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 10, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:53:18.630Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:53:20.824Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:53:40.823Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:53:45.797Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:54:10.886Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:54:18.943Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:54:19.027Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:54:25.866Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:54:35.797Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:55:00.824Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:55:10.798Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:55:18.661Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:55:18.673Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:55:25.817Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:55:50.819Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:55:55.803Z' }
+[news] done { user: 2, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:56:15.836Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:56:18.625Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 8, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:56:18.650Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:56:40.836Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:56:40.838Z' }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[news] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:57:05.892Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 16, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:57:18.707Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:57:18.753Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:57:25.859Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:57:30.817Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:57:55.846Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:58:10.819Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:58:18.672Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:58:18.676Z' }
+[chats] done { user: 4, tookMs: 11, items: 0 }
+[news] done { user: 4, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:58:20.831Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:58:46.050Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 20, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:58:55.819Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:59:10.822Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T10:59:19.268Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 12, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T10:59:19.304Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T10:59:35.856Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T10:59:40.815Z' }
+[news] done { user: 2, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:00:00.849Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:00:18.848Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 8, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:00:18.885Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:00:25.964Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:00:25.976Z' }
+[chats] done { user: 2, tookMs: 54, items: 0 }
+[news] done { user: 2, tookMs: 44, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:00:51.649Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 26, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:01:10.842Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:01:15.815Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:01:18.943Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:01:18.968Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:01:40.842Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:01:55.831Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:02:05.832Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:02:18.839Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 11, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:02:18.872Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:02:30.843Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:02:40.817Z' }
+[news] done { user: 2, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:02:55.849Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:03:18.840Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:03:18.878Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:03:20.860Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:03:25.822Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:03:45.847Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:04:10.864Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:04:10.866Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] done { user: 2, tookMs: 8, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:04:18.645Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:04:18.648Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] done { user: 4, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:04:35.862Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:04:55.840Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:05:00.828Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:05:18.621Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:05:18.636Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:05:25.857Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:05:40.826Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:05:50.822Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:06:15.839Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:06:18.632Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:06:18.645Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:06:25.824Z' }
+[news] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:06:40.822Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:07:05.841Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:07:10.822Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:07:18.626Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:07:18.629Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] done { user: 4, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:07:30.837Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:07:55.847Z' }
+[chats] query.begin { user: 2 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:07:55.849Z' }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:08:19.710Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 17, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:08:19.757Z' }
+[news] done { user: 4, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:08:20.910Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 13, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:08:40.828Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:08:45.817Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:09:10.848Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:09:18.647Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:09:18.657Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:09:25.854Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:09:35.832Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:10:00.847Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:10:10.819Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:10:18.862Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:10:18.864Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] done { user: 4, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:10:25.856Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:10:50.872Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:10:55.821Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:11:15.858Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:11:18.954Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:11:18.990Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:11:40.857Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:11:40.859Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:12:05.848Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:12:18.822Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:12:18.862Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:12:25.837Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:12:30.820Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:12:55.859Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:13:10.955Z' }
+[news] done { user: 2, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:13:19.097Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:13:19.133Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:13:20.824Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:13:45.853Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:13:55.822Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:14:10.824Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:14:18.845Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 9, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:14:18.881Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:14:35.863Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:14:40.822Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:15:00.834Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:15:18.654Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:15:18.684Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:15:25.853Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:15:25.855Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] done { user: 2, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:15:50.844Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:16:10.838Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:16:15.821Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:16:18.651Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:16:18.668Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:16:40.837Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:16:55.839Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:17:05.820Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:17:19.331Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:17:19.381Z' }
+[news] done { user: 4, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:17:31.630Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:17:40.828Z' }
+[news] done { user: 2, tookMs: 14, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:17:56.137Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:18:20.171Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 7, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:18:20.217Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:18:21.188Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 1, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:18:25.820Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:18:46.025Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 14, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:19:11.010Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:19:11.015Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] done { user: 2, tookMs: 18, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:19:18.884Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:19:18.885Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 2, items: 0 }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:19:35.868Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:19:55.856Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:20:00.820Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:20:18.977Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 9, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:20:19.037Z' }
+[news] done { user: 4, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:20:25.894Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 12, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:20:40.820Z' }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:20:50.823Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:21:15.846Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:21:18.956Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:21:18.991Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:21:25.822Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:21:40.821Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:22:05.846Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:22:10.818Z' }
+[news] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:22:18.932Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:22:18.934Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] done { user: 4, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:22:30.856Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:22:55.916Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:22:55.917Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:23:19.303Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 7, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:23:19.341Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:23:21.033Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:23:40.864Z' }
+[news] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:23:45.929Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:24:10.888Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:24:18.903Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:24:18.939Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:24:25.910Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:24:35.823Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:25:00.859Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:25:10.817Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:25:18.833Z' }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:25:18.835Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 7, items: 0 }
+[news] done { user: 4, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:25:25.854Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:25:50.841Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:25:55.823Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:26:15.852Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:26:18.817Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:26:18.852Z' }
+[news] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:26:40.848Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:26:40.851Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] done { user: 2, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:27:05.840Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:27:18.639Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 5, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:27:18.657Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:27:25.846Z' }
+[news] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:27:30.822Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:27:55.885Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:28:10.825Z' }
+[news] done { user: 2, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:28:19.405Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:28:19.407Z' }
+[chats] done { user: 4, tookMs: 7, items: 0 }
+[news] done { user: 4, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:28:20.849Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:28:45.859Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 7, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:28:55.821Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:29:10.832Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:29:18.828Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:29:18.870Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:29:35.855Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:29:40.821Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:30:00.893Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:30:18.863Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:30:18.912Z' }
+[news] done { user: 4, tookMs: 2, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:30:25.935Z' }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:30:25.936Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 4, items: 0 }
+[news] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:30:50.847Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:31:10.858Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:31:15.819Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:31:18.821Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:31:18.855Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:31:40.845Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 10, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:31:55.846Z' }
+[news] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:32:05.822Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:32:18.781Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 3, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:32:18.825Z' }
+[news] done { user: 4, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:32:30.864Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 8, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:32:40.821Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:32:55.856Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-11-04T11:33:37.098Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 25, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:33:37.136Z' }
+[news] done { user: 4, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:33:38.842Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 10, items: 0 }
+[news] GET /news start { user: 2, at: '2025-11-04T11:33:43.706Z' }
+[news] done { user: 2, tookMs: 4, items: 0 }
+[news] GET /news start { user: 4, at: '2025-11-04T11:48:52.958Z' }
+[news] done { user: 4, tookMs: 26, items: 0 }
+[chats] GET /chats start { user: 2, at: '2025-11-04T11:49:08.606Z' }
+[chats] query.begin { user: 2 }
+[chats] done { user: 2, tookMs: 274, items: 0 }

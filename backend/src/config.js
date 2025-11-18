@@ -32,6 +32,11 @@ function loadConfig() {
     console.warn("WARN: JWT_SECRET not set; using default (dev only).");
   }
 
+  // Global session epoch for JWTs. All tokens are issued with the current epoch
+  // in their payload; middleware must compare token.epoch with this value.
+  // Bumping this value effectively invalidates all existing tokens at once.
+  const SESSION_EPOCH = Number(process.env.SESSION_EPOCH || 1);
+
   // Build a flexible CORS origin handler that supports a comma-separated list
   const rawCors = process.env.CORS_ORIGIN || '';
   const defaultDevOrigins = [
@@ -57,6 +62,7 @@ function loadConfig() {
 
   return {
     JWT_SECRET,
+    SESSION_EPOCH,
     // Prefer SQLITE_FILE or SQLITE_DB_PATH so scripts and server share the same DB
     DB_PATH: (function() {
       const p = process.env.SQLITE_FILE || process.env.SQLITE_DB_PATH || process.env.DB_PATH || "sportplattform.db";

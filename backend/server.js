@@ -315,6 +315,7 @@ const lastStartupAdmin = { value: null };
 const ctx = {
   db,
   SECRET: cfg.JWT_SECRET,
+  SESSION_EPOCH: cfg.SESSION_EPOCH,
   transporter,
   mailerState,
   sendMail,

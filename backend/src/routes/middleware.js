@@ -9,6 +9,21 @@ function createMiddleware(ctx) {
     if (!token) return res.sendStatus(401);
     jwt.verify(token, SECRET, (err, user) => {
       if (err) return res.sendStatus(403);
+      // Enforce global session epoch if available on ctx/global
+      try {
+        const epoch = user && typeof user.epoch === 'number' ? user.epoch : null;
+        const currentEpoch = (ctx && typeof ctx.SESSION_EPOCH === 'number')
+          ? ctx.SESSION_EPOCH
+          : (global && global._app_ctx && typeof global._app_ctx.SESSION_EPOCH === 'number')
+            ? global._app_ctx.SESSION_EPOCH
+            : null;
+        if (currentEpoch && epoch && epoch !== currentEpoch) {
+          return res.sendStatus(401);
+        }
+      } catch (_) {
+        // if epoch check fails unexpectedly, fall back to treating token as invalid
+        return res.sendStatus(401);
+      }
       req.user = user;
       next();
     });
