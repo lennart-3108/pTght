@@ -1,0 +1,251 @@
+/**
+ * Migration: Create booking system core tables (excluding locations)
+ * Creates tables for assets, slots, bookings, blackout windows, and pricing rules
+ */
+
+exports.up = function(knex) {
+  return knex.schema
+    // 1) ASSETS table (courts, fields, tables, halls)
+    .createTableIfNotExists('assets', table => {
+      table.increments('id').primary();
+      table.integer('location_id').unsigned().notNullable()
+        .references('id').inTable('locations').onDelete('CASCADE');
+      
+      table.string('name', 200).notNullable(); // e.g., "Court 1", "Hall A"
+      table.text('description');
+      table.enum('type', ['court', 'field', 'hall', 'table', 'room', 'other']).defaultTo('court');
+      
+      // Sport compatibility (can support multiple sports)
+      table.json('supported_sports'); // [{sport_id: 1, formats: ["singles", "doubles"]}, ...]
+      
+      // Physical attributes
+      table.string('surface', 100); // clay, grass, hard, turf, wood, etc.
+      table.boolean('indoor').defaultTo(false);
+      table.integer('capacity'); // max players/spectators
+      table.json('equipment'); // ["nets", "lighting", "scoreboard"]
+      table.json('amenities'); // ["parking", "showers", "wifi"]
+      
+      // Dimensions (optional)
+      table.decimal('length', 8, 2); // meters
+      table.decimal('width', 8, 2);
+      
+      // Operational
+      table.enum('status', ['active', 'maintenance', 'blocked', 'inactive']).defaultTo('active');
+      table.integer('display_order').defaultTo(0);
+      table.json('photos');
+      
+      table.timestamps(true, true);
+      
+      table.index(['location_id']);
+      table.index(['status']);
+      table.index(['type']);
+    })
+    
+    // 2) SLOTS table (bookable time slots)
+    .createTableIfNotExists('slots', table => {
+      table.increments('id').primary();
+      table.integer('asset_id').unsigned().notNullable()
+        .references('id').inTable('assets').onDelete('CASCADE');
+      table.integer('location_id').unsigned().notNullable()
+        .references('id').inTable('locations').onDelete('CASCADE');
+      
+      // Time range (stored in UTC, display uses location timezone)
+      table.datetime('start_time').notNullable(); // UTC
+      table.datetime('end_time').notNullable(); // UTC
+      table.integer('duration_minutes').notNullable(); // calculated
+      
+      // Buffers (minutes before/after slot for cleanup/setup)
+      table.integer('buffer_before').defaultTo(0);
+      table.integer('buffer_after').defaultTo(0);
+      
+      // Pricing
+      table.decimal('base_price', 10, 2); // base price for this slot
+      table.string('currency', 3).defaultTo('EUR');
+      table.integer('pricing_rule_id').unsigned(); // FK to pricing_rules (nullable)
+      
+      // Sport/format restrictions (optional)
+      table.integer('sport_id').unsigned().references('id').inTable('sports').onDelete('SET NULL');
+      table.string('format', 100); // e.g., "singles", "doubles", "5v5"
+      
+      // Status & visibility
+      table.enum('status', ['available', 'held', 'booked', 'blocked']).defaultTo('available');
+      table.enum('visibility', ['public', 'private', 'members-only']).defaultTo('public');
+      
+      // Recurrence (for series management)
+      table.string('recurrence_id', 100); // group recurring slots
+      table.boolean('is_recurring').defaultTo(false);
+      table.json('recurrence_rule'); // {freq: "weekly", interval: 1, until: "2025-12-31"}
+      
+      // Booking metadata
+      table.integer('booking_id').unsigned(); // FK to bookings (when booked)
+      table.datetime('held_at'); // timestamp when hold was placed
+      table.datetime('held_expires_at'); // TTL for hold
+      table.integer('held_by_user_id').unsigned(); // who placed the hold
+      
+      // Boost & promotion
+      table.boolean('is_boosted').defaultTo(false);
+      table.integer('boost_rank').defaultTo(0);
+      table.decimal('boost_discount_pct', 5, 2).defaultTo(0);
+      
+      table.timestamps(true, true);
+      
+      // Critical indices for booking queries
+      table.index(['asset_id', 'start_time', 'end_time']);
+      table.index(['location_id', 'start_time']);
+      table.index(['status']);
+      table.index(['sport_id']);
+      table.index(['held_expires_at']); // for TTL cleanup worker
+      table.index(['recurrence_id']);
+      table.unique(['asset_id', 'start_time']); // prevent duplicate slots at same time on same asset
+    })
+    
+    // 3) BOOKINGS table
+    .createTableIfNotExists('bookings', table => {
+      table.increments('id').primary();
+      
+      // References
+      table.integer('slot_id').unsigned().notNullable()
+        .references('id').inTable('slots').onDelete('CASCADE');
+      table.integer('location_id').unsigned().notNullable()
+        .references('id').inTable('locations').onDelete('CASCADE');
+      table.integer('asset_id').unsigned().notNullable()
+        .references('id').inTable('assets').onDelete('CASCADE');
+      table.integer('user_id').unsigned().notNullable()
+        .references('id').inTable('users').onDelete('CASCADE'); // who booked
+      
+      // Match/team context (optional)
+      table.integer('match_id').unsigned().references('id').inTable('matches').onDelete('SET NULL');
+      table.integer('team_id').unsigned().references('id').inTable('teams').onDelete('SET NULL');
+      table.integer('league_id').unsigned().references('id').inTable('leagues').onDelete('SET NULL');
+      
+      // Booking lifecycle
+      table.enum('status', [
+        'held',          // temporary hold (TTL active)
+        'confirmed',     // confirmed, awaiting payment
+        'paid',          // payment received
+        'completed',     // event occurred
+        'cancelled',     // cancelled by user
+        'rejected',      // rejected by owner
+        'no-show',       // user didn't show up
+        'refunded'       // payment refunded
+      ]).defaultTo('held');
+      
+      // Time details (denormalized for performance)
+      table.datetime('start_time').notNullable();
+      table.datetime('end_time').notNullable();
+      table.integer('duration_minutes').notNullable();
+      
+      // Pricing & payment
+      table.decimal('price', 10, 2).notNullable();
+      table.string('currency', 3).defaultTo('EUR');
+      table.decimal('platform_fee', 10, 2).defaultTo(0);
+      table.decimal('owner_payout', 10, 2).defaultTo(0);
+      table.string('payment_intent_id', 200); // Stripe/payment provider ID
+      table.string('invoice_id', 200);
+      table.datetime('paid_at');
+      
+      // Cancellation & refund
+      table.datetime('cancelled_at');
+      table.string('cancellation_reason', 500);
+      table.decimal('refund_amount', 10, 2);
+      table.datetime('refunded_at');
+      
+      // No-show tracking
+      table.boolean('is_no_show').defaultTo(false);
+      table.datetime('no_show_reported_at');
+      
+      // Idempotency
+      table.string('idempotency_key', 100).unique();
+      
+      // Metadata
+      table.json('metadata'); // additional data (promo codes, notes, etc.)
+      table.text('user_notes');
+      table.text('owner_notes');
+      
+      table.timestamps(true, true);
+      
+      table.index(['user_id']);
+      table.index(['slot_id']);
+      table.index(['location_id']);
+      table.index(['match_id']);
+      table.index(['status']);
+      table.index(['start_time']);
+      table.index(['payment_intent_id']);
+      table.index(['idempotency_key']);
+    })
+    
+    // 4) BLACKOUT_WINDOWS table (maintenance, blocked periods)
+    .createTableIfNotExists('blackout_windows', table => {
+      table.increments('id').primary();
+      
+      // Scope: can apply to location or specific asset
+      table.integer('location_id').unsigned().notNullable()
+        .references('id').inTable('locations').onDelete('CASCADE');
+      table.integer('asset_id').unsigned()
+        .references('id').inTable('assets').onDelete('CASCADE'); // nullable = applies to all assets
+      
+      table.datetime('start_time').notNullable();
+      table.datetime('end_time').notNullable();
+      
+      table.string('reason', 500); // "Maintenance", "Private Event", etc.
+      table.text('description');
+      
+      // Recurrence support
+      table.boolean('is_recurring').defaultTo(false);
+      table.json('recurrence_rule'); // {freq: "weekly", byday: ["mon"], until: "2025-12-31"}
+      table.string('recurrence_id', 100);
+      
+      table.timestamps(true, true);
+      
+      table.index(['location_id', 'start_time', 'end_time']);
+      table.index(['asset_id', 'start_time', 'end_time']);
+    })
+    
+    // 5) PRICING_RULES table (dynamic pricing)
+    .createTableIfNotExists('pricing_rules', table => {
+      table.increments('id').primary();
+      
+      table.integer('location_id').unsigned().notNullable()
+        .references('id').inTable('locations').onDelete('CASCADE');
+      table.integer('asset_id').unsigned()
+        .references('id').inTable('assets').onDelete('CASCADE'); // nullable = applies to all
+      table.integer('sport_id').unsigned()
+        .references('id').inTable('sports').onDelete('SET NULL'); // nullable
+      
+      table.string('name', 200).notNullable(); // "Peak Hours", "Weekend Rate", etc.
+      table.text('description');
+      
+      // Time conditions
+      table.json('days_of_week'); // [1,2,3,4,5] = Mon-Fri
+      table.time('time_from'); // "18:00"
+      table.time('time_to'); // "22:00"
+      table.date('valid_from');
+      table.date('valid_until');
+      
+      // Pricing
+      table.decimal('base_price', 10, 2);
+      table.decimal('price_modifier', 10, 2); // add/subtract from base
+      table.decimal('price_multiplier', 5, 2); // multiply base by this
+      table.string('currency', 3).defaultTo('EUR');
+      
+      // Priority (higher = applied first)
+      table.integer('priority').defaultTo(0);
+      table.boolean('is_active').defaultTo(true);
+      
+      table.timestamps(true, true);
+      
+      table.index(['location_id']);
+      table.index(['asset_id']);
+      table.index(['sport_id']);
+      table.index(['is_active', 'priority']);
+    });
+};
+
+exports.down = function(knex) {
+  return knex.schema
+    .dropTableIfExists('pricing_rules')
+    .dropTableIfExists('blackout_windows')
+    .dropTableIfExists('bookings')
+    .dropTableIfExists('slots')
+    .dropTableIfExists('assets');
+};

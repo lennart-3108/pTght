@@ -15,39 +15,23 @@ class LocationService {
    */
   async createLocation(ownerId, data) {
     // Validation
-    if (!data.name || !data.timezone) {
-      throw new Error('Name and timezone are required');
+    if (!data.name) {
+      throw new Error('Name is required');
     }
 
-    if (!validateTimezone(data.timezone)) {
-      throw new Error(`Invalid timezone: ${data.timezone}`);
-    }
-
-    if (data.latitude && data.longitude) {
-      if (!validateCoordinates(data.latitude, data.longitude)) {
-        throw new Error('Invalid coordinates');
-      }
-    }
-
-    // Prepare location data
+    // Prepare location data (only columns that exist in schema)
     const locationData = {
       owner_id: ownerId,
       name: data.name,
       description: data.description || null,
       address: data.address || null,
       city: data.city || null,
+      state: data.state || null,
       postal_code: data.postal_code || null,
       country: data.country || null,
-      latitude: data.latitude || null,
-      longitude: data.longitude || null,
-      phone: data.phone || null,
-      email: data.email || null,
-      website: data.website || null,
-      timezone: data.timezone,
-      opening_hours: data.opening_hours ? JSON.stringify(data.opening_hours) : null,
-      photos: data.photos ? JSON.stringify(data.photos) : null,
+      country_code: data.country_code || null,
+      timezone: data.timezone || 'Europe/Berlin',
       status: data.status || 'draft',
-      is_verified: false,
     };
 
     const [id] = await this.db('locations').insert(locationData);
@@ -66,25 +50,20 @@ class LocationService {
       return null;
     }
 
-    // Parse JSON fields
-    if (location.opening_hours) {
-      location.opening_hours = JSON.parse(location.opening_hours);
-    }
-    if (location.photos) {
-      location.photos = JSON.parse(location.photos);
-    }
+    // No JSON fields to parse in current schema
 
     if (includeAssets) {
       location.assets = await this.db('assets')
         .where({ location_id: id })
-        .orderBy('display_order', 'asc');
+        .orderBy('id', 'asc');
 
-      // Parse JSON for assets
+      // Parse JSON for assets if they have such fields
       location.assets = location.assets.map(asset => {
-        if (asset.supported_sports) asset.supported_sports = JSON.parse(asset.supported_sports);
-        if (asset.equipment) asset.equipment = JSON.parse(asset.equipment);
-        if (asset.amenities) asset.amenities = JSON.parse(asset.amenities);
-        if (asset.photos) asset.photos = JSON.parse(asset.photos);
+        if (asset.sports_json) {
+          try {
+            asset.sports_json = JSON.parse(asset.sports_json);
+          } catch (e) { /* keep as string */ }
+        }
         return asset;
       });
     }

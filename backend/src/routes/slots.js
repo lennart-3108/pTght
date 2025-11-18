@@ -89,8 +89,7 @@ module.exports = function slotRoutes(ctx) {
           'assets.name as asset_name',
           'assets.type as asset_type',
           'assets.surface',
-          'assets.indoor',
-          'assets.supported_sports',
+          'assets.sports_json',
           'locations.id as location_id',
           'locations.name as location_name',
           'locations.city',
@@ -105,9 +104,12 @@ module.exports = function slotRoutes(ctx) {
         query = query.where('locations.city', city);
       }
 
-      // Filter by sport_id
+      // Filter by sport_id (using sports_json column)
       if (sport_id) {
-        query = query.whereRaw(`json_extract(assets.supported_sports, '$') LIKE ?`, [`%"${sport_id}"%`]);
+        query = query.where(function() {
+          this.whereRaw(`json_extract(assets.sports_json, '$') LIKE ?`, [`%"${sport_id}"%`])
+            .orWhereNull('assets.sports_json');
+        });
       }
 
       const slots = await query
@@ -121,10 +123,10 @@ module.exports = function slotRoutes(ctx) {
 
       // Format results
       const formattedSlots = slots.map(slot => {
-        // Get first sport from supported_sports
+        // Get sports from sports_json
         let sportName = null;
         try {
-          const sports = slot.supported_sports ? JSON.parse(slot.supported_sports) : [];
+          const sports = slot.sports_json ? JSON.parse(slot.sports_json) : [];
           if (sports.length > 0) {
             // Sports are stored as IDs, we'd need to look them up
             // For now, just indicate if sports are supported
@@ -142,7 +144,6 @@ module.exports = function slotRoutes(ctx) {
           asset_name: slot.asset_name,
           asset_type: slot.asset_type,
           surface: slot.surface,
-          indoor: slot.indoor,
           sport_name: sportName,
           start_time: slot.start_time,
           end_time: slot.end_time,

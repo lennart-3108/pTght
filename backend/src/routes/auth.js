@@ -4,14 +4,14 @@ const bcrypt = require("bcrypt");
 
 module.exports = function authRoutes(ctx) {
   const router = express.Router();
-  const { db, SECRET, transporter, mailerState } = ctx;
+  const { db, SECRET, transporter, mailerState, SESSION_EPOCH } = ctx;
 
   router.post("/register", (req, res) => {
     const { firstname, lastname, birthday, email, password, sports } = req.body;
     if (!firstname || !lastname || !birthday || !email || !password || !sports?.length) {
       return res.status(400).json({ error: "Alle Felder sind erforderlich" });
     }
-    const confirmationToken = jwt.sign({ email }, SECRET, { expiresIn: "1d" });
+    const confirmationToken = jwt.sign({ email, epoch: SESSION_EPOCH || 1 }, SECRET, { expiresIn: "1d" });
     const hashedPassword = bcrypt.hashSync(password, 10);
 
     db.run(
@@ -105,7 +105,7 @@ module.exports = function authRoutes(ctx) {
         if (!ok) return res.status(401).json({ error: "Ungültige Zugangsdaten" });
 
         const token = jwt.sign(
-          { id: user.id, email: user.email, is_admin: !!user.is_admin },
+          { id: user.id, email: user.email, is_admin: !!user.is_admin, epoch: SESSION_EPOCH || 1 },
           SECRET,
           { expiresIn: "7d" }
         );
@@ -239,7 +239,7 @@ module.exports = function authRoutes(ctx) {
               return sendEmailAndRespond(user.confirmation_token);
             }
 
-            const newToken = jwt.sign({ email }, SECRET, { expiresIn: '1d' });
+            const newToken = jwt.sign({ email, epoch: SESSION_EPOCH || 1 }, SECRET, { expiresIn: '1d' });
             db.run(
               `UPDATE users SET confirmation_token = ? WHERE id = ?`,
               [newToken, user.id],
@@ -340,7 +340,7 @@ module.exports = function authRoutes(ctx) {
         if (data) store.delete(one_time);
         return res.status(500).json({ error: 'user not available' });
       }
-      const jwtToken = jwt.sign({ id: userRow.id, email: userRow.email, is_admin: !!userRow.is_admin }, SECRET, { expiresIn: '7d' });
+      const jwtToken = jwt.sign({ id: userRow.id, email: userRow.email, is_admin: !!userRow.is_admin, epoch: SESSION_EPOCH || 1 }, SECRET, { expiresIn: '7d' });
       // delete the one-time token (single-use)
       store.delete(one_time);
       return res.json({ token: jwtToken, is_admin: !!userRow.is_admin });

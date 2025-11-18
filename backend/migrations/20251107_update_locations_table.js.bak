@@ -1,0 +1,113 @@
+/**
+ * Migration: Update locations table with missing columns
+ * Add columns that are needed for the booking system
+ */
+
+exports.up = async function(knex) {
+  // Add missing columns to locations table
+  const hasLatitude = await knex.schema.hasColumn('locations', 'latitude');
+  if (!hasLatitude) {
+    await knex.schema.alterTable('locations', table => {
+      table.decimal('latitude', 10, 7);
+    });
+  }
+
+  const hasLongitude = await knex.schema.hasColumn('locations', 'longitude');
+  if (!hasLongitude) {
+    await knex.schema.alterTable('locations', table => {
+      table.decimal('longitude', 10, 7);
+    });
+  }
+
+  const hasPhone = await knex.schema.hasColumn('locations', 'phone');
+  if (!hasPhone) {
+    await knex.schema.alterTable('locations', table => {
+      table.string('phone', 50);
+    });
+  }
+
+  const hasEmail = await knex.schema.hasColumn('locations', 'email');
+  if (!hasEmail) {
+    await knex.schema.alterTable('locations', table => {
+      table.string('email', 255);
+    });
+  }
+
+  const hasWebsite = await knex.schema.hasColumn('locations', 'website');
+  if (!hasWebsite) {
+    await knex.schema.alterTable('locations', table => {
+      table.string('website', 500);
+    });
+  }
+
+  const hasOpeningHours = await knex.schema.hasColumn('locations', 'opening_hours');
+  if (!hasOpeningHours) {
+    await knex.schema.alterTable('locations', table => {
+      table.json('opening_hours');
+    });
+  }
+
+  const hasPhotos = await knex.schema.hasColumn('locations', 'photos');
+  if (!hasPhotos) {
+    await knex.schema.alterTable('locations', table => {
+      table.json('photos');
+    });
+  }
+
+  const hasIsVerified = await knex.schema.hasColumn('locations', 'is_verified');
+  if (!hasIsVerified) {
+    await knex.schema.alterTable('locations', table => {
+      table.boolean('is_verified').defaultTo(false);
+    });
+  }
+
+  const hasRating = await knex.schema.hasColumn('locations', 'rating');
+  if (!hasRating) {
+    await knex.schema.alterTable('locations', table => {
+      table.decimal('rating', 3, 2).defaultTo(0);
+    });
+  }
+
+  const hasReviewCount = await knex.schema.hasColumn('locations', 'review_count');
+  if (!hasReviewCount) {
+    await knex.schema.alterTable('locations', table => {
+      table.integer('review_count').defaultTo(0);
+    });
+  }
+
+  // Add indices
+  await knex.raw(`
+    CREATE INDEX IF NOT EXISTS idx_locations_city ON locations(city);
+    CREATE INDEX IF NOT EXISTS idx_locations_status ON locations(status);
+  `);
+
+  // Add geo index only if both latitude and longitude columns exist
+  const hasLat = await knex.schema.hasColumn('locations', 'latitude');
+  const hasLng = await knex.schema.hasColumn('locations', 'longitude');
+  if (hasLat && hasLng) {
+    await knex.raw(`
+      CREATE INDEX IF NOT EXISTS idx_locations_geo ON locations(latitude, longitude);
+    `);
+  }
+};
+
+exports.down = async function(knex) {
+  // Remove added columns in reverse order
+  const columns = ['review_count', 'rating', 'is_verified', 'photos', 'opening_hours', 'website', 'email', 'phone', 'longitude', 'latitude'];
+  
+  for (const column of columns) {
+    const hasColumn = await knex.schema.hasColumn('locations', column);
+    if (hasColumn) {
+      await knex.schema.alterTable('locations', table => {
+        table.dropColumn(column);
+      });
+    }
+  }
+
+  // Drop indices
+  await knex.raw(`
+    DROP INDEX IF EXISTS idx_locations_city;
+    DROP INDEX IF EXISTS idx_locations_status;
+    DROP INDEX IF EXISTS idx_locations_geo;
+  `);
+};

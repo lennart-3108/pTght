@@ -1,7 +1,7 @@
 exports.up = function(knex) {
   return knex.schema
     // 1. Create districts table
-    .createTable('districts', function(table) {
+    .createTableIfNotExists('districts', function(table) {
       table.increments('id').primary();
       table.integer('city_id').unsigned().notNullable();
       table.string('name', 100).notNullable();
@@ -18,18 +18,23 @@ exports.up = function(knex) {
       table.index('name');
     })
     // 2. Add district_id to leagues table
-    .then(() => {
-      return knex.schema.table('leagues', function(table) {
-        table.integer('district_id').unsigned();
-        table.string('level', 50); // 'national', 'state', 'city', 'district'
-        
-        // Foreign key
-        table.foreign('district_id').references('districts.id').onDelete('SET NULL');
-        
-        // Index
-        table.index('district_id');
-        table.index('level');
-      });
+    .then(async () => {
+      const hasDistrictId = await knex.schema.hasColumn('leagues', 'district_id');
+      const hasLevel = await knex.schema.hasColumn('leagues', 'level');
+      
+      if (!hasDistrictId || !hasLevel) {
+        return knex.schema.table('leagues', function(table) {
+          if (!hasDistrictId) {
+            table.integer('district_id').unsigned();
+            table.foreign('district_id').references('districts.id').onDelete('SET NULL');
+            table.index('district_id');
+          }
+          if (!hasLevel) {
+            table.string('level', 50); // 'national', 'state', 'city', 'district'
+            table.index('level');
+          }
+        });
+      }
     })
     // 3. Set level for existing leagues based on their scope
     .then(() => {

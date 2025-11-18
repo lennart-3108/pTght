@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
+import AuthNoticeBanner from "../components/AuthNoticeBanner";
 // large hero logo not currently used here
 import smallLogo from "../images/logo.png";
 // dynamically load all images from the background folder
@@ -219,10 +220,9 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
     return () => { cancelled = true; };
   }, [API]);
 
-  
-
   return (
     <div>
+      <AuthNoticeBanner />
       <section className="hero-carousel">
         {slides.map((s, i) => (
           <div key={i} className={`hero-slide ${i === index ? 'active' : ''}`} style={{ backgroundImage: `url(${s})` }} />

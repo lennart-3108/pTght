@@ -80,7 +80,7 @@ export default function SportSelector({ sports = [], value = '', onChange, place
   };
 
   return (
-    <div style={{ position: 'relative', zIndex: showDropdown ? 9999 : 1 }}>
+    <div style={{ position: 'relative', zIndex: showDropdown ? 99999 : 1 }}>
       {/* Display field */}
       <div
         onClick={() => setShowDropdown(!showDropdown)}
@@ -114,7 +114,7 @@ export default function SportSelector({ sports = [], value = '', onChange, place
           borderRadius: 10,
           maxHeight: 400,
           overflowY: 'auto',
-          zIndex: 10000,
+          zIndex: 100000,
           boxShadow: '0 10px 40px rgba(0,0,0,0.5)'
         }}>
           {/* Search input */}

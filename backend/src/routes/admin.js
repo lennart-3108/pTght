@@ -5,6 +5,26 @@ module.exports = function adminRoutes(ctx) {
   const router = express.Router();
   const { db, SECRET } = ctx;
 
+  // Session epoch is stored on ctx so we can bump it at runtime to invalidate all JWTs.
+  function getSessionEpoch() {
+    return (ctx && typeof ctx.SESSION_EPOCH === 'number' && ctx.SESSION_EPOCH > 0)
+      ? ctx.SESSION_EPOCH
+      : 1;
+  }
+
+  function bumpSessionEpoch() {
+    const current = getSessionEpoch();
+    const next = current + 1;
+    ctx.SESSION_EPOCH = next;
+    // Also mirror to a global singleton so other modules using global._app_ctx stay in sync
+    try {
+      if (global && global._app_ctx) {
+        global._app_ctx.SESSION_EPOCH = next;
+      }
+    } catch (_) {}
+    return next;
+  }
+
   // Admin-Guard
   const requireAdmin = (req, res, next) => {
     const auth = req.headers.authorization || "";
@@ -22,7 +42,19 @@ module.exports = function adminRoutes(ctx) {
 
   // Minimal placeholder endpoint
   router.get("/health", (req, res) => {
-    res.json({ status: "ok" });
+    res.json({ status: "ok", sessionEpoch: getSessionEpoch() });
+  });
+
+  // Invalidate all active logins by bumping the global session epoch.
+  // All JWTs carry an `epoch` claim; middleware must compare it to ctx.SESSION_EPOCH.
+  router.post("/logout-all", requireAdmin, (_req, res) => {
+    try {
+      const next = bumpSessionEpoch();
+      return res.json({ success: true, sessionEpoch: next });
+    } catch (e) {
+      console.error("[admin/logout-all] failed to bump epoch", e && (e.stack || e.message || e));
+      return res.status(500).json({ success: false, error: "Failed to invalidate sessions" });
+    }
   });
 
   // Admin-Statistiken (robust gegen fehlende Tabellen)

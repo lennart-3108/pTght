@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { API_BASE, fetchWithTimeout } from "../config";
+import { handleInvalidToken } from "../utils/auth";
 import Avatar from "../components/Avatar";
 import { useResponsive } from "../hooks/useResponsive";
 
@@ -501,7 +502,10 @@ export default function LeagueDetailPage() {
   }
 
   if (loading) return <div style={{ padding: 16 }}>Lade Liga ...</div>;
-  if (err) return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+  if (err) {
+    if (handleInvalidToken(err, navigate)) return null;
+    return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+  }
   if (!league) return <div style={{ padding: 16 }}>Keine Daten.</div>;
 
   // Mobile responsive styles (now using dynamic hook)
