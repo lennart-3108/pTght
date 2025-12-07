@@ -2,131 +2,84 @@ import React, { useState, useEffect } from 'react';
 
 /**
  * Hierarchical Location Selector Component
- * Shows: Region/Area → Country → State → City → District
- * Props:
- *   - cities: array of city objects with {id, name, stateId, countryId}
- *   - countries: array of country objects with {id, name}
- *   - states: array of state objects with {id, name, countryId}
- *   - districts: array of district objects with {id, name, cityId} (optional)
- *   - value: currently selected city or district name
- *   - onChange: callback(locationName, cityId, stateId, countryId, districtId)
- *   - placeholder: optional placeholder text (default: "Standort wählen")
+ * Shows: Country → State → City → District
  */
-export default function LocationSelector({ cities = [], countries = [], states = [], districts = [], value = '', onChange, placeholder = 'Standort wählen' }) {
+export default function LocationSelector({ 
+  cities = [], 
+  countries = [], 
+  states = [], 
+  districts = [], 
+  value = '', 
+  onChange, 
+  onLoadDistricts, 
+  placeholder = 'Standort wählen' 
+}) {
   const [showDropdown, setShowDropdown] = useState(false);
-  const [expandedRegions, setExpandedRegions] = useState({});
-  const [selectedCountryId, setSelectedCountryId] = useState('');
-  const [selectedStateId, setSelectedStateId] = useState('');
-  const [selectedCityId, setSelectedCityId] = useState('');
+  const [expandedCountries, setExpandedCountries] = useState(new Set());
+  const [expandedStates, setExpandedStates] = useState(new Set());
+  const [expandedCities, setExpandedCities] = useState(new Set());
 
-  // Reset expanded states when dropdown closes
+  // Debug: Log props when they change
+  useEffect(() => {
+    console.log('[LocationSelector] Props received:', {
+      countries: countries.length,
+      states: states.length,
+      cities: cities.length,
+      districts: districts.length,
+      statesSample: states.slice(0, 2)
+    });
+  }, [countries, states, cities, districts]);
+
+  // Reset when dropdown closes
   useEffect(() => {
     if (!showDropdown) {
-      setExpandedRegions({});
-      setSelectedCountryId('');
-      setSelectedStateId('');
-      setSelectedCityId('');
+      setExpandedCountries(new Set());
+      setExpandedStates(new Set());
+      setExpandedCities(new Set());
     }
   }, [showDropdown]);
 
-  // Auto-expand region/country/state/city when value is set
-  useEffect(() => {
-    if (value && cities.length > 0 && showDropdown) {
-      // Check if value is a district
-      const district = districts.find(d => d.name === value);
-      if (district) {
-        const city = cities.find(c => String(c.id) === String(district.cityId));
-        if (city) {
-          setSelectedCityId(String(city.id));
-          if (city.countryId) {
-            const country = countries.find(co => String(co.id) === String(city.countryId));
-            if (country) {
-              const region = getRegion(country.name);
-              setExpandedRegions(prev => ({ ...prev, [region]: true }));
-              setSelectedCountryId(String(city.countryId));
-            }
-          }
-          if (city.stateId) {
-            setSelectedStateId(String(city.stateId));
-          }
-        }
-      } else {
-        // Value is a city
-        const city = cities.find(c => c.name === value);
-        if (city) {
-          if (city.countryId) {
-            const country = countries.find(co => String(co.id) === String(city.countryId));
-            if (country) {
-              const region = getRegion(country.name);
-              setExpandedRegions(prev => ({ ...prev, [region]: true }));
-              setSelectedCountryId(String(city.countryId));
-            }
-          }
-          if (city.stateId) {
-            setSelectedStateId(String(city.stateId));
-          }
-        }
-      }
+  const toggleCountry = (countryId) => {
+    const newSet = new Set(expandedCountries);
+    if (newSet.has(countryId)) {
+      newSet.delete(countryId);
+    } else {
+      newSet.add(countryId);
     }
-  }, [value, cities, countries, districts, showDropdown]);
-
-  // Region mapping
-  const regionMap = {
-    'Western Europe': ['Germany', 'France', 'Netherlands', 'Belgium', 'Luxembourg', 'Switzerland', 'Austria', 'Liechtenstein'],
-    'Southern Europe': ['Italy', 'Spain', 'Portugal', 'Greece', 'Malta', 'Andorra', 'Monaco', 'San Marino', 'Holy See', 'Cyprus'],
-    'Northern Europe': ['United Kingdom', 'Ireland', 'Sweden', 'Norway', 'Denmark', 'Finland', 'Iceland', 'Estonia', 'Latvia', 'Lithuania'],
-    'Eastern Europe': ['Poland', 'Czechia', 'Slovakia', 'Hungary', 'Romania', 'Bulgaria', 'Serbia', 'Croatia', 'Slovenia', 'Bosnia and Herzegovina', 'Montenegro', 'North Macedonia', 'Albania', 'Belarus', 'Ukraine', 'Moldova', 'Russian Federation'],
-    'Middle East': ['Türkiye', 'Iran', 'Iraq', 'Saudi Arabia', 'Yemen', 'Jordan', 'United Arab Emirates', 'Israel', 'Lebanon', 'Palestine, State of', 'Oman', 'Kuwait', 'Qatar', 'Bahrain', 'Syria', 'Armenia', 'Azerbaijan', 'Georgia'],
-    'East Asia': ['China', 'Japan', 'Korea, Republic of', 'Korea, Democratic People\'s Republic of', 'Taiwan, Province of China', 'Hong Kong', 'Macao', 'Mongolia'],
-    'Southeast Asia': ['Indonesia', 'Philippines', 'Viet Nam', 'Thailand', 'Myanmar', 'Malaysia', 'Singapore', 'Cambodia', 'Lao People\'s Democratic Republic', 'Timor-Leste', 'Brunei Darussalam'],
-    'South Asia': ['India', 'Pakistan', 'Bangladesh', 'Nepal', 'Sri Lanka', 'Afghanistan', 'Bhutan', 'Maldives'],
-    'Central Asia': ['Uzbekistan', 'Tajikistan', 'Kyrgyzstan', 'Turkmenistan', 'Kazakhstan'],
-    'North Africa': ['Egypt', 'Algeria', 'Morocco', 'Tunisia', 'Libya', 'Sudan', 'South Sudan', 'Western Sahara'],
-    'West Africa': ['Nigeria', 'Ghana', 'Côte d\'Ivoire', 'Niger', 'Burkina Faso', 'Mali', 'Senegal', 'Guinea', 'Benin', 'Togo', 'Sierra Leone', 'Liberia', 'Mauritania', 'Gambia', 'Guinea-Bissau', 'Cabo Verde'],
-    'East Africa': ['Ethiopia', 'Kenya', 'Uganda', 'Tanzania, United Republic of', 'Rwanda', 'Burundi', 'Somalia', 'Eritrea', 'Djibouti'],
-    'Central Africa': ['Congo, Democratic Republic of the', 'Angola', 'Cameroon', 'Chad', 'Central African Republic', 'Gabon', 'Equatorial Guinea', 'Sao Tome and Principe'],
-    'Southern Africa': ['South Africa', 'Mozambique', 'Madagascar', 'Malawi', 'Zambia', 'Zimbabwe', 'Botswana', 'Namibia', 'Lesotho', 'Eswatini', 'Mauritius', 'Comoros', 'Seychelles'],
-    'North America': ['United States of America', 'Canada', 'Mexico', 'Greenland'],
-    'Central America': ['Guatemala', 'Honduras', 'Nicaragua', 'El Salvador', 'Costa Rica', 'Panama', 'Belize'],
-    'Caribbean': ['Cuba', 'Jamaica', 'Trinidad and Tobago', 'Bahamas', 'Barbados', 'Saint Lucia', 'Grenada', 'Saint Vincent and the Grenadines', 'Antigua and Barbuda', 'Dominica', 'Saint Kitts and Nevis', 'Haiti', 'Dominican Republic'],
-    'South America': ['Brazil', 'Colombia', 'Argentina', 'Peru', 'Venezuela', 'Chile', 'Ecuador', 'Bolivia', 'Paraguay', 'Uruguay', 'Guyana', 'Suriname', 'French Guiana'],
-    'Australia & New Zealand': ['Australia', 'New Zealand'],
-    'Pacific Islands': ['Papua New Guinea', 'Fiji', 'Solomon Islands', 'Vanuatu', 'New Caledonia', 'French Polynesia', 'Samoa', 'Guam', 'Kiribati', 'Micronesia', 'Tonga', 'Palau', 'Cook Islands', 'American Samoa', 'Northern Mariana Islands', 'Marshall Islands', 'Tuvalu', 'Nauru', 'Wallis and Futuna', 'Niue', 'Tokelau']
+    setExpandedCountries(newSet);
   };
 
-  const getRegion = (countryName) => {
-    for (const [region, countryList] of Object.entries(regionMap)) {
-      if (countryList.includes(countryName)) {
-        return region;
-      }
+  const toggleState = (stateId) => {
+    const newSet = new Set(expandedStates);
+    if (newSet.has(stateId)) {
+      newSet.delete(stateId);
+    } else {
+      newSet.add(stateId);
     }
-    return 'Other';
+    setExpandedStates(newSet);
   };
 
-  const groupedCountries = countries.reduce((acc, country) => {
-    const region = getRegion(country.name);
-    if (!acc[region]) acc[region] = [];
-    acc[region].push(country);
-    return acc;
-  }, {});
+  const toggleCity = (cityId) => {
+    const newSet = new Set(expandedCities);
+    if (newSet.has(cityId)) {
+      newSet.delete(cityId);
+    } else {
+      newSet.add(cityId);
+      if (onLoadDistricts) {
+        onLoadDistricts(cityId);
+      }
+    }
+    setExpandedCities(newSet);
+  };
 
-  const regionOrder = [
-    'Western Europe', 'Southern Europe', 'Northern Europe', 'Eastern Europe',
-    'Middle East', 'East Asia', 'Southeast Asia', 'South Asia', 'Central Asia',
-    'North Africa', 'West Africa', 'East Africa', 'Central Africa', 'Southern Africa',
-    'North America', 'Central America', 'Caribbean', 'South America',
-    'Australia & New Zealand', 'Pacific Islands',
-    'Other'
-  ];
-
-  const handleCitySelect = (city) => {
+  const selectCity = (city) => {
     if (onChange) {
       onChange(city.name, city.id, city.stateId, city.countryId, null);
     }
     setShowDropdown(false);
   };
 
-  const handleDistrictSelect = (district, city) => {
+  const selectDistrict = (district, city) => {
     if (onChange) {
       onChange(district.name, city.id, city.stateId, city.countryId, district.id);
     }
@@ -180,317 +133,148 @@ export default function LocationSelector({ cities = [], countries = [], states =
           maxHeight: 400,
           overflowY: 'auto',
           zIndex: 100000,
-          boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          padding: '8px 0'
         }}>
-          {regionOrder.map(region => {
-            const regionCountries = groupedCountries[region] || [];
-            if (regionCountries.length === 0) return null;
-
-            const isRegionExpanded = expandedRegions[region];
+          {[...countries].sort((a, b) => a.name.localeCompare(b.name)).map(country => {
+            const countryId = String(country.id);
+            const isExpanded = expandedCountries.has(countryId);
+            const countryStates = states.filter(s => String(s.countryId) === countryId);
 
             return (
-              <div key={region}>
-                {/* Region Header - Clickable */}
+              <div key={countryId}>
+                {/* Country */}
                 <div
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setExpandedRegions(prev => ({
-                      ...prev,
-                      [region]: !prev[region]
-                    }));
-                  }}
+                  onClick={() => toggleCountry(countryId)}
                   style={{
-                    padding: '10px 16px',
-                    background: '#0a1e19',
-                    borderBottom: '1px solid #2f6b57',
-                    fontSize: 11,
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: 1,
-                    color: '#9ca3af',
-                    position: 'sticky',
-                    top: 0,
-                    zIndex: 1,
+                    padding: '12px 16px',
                     cursor: 'pointer',
+                    background: isExpanded ? '#113528' : 'transparent',
+                    borderBottom: '1px solid #1a3329',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 8,
-                    transition: 'background 0.2s'
+                    fontWeight: 600,
+                    color: '#e8efe8'
                   }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#0e2521'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = '#0a1e19'}
                 >
-                  <span style={{ fontSize: 10 }}>
-                    {isRegionExpanded ? '▼' : '▶'}
+                  <span style={{ fontSize: 10, color: '#9ca3af' }}>
+                    {isExpanded ? '▼' : '▶'}
                   </span>
-                  {region}
+                  <span>{country.name}</span>
+                  <span style={{ marginLeft: 'auto', fontSize: 11, color: '#6b8578' }}>
+                    {countryStates.length}
+                  </span>
                 </div>
 
-                {/* Countries in Region - Only show when expanded */}
-                {isRegionExpanded && regionCountries.map(country => {
-                  const isCountrySelected = String(country.id) === String(selectedCountryId);
-                  const countryStates = states.filter(st => String(st.countryId) === String(country.id));
-                  const countryCities = cities.filter(c => String(c.countryId) === String(country.id));
+                {/* States */}
+                {isExpanded && countryStates.map(state => {
+                  const stateId = String(state.id);
+                  const isStateExpanded = expandedStates.has(stateId);
+                  const stateCities = cities.filter(c => String(c.stateId) === stateId);
 
                   return (
-                    <div key={country.id}>
-                      {/* Country item */}
+                    <div key={stateId}>
+                      {/* State */}
                       <div
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (isCountrySelected) {
-                            setSelectedCountryId('');
-                            setSelectedStateId('');
-                          } else {
-                            setSelectedCountryId(String(country.id));
-                            setSelectedStateId('');
-                          }
-                        }}
+                        onClick={() => toggleState(stateId)}
                         style={{
-                          padding: '12px 16px',
+                          padding: '10px 16px 10px 32px',
                           cursor: 'pointer',
-                          background: isCountrySelected ? '#113528' : 'transparent',
+                          background: isStateExpanded ? '#0e2521' : 'transparent',
                           borderBottom: '1px solid #1a3329',
                           display: 'flex',
                           alignItems: 'center',
                           gap: 8,
-                          fontWeight: 600,
-                          color: '#e8efe8',
-                          transition: 'background 0.2s'
+                          fontWeight: 500,
+                          color: '#ccffee',
+                          fontSize: 14
                         }}
-                        onMouseEnter={(e) => e.currentTarget.style.background = '#113528'}
-                        onMouseLeave={(e) => e.currentTarget.style.background = isCountrySelected ? '#113528' : 'transparent'}
                       >
                         <span style={{ fontSize: 10, color: '#9ca3af' }}>
-                          {isCountrySelected ? '▼' : '▶'}
+                          {isStateExpanded ? '▼' : '▶'}
                         </span>
-                        <span>{country.name}</span>
+                        <span>{state.name}</span>
+                        <span style={{ marginLeft: 'auto', fontSize: 11, color: '#6b8578' }}>
+                          {stateCities.length}
+                        </span>
                       </div>
 
-                      {/* States */}
-                      {isCountrySelected && countryStates.length > 0 && countryStates.map(state => {
-                        const isStateSelected = String(state.id) === String(selectedStateId);
-                        const stateCities = cities.filter(c => String(c.stateId) === String(state.id));
-
-                        return (
-                          <div key={state.id}>
-                            {/* State item */}
-                            <div
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (isStateSelected) {
-                                  setSelectedStateId('');
-                                } else {
-                                  setSelectedStateId(String(state.id));
-                                }
-                              }}
-                              style={{
-                                padding: '10px 16px 10px 32px',
-                                cursor: 'pointer',
-                                background: isStateSelected ? '#0e2521' : 'transparent',
-                                borderBottom: '1px solid #1a3329',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: 8,
-                                fontWeight: 500,
-                                color: '#cfe',
-                                fontSize: 14,
-                                transition: 'background 0.2s'
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.background = '#0e2521'}
-                              onMouseLeave={(e) => e.currentTarget.style.background = isStateSelected ? '#0e2521' : 'transparent'}
-                            >
-                              <span style={{ fontSize: 10, color: '#9ca3af' }}>
-                                {isStateSelected ? '▼' : '▶'}
-                              </span>
-                              <span>{state.name}</span>
-                            </div>
-
-                            {/* Cities in state */}
-                            {isStateSelected && stateCities.map(city => {
-                              const isCitySelected = String(city.id) === String(selectedCityId);
-                              const cityDistricts = districts.filter(d => String(d.cityId) === String(city.id));
-                              const hasDistricts = cityDistricts.length > 0;
-
-                              return (
-                                <div key={city.id}>
-                                  {/* City item */}
-                                  <div
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (hasDistricts) {
-                                        // Toggle city expansion
-                                        if (isCitySelected) {
-                                          setSelectedCityId('');
-                                        } else {
-                                          setSelectedCityId(String(city.id));
-                                        }
-                                      } else {
-                                        // Select city directly if no districts
-                                        handleCitySelect(city);
-                                      }
-                                    }}
-                                    style={{
-                                      padding: '8px 16px 8px 48px',
-                                      cursor: 'pointer',
-                                      background: value === city.name ? '#0a1e19' : 'transparent',
-                                      borderBottom: '1px solid #1a3329',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      gap: 8,
-                                      color: value === city.name ? '#debc7c' : '#a6bfb3',
-                                      fontSize: 13,
-                                      transition: 'all 0.2s'
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.background = '#0a1e19';
-                                      e.currentTarget.style.color = '#debc7c';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.background = value === city.name ? '#0a1e19' : 'transparent';
-                                      e.currentTarget.style.color = value === city.name ? '#debc7c' : '#a6bfb3';
-                                    }}
-                                  >
-                                    <span style={{ fontSize: 10, color: '#9ca3af' }}>
-                                      {hasDistricts ? (isCitySelected ? '▼' : '▶') : '•'}
-                                    </span>
-                                    <span>{city.name}</span>
-                                    {value === city.name && !hasDistricts && (
-                                      <span style={{ marginLeft: 'auto', fontSize: 12 }}>✓</span>
-                                    )}
-                                  </div>
-
-                                  {/* Districts in city */}
-                                  {isCitySelected && cityDistricts.map(district => (
-                                    <div
-                                      key={district.id}
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleDistrictSelect(district, city);
-                                      }}
-                                      style={{
-                                        padding: '6px 16px 6px 64px',
-                                        cursor: 'pointer',
-                                        background: value === district.name ? '#05120e' : 'transparent',
-                                        borderBottom: '1px solid #1a3329',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 8,
-                                        color: value === district.name ? '#debc7c' : '#8fa89d',
-                                        fontSize: 12,
-                                        transition: 'all 0.2s'
-                                      }}
-                                      onMouseEnter={(e) => {
-                                        e.currentTarget.style.background = '#05120e';
-                                        e.currentTarget.style.color = '#debc7c';
-                                      }}
-                                      onMouseLeave={(e) => {
-                                        e.currentTarget.style.background = value === district.name ? '#05120e' : 'transparent';
-                                        e.currentTarget.style.color = value === district.name ? '#debc7c' : '#8fa89d';
-                                      }}
-                                    >
-                                      <span style={{ fontSize: 10 }}>•</span>
-                                      <span>{district.name}</span>
-                                      {value === district.name && (
-                                        <span style={{ marginLeft: 'auto', fontSize: 12 }}>✓</span>
-                                      )}
-                                    </div>
-                                  ))}
-                                </div>
-                              );
-                            })}
-                          </div>
+                      {/* Cities */}
+                      {isStateExpanded && stateCities.map(city => {
+                        const cityId = String(city.id);
+                        const isCityExpanded = expandedCities.has(cityId);
+                        const cityDistricts = districts.filter(d => 
+                          String(d.parentCityId || d.cityId) === cityId
                         );
-                      })}
-
-                      {/* Cities without state */}
-                      {isCountrySelected && countryStates.length === 0 && countryCities.map(city => {
-                        const isCitySelected = String(city.id) === String(selectedCityId);
-                        const cityDistricts = districts.filter(d => String(d.cityId) === String(city.id));
                         const hasDistricts = cityDistricts.length > 0;
+                        const isSelected = value === city.name;
 
                         return (
-                          <div key={city.id}>
-                            {/* City item */}
+                          <div key={cityId}>
+                            {/* City */}
                             <div
-                              onClick={(e) => {
-                                e.stopPropagation();
+                              onClick={() => {
                                 if (hasDistricts) {
-                                  if (isCitySelected) {
-                                    setSelectedCityId('');
-                                  } else {
-                                    setSelectedCityId(String(city.id));
-                                  }
+                                  toggleCity(cityId);
                                 } else {
-                                  handleCitySelect(city);
+                                  selectCity(city);
                                 }
                               }}
                               style={{
-                                padding: '8px 16px 8px 32px',
+                                padding: '8px 16px 8px 44px',
                                 cursor: 'pointer',
-                                background: value === city.name ? '#0a1e19' : 'transparent',
+                                background: isSelected ? '#0a1e19' : 'transparent',
                                 borderBottom: '1px solid #1a3329',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: 8,
-                                color: value === city.name ? '#debc7c' : '#a6bfb3',
-                                fontSize: 13,
-                                transition: 'all 0.2s'
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = '#0a1e19';
-                                e.currentTarget.style.color = '#debc7c';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = value === city.name ? '#0a1e19' : 'transparent';
-                                e.currentTarget.style.color = value === city.name ? '#debc7c' : '#a6bfb3';
+                                color: isSelected ? '#debc7c' : '#a6bfb3',
+                                fontSize: 13
                               }}
                             >
                               <span style={{ fontSize: 10, color: '#9ca3af' }}>
-                                {hasDistricts ? (isCitySelected ? '▼' : '▶') : '•'}
+                                {hasDistricts ? (isCityExpanded ? '▼' : '▶') : '•'}
                               </span>
                               <span>{city.name}</span>
-                              {value === city.name && !hasDistricts && (
+                              {isSelected && !hasDistricts && (
                                 <span style={{ marginLeft: 'auto', fontSize: 12 }}>✓</span>
+                              )}
+                              {hasDistricts && (
+                                <span style={{ marginLeft: 'auto', fontSize: 11, color: '#6b8578' }}>
+                                  {cityDistricts.length}
+                                </span>
                               )}
                             </div>
 
                             {/* Districts */}
-                            {isCitySelected && cityDistricts.map(district => (
-                              <div
-                                key={district.id}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDistrictSelect(district, city);
-                                }}
-                                style={{
-                                  padding: '6px 16px 6px 48px',
-                                  cursor: 'pointer',
-                                  background: value === district.name ? '#05120e' : 'transparent',
-                                  borderBottom: '1px solid #1a3329',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  gap: 8,
-                                  color: value === district.name ? '#debc7c' : '#8fa89d',
-                                  fontSize: 12,
-                                  transition: 'all 0.2s'
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.background = '#05120e';
-                                  e.currentTarget.style.color = '#debc7c';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.background = value === district.name ? '#05120e' : 'transparent';
-                                  e.currentTarget.style.color = value === district.name ? '#8fa89d' : '#8fa89d';
-                                }}
-                              >
-                                <span style={{ fontSize: 10 }}>•</span>
-                                <span>{district.name}</span>
-                                {value === district.name && (
-                                  <span style={{ marginLeft: 'auto', fontSize: 12 }}>✓</span>
-                                )}
-                              </div>
-                            ))}
+                            {isCityExpanded && cityDistricts.map(district => {
+                              const isDistrictSelected = value === district.name;
+
+                              return (
+                                <div
+                                  key={district.id}
+                                  onClick={() => selectDistrict(district, city)}
+                                  style={{
+                                    padding: '6px 16px 6px 60px',
+                                    cursor: 'pointer',
+                                    background: isDistrictSelected ? '#05120e' : 'transparent',
+                                    borderBottom: '1px solid #1a3329',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: 8,
+                                    color: isDistrictSelected ? '#debc7c' : '#8fa89d',
+                                    fontSize: 12
+                                  }}
+                                >
+                                  <span style={{ fontSize: 10 }}>•</span>
+                                  <span>{district.name}</span>
+                                  {isDistrictSelected && (
+                                    <span style={{ marginLeft: 'auto', fontSize: 12 }}>✓</span>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         );
                       })}

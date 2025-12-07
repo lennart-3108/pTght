@@ -6,6 +6,8 @@ const meRoutes = require("./me");
 const leaguesRoutes = require("./leagues");
 const sportsRoutes = require("./sports");
 const citiesRoutes = require("./cities");
+const countiesRoutes = require("./counties");
+const countriesRoutes = require("./countries");
 const adminRoutes = require("./admin");
 const mailerRoutes = require("./mailer");
 const healthRoutes = require("./health");
@@ -18,6 +20,11 @@ const profileRoutes = require("./profile");
 const locationsRoutes = require("./locations");
 const assetsRoutes = require("./assets");
 const slotsRoutes = require("./slots");
+const bookingsRoutes = require("./bookings");
+const bookingStatsRoutes = require("./bookingStats");
+const slotGeneratorRoutes = require("./slotGenerator");
+const suggestRoutes = require("./suggest");
+const paymentsRoutes = require("./payments");
 const districtsRoutes = require("./districts");
 
 function registerRoutes(app, ctx) {
@@ -35,6 +42,8 @@ function registerRoutes(app, ctx) {
   apiRouter.use("/leagues", leaguesRoutes(ctx));
   apiRouter.use("/sports", sportsRoutes(ctx));
   apiRouter.use(citiesRoutes(ctx));
+  apiRouter.use(countiesRoutes(ctx));
+  apiRouter.use(countriesRoutes(ctx));
   apiRouter.use(profileRoutes(ctx));
   apiRouter.use("/admin", adminRoutes(ctx));
   // Mount mailer under explicit prefix so endpoints are /api/mailer/*
@@ -50,6 +59,11 @@ function registerRoutes(app, ctx) {
   apiRouter.use('/locations', locationsRoutes(ctx));
   apiRouter.use('/assets', assetsRoutes(ctx));
   apiRouter.use('/slots', slotsRoutes(ctx));
+  apiRouter.use('/bookings', bookingsRoutes(ctx));
+  apiRouter.use('/booking-stats', bookingStatsRoutes(ctx));
+  apiRouter.use('/slots', slotGeneratorRoutes(ctx));
+  apiRouter.use('/suggest', suggestRoutes(ctx));
+  apiRouter.use('/payments', paymentsRoutes(ctx));
   apiRouter.use('/districts', districtsRoutes(ctx));
 
   // --- Email status + test routes ---

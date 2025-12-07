@@ -16,15 +16,18 @@ router.get('/', async (req, res) => {
         'cities.name',
         'cities.country_id',
         'cities.state_id',
+        'cities.type',
+        'cities.parent_city_id',
         'cities.population',
         'cities.latitude',
         'cities.longitude',
         'countries.name as country_name',
         'countries.code as country_code',
-        'states.name as state_name'
+        'counties.name as state_name',
+        'counties.code as state_code'
       )
       .leftJoin('countries', 'cities.country_id', 'countries.id')
-      .leftJoin('states', 'cities.state_id', 'states.id')
+      .leftJoin('counties', 'cities.state_id', 'counties.id')
       .orderBy('cities.name', 'asc');
 
     // Filter by country if specified
@@ -60,10 +63,11 @@ router.get('/:id', async (req, res) => {
         'cities.*',
         'countries.name as country_name',
         'countries.code as country_code',
-        'states.name as state_name'
+        'counties.name as state_name',
+        'counties.code as state_code'
       )
       .leftJoin('countries', 'cities.country_id', 'countries.id')
-      .leftJoin('states', 'cities.state_id', 'states.id')
+      .leftJoin('counties', 'cities.state_id', 'counties.id')
       .where('cities.id', parseInt(req.params.id))
       .first();
 
@@ -108,10 +112,11 @@ router.post('/', async (req, res) => {
       .select(
         'cities.*',
         'countries.name as country_name',
-        'states.name as state_name'
+        'counties.name as state_name',
+        'counties.code as state_code'
       )
       .leftJoin('countries', 'cities.country_id', 'countries.id')
-      .leftJoin('states', 'cities.state_id', 'states.id')
+      .leftJoin('counties', 'cities.state_id', 'counties.id')
       .where('cities.id', cityId[0])
       .first();
 

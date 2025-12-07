@@ -323,6 +323,13 @@ const ctx = {
   schemaToHtml,
   lastStartupAdmin
 };
+// Expose a Knex instance on ctx for routes/services that require it
+try {
+  const primaryKnex = (db && db.knex && db.knex.client) ? db.knex : (knexDirect || knexFileInstance || null);
+  if (primaryKnex && primaryKnex.client) {
+    ctx.knex = primaryKnex;
+  }
+} catch (_) {}
 
 // ephemeral one-time auth token store (in-memory). Keys: token -> { userId, expiresAt }
 // NOTE: in production you may want a persistent/cluster-safe store (Redis) instead.
@@ -978,11 +985,13 @@ apiRouter.use("/me", meRoutes({ db: knexDirect || db }));
 apiRouter.use("/leagues", leagueMatchesRoutes({ db: knexDirect || db }));
 
 const sportsRoutes = require("./src/routes/sports");
+const citiesRoutes = require("./src/routes/cities");
 const matchesRoutes = require("./routes/matches");
 const chatsRoutes = require("./routes/chats");
 
 // Mount routes BEFORE any 404 handler
 apiRouter.use("/sports", sportsRoutes({ db }));
+apiRouter.use("/", citiesRoutes({ db }));
 // Ensure we pass a usable knex instance into routes that expect it.
 // Prefer knexDirect (legacy), then adapter's knex, then the adapter object as last resort.
 const resolvedKnexForRoutes = (knexDirect && knexDirect.client)
@@ -1155,13 +1164,14 @@ app.get("/sports/list", async (req, res) => {
 
 apiRouter.get("/cities/list", async (req, res) => {
   try {
+    console.log('[API /api/cities/list] Request received');
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
     if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
 
-    // Simplified query: directly select the columns we need
+    // Query all cities (filtered to major cities via database - population > 50k from GeoNames)
     const rows = await k('cities as c')
       .leftJoin('countries as co', 'co.id', 'c.country_id')
-      .leftJoin('states as st', 'st.id', 'c.state_id')
+      .leftJoin('counties as st', 'st.id', 'c.state_id')
       .select(
         'c.id',
         'c.name',
@@ -1170,13 +1180,16 @@ apiRouter.get("/cities/list", async (req, res) => {
         'co.name as countryName',
         'co.code as countryCode',
         'st.name as stateName',
-        'st.code as stateCode'
+        'st.code as stateCode',
+        'c.type'
       )
+      .where('c.type', 'city')
       .orderBy('c.name', 'asc');
     
+    console.log(`[API /api/cities/list] Returning ${rows.length} cities`);
     return res.json(rows || []);
   } catch (e) {
-    console.error("GET /cities/list failed:", e && (e.stack || e.message || e));
+    console.error("GET /api/cities/list failed:", e && (e.stack || e.message || e));
     return res.status(500).json({ error: "Datenbankfehler", details: (e && e.message) || String(e) });
   }
 });
@@ -1186,10 +1199,11 @@ app.get("/cities/list", async (req, res) => {
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
     if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
 
-    // Simplified query: directly select the columns we need
+    // Query all cities (now filtered to major cities only via database)
+    // German cities filtered to population > 50k via GeoNames import
     const rows = await k('cities as c')
       .leftJoin('countries as co', 'co.id', 'c.country_id')
-      .leftJoin('states as st', 'st.id', 'c.state_id')
+      .leftJoin('counties as st', 'st.id', 'c.state_id')
       .select(
         'c.id',
         'c.name',
@@ -1198,8 +1212,10 @@ app.get("/cities/list", async (req, res) => {
         'co.name as countryName',
         'co.code as countryCode',
         'st.name as stateName',
-        'st.code as stateCode'
+        'st.code as stateCode',
+        'c.type'
       )
+      .where('c.type', 'city')
       .orderBy('c.name', 'asc');
     
     return res.json(rows || []);
@@ -1255,6 +1271,50 @@ apiRouter.get('/countries/list', async (req, res) => {
     return res.json(rows || []);
   } catch (e) {
     console.error('GET /countries/list failed', e && (e.stack || e.message || e));
+    return res.status(500).json({ error: 'Datenbankfehler' });
+  }
+});
+
+apiRouter.get('/counties/list', async (req, res) => {
+  try {
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+    const hasCounties = await k.schema.hasTable('counties').catch(() => false);
+    if (!hasCounties) return res.json([]);
+    const rows = await k('counties')
+      .select('id', { countryId: 'country_id' }, 'code', 'name', 'type')
+      .orderBy('name');
+    return res.json(rows || []);
+  } catch (e) {
+    console.error('GET /counties/list failed', e && (e.stack || e.message || e));
+    return res.status(500).json({ error: 'Datenbankfehler' });
+  }
+});
+
+apiRouter.get('/districts/list', async (req, res) => {
+  try {
+    const { cityId } = req.query;
+    console.log('[/api/districts/list] Request cityId:', cityId);
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+    const hasCities = await k.schema.hasTable('cities').catch(() => false);
+    if (!hasCities) return res.json([]);
+    
+    let query = k('cities')
+      .select('id', 'name', 'type', { parentCityId: 'parent_city_id' }, { cityId: 'parent_city_id' }, 'latitude', 'longitude')
+      .where('type', 'district')
+      .orderBy('name');
+    
+    if (cityId) {
+      query = query.where('parent_city_id', parseInt(cityId, 10));
+    }
+    
+    console.log('[/api/districts/list] Query SQL:', query.toSQL().sql);
+    const rows = await query;
+    console.log(`[/api/districts/list] Returning ${rows.length} districts`);
+    return res.json(rows || []);
+  } catch (e) {
+    console.error('GET /districts/list failed', e && (e.stack || e.message || e));
     return res.status(500).json({ error: 'Datenbankfehler' });
   }
 });
@@ -1615,10 +1675,7 @@ server.on('error', (err) => {
         }
       }
       const leagues = await countSafe('leagues');
-      // prefer matches table, else games
-      let matches = null;
-      if (tables.matches) matches = await countSafe('matches');
-      else if (tables.games) matches = await countSafe('games');
+      const matches = await countSafe('matches');
       const memberships = await countSafe('user_leagues');
       const sports = await countSafe('sports');
       const teams = await countSafe('teams');
@@ -1682,9 +1739,7 @@ app.get('/public/stats', async (req, res) => {
       }
     }
     const leagues = await countSafe('leagues');
-    let matches = null;
-    if (tables.matches) matches = await countSafe('matches');
-    else if (tables.games) matches = await countSafe('games');
+    const matches = await countSafe('matches');
     const memberships = await countSafe('user_leagues');
     const sports = await countSafe('sports');
     const teams = await countSafe('teams');
@@ -1748,6 +1803,16 @@ try {
   })();
 } catch (e) {
   console.warn('[ensureTestLocation] not available:', e && (e.message || e));
+}
+
+// Start background job: release expired holds
+try {
+  const { startReleaseExpiredHoldsJob } = require('./src/jobs/releaseExpiredHolds');
+  const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+  if (k) startReleaseExpiredHoldsJob({ knex: k });
+  else console.warn('[releaseExpiredHolds] skipped (no knex)');
+} catch (e) {
+  console.warn('[releaseExpiredHolds] not available:', e && (e.message || e));
 }
 
 // export for tests

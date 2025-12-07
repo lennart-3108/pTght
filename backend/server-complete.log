@@ -1,0 +1,636 @@
+[INFO] 2025-12-07T20:30:17.123Z [DB] SQLite detected – ensured base tables via db-setup.js {}
+[DB] SQLite file: /Users/A105227786/Documents/projects/sL/pTght/backend/sportplattform.db
+[DB] Migrations dir: /Users/A105227786/Documents/projects/sL/pTght/backend/migrations
+[2025-12-07 20:30:17] DEBUG Creating transport: nodemailer (7.0.10; +https://nodemailer.com/; SMTP/7.0.10[client:7.0.10])
+[Mailer] Transport konfiguriert smtp.hostinger.com:465 secure=true
+[Mailer] Verifiziere SMTP-Verbindung ...
+[releaseExpiredHolds] Job started, interval 120s
+[INFO] 2025-12-07T20:30:17.336Z [Server] Listening on http://0.0.0.0:5001 {}
+[INFO] 2025-12-07T20:30:17.336Z [Server] Logs directory: /Users/A105227786/Documents/projects/sL/pTght/backend/logs (error.log, info.log, link-tests.log) {}
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] Resolved smtp.hostinger.com as 172.65.255.143 [cache miss]
+🔒 Haupt-Admin aktualisiert: admin
+[2025-12-07 20:30:17] INFO  [mjccsqe2Gk] Secure connection established to 172.65.255.143:465
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] S: 220 ESMTP smtp.hostinger.com
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] C: EHLO [127.0.0.1]
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] S: 250-smtp.hostinger.com
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] S: 250-PIPELINING
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] S: 250-SIZE 48811212
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] S: 250-ETRN
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] S: 250-AUTH PLAIN LOGIN
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] S: 250-ENHANCEDSTATUSCODES
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] S: 250-8BITMIME
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] S: 250-DSN
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] S: 250 CHUNKING
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] SMTP handshake finished
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] C: AUTH PLAIN AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAvKiBzZWNyZXQgKi8=
+[ensureTestLocation] failed: insert into `assets` (`capacity`, `created_at`, `description`, `display_order`, `indoor`, `length`, `location_id`, `name`, `status`, `supported_sports`, `surface`, `type`, `updated_at`, `width`) values (20, CURRENT_TIMESTAMP, NULL, 1, 0, 23.77, 5, 'center court', 'active', '[{"sport_id":1,"formats":["singles","doubles"]}]', 'hardcourt', 'court', CURRENT_TIMESTAMP, 10.97) - SQLITE_ERROR: table assets has no column named indoor
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] S: 235 2.7.0 Authentication successful
+[2025-12-07 20:30:17] INFO  [mjccsqe2Gk] User "info@dev.matchleague.org" authenticated
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] C: QUIT
+[Mailer] Verify OK in 401ms. Sende Acceptance-Mail ...
+[2025-12-07 20:30:17] DEBUG Sending mail using SMTP/7.0.10[client:7.0.10]
+[2025-12-07 20:30:17] DEBUG [Iza9XUhFGjg] Resolved smtp.hostinger.com as 172.65.255.143 [cache hit]
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] S: 221 2.0.0 Bye
+[2025-12-07 20:30:17] DEBUG [mjccsqe2Gk] Closing connection to the server using "end"
+[2025-12-07 20:30:17] INFO  [mjccsqe2Gk] Connection closed
+[2025-12-07 20:30:17] INFO  [Iza9XUhFGjg] Secure connection established to 172.65.255.143:465
+[2025-12-07 20:30:17] DEBUG [Iza9XUhFGjg] S: 220 ESMTP smtp.hostinger.com
+[2025-12-07 20:30:17] DEBUG [Iza9XUhFGjg] C: EHLO [127.0.0.1]
+[2025-12-07 20:30:17] DEBUG [Iza9XUhFGjg] S: 250-smtp.hostinger.com
+[2025-12-07 20:30:17] DEBUG [Iza9XUhFGjg] S: 250-PIPELINING
+[2025-12-07 20:30:17] DEBUG [Iza9XUhFGjg] S: 250-SIZE 48811212
+[2025-12-07 20:30:17] DEBUG [Iza9XUhFGjg] S: 250-ETRN
+[2025-12-07 20:30:17] DEBUG [Iza9XUhFGjg] S: 250-AUTH PLAIN LOGIN
+[2025-12-07 20:30:17] DEBUG [Iza9XUhFGjg] S: 250-ENHANCEDSTATUSCODES
+[2025-12-07 20:30:17] DEBUG [Iza9XUhFGjg] S: 250-8BITMIME
+[2025-12-07 20:30:17] DEBUG [Iza9XUhFGjg] S: 250-DSN
+[2025-12-07 20:30:17] DEBUG [Iza9XUhFGjg] S: 250 CHUNKING
+[2025-12-07 20:30:17] DEBUG [Iza9XUhFGjg] SMTP handshake finished
+[2025-12-07 20:30:17] DEBUG [Iza9XUhFGjg] C: AUTH PLAIN AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAvKiBzZWNyZXQgKi8=
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] S: 235 2.7.0 Authentication successful
+[2025-12-07 20:30:18] INFO  [Iza9XUhFGjg] User "info@dev.matchleague.org" authenticated
+[2025-12-07 20:30:18] INFO  Sending message 1765139417720-da7be97cb04b2@matchleague.org to <info@dev.matchleague.org>
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] C: MAIL FROM:<info@dev.matchleague.org>
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] S: 250 2.1.0 Ok
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] C: RCPT TO:<info@dev.matchleague.org>
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] S: 250 2.1.5 Ok
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] C: DATA
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] S: 354 End data with <CR><LF>.<CR><LF>
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] X-Mailer: MatchLeague
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] Auto-Submitted: auto-generated
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] From: MatchLeague <info@dev.matchleague.org>
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] To: info@dev.matchleague.org
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] Reply-To: info@dev.matchleague.org
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] Subject: Mailer verified
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] Message-ID: <1765139417720-da7be97cb04b2@matchleague.org>
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] Date: Sun, 07 Dec 2025 20:30:17 +0000
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] MIME-Version: 1.0
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] Content-Type: multipart/alternative;
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg]  boundary="--_NmP-09ad81683691536d-Part_1"
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] 
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] ----_NmP-09ad81683691536d-Part_1
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] Content-Type: text/plain; charset=utf-8
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] Content-Transfer-Encoding: 7bit
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] 
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] SMTP connection accepted at 2025-12-07T20:30:17.720Z
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] ----_NmP-09ad81683691536d-Part_1
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] Content-Type: text/html; charset=utf-8
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] Content-Transfer-Encoding: 7bit
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] 
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] <p>SMTP connection accepted at <b>2025-12-07T20:30:17.720Z</b></p>
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] ----_NmP-09ad81683691536d-Part_1--
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] .
+[2025-12-07 20:30:18] INFO  [Iza9XUhFGjg] <774 bytes encoded mime message (source size 771 bytes)>
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] S: 250 2.0.0 Ok: queued as 4dPcDp0rX9z1xpt
+[2025-12-07 20:30:18] DEBUG [Iza9XUhFGjg] Closing connection to the server using "end"
+📧 E-Mail gesendet: 1765139417720-da7be97cb04b2@matchleague.org
+[2025-12-07 20:30:18] INFO  [Iza9XUhFGjg] Connection closed
+{"level":30,"time":1765139418403,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"connection","msg":"Established secure TCP connection","cid":"x6v863jmkaqldmz3ofwp","secure":true,"host":"imap.hostinger.com","servername":"imap.hostinger.com","port":993,"address":"2606:4700:90:0:4bc4:2557:ca17:2529","localAddress":"2003:f5:ff32:58dc:7d13:b4a8:6070:107e","localPort":60341,"authorized":true,"algo":"TLS_AES_256_GCM_SHA384","version":"TLSv1.3"}
+{"level":20,"time":1765139418424,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Server ready.","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418425,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"c","msg":"1 ID (\"name\" \"imapflow\" \"version\" \"1.1.0\" \"vendor\" \"Postal Systems\" \"support-url\" \"https://github.com/postalsys/imapflow/issues\")","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418441,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* ID (\"name\" \"Dovecot\")","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418441,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"1 OK ID completed.","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418441,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"c","msg":"2 AUTHENTICATE PLAIN","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418455,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"+","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418456,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"c","msg":"AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAoKiB2YWx1ZSBoaWRkZW4gKik=","comment":"Encoded response for AUTH=PLAIN"}
+{"level":20,"time":1765139418510,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"2 OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE SORT SORT=DISPLAY THREAD=REFERENCES THREAD=REFS THREAD=ORDEREDSUBJECT MULTIAPPEND URL-PARTIAL CATENATE UNSELECT CHILDREN NAMESPACE UIDPLUS LIST-EXTENDED I18NLEVEL=1 CONDSTORE QRESYNC ESEARCH ESORT SEARCHRES WITHIN CONTEXT=SEARCH LIST-STATUS BINARY MOVE SNIPPET=FUZZY PREVIEW=FUZZY PREVIEW STATUS=SIZE SAVEDATE LITERAL+ NOTIFY SPECIAL-USE COMPRESS=DEFLATE QUOTA] Logged in","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":30,"time":1765139418510,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"auth","msg":"User authenticated","cid":"x6v863jmkaqldmz3ofwp","user":"info@dev.matchleague.org"}
+{"level":20,"time":1765139418510,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"c","msg":"3 ID (\"name\" \"imapflow\" \"version\" \"1.1.0\" \"vendor\" \"Postal Systems\" \"support-url\" \"https://github.com/postalsys/imapflow/issues\")","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418526,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* ID (\"name\" \"Dovecot\")","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418527,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"3 OK ID completed (0.001 + 0.000 secs).","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418527,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"c","msg":"4 NAMESPACE","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418543,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* NAMESPACE ((\"INBOX.\" \".\")) NIL NIL","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418544,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"4 OK Namespace completed (0.001 + 0.000 secs).","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418544,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"c","msg":"5 COMPRESS DEFLATE","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418560,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"5 OK Begin compression (0.001 + 0.000 secs).","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418560,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"c","msg":"6 ENABLE CONDSTORE","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418577,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* ENABLED CONDSTORE","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418577,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"6 OK Enabled (0.001 + 0.000 secs).","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418577,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"c","msg":"7 LIST \"INBOX.\" \"INBOX.Sent\"","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418595,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"7 OK List completed (0.001 + 0.000 secs).","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418595,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"c","msg":"8 LIST \"\" \"INBOX\"","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418611,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* LIST (\\HasChildren) \".\" INBOX","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418611,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"8 OK List completed (0.001 + 0.000 secs).","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418611,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"c","msg":"9 LSUB \"INBOX.\" \"INBOX.Sent\"","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418629,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"9 OK Lsub completed (0.001 + 0.000 secs).","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418629,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"c","msg":"A SELECT INBOX.Sent","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418646,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418646,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* OK [PERMANENTFLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft \"\\\\*\")] Flags permitted.","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418646,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* 543 EXISTS","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418646,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* 0 RECENT","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418646,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* OK [UNSEEN 1] First unseen.","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418646,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* OK [UIDVALIDITY 1758917061] UIDs valid","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418646,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* OK [UIDNEXT 544] Predicted next UID","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418646,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* OK [HIGHESTMODSEQ 546] Highest","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418646,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"A OK [READ-WRITE] Select completed (0.001 + 0.000 secs).","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418647,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"c","msg":"B APPEND INBOX.Sent \"(* 771B literal *)\"","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418674,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* 544 EXISTS","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418674,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"* 1 RECENT","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418674,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"s","msg":"B OK [APPENDUID 1758917061 544] Append completed (0.013 + 0.000 + 0.012 secs).","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":20,"time":1765139418674,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","src":"c","msg":"C LOGOUT","cid":"x6v863jmkaqldmz3ofwp"}
+{"level":10,"time":1765139418690,"pid":41520,"hostname":"T0010cc902","component":"imap-connection","cid":"x6v863jmkaqldmz3ofwp","msg":"Connection closed","cid":"x6v863jmkaqldmz3ofwp"}
+✉️  Kopie im IMAP-Ordner abgelegt (Sent)
+📧 Acceptance-Mail gesendet (sendMail): 1765139417720-da7be97cb04b2@matchleague.org
+[sports/categories] Returning 2 categories with 49 total sports
+[news] GET /news start { user: 4, at: '2025-12-07T20:30:29.364Z' }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:30:29.365Z' }
+[chats] query.begin { user: 4 }
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] done { user: 4, tookMs: 1014, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:30:30.381Z' }
+[chats] query.begin { user: 4 }
+[news] done { user: 4, tookMs: 1024, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:30:30.390Z' }
+[chats] done { user: 4, tookMs: 47, items: 0 }
+[news] done { user: 4, tookMs: 53, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:30:54.315Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 65, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:31:14.320Z' }
+[news] done { user: 4, tookMs: 55, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:31:19.351Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 412, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:31:44.317Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 8, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:31:59.321Z' }
+[news] done { user: 4, tookMs: 56, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:32:09.315Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 45, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:32:34.318Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 91, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:32:44.321Z' }
+[news] done { user: 4, tookMs: 167, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:32:59.332Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 229, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:33:24.315Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 135, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:33:29.313Z' }
+[news] done { user: 4, tookMs: 73, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:33:34.101Z' }
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:33:34.118Z' }
+[chats] query.begin { user: 4 }
+[sports/categories] Returning 2 categories with 49 total sports
+[news] done { user: 4, tookMs: 663, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:33:34.765Z' }
+[chats] done { user: 4, tookMs: 647, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:33:34.767Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 112, items: 0 }
+[news] done { user: 4, tookMs: 130, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:33:59.105Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 113, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:34:19.110Z' }
+[news] done { user: 4, tookMs: 270, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:34:24.104Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 124, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:34:49.104Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 151, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:35:04.104Z' }
+[news] done { user: 4, tookMs: 94, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:35:14.103Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 174, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:35:39.107Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 174, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:35:49.110Z' }
+[news] done { user: 4, tookMs: 214, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:36:04.107Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 154, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:36:14.884Z' }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:36:14.908Z' }
+[chats] query.begin { user: 4 }
+[sports/categories] Returning 2 categories with 49 total sports
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] done { user: 4, tookMs: 1265, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:36:16.176Z' }
+[chats] query.begin { user: 4 }
+[news] done { user: 4, tookMs: 1314, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:36:16.201Z' }
+[chats] done { user: 4, tookMs: 285, items: 0 }
+[news] done { user: 4, tookMs: 313, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:36:39.875Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 117, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:36:59.874Z' }
+[news] done { user: 4, tookMs: 216, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:37:04.875Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 171, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:37:29.874Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 129, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:37:44.875Z' }
+[news] done { user: 4, tookMs: 115, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:37:54.874Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 161, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:38:19.878Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 215, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:38:29.875Z' }
+[news] done { user: 4, tookMs: 217, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:38:44.881Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 319, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:39:09.875Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 180, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:39:14.877Z' }
+[news] done { user: 4, tookMs: 211, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:39:34.896Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 125, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:39:59.888Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:39:59.888Z' }
+[chats] done { user: 4, tookMs: 329, items: 0 }
+[news] done { user: 4, tookMs: 373, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:40:24.891Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 241, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:40:44.888Z' }
+[news] done { user: 4, tookMs: 267, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:40:49.888Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 122, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:41:14.888Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 192, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:41:29.890Z' }
+[news] done { user: 4, tookMs: 325, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:41:39.823Z' }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:41:39.823Z' }
+[chats] query.begin { user: 4 }
+[sports/categories] Returning 2 categories with 49 total sports
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] done { user: 4, tookMs: 1448, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:41:41.273Z' }
+[chats] query.begin { user: 4 }
+[news] done { user: 4, tookMs: 1490, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:41:41.315Z' }
+[chats] done { user: 4, tookMs: 287, items: 0 }
+[news] done { user: 4, tookMs: 316, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:42:04.831Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 276, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:42:24.832Z' }
+[news] done { user: 4, tookMs: 368, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:42:29.819Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 282, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:42:54.821Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 187, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:43:09.838Z' }
+[news] done { user: 4, tookMs: 272, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:43:19.820Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 351, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:43:44.848Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 251, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:43:54.821Z' }
+[news] done { user: 4, tookMs: 234, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:44:09.837Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 179, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:44:34.844Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 205, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:44:39.821Z' }
+[news] done { user: 4, tookMs: 385, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:44:59.849Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 378, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:45:24.831Z' }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:45:24.832Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 269, items: 0 }
+[news] done { user: 4, tookMs: 296, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:45:49.839Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 282, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:46:09.839Z' }
+[news] done { user: 4, tookMs: 252, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:46:12.923Z' }
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:46:12.962Z' }
+[chats] query.begin { user: 4 }
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] done { user: 4, tookMs: 1460, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:46:14.424Z' }
+[chats] query.begin { user: 4 }
+[news] done { user: 4, tookMs: 1534, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:46:14.459Z' }
+[chats] done { user: 4, tookMs: 399, items: 0 }
+[news] done { user: 4, tookMs: 442, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:46:37.932Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 500, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:46:57.927Z' }
+[news] done { user: 4, tookMs: 457, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:47:02.925Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 422, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:47:27.935Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 316, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:47:42.930Z' }
+[news] GET /news start { user: 4, at: '2025-12-07T20:47:43.451Z' }
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:47:43.470Z' }
+[chats] query.begin { user: 4 }
+[sports/categories] Returning 2 categories with 49 total sports
+[news] done { user: 4, tookMs: 675, items: 0 }
+[chats] done { user: 4, tookMs: 1065, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:47:44.537Z' }
+[chats] query.begin { user: 4 }
+[news] done { user: 4, tookMs: 1722, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:47:45.175Z' }
+[chats] done { user: 4, tookMs: 1239, items: 0 }
+[news] done { user: 4, tookMs: 742, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:48:08.452Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 326, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:48:28.451Z' }
+[news] done { user: 4, tookMs: 412, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:48:33.449Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 337, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:48:56.311Z' }
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:48:56.315Z' }
+[chats] query.begin { user: 4 }
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] done { user: 4, tookMs: 1817, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:48:58.135Z' }
+[chats] query.begin { user: 4 }
+[news] done { user: 4, tookMs: 1922, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:48:58.234Z' }
+[chats] done { user: 4, tookMs: 618, items: 0 }
+[news] done { user: 4, tookMs: 670, items: 0 }
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:49:21.265Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 337, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:49:41.264Z' }
+[news] done { user: 4, tookMs: 538, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:49:46.264Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 382, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:50:11.267Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 410, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:50:26.267Z' }
+[news] done { user: 4, tookMs: 468, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:50:36.265Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 440, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:51:01.266Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 445, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:51:11.264Z' }
+[news] done { user: 4, tookMs: 430, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:51:26.267Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 270, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:51:51.269Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 589, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:51:56.265Z' }
+[news] done { user: 4, tookMs: 368, items: 0 }
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:52:16.266Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 565, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:52:38.821Z' }
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:52:38.825Z' }
+[chats] query.begin { user: 4 }
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] done { user: 4, tookMs: 1996, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:52:40.823Z' }
+[chats] query.begin { user: 4 }
+[news] timeout { user: 4, tookMs: 2003, timeoutMs: 2000 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:52:40.830Z' }
+[chats] done { user: 4, tookMs: 597, items: 0 }
+[news] done { user: 4, tookMs: 660, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:53:03.797Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 570, items: 0 }
+[sports/categories] Returning 2 categories with 49 total sports
+[news] GET /news start { user: 4, at: '2025-12-07T20:53:23.784Z' }
+[news] done { user: 4, tookMs: 953, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:53:28.781Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 403, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:53:38.360Z' }
+[chats] query.begin { user: 4 }
+[sports/categories] Returning 2 categories with 49 total sports
+[news] GET /news start { user: 4, at: '2025-12-07T20:53:38.373Z' }
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] done { user: 4, tookMs: 1514, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:53:39.878Z' }
+[chats] query.begin { user: 4 }
+[news] done { user: 4, tookMs: 1593, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:53:39.968Z' }
+[chats] done { user: 4, tookMs: 437, items: 0 }
+[news] done { user: 4, tookMs: 473, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:54:03.359Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 513, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:54:23.364Z' }
+[news] done { user: 4, tookMs: 872, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:54:28.358Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 453, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:54:50.935Z' }
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:54:50.938Z' }
+[chats] query.begin { user: 4 }
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] done { user: 4, tookMs: 1594, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:54:52.534Z' }
+[chats] query.begin { user: 4 }
+[news] done { user: 4, tookMs: 1663, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:54:52.600Z' }
+[chats] done { user: 4, tookMs: 537, items: 0 }
+[news] done { user: 4, tookMs: 593, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:55:15.906Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 594, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:55:35.915Z' }
+[news] done { user: 4, tookMs: 790, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:55:40.903Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 379, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:56:05.903Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 467, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:56:20.902Z' }
+[news] done { user: 4, tookMs: 618, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:56:30.904Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 672, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:56:55.903Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 558, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:57:05.904Z' }
+[news] done { user: 4, tookMs: 620, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:57:20.904Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 349, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:57:45.905Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 576, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:57:50.904Z' }
+[news] done { user: 4, tookMs: 592, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:58:10.906Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 508, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:58:35.907Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:58:35.907Z' }
+[chats] done { user: 4, tookMs: 407, items: 0 }
+[news] done { user: 4, tookMs: 472, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:59:00.905Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 483, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T20:59:20.907Z' }
+[news] done { user: 4, tookMs: 631, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:59:25.910Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 441, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T20:59:50.906Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 609, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:00:05.906Z' }
+[news] done { user: 4, tookMs: 612, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:00:15.907Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 648, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:00:40.911Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 546, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:00:50.907Z' }
+[news] done { user: 4, tookMs: 621, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:01:05.924Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 620, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:01:30.910Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 638, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:01:35.907Z' }
+[news] done { user: 4, tookMs: 676, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:01:55.909Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 567, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:02:20.908Z' }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:02:20.909Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 764, items: 0 }
+[news] done { user: 4, tookMs: 869, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:02:45.911Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 638, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:03:05.908Z' }
+[news] done { user: 4, tookMs: 764, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:03:10.908Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 741, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:03:35.911Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 622, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:03:50.911Z' }
+[news] done { user: 4, tookMs: 748, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:04:00.912Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 681, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:04:25.919Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 786, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:04:35.914Z' }
+[news] done { user: 4, tookMs: 738, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:04:50.916Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 784, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:05:15.914Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 739, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:05:20.915Z' }
+[news] done { user: 4, tookMs: 817, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:05:40.918Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 714, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:06:05.931Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:06:05.932Z' }
+[chats] done { user: 4, tookMs: 709, items: 0 }
+[news] done { user: 4, tookMs: 821, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:06:30.916Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 670, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:06:50.916Z' }
+[news] done { user: 4, tookMs: 829, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:06:55.924Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 1438, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:07:20.925Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 833, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:07:22.494Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:07:22.495Z' }
+[sports/categories] Returning 2 categories with 49 total sports
+[sports/categories] Returning 2 categories with 49 total sports
+[chats] timeout { user: 4, tookMs: 2001, timeoutMs: 2000 }
+[news] timeout { user: 4, tookMs: 2003, timeoutMs: 2000 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:07:24.530Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:07:24.531Z' }
+[chats] done { user: 4, tookMs: 979, items: 0 }
+[news] done { user: 4, tookMs: 1102, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:07:47.497Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 748, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:08:07.497Z' }
+[news] done { user: 4, tookMs: 1427, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:08:12.498Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 819, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:08:37.498Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 1133, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:08:52.499Z' }
+[news] done { user: 4, tookMs: 588, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:09:02.500Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 721, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:09:27.499Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 832, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:09:37.498Z' }
+[news] done { user: 4, tookMs: 794, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:09:52.500Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 628, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:10:17.505Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 1017, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T21:10:22.498Z' }
+[news] done { user: 4, tookMs: 1208, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T21:10:42.503Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 952, items: 0 }

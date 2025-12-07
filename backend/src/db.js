@@ -87,7 +87,7 @@ function schemaToHtml(schema) {
 }
 
 function createIncrementalAdmin(db, setBanner) {
-  // Detect existing columns in users table and insert only those
+  // Enforce single main admin account and purge extra admins except testadmin1..10
   db.all(`PRAGMA table_info(users)`, (piErr, cols) => {
     if (piErr) {
       console.error('Admin PRAGMA error:', piErr.message);
@@ -96,40 +96,99 @@ function createIncrementalAdmin(db, setBanner) {
     const colNames = new Set((cols || []).map(c => c.name));
     const has = (c) => colNames.has(c);
 
-    db.get(
-      `SELECT COUNT(*) AS cnt FROM users WHERE is_admin = 1 AND email LIKE 'admin%@example.com'`,
-      (countErr, row) => {
-        if (countErr) {
-          console.error("Admin-Zählfehler:", countErr.message);
-          return;
-        }
-        const nextNum = (row?.cnt || 0) + 1;
-        const adminName = `admin${nextNum}`;
-        const adminEmail = `${adminName}@example.com`;
-        const hashed = bcrypt.hashSync("test1234", 10);
+    const MAIN_USERNAME = 'admin';
+    const MAIN_EMAIL = 'admin@example.com';
+    const MAIN_PASSWORD = 'Arabica.2025';
+    const whitelistUsernames = new Set([MAIN_USERNAME, ...Array.from({ length: 10 }, (_, i) => `testadmin${i+1}`)]);
+    const whitelistEmails = new Set([MAIN_EMAIL, ...Array.from({ length: 10 }, (_, i) => `testadmin${i+1}@example.com`)]);
 
-        // Build column/value lists dynamically
-        const columns = ['email', 'password'];
-        const values = [adminEmail, hashed];
-        if (has('firstname')) { columns.push('firstname'); values.push(adminName); }
-        if (has('lastname')) { columns.push('lastname'); values.push(''); }
-        if (has('birthday')) { columns.push('birthday'); values.push('1970-01-01'); }
-        if (has('is_admin')) { columns.push('is_admin'); values.push(1); }
-        if (has('is_confirmed')) { columns.push('is_confirmed'); values.push(1); }
+    const upsertMainAdmin = () => {
+      const hashed = bcrypt.hashSync(MAIN_PASSWORD, 10);
+      const columns = [];
+      const values = [];
+      // Prefer username if exists, else ensure email
+      if (has('username')) { columns.push('username'); values.push(MAIN_USERNAME); }
+      if (has('email')) { columns.push('email'); values.push(MAIN_EMAIL); }
+      if (has('password')) { columns.push('password'); values.push(hashed); }
+      if (has('is_admin')) { columns.push('is_admin'); values.push(1); }
+      if (has('is_confirmed')) { columns.push('is_confirmed'); values.push(1); }
+      if (has('firstname')) { columns.push('firstname'); values.push('Admin'); }
+      if (has('lastname')) { columns.push('lastname'); values.push(''); }
 
-        const placeholders = values.map(() => '?').join(', ');
-        const sql = `INSERT INTO users (${columns.join(', ')}) VALUES (${placeholders})`;
-        db.run(sql, values, function (insErr) {
-          if (insErr) {
-            console.error("Admin-Anlegefehler:", insErr.message);
-            return;
+      const placeholders = values.map(() => '?').join(', ');
+
+      // Try update first (matched by username or email), fallback to insert
+      const whereClause = has('username') ? `username = ?` : (has('email') ? `email = ?` : null);
+      if (whereClause) {
+        const keyValue = has('username') ? MAIN_USERNAME : MAIN_EMAIL;
+        // Build SET clause
+        const setCols = columns.map(c => `${c} = ?`).join(', ');
+        const updateSql = `UPDATE users SET ${setCols} WHERE ${whereClause}`;
+        db.run(updateSql, [...values, keyValue], function (updErr) {
+          if (updErr) {
+            console.warn('Admin update failed, will try insert:', updErr.message);
+            const insertSql = `INSERT INTO users (${columns.join(', ')}) VALUES (${placeholders})`;
+            db.run(insertSql, values, function (insErr) {
+              if (insErr) {
+                console.error('Admin insert failed:', insErr.message);
+              } else {
+                setBanner({ name: MAIN_USERNAME, email: MAIN_EMAIL, createdAt: new Date().toISOString() });
+                console.log(`🛠️ Haupt-Admin angelegt: ${MAIN_USERNAME} (${MAIN_EMAIL})`);
+              }
+            });
+          } else if (this && this.changes > 0) {
+            console.log(`🔒 Haupt-Admin aktualisiert: ${MAIN_USERNAME}`);
+          } else {
+            // No existing row matched; insert
+            const insertSql = `INSERT INTO users (${columns.join(', ')}) VALUES (${placeholders})`;
+            db.run(insertSql, values, function (insErr) {
+              if (insErr) {
+                console.error('Admin insert failed:', insErr.message);
+              } else {
+                setBanner({ name: MAIN_USERNAME, email: MAIN_EMAIL, createdAt: new Date().toISOString() });
+                console.log(`🛠️ Haupt-Admin angelegt: ${MAIN_USERNAME} (${MAIN_EMAIL})`);
+              }
+            });
           }
-          const info = { name: adminName, email: adminEmail, createdAt: new Date().toISOString() };
-          setBanner(info);
-          console.log(`🛠️ Admin erstellt: ${adminName} (${adminEmail}) / Passwort: test1234`);
+        });
+      } else {
+        // No username/email columns? Insert minimal possible
+        const insertSql = `INSERT INTO users (${columns.join(', ')}) VALUES (${placeholders})`;
+        db.run(insertSql, values, function (insErr) {
+          if (insErr) console.error('Admin insert failed (minimal):', insErr.message);
+          else console.log('🛠️ Haupt-Admin angelegt (minimal columns)');
         });
       }
-    );
+    };
+
+    const purgeExtraAdmins = () => {
+      // Delete admins not in whitelist
+      const hasUsername = has('username');
+      const hasEmail = has('email');
+      const selectSql = `SELECT id, ${hasUsername ? 'username' : 'NULL as username'}, ${hasEmail ? 'email' : 'NULL as email'} FROM users WHERE is_admin = 1`;
+      db.all(selectSql, (selErr, rows) => {
+        if (selErr) {
+          console.warn('Purge admins select failed:', selErr.message);
+          return upsertMainAdmin();
+        }
+        const idsToDelete = [];
+        for (const r of rows || []) {
+          const uname = (r.username || '').toLowerCase();
+          const email = (r.email || '').toLowerCase();
+          const keep = (uname && whitelistUsernames.has(uname)) || (email && whitelistEmails.has(email));
+          if (!keep) idsToDelete.push(r.id);
+        }
+        if (!idsToDelete.length) return upsertMainAdmin();
+        const placeholders = idsToDelete.map(() => '?').join(', ');
+        db.run(`DELETE FROM users WHERE id IN (${placeholders})`, idsToDelete, function (delErr) {
+          if (delErr) console.warn('Purge admins delete failed:', delErr.message);
+          else console.log(`🧹 Entfernte Admin-Konten: ${idsToDelete.length}`);
+          upsertMainAdmin();
+        });
+      });
+    };
+
+    purgeExtraAdmins();
   });
 }
 

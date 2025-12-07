@@ -11,6 +11,7 @@ export default function EditProfilePage() {
   const [cities, setCities] = useState([]);
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
+  const [districts, setDistricts] = useState([]);
   const [formData, setFormData] = useState({
     firstname: '',
     lastname: '',
@@ -41,57 +42,27 @@ export default function EditProfilePage() {
         } catch { return []; }
       };
 
-      fetch(`${API_BASE}/cities/list`, { headers: { Authorization: `Bearer ${token}` } })
+      // Load cities with type filter (only main cities, not districts)
+      fetch(`${API_BASE}/cities/list?type=city`, { headers: { Authorization: `Bearer ${token}` } })
         .then(safeJson)
         .then(data => setCities(Array.isArray(data) ? data : []))
         .catch(e => console.error('Error loading cities:', e));
 
-      (async () => {
-        try {
-          let arr = await fetch(`${API_BASE}/countries/list`).then(safeJson);
-          setCountries(Array.isArray(arr) ? arr : []);
-          if ((!arr || arr.length === 0) && !String(API_BASE).startsWith('http://localhost:5001')) {
-            const fallbackBase = 'http://localhost:5001/api';
-            const list = await fetch(`${fallbackBase}/countries/list`).then(safeJson).catch(() => []);
-            if (Array.isArray(list) && list.length) setCountries(list);
-          }
-        } catch (e) {
-          console.error('Error loading countries:', e);
-          if (!String(API_BASE).startsWith('http://localhost:5001')) {
-            try {
-              const list = await fetch(`http://localhost:5001/api/countries/list`).then(safeJson);
-              if (Array.isArray(list) && list.length) setCountries(list);
-            } catch {}
-          }
-        }
-      })();
-
-      fetch(`${API_BASE}/states/list`)
+      // Load countries
+      fetch(`${API_BASE}/countries/list`)
         .then(safeJson)
-        .then(data => setStates(Array.isArray(data) ? data : []))
-        .catch(e => console.error('Error loading states:', e));
+        .then(data => setCountries(Array.isArray(data) ? data : []))
+        .catch(e => console.error('Error loading countries:', e));
 
-      fetch(`${API_BASE}/me`, { headers: { Authorization: `Bearer ${token}` } })
-
-    fetch(`${API_BASE}/countries/list`)
-      .then(r => r.ok ? r.json() : [])
-      .then(data => {
-        const arr = Array.isArray(data) ? data : [];
-        setCountries(arr);
-        // Fallback: if empty and API_BASE is not localhost, try localhost directly
-        if (!arr.length && !String(API_BASE).startsWith('http://localhost:5001')) {
-          const fallbackBase = 'http://localhost:5001/api';
-          fetch(`${fallbackBase}/countries/list`).then(r => r.ok ? r.json() : [])
-            .then(list => { if (Array.isArray(list) && list.length) setCountries(list); })
-            .catch(() => {});
-        }
-      })
-      .catch(e => console.error('Error loading countries:', e));
-
-    fetch(`${API_BASE}/states/list`)
-      .then(r => r.ok ? r.json() : [])
-      .then(data => setStates(Array.isArray(data) ? data : []))
-      .catch(e => console.error('Error loading states:', e));
+      // Load counties/states
+      fetch(`${API_BASE}/counties/list`)
+        .then(safeJson)
+        .then(data => {
+          console.log('[EditProfilePage] Counties/states loaded:', data?.length, 'items');
+          console.log('[EditProfilePage] First 3 states:', data?.slice(0, 3));
+          setStates(Array.isArray(data) ? data : []);
+        })
+        .catch(e => console.error('Error loading counties:', e));
 
     fetch(`${API_BASE}/me`, { headers: { Authorization: `Bearer ${token}` } })
       .then(async (r) => {
@@ -311,11 +282,19 @@ export default function EditProfilePage() {
               cities={cities}
               countries={countries}
               states={states}
+              districts={districts}
               value={formData.location}
               onChange={(cityName) => {
                 setFormData({ ...formData, location: cityName });
               }}
               placeholder="Standort wählen"
+              onLoadDistricts={(cityId) => {
+                // Load districts for selected city
+                fetch(`${API_BASE}/cities/${cityId}/districts`)
+                  .then(r => r.ok ? r.json() : [])
+                  .then(data => setDistricts(Array.isArray(data) ? data : []))
+                  .catch(e => console.error('Error loading districts:', e));
+              }}
             />
           </div>
 

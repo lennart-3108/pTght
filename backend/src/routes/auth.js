@@ -82,10 +82,17 @@ module.exports = function authRoutes(ctx) {
       return res.status(400).json({ error: "E-Mail und Passwort erforderlich" });
     }
 
-    db.get(
-      `SELECT id, email, password, is_admin, is_confirmed FROM users WHERE email = ?`,
-      [email],
-      (err, user) => {
+    // Allow login via username or email. If a 'username' column exists, try matching by username first.
+    db.all(`PRAGMA table_info(users)`, (piErr, cols) => {
+      if (piErr) return res.status(500).json({ error: "Datenbankfehler" });
+      const hasUsername = Array.isArray(cols) && cols.some(c => String(c.name).toLowerCase() === 'username');
+      const key = String(email).trim();
+      const querySql = hasUsername
+        ? `SELECT id, email, password, is_admin, is_confirmed FROM users WHERE username = ? OR email = ?`
+        : `SELECT id, email, password, is_admin, is_confirmed FROM users WHERE email = ?`;
+      const params = hasUsername ? [key, key] : [key];
+
+      db.get(querySql, params, (err, user) => {
         if (err) return res.status(500).json({ error: "Datenbankfehler" });
         if (!user) return res.status(401).json({ error: "Ungültige Zugangsdaten" });
         if (!user.is_confirmed) return res.status(403).json({ error: "E-Mail noch nicht bestätigt" });
@@ -110,8 +117,8 @@ module.exports = function authRoutes(ctx) {
           { expiresIn: "7d" }
         );
         return res.json({ token, is_admin: !!user.is_admin });
-      }
-    );
+      });
+    });
   });
 
   // Reset password (used by frontend /reset-password)

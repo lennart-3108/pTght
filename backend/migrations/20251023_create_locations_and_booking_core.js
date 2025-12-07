@@ -11,6 +11,26 @@
  */
 
 exports.up = async function up(knex) {
+  // Ensure locations table exists (older setups may not have it yet)
+  const hasLocationsTable = await knex.schema.hasTable('locations');
+  if (!hasLocationsTable) {
+    await knex.schema.createTable('locations', (table) => {
+      table.increments('id').primary();
+      table.string('name', 255).notNullable();
+      table.string('street', 255);
+      table.string('city', 255);
+      table.string('state', 100);
+      table.string('country', 100);
+      table.string('postal_code', 20);
+      table.string('status', 50).defaultTo('active');
+      table.decimal('latitude', 10, 7);
+      table.decimal('longitude', 10, 7);
+      table.string('timezone', 100);
+      table.json('metadata');
+      table.timestamps(true, true);
+    });
+  }
+
   const locationColumns = [
     { name: 'latitude', apply: table => table.decimal('latitude', 10, 7) },
     { name: 'longitude', apply: table => table.decimal('longitude', 10, 7) },
@@ -37,9 +57,13 @@ exports.up = async function up(knex) {
     });
   }
 
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_locations_city ON locations(city)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_locations_status ON locations(status)');
-  await knex.raw('CREATE INDEX IF NOT EXISTS idx_locations_geo ON locations(latitude, longitude)');
+  // Create indexes only when columns exist
+  try { await knex.raw('CREATE INDEX IF NOT EXISTS idx_locations_city ON locations(city)'); } catch {}
+  const hasStatusCol = await knex.schema.hasColumn('locations', 'status').catch(() => false);
+  if (hasStatusCol) { try { await knex.raw('CREATE INDEX IF NOT EXISTS idx_locations_status ON locations(status)'); } catch {} }
+  const hasLat = await knex.schema.hasColumn('locations', 'latitude').catch(() => false);
+  const hasLon = await knex.schema.hasColumn('locations', 'longitude').catch(() => false);
+  if (hasLat && hasLon) { try { await knex.raw('CREATE INDEX IF NOT EXISTS idx_locations_geo ON locations(latitude, longitude)'); } catch {} }
 
   const hasAssets = await knex.schema.hasTable('assets');
   if (!hasAssets) {

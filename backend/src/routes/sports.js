@@ -26,35 +26,68 @@ module.exports = function sportsRoutes(ctx) {
 
   // Kategorien mit ihren Sportarten (hierarchisch)
   router.get("/categories", (_req, res) => {
-    // Erst Kategorien holen
-    db.all(`SELECT id, name, slug, icon, sort_order FROM sport_categories ORDER BY sort_order`, [], (err, categories) => {
-      if (err) return res.status(500).json({ error: "Datenbankfehler" });
+    // Get all sports from sports table
+    db.all(`
+      SELECT 
+        id, 
+        name,
+        type,
+        category,
+        parent_id,
+        team_size,
+        sport_type
+      FROM sports
+      ORDER BY name
+    `, [], (err, sports) => {
+      if (err) {
+        console.error('[sports/categories] Database error:', err);
+        return res.status(500).json({ error: "Datenbankfehler" });
+      }
       
-      // Dann alle Sportarten
-      db.all(`
-        SELECT 
-          s.id, 
-          s.name,
-          s.category_id,
-          s.parent_sport_id,
-          s.variant_type,
-          s.type
-        FROM sports s
-        ORDER BY s.sort_order, s.name
-      `, [], (err2, sports) => {
-        if (err2) return res.status(500).json({ error: "Datenbankfehler" });
+      if (!sports || !sports.length) {
+        console.log('[sports/categories] No sports found in database');
+        return res.json([]);
+      }
+      
+      // Group by type (Single/Team) as categories
+      const categoryMap = {};
+      
+      sports.forEach(sport => {
+        const catKey = sport.type || 'Sonstige';
+        if (!categoryMap[catKey]) {
+          categoryMap[catKey] = {
+            id: catKey,
+            name: catKey === 'Single' ? 'Einzelsportarten' : catKey === 'Team' ? 'Teamsportarten' : catKey,
+            slug: catKey.toLowerCase(),
+            sports: []
+          };
+        }
         
-        // Organisiere hierarchisch
-        const result = categories.map(cat => ({
-          ...cat,
-          sports: sports.filter(s => s.category_id === cat.id && !s.parent_sport_id).map(sport => ({
-            ...sport,
-            variants: sports.filter(v => v.parent_sport_id === sport.id)
-          }))
-        }));
-        
-        res.json(result);
+        // Only add main sports (not variants with parent_id)
+        if (!sport.parent_id) {
+          // Find variants for this sport
+          const variants = sports.filter(v => v.parent_id === sport.id);
+          
+          categoryMap[catKey].sports.push({
+            id: sport.id,
+            name: sport.name,
+            type: sport.type,
+            category: sport.category,
+            team_size: sport.team_size,
+            sport_type: sport.sport_type,
+            variants: variants.map(v => ({
+              id: v.id,
+              name: v.name,
+              type: v.type,
+              category: v.category
+            }))
+          });
+        }
       });
+      
+      const result = Object.values(categoryMap);
+      console.log(`[sports/categories] Returning ${result.length} categories with ${sports.length} total sports`);
+      res.json(result);
     });
   });
 
