@@ -27,6 +27,10 @@ export default function LeaguesPage() {
   const [loadingCounts, setLoadingCounts] = useState(false);
   const [err, setErr] = useState("");
   const [userProfile, setUserProfile] = useState(null);
+  
+  // Sorting state
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
 
   // Reachability state: { [leagueId]: { ok: boolean, status: number|null, error: string|null } }
   const [reachable, setReachable] = useState({});
@@ -229,6 +233,60 @@ export default function LeaguesPage() {
       return byCity && bySport && bySearch && byMyLeagues;
     });
   }, [leagues, selectedCity, selectedSport, searchQuery, showMyLeaguesOnly, userLeagues, selectedCityObj, selectedSportObj]);
+
+  // Handle sort
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  // Sorted leagues
+  const sortedVisibleLeagues = useMemo(() => {
+    if (!sortColumn) return visibleLeagues;
+
+    return [...visibleLeagues].sort((a, b) => {
+      let aVal, bVal;
+
+      switch (sortColumn) {
+        case 'name':
+          aVal = (a.name || '').toLowerCase();
+          bVal = (b.name || '').toLowerCase();
+          break;
+        case 'city':
+          aVal = (a.city || a.cityName || '').toLowerCase();
+          bVal = (b.city || b.cityName || '').toLowerCase();
+          break;
+        case 'sport':
+          aVal = (a.sport || a.sportName || '').toLowerCase();
+          bVal = (b.sport || b.sportName || '').toLowerCase();
+          break;
+        case 'members':
+          aVal = membersCount[a.id] ?? 0;
+          bVal = membersCount[b.id] ?? 0;
+          break;
+        default:
+          return 0;
+      }
+
+      // Handle null/undefined
+      if (aVal === null || aVal === undefined) return 1;
+      if (bVal === null || bVal === undefined) return -1;
+
+      // Compare
+      let comparison = 0;
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        comparison = aVal - bVal;
+      } else {
+        comparison = String(aVal).localeCompare(String(bVal));
+      }
+
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
+  }, [visibleLeagues, sortColumn, sortDirection, membersCount]);
 
   // Log whenever visibleLeagues changes
   useEffect(() => {
@@ -585,42 +643,82 @@ export default function LeaguesPage() {
                   background: 'rgba(255,255,255,0.05)',
                   borderBottom: "1px solid rgba(255,255,255,0.1)"
                 }}>
-                  <th style={{ 
-                    padding: "16px 20px", 
-                    textAlign: "left",
-                    fontWeight: 600,
-                    color: "#e5e7eb",
-                    fontSize: 13,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px"
-                  }}>Liga</th>
-                  <th style={{ 
-                    padding: "16px 20px", 
-                    textAlign: "left",
-                    fontWeight: 600,
-                    color: "#e5e7eb",
-                    fontSize: 13,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px"
-                  }}>Ort</th>
-                  <th style={{ 
-                    padding: "16px 20px", 
-                    textAlign: "left",
-                    fontWeight: 600,
-                    color: "#e5e7eb",
-                    fontSize: 13,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px"
-                  }}>Sport</th>
-                  <th style={{ 
-                    padding: "16px 20px", 
-                    textAlign: "center",
-                    fontWeight: 600,
-                    color: "#e5e7eb",
-                    fontSize: 13,
-                    textTransform: "uppercase",
-                    letterSpacing: "0.5px"
-                  }}>Mitglieder</th>
+                  <th 
+                    onClick={() => handleSort('name')}
+                    style={{ 
+                      padding: "16px 20px", 
+                      textAlign: "left",
+                      fontWeight: 600,
+                      color: "#e5e7eb",
+                      fontSize: 13,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      cursor: "pointer",
+                      userSelect: "none",
+                      transition: "background-color 0.2s"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    Liga {sortColumn === 'name' && (sortDirection === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th 
+                    onClick={() => handleSort('city')}
+                    style={{ 
+                      padding: "16px 20px", 
+                      textAlign: "left",
+                      fontWeight: 600,
+                      color: "#e5e7eb",
+                      fontSize: 13,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      cursor: "pointer",
+                      userSelect: "none",
+                      transition: "background-color 0.2s"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    Ort {sortColumn === 'city' && (sortDirection === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th 
+                    onClick={() => handleSort('sport')}
+                    style={{ 
+                      padding: "16px 20px", 
+                      textAlign: "left",
+                      fontWeight: 600,
+                      color: "#e5e7eb",
+                      fontSize: 13,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      cursor: "pointer",
+                      userSelect: "none",
+                      transition: "background-color 0.2s"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    Sport {sortColumn === 'sport' && (sortDirection === 'asc' ? '▲' : '▼')}
+                  </th>
+                  <th 
+                    onClick={() => handleSort('members')}
+                    style={{ 
+                      padding: "16px 20px", 
+                      textAlign: "center",
+                      fontWeight: 600,
+                      color: "#e5e7eb",
+                      fontSize: 13,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.5px",
+                      cursor: "pointer",
+                      userSelect: "none",
+                      transition: "background-color 0.2s"
+                    }}
+                    onMouseEnter={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'}
+                    onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                  >
+                    Mitglieder {sortColumn === 'members' && (sortDirection === 'asc' ? '▲' : '▼')}
+                  </th>
                   <th style={{ 
                     padding: "16px 20px", 
                     textAlign: "right",
@@ -633,14 +731,14 @@ export default function LeaguesPage() {
                 </tr>
               </thead>
               <tbody>
-                {visibleLeagues.map((l, index) => {
+                {sortedVisibleLeagues.map((l, index) => {
                   const idKey = l.id;
                   const memberCount = membersCount[idKey] ?? membersCount[String(idKey)] ?? (loadingCounts ? "…" : 0);
                   return (
                     <tr 
                       key={idKey} 
                       style={{ 
-                        borderBottom: index < visibleLeagues.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
+                        borderBottom: index < sortedVisibleLeagues.length - 1 ? "1px solid rgba(255,255,255,0.05)" : "none",
                         transition: "background-color 0.2s",
                         cursor: "pointer"
                       }}

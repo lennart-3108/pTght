@@ -149,13 +149,23 @@ export default function StartPage() {
     Promise.all([
       fetch(`${API_BASE}/leagues`).then(safeJson),
       fetch(`${API_BASE}/sports/categories`).then(safeJson),
-      fetch(`${API_BASE}/cities/list`).then(safeJson),
+      fetch(`${API_BASE}/cities/list?type=city`).then(safeJson),
       fetch(`${API_BASE}/countries/list`).then(safeJson),
-      fetch(`${API_BASE}/states/list`).then(safeJson),
+      fetch(`${API_BASE}/counties/list`).then(safeJson),
       fetch(`${API_BASE}/districts/list`).then(safeJson),
     ])
       .then(([ls, ss, cs, co, sts, dists]) => {
         if (!mounted) return;
+        console.log('[StartPage] Data loaded:', { 
+          leagues: ls?.length || 0, 
+          sports: ss?.length || 0, 
+          cities: cs?.length || 0, 
+          countries: co?.length || 0,
+          states: sts?.length || 0,
+          districts: dists?.length || 0
+        });
+        console.log('[StartPage] Sample city:', cs?.[0]);
+        console.log('[StartPage] Sample state:', sts?.[0]);
         setLeagues(Array.isArray(ls) ? ls : []);
         setSports(Array.isArray(ss) ? ss : []);
         setCities(Array.isArray(cs) ? cs : []);

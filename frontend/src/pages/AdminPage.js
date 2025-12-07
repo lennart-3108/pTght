@@ -18,6 +18,10 @@ export default function AdminPage() {
   const [deletingId, setDeletingId] = useState(null);
   const [editingRow, setEditingRow] = useState(null); // State für den zu bearbeitenden Datensatz
   const [logoutAllStatus, setLogoutAllStatus] = useState(null);
+  const [sortColumn, setSortColumn] = useState(null);
+  const [sortDirection, setSortDirection] = useState('asc');
+  const [selectedRows, setSelectedRows] = useState(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
@@ -109,6 +113,105 @@ export default function AdminPage() {
     return () => { mounted = false; };
   }, [table, token, selectedMeta]);
 
+  // Sortierte Rows
+  const sortedRows = useMemo(() => {
+    if (!sortColumn) return rows;
+    const sorted = [...rows].sort((a, b) => {
+      let aVal = a[sortColumn];
+      let bVal = b[sortColumn];
+      
+      // Handle null/undefined
+      if (aVal == null && bVal == null) return 0;
+      if (aVal == null) return 1;
+      if (bVal == null) return -1;
+      
+      // Convert to comparable values
+      if (typeof aVal === 'number' && typeof bVal === 'number') {
+        return sortDirection === 'asc' ? aVal - bVal : bVal - aVal;
+      }
+      
+      aVal = String(aVal).toLowerCase();
+      bVal = String(bVal).toLowerCase();
+      
+      if (sortDirection === 'asc') {
+        return aVal < bVal ? -1 : aVal > bVal ? 1 : 0;
+      } else {
+        return aVal > bVal ? -1 : aVal < bVal ? 1 : 0;
+      }
+    });
+    return sorted;
+  }, [rows, sortColumn, sortDirection]);
+
+  const handleSort = (column) => {
+    if (sortColumn === column) {
+      setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortColumn(column);
+      setSortDirection('asc');
+    }
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedRows.size === rows.length) {
+      setSelectedRows(new Set());
+    } else {
+      setSelectedRows(new Set(rows.map(r => r.id)));
+    }
+  };
+
+  const toggleSelectRow = (rowId) => {
+    setSelectedRows(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(rowId)) {
+        newSet.delete(rowId);
+      } else {
+        newSet.add(rowId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedRows.size === 0) return;
+    if (!window.confirm(`${selectedRows.size} Datensätze aus "${table}" löschen?`)) return;
+    
+    setBulkDeleting(true);
+    const deletePromises = Array.from(selectedRows).map(async (rowId) => {
+      try {
+        const r = await fetch(`${API_BASE}/admin/table/${encodeURIComponent(table)}/${rowId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return { success: true, id: rowId };
+      } catch (e) {
+        return { success: false, id: rowId, error: e.message };
+      }
+    });
+    
+    const results = await Promise.all(deletePromises);
+    const successful = results.filter(r => r.success).map(r => r.id);
+    const failed = results.filter(r => !r.success);
+    
+    if (successful.length > 0) {
+      setRows(prev => prev.filter(r => !successful.includes(r.id)));
+      setSelectedRows(new Set());
+    }
+    
+    if (failed.length > 0) {
+      alert(`${failed.length} Datensätze konnten nicht gelöscht werden:\n${failed.map(f => `ID ${f.id}: ${f.error}`).join('\n')}`);
+    }
+    
+    setBulkDeleting(false);
+  };
+
+  // Reset selection when table changes
+  useEffect(() => {
+    setSelectedRows(new Set());
+    setSortColumn(null);
+    setSortDirection('asc');
+  }, [table]);
+
   const sendTestEmail = async () => {
     setTestMessage("");
     try {
@@ -174,12 +277,25 @@ export default function AdminPage() {
   };
 
   return (
-    <div style={{ padding: 16 }}>
-      <h2>Admin</h2>
+    <div style={{ padding: 16, maxWidth: '1400px', margin: '0 auto' }}>
+      <h2 style={{ 
+        marginBottom: 24,
+        fontSize: '28px',
+        fontWeight: 700,
+        color: 'var(--text, #e5e7eb)'
+      }}>
+        Admin Panel
+      </h2>
 
       {/* Global Logout */}
-      <div style={{ marginBottom: 16, padding: 12, border: "1px solid #ddd", borderRadius: 8 }}>
-        <div style={{ marginBottom: 8, fontWeight: 600 }}>Sicherheit</div>
+      <div style={{ 
+        marginBottom: 16, 
+        padding: 16, 
+        backgroundColor: 'var(--surface, #1f2937)',
+        border: "1px solid rgba(255,255,255,0.1)", 
+        borderRadius: 8 
+      }}>
+        <div style={{ marginBottom: 8, fontWeight: 600, color: 'var(--text, #e5e7eb)' }}>🔒 Sicherheit</div>
         <button
           onClick={async () => {
             setLogoutAllStatus(null);
@@ -212,8 +328,18 @@ export default function AdminPage() {
               setLogoutAllStatus({ ok: false, message: e?.message || "Fehler beim Beenden aller Logins" });
             }
           }}
+          style={{
+            padding: '10px 16px',
+            backgroundColor: 'rgba(220, 38, 38, 0.1)',
+            color: '#dc2626',
+            border: '1px solid rgba(220, 38, 38, 0.3)',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontSize: '14px',
+            fontWeight: 500
+          }}
         >
-          Alle aktiven Logins beenden
+          🚪 Alle aktiven Logins beenden
         </button>
         {logoutAllStatus && (
           <div
@@ -232,46 +358,143 @@ export default function AdminPage() {
       {!stats ? (
         statsErr ? <div style={{ color: "crimson" }}>Fehler: {statsErr}</div> : <div>Lade Admin-Daten ...</div>
       ) : (
-        <div style={{ marginBottom: 16 }}>
-          <b>Statistiken</b>
-          <ul style={{ marginTop: 6 }}>
-            <li>Nutzer gesamt: {stats.users}</li>
-            <li>Nutzer bestätigt: {stats.confirmedUsers}</li>
-            <li>Admins: {stats.admins}</li>
-            <li>Sportarten: {stats.sports}</li>
-            <li>Städte: {stats.cities}</li>
-            <li>Ligen: {stats.leagues}</li>
-          </ul>
+        <div style={{ 
+          marginBottom: 16,
+          padding: 16,
+          backgroundColor: 'var(--surface, #1f2937)',
+          borderRadius: 8,
+          border: '1px solid rgba(255,255,255,0.1)'
+        }}>
+          <div style={{ marginBottom: 12, fontWeight: 600, color: 'var(--text, #e5e7eb)' }}>📊 Statistiken</div>
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '12px'
+          }}>
+            {[
+              { label: 'Nutzer gesamt', value: stats.users, icon: '👥' },
+              { label: 'Nutzer bestätigt', value: stats.confirmedUsers, icon: '✓' },
+              { label: 'Admins', value: stats.admins, icon: '👑' },
+              { label: 'Sportarten', value: stats.sports, icon: '⚽' },
+              { label: 'Städte', value: stats.cities, icon: '🏙️' },
+              { label: 'Ligen', value: stats.leagues, icon: '🏆' }
+            ].map(({ label, value, icon }) => (
+              <div 
+                key={label}
+                style={{
+                  padding: '12px',
+                  backgroundColor: 'var(--bg, #111827)',
+                  borderRadius: '6px',
+                  border: '1px solid rgba(255,255,255,0.05)'
+                }}
+              >
+                <div style={{ 
+                  fontSize: '12px', 
+                  color: 'var(--muted, #9ca3af)',
+                  marginBottom: '4px'
+                }}>
+                  {icon} {label}
+                </div>
+                <div style={{ 
+                  fontSize: '20px', 
+                  fontWeight: 700,
+                  color: 'var(--text, #e5e7eb)'
+                }}>
+                  {value}
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {/* Tabellen-Auswahl */}
-      <div style={{ margin: "8px 0" }}>
-        <label>
-          Tabelle:&nbsp;
-          {schemaErr ? (
-            <span style={{ color: "crimson" }}>Fehler: {schemaErr}</span>
-          ) : !schema ? (
-            <span>Lade Schema ...</span>
-          ) : (
-            <>
-              <select value={table} onChange={(e) => setTable(e.target.value)}>
-                <option value="">– bitte wählen –</option>
-                {tableNames.map((t) => (
-                  <option key={t} value={t}>{t}</option>
-                ))}
-              </select>
-              &nbsp;
-              <button onClick={() => loadSchema()} title="Schema neu laden">Refresh</button>
-            </>
-          )}
-        </label>
+      <div style={{ 
+        margin: "16px 0", 
+        padding: "16px",
+        backgroundColor: "var(--surface, #1f2937)",
+        borderRadius: "8px",
+        border: "1px solid rgba(255,255,255,0.1)"
+      }}>
+        <div style={{ marginBottom: 8, fontWeight: 600, color: 'var(--text, #e5e7eb)' }}>Datenbank-Tabelle</div>
+        {schemaErr ? (
+          <span style={{ color: "crimson" }}>Fehler: {schemaErr}</span>
+        ) : !schema ? (
+          <span>Lade Schema ...</span>
+        ) : (
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <select 
+              value={table} 
+              onChange={(e) => setTable(e.target.value)}
+              style={{
+                padding: '10px 14px',
+                backgroundColor: 'var(--bg, #111827)',
+                color: 'var(--text, #e5e7eb)',
+                border: '1px solid rgba(255,255,255,0.2)',
+                borderRadius: '6px',
+                fontSize: '14px',
+                cursor: 'pointer',
+                minWidth: '200px',
+                outline: 'none'
+              }}
+            >
+              <option value="">– Tabelle auswählen –</option>
+              {tableNames.map((t) => (
+                <option key={t} value={t}>{t}</option>
+              ))}
+            </select>
+            <button 
+              onClick={() => loadSchema()} 
+              title="Schema neu laden"
+              style={{
+                padding: '10px 16px',
+                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                color: '#3b82f6',
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+                borderRadius: '6px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: 500
+              }}
+            >
+              🔄 Refresh
+            </button>
+            {table && selectedMeta && (
+              <span style={{ 
+                color: 'var(--muted, #9ca3af)', 
+                fontSize: '13px',
+                marginLeft: '8px'
+              }}>
+                {selectedMeta.columns.length} Spalten
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Records-Tabelle */}
       {table && (
         <div style={{ marginTop: 12 }}>
-          <b>Records: {table}</b>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+            <b>Records: {table} ({rows.length})</b>
+            {selectedRows.size > 0 && (
+              <button 
+                onClick={handleBulkDelete}
+                disabled={bulkDeleting}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#dc2626',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '6px',
+                  cursor: bulkDeleting ? 'not-allowed' : 'pointer',
+                  opacity: bulkDeleting ? 0.6 : 1
+                }}
+              >
+                {bulkDeleting ? 'Lösche...' : `${selectedRows.size} ausgewählte löschen`}
+              </button>
+            )}
+          </div>
           {rowsErr && <div style={{ color: "crimson" }}>{rowsErr}</div>}
           {loadingRows ? (
             <div>Lade Datensätze ...</div>
@@ -279,32 +502,159 @@ export default function AdminPage() {
             <div>Keine Datensätze.</div>
           ) : (
             <div style={{ overflowX: "auto" }}>
-              <table border="1" cellPadding="6" style={{ borderCollapse: "collapse", width: "100%" }}>
-                <thead>
+              <table style={{ 
+                borderCollapse: "collapse", 
+                width: "100%",
+                backgroundColor: 'var(--surface, #1f2937)',
+                borderRadius: '8px',
+                overflow: 'hidden'
+              }}>
+                <thead style={{ backgroundColor: 'var(--bg, #111827)' }}>
                   <tr>
+                    <th style={{
+                      padding: '16px 20px',
+                      textAlign: 'left',
+                      fontWeight: 600,
+                      color: 'var(--text, #e5e7eb)',
+                      fontSize: '13px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      borderBottom: '1px solid rgba(255,255,255,0.1)'
+                    }}>
+                      <input 
+                        type="checkbox"
+                        checked={selectedRows.size === rows.length && rows.length > 0}
+                        onChange={toggleSelectAll}
+                        style={{ cursor: 'pointer' }}
+                      />
+                    </th>
                     {cols.map((c) => (
-                      <th key={c}>{c}</th>
+                      <th 
+                        key={c}
+                        onClick={() => handleSort(c)}
+                        style={{
+                          padding: '16px 20px',
+                          textAlign: 'left',
+                          fontWeight: 600,
+                          color: 'var(--text, #e5e7eb)',
+                          fontSize: '13px',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          cursor: 'pointer',
+                          userSelect: 'none',
+                          borderBottom: '1px solid rgba(255,255,255,0.1)',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = 'rgba(255,255,255,0.05)'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {c}
+                          {sortColumn === c && (
+                            <span style={{ fontSize: '10px' }}>
+                              {sortDirection === 'asc' ? '▲' : '▼'}
+                            </span>
+                          )}
+                        </div>
+                      </th>
                     ))}
-                    <th>Aktion</th>
+                    <th style={{
+                      padding: '16px 20px',
+                      textAlign: 'left',
+                      fontWeight: 600,
+                      color: 'var(--text, #e5e7eb)',
+                      fontSize: '13px',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      borderBottom: '1px solid rgba(255,255,255,0.1)'
+                    }}>Aktion</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {rows.map((r, idx) => (
-                    <tr key={r.id ?? idx}>
+                  {sortedRows.map((r, idx) => (
+                    <tr 
+                      key={r.id ?? idx}
+                      style={{
+                        backgroundColor: selectedRows.has(r.id) ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
+                        borderBottom: '1px solid rgba(255,255,255,0.05)'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!selectedRows.has(r.id)) {
+                          e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.02)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!selectedRows.has(r.id)) {
+                          e.currentTarget.style.backgroundColor = 'transparent';
+                        }
+                      }}
+                    >
+                      <td style={{ 
+                        padding: '12px 20px',
+                        color: 'var(--text, #e5e7eb)',
+                        fontSize: '14px'
+                      }}>
+                        <input 
+                          type="checkbox"
+                          checked={selectedRows.has(r.id)}
+                          onChange={() => toggleSelectRow(r.id)}
+                          style={{ cursor: 'pointer' }}
+                        />
+                      </td>
                       {cols.map((c) => (
-                        <td key={c}>
+                        <td 
+                          key={c}
+                          style={{ 
+                            padding: '12px 20px',
+                            color: 'var(--muted, #9ca3af)',
+                            fontSize: '14px',
+                            maxWidth: '300px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                          title={r[c] === null || typeof r[c] === "undefined" ? "" : 
+                                 typeof r[c] === "object" ? JSON.stringify(r[c]) : String(r[c])}
+                        >
                           {r[c] === null || typeof r[c] === "undefined"
-                            ? ""
+                            ? <span style={{ color: 'rgba(156, 163, 175, 0.4)' }}>null</span>
                             : typeof r[c] === "object"
-                              ? JSON.stringify(r[c])
-                              : String(r[c])}
+                              ? <span style={{ fontFamily: 'monospace', fontSize: '12px' }}>{JSON.stringify(r[c])}</span>
+                              : c === 'id' 
+                                ? <span style={{ fontWeight: 600, color: 'var(--text, #e5e7eb)' }}>{String(r[c])}</span>
+                                : String(r[c])}
                         </td>
                       ))}
-                      <td>
-                        <button onClick={() => handleEdit(r)} style={{ marginRight: 8 }}>
+                      <td style={{ padding: '12px 20px' }}>
+                        <button 
+                          onClick={() => handleEdit(r)} 
+                          style={{ 
+                            marginRight: 8,
+                            padding: '6px 12px',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            color: '#3b82f6',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
+                        >
                           Bearbeiten
                         </button>
-                        <button onClick={() => handleDelete(r.id)} disabled={deletingId === r.id}>
+                        <button 
+                          onClick={() => handleDelete(r.id)} 
+                          disabled={deletingId === r.id}
+                          style={{
+                            padding: '6px 12px',
+                            backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                            color: '#dc2626',
+                            border: '1px solid rgba(220, 38, 38, 0.3)',
+                            borderRadius: '4px',
+                            cursor: deletingId === r.id ? 'not-allowed' : 'pointer',
+                            opacity: deletingId === r.id ? 0.6 : 1,
+                            fontSize: '12px'
+                          }}
+                        >
                           {deletingId === r.id ? "Lösche..." : "Löschen"}
                         </button>
                       </td>

@@ -5,6 +5,19 @@ import { handleInvalidToken } from "../utils/auth";
 import Avatar from "../components/Avatar";
 import { useResponsive } from "../hooks/useResponsive";
 
+// Import sport background images
+function importAllSportImages(r) {
+  const images = {};
+  r.keys().forEach((key) => {
+    const sportName = key.replace('./', '').replace(/-image\.(png|jpe?g|webp|svg)$/, '');
+    images[sportName] = r(key);
+  });
+  return images;
+}
+const sportBackgrounds = importAllSportImages(
+  require.context("../images/sports", false, /-image\.(png|jpe?g|webp|svg)$/)
+);
+
 export default function LeagueDetailPage() {
   const { leagueId } = useParams();
   const navigate = useNavigate();
@@ -531,11 +544,28 @@ export default function LeagueDetailPage() {
   };
   const small = { fontSize: isMobile ? 11 : 12, color: '#a6bfb3' };
 
+  // Get sport-specific background image
+  const getSportBackground = () => {
+    if (!league?.sport) return null;
+    const normalized = league.sport.toLowerCase().replace(/\s+/g, '-');
+    return sportBackgrounds[normalized] || null;
+  };
+  const sportBg = getSportBackground();
+
   return (
     <div style={wrap}>
       {/* Hero */}
-      <div style={{ ...card, paddingBottom: 0 }}>
-        <div style={{ ...pad }}>
+      <div style={{ 
+        ...card, 
+        paddingBottom: 0,
+        ...(sportBg && {
+          backgroundImage: `linear-gradient(to bottom, rgba(15, 42, 32, 0.4), rgba(15, 42, 32, 0.55)), url(${sportBg})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        })
+      }}>
+        <div style={{ ...pad, paddingTop: isMobile ? 20 : 32, paddingBottom: isMobile ? 20 : 32 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ fontSize: 26 }}>🏆</div>
             <div style={{ fontSize: 28, fontWeight: 900 }}>{league.name}</div>
@@ -563,8 +593,9 @@ export default function LeagueDetailPage() {
         <div style={{ 
           display: 'grid', 
           gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)', 
-          gap: isMobile ? 6 : 8, 
-          padding: isMobile ? 12 : 16 
+          gap: isMobile ? 8 : 12, 
+          padding: isMobile ? 16 : 24,
+          borderTop: '1px solid rgba(255,255,255,0.1)'
         }}>
           <div style={{ textAlign: 'center' }}>
             <div style={{ 
@@ -593,6 +624,61 @@ export default function LeagueDetailPage() {
               fontWeight: 900 
             }}>{(games.upcoming||[]).length}</div>
             <div style={{ color: '#bcd', fontSize: isMobile ? 12 : 14 }}>Anstehend</div>
+          </div>
+        </div>
+        {/* league highlights */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(2, 1fr)',
+          gap: isMobile ? 12 : 16,
+          padding: isMobile ? 16 : 24,
+          paddingTop: isMobile ? 12 : 16,
+          borderTop: '1px solid rgba(255,255,255,0.1)'
+        }}>
+          <div>
+            <div style={{ fontSize: isMobile ? 11 : 12, color: '#9ab', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>
+              Tabellenführer
+            </div>
+            {standingsWithMembers && standingsWithMembers.length > 0 ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ fontSize: 20 }}>👑</div>
+                <div>
+                  <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 700, color: '#ffd700' }}>
+                    {standingsWithMembers[0].username || 'N/A'}
+                  </div>
+                  <div style={{ fontSize: isMobile ? 11 : 12, color: '#9ab' }}>
+                    {standingsWithMembers[0].points || 0} Punkte · {standingsWithMembers[0].played || 0} Spiele
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{ color: '#7a9', fontSize: isMobile ? 13 : 14 }}>Noch keine Daten</div>
+            )}
+          </div>
+          <div>
+            <div style={{ fontSize: isMobile ? 11 : 12, color: '#9ab', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>
+              Top Scorer
+            </div>
+            {standingsWithMembers && standingsWithMembers.length > 0 ? (
+              (() => {
+                const topScorer = [...standingsWithMembers].sort((a, b) => (b.goals_for || 0) - (a.goals_for || 0))[0];
+                return (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ fontSize: 20 }}>⚽</div>
+                    <div>
+                      <div style={{ fontSize: isMobile ? 15 : 17, fontWeight: 700, color: '#4af' }}>
+                        {topScorer.username || 'N/A'}
+                      </div>
+                      <div style={{ fontSize: isMobile ? 11 : 12, color: '#9ab' }}>
+                        {topScorer.goals_for || 0} Tore
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()
+            ) : (
+              <div style={{ color: '#7a9', fontSize: isMobile ? 13 : 14 }}>Noch keine Daten</div>
+            )}
           </div>
         </div>
       </div>

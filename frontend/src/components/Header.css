@@ -5,9 +5,7 @@
   color: #e6efe9;
   height: var(--ml-header-height);
   box-sizing: border-box;
-  position: sticky;
-  top: 0;
-  z-index: 1000;
+  position: relative;
   width: 100%;
 }
 

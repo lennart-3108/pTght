@@ -133,7 +133,16 @@ async function ensureTestLocation(knex) {
       make(16, 0, 17, 0, 30),
       make(19, 0, 20, 0, 35),
     ];
-    await knex('slots').insert(slots);
+    try {
+      await knex('slots').insert(slots);
+    } catch (err) {
+      // Gracefully skip duplicates due to unique(asset_id, start_time)
+      if (String(err.message || '').includes('UNIQUE constraint failed: slots.asset_id, slots.start_time')) {
+        console.warn('[ensureTestLocation] slots already exist for tomorrow, skipping insert');
+      } else {
+        throw err;
+      }
+    }
   }
 }
 

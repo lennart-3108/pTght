@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 import { routes } from "./helpers/autoRoutes";
 import ProtectedRoute from "./helpers/ProtectedRoute";
 import StartPage from "./pages/StartPage"; // neu
@@ -18,7 +18,12 @@ import SearchMatchDialog from "./pages/SearchMatchDialog"; // neu
 import AdminPage from "./pages/AdminPage"; // neu
 import ProfilePage from "./pages/ProfilePage"; // user profile
 import EditProfilePage from "./pages/EditProfilePage"; // edit profile
-import BookingPage from "./pages/BookingPage"; // booking page
+import BookingPage from "./pages/BookingPage"; // booking page (legacy redirects to /slots)
+import SlotSearchPage from "./pages/SlotSearchPage";
+import SlotReviewPage from "./pages/SlotReviewPage";
+import BookingPaymentPage from "./pages/BookingPaymentPage";
+import BookingConfirmationPage from "./pages/BookingConfirmationPage";
+import BookingDetailPage from "./pages/BookingDetailPage";
 import MyBookingsPage from "./pages/MyBookingsPage"; // my bookings
 import LocationManagerPage from "./pages/LocationManagerPage"; // location manager
 import LocationDetailsPage from "./pages/LocationDetailsPage"; // location details
@@ -47,6 +52,40 @@ function fetchWithErrorLogging(url, options) {
   });
 }
 
+// Mount-only component inside Router to attach global 401 handling with navigation available
+function NavigationGuard({ setToken }) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const originalFetch = window.fetch;
+    window.fetch = async (input, init) => {
+      const res = await originalFetch(input, init);
+      try {
+        if (res && res.status === 401) {
+          let bodyText = "";
+          try {
+            const clone = res.clone();
+            bodyText = await clone.text();
+          } catch (_) {}
+          if (String(bodyText).toLowerCase().includes("invalid token")) {
+            try {
+              localStorage.removeItem("token");
+              localStorage.setItem("authNotice", "Deine Sitzung ist abgelaufen. Bitte erneut einloggen.");
+            } catch (_) {}
+            setToken(null);
+            navigate("/login");
+          }
+        }
+      } catch (_) {}
+      return res;
+    };
+    return () => {
+      window.fetch = originalFetch;
+    };
+  }, [navigate, setToken]);
+  return null;
+}
+
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [isAdminFlag, setIsAdminFlag] = useState(localStorage.getItem("is_admin") === "1");
@@ -55,6 +94,8 @@ function App() {
     console.log("Token:", token);
     console.log("Is Admin:", isAdminFlag);
   }, [token, isAdminFlag]);
+
+  // Globale 401-Handling inside Router via NavigationGuard
 
   // Hintergrundrotation mit Bildern "l-*" aus src/images
   useEffect(() => {
@@ -90,6 +131,8 @@ function App() {
 
   return (
     <Router>
+      {/* NavigationGuard attaches global 401 Invalid token handling */}
+      <NavigationGuard setToken={setToken} />
       {/* --- Header --- */}
       <Header />
 
@@ -219,6 +262,47 @@ function App() {
             element={
               <ProtectedRoute token={token} setToken={setToken}>
                 <BookingPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* New booking flow routes */}
+          <Route
+            path="/slots"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <SlotSearchPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/book/slot/:slotId"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <SlotReviewPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/book/:bookingId/payment"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <BookingPaymentPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/book/:bookingId/confirm"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <BookingConfirmationPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/booking/:bookingId"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <BookingDetailPage />
               </ProtectedRoute>
             }
           />

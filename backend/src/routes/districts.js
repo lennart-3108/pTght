@@ -4,25 +4,35 @@ module.exports = function districtsRoutes(ctx) {
   const router = express.Router();
   const { db } = ctx;
 
-  // Get all districts
-  router.get("/list", (_req, res) => {
-    db.all(
-      `SELECT 
-        d.id, 
-        d.name, 
-        d.type,
-        d.population,
-        d.city_id as cityId,
-        c.name as cityName
-      FROM districts d
-      LEFT JOIN cities c ON d.city_id = c.id
-      ORDER BY c.name, d.name`,
-      [],
-      (err, rows) => {
-        if (err) return res.status(500).json({ error: "Datenbankfehler" });
-        res.json(rows || []);
+  // Get all districts (or filtered by cityId)
+  router.get("/list", (req, res) => {
+    const { cityId } = req.query;
+    let sql = `SELECT 
+        id, 
+        name, 
+        type,
+        parent_city_id as parentCityId,
+        parent_city_id as cityId,
+        latitude,
+        longitude
+      FROM cities 
+      WHERE type = 'district'`;
+    const params = [];
+    
+    if (cityId) {
+      sql += " AND parent_city_id = ?";
+      params.push(Number(cityId));
+    }
+    
+    sql += " ORDER BY name";
+    
+    db.all(sql, params, (err, rows) => {
+      if (err) {
+        console.error('[districts/list] DB Error:', err);
+        return res.status(500).json({ error: "Datenbankfehler" });
       }
-    );
+      res.json(rows || []);
+    });
   });
 
   // Get districts by city
@@ -37,10 +47,12 @@ module.exports = function districtsRoutes(ctx) {
         id, 
         name, 
         type,
-        population,
-        city_id as cityId
-      FROM districts
-      WHERE city_id = ?
+        parent_city_id as parentCityId,
+        parent_city_id as cityId,
+        latitude,
+        longitude
+      FROM cities
+      WHERE type = 'district' AND parent_city_id = ?
       ORDER BY name`,
       [cityId],
       (err, rows) => {
