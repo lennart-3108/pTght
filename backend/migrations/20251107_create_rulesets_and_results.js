@@ -76,13 +76,8 @@ exports.up = async function(knex) {
     table.integer('winner_team_id').unsigned()
       .references('id').inTable('teams').onDelete('SET NULL');
     
-    // Lifecycle status
-    table.enum('status', [
-      'pending',      // Awaiting opponent confirmation
-      'accepted',     // Both sides confirmed
-      'disputed',     // Opponent disputed
-      'adjudicated'   // Admin resolved dispute
-    ]).defaultTo('pending');
+    // Lifecycle status (values: pending, accepted, disputed, adjudicated)
+    table.string('status', 50).defaultTo('pending');
     
     // Evidence & notes
     table.json('evidence_urls'); // Array of image/video URLs
