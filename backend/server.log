@@ -1285,3 +1285,177 @@ POST /:id/match-search failed: Error: insert into `matches` (`home_user_id`, `le
 [chats] GET /chats start { user: 4, at: '2025-12-07T22:56:08.891Z' }
 [chats] query.begin { user: 4 }
 [chats] done { user: 4, tookMs: 71, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T22:56:13.892Z' }
+[news] done { user: 4, tookMs: 111, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T22:56:33.893Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 48, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T22:56:58.892Z' }
+[chats] GET /chats start { user: 4, at: '2025-12-07T22:56:58.893Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 106, items: 0 }
+[news] done { user: 4, tookMs: 118, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T22:57:23.894Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 118, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T22:57:43.892Z' }
+[news] done { user: 4, tookMs: 96, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T22:57:48.892Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 96, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T22:58:13.892Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 130, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T22:58:28.894Z' }
+[news] done { user: 4, tookMs: 112, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T22:58:38.892Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 133, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T22:59:03.892Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 106, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T22:59:13.892Z' }
+[news] done { user: 4, tookMs: 71, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T22:59:28.894Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 102, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T22:59:53.894Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 137, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T22:59:58.893Z' }
+[news] done { user: 4, tookMs: 199, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:00:18.904Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 310, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:00:43.896Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:00:43.897Z' }
+[chats] done { user: 4, tookMs: 81, items: 0 }
+[news] done { user: 4, tookMs: 98, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:01:08.894Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 112, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:01:28.897Z' }
+[news] done { user: 4, tookMs: 100, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:01:33.895Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 173, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:01:58.898Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 130, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:02:13.896Z' }
+[news] done { user: 4, tookMs: 171, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:02:23.900Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 152, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:02:48.896Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 169, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:02:58.896Z' }
+[news] done { user: 4, tookMs: 216, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:03:13.897Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 235, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:03:38.900Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 138, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:03:43.895Z' }
+[news] done { user: 4, tookMs: 273, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:04:03.897Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 245, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:04:28.902Z' }
+[chats] query.begin { user: 4 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:04:28.903Z' }
+[chats] done { user: 4, tookMs: 235, items: 0 }
+[news] done { user: 4, tookMs: 270, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:04:53.897Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 220, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:05:13.896Z' }
+[news] done { user: 4, tookMs: 435, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:05:18.907Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 610, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:05:43.900Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 178, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:05:58.898Z' }
+[news] done { user: 4, tookMs: 250, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:06:08.898Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 254, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:06:33.901Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 206, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:06:43.898Z' }
+[news] done { user: 4, tookMs: 232, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:06:58.897Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 174, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:07:23.903Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 242, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:07:28.899Z' }
+[news] done { user: 4, tookMs: 269, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:07:48.898Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 289, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:08:13.908Z' }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:08:13.909Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 292, items: 0 }
+[news] done { user: 4, tookMs: 333, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:08:38.912Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 255, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:08:58.911Z' }
+[news] done { user: 4, tookMs: 255, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:09:03.911Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 194, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:09:28.916Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 272, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:09:43.914Z' }
+[news] done { user: 4, tookMs: 249, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:09:53.912Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 281, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:10:18.932Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 400, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:10:28.912Z' }
+[news] done { user: 4, tookMs: 273, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:10:43.913Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 364, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:11:08.912Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 303, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:11:13.912Z' }
+[news] done { user: 4, tookMs: 354, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:11:33.915Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 345, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:11:58.914Z' }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:11:58.915Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 249, items: 0 }
+[news] done { user: 4, tookMs: 297, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:12:23.917Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 280, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:12:43.914Z' }
+[news] done { user: 4, tookMs: 336, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:12:48.914Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 308, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:13:13.914Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 438, items: 0 }
+[news] GET /news start { user: 4, at: '2025-12-07T23:13:28.918Z' }
+[news] done { user: 4, tookMs: 358, items: 0 }
+[chats] GET /chats start { user: 4, at: '2025-12-07T23:13:38.916Z' }
+[chats] query.begin { user: 4 }
+[chats] done { user: 4, tookMs: 376, items: 0 }
