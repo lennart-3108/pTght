@@ -52,10 +52,11 @@ exports.up = async function(knex) {
   });
 
   // 2. Add ruleset_id to matches table (if column doesn't exist)
+  // Note: SQLite doesn't support adding foreign keys to existing tables via ALTER
   const hasRulesetId = await knex.schema.hasColumn('matches', 'ruleset_id');
   if (!hasRulesetId) {
     await knex.schema.table('matches', table => {
-      table.integer('ruleset_id').unsigned().references('id').inTable('rulesets').onDelete('SET NULL');
+      table.integer('ruleset_id').unsigned();
       table.index(['ruleset_id']);
     });
   }
