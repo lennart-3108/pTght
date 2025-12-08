@@ -41,21 +41,49 @@ module.exports = function leagueMatchesRoutes({ db }) {
   const router = express.Router();
   let table; // cached detected table name
 
-  // --- NEW: GET / - return leagues list (robust: leftJoin + optional l.city/l.sport) ---
-  router.get("/", async (_req, res) => {
+  // --- NEW: GET / - return leagues list with PAGINATION (robust: leftJoin + optional l.city/l.sport) ---
+  router.get("/", async (req, res) => {
     const k = resolveKnex(db);
     if (!k) {
       console.error("GET /leagues: no knex available");
       return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
     }
     try {
+      // Pagination parameters
+      const limit = Math.min(parseInt(req.query.limit) || 50, 1000);
+      const offset = parseInt(req.query.offset) || 0;
+      const sportId = req.query.sportId;
+      const cityId = req.query.cityId;
+      const search = req.query.search;
+
+      console.log(`[GET /leagues] limit=${limit} offset=${offset} sportId=${sportId} cityId=${cityId} search=${search}`);
+
       const leagueInfo = await k("leagues").columnInfo().catch(() => ({}));
       const hasLeagueCityCol = Object.prototype.hasOwnProperty.call(leagueInfo, "city");
       const hasLeagueSportCol = Object.prototype.hasOwnProperty.call(leagueInfo, "sport");
 
-      const rows = await k("leagues as l")
+      // Build base query
+      let query = k("leagues as l")
         .leftJoin("cities as c", "l.city_id", "c.id")
-        .leftJoin("sports as s", "l.sport_id", "s.id")
+        .leftJoin("sports as s", "l.sport_id", "s.id");
+
+      // Apply filters
+      if (sportId) {
+        query = query.where("l.sport_id", sportId);
+      }
+      if (cityId) {
+        query = query.where("l.city_id", cityId);
+      }
+      if (search) {
+        query = query.where("l.name", "like", `%${search}%`);
+      }
+
+      // Get total count
+      const countQuery = query.clone().count("* as count");
+      const [{ count: total }] = await countQuery;
+
+      // Get paginated results
+      const rows = await query
         .select(
           "l.id",
           { cityId: "c.id" },
@@ -64,9 +92,19 @@ module.exports = function leagueMatchesRoutes({ db }) {
           (hasLeagueSportCol ? k.raw("COALESCE(s.name, l.sport) as sport") : k.raw("COALESCE(s.name, '') as sport")),
           "l.name"
         )
-        .orderBy(["c.name", "l.name"]);
+        .orderBy(["l.name"])
+        .limit(limit)
+        .offset(offset);
 
-      return res.json(rows || []);
+      console.log(`[GET /leagues] Returning ${rows.length} of ${total} leagues`);
+
+      return res.json({
+        data: rows || [],
+        total,
+        limit,
+        offset,
+        hasMore: offset + rows.length < total
+      });
     } catch (e) {
       console.error("GET /leagues failed:", e && (e.stack || e.message || e));
       return res.status(500).json({ error: "Datenbankfehler", details: (e && e.message) || String(e) });
