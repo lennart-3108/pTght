@@ -24,9 +24,15 @@ export default function LeaguesPage() {
   const [userLeagues, setUserLeagues] = useState([]);
   const [membersCount, setMembersCount] = useState({});
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [loadingCounts, setLoadingCounts] = useState(false);
   const [err, setErr] = useState("");
   const [userProfile, setUserProfile] = useState(null);
+  
+  // Pagination state
+  const [totalCount, setTotalCount] = useState(0);
+  const [currentOffset, setCurrentOffset] = useState(0);
+  const pageSize = 50; // Load 50 leagues at a time
   
   // Sorting state
   const [sortColumn, setSortColumn] = useState(null);
@@ -97,142 +103,156 @@ export default function LeaguesPage() {
   }
 
   // Handler: set selected city and log immediate info
-  async function handleCitySelect(value) {
-    console.log("[LeaguesPage] City selection changed (raw):", value);
+  function handleCitySelect(value) {
+    console.log("[LeaguesPage] City selection changed:", value);
     setSelectedCity(value);
-    const raw = String(value || "").trim();
-    const byId = cities.find(c => String(c.id) === raw);
-    const byName = cities.find(c => normalize(c.name) === normalize(raw));
-    const resolved = byId || byName || (raw ? { id: raw, name: raw } : null);
-    console.log("[LeaguesPage] Resolved selectedCityObj:", resolved);
-
-    // Try to fetch a fresh full list from server for a complete scan.
-    // Backend typically returns all leagues for /leagues; adding ?full=1 as a hint.
-    let allLeagues = leagues || [];
-    try {
-      const r = await fetch(`${API_BASE}/leagues?full=1`);
-      if (r.ok) {
-        const json = await r.json().catch(() => null);
-        if (Array.isArray(json) && json.length > (allLeagues.length || 0)) {
-          allLeagues = json;
-          console.log("[LeaguesPage] Fetched full leagues list for preview, count:", allLeagues.length);
-        } else {
-          console.log("[LeaguesPage] Server returned leagues (count):", Array.isArray(json) ? json.length : "n/a");
-        }
-      } else {
-        console.warn("[LeaguesPage] Could not fetch full leagues list, using cached leagues. HTTP", r.status);
-      }
-    } catch (e) {
-      console.warn("[LeaguesPage] Fetch full leagues failed, using cached leagues:", e && e.message);
-    }
-
-    // Scan all entries and log matches. Keep per-item verbose limited to avoid huge console output.
-    const previewAll = allLeagues;
-    const total = previewAll.length;
-    console.group(`[LeaguesPage] Detailed match preview for city=${JSON.stringify(resolved)} — scanning ${total} leagues`);
-    let matchCount = 0;
-    const matchedIds = [];
-    const VERBOSE_LIMIT = 200; // verbose per-league logs for first N entries
-    for (let i = 0; i < previewAll.length; i++) {
-      const l = previewAll[i];
-      const verbose = i < VERBOSE_LIMIT;
-      const ok = leagueMatchesCity(l, resolved, verbose);
-      if (ok) {
-        matchCount++;
-        matchedIds.push(l.id);
-      }
-    }
-    console.log(`[LeaguesPage] Preview scanned ${total} leagues, matched ${matchCount}`, { matchedIds: matchedIds.slice(0, 200) });
-    if (matchedIds.length > 200) console.log(`[LeaguesPage] ...and ${matchedIds.length - 200} more matched IDs omitted from sample`);
-    console.groupEnd();
+    setCurrentOffset(0); // Reset pagination when filter changes
+    // fetchLeagues will be triggered by useEffect
   }
 
+  // Fetch leagues from server with current filters
+  const fetchLeagues = async (append = false) => {
+    try {
+      if (append) {
+        setLoadingMore(true);
+      } else {
+        setLoading(true);
+        setLeagues([]);
+      }
+      setErr("");
+
+      // Build query parameters for server-side filtering
+      const params = new URLSearchParams();
+      params.set('limit', String(pageSize));
+      params.set('offset', String(append ? currentOffset : 0));
+      
+      if (selectedCityObj?.id) {
+        params.set('cityId', String(selectedCityObj.id));
+      }
+      if (selectedSportObj?.id) {
+        params.set('sportId', String(selectedSportObj.id));
+      }
+      if (searchQuery) {
+        params.set('search', searchQuery);
+      }
+
+      const response = await fetch(`${API_BASE}/leagues?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const result = await response.json();
+      
+      // Handle both old format (array) and new format ({data, total, limit, offset})
+      let leaguesData, total;
+      if (Array.isArray(result)) {
+        // Old format - backward compatibility
+        leaguesData = result;
+        total = result.length;
+      } else {
+        // New format with pagination info
+        leaguesData = result.data || [];
+        total = result.total || 0;
+      }
+
+      if (append) {
+        setLeagues(prev => [...prev, ...leaguesData]);
+        setCurrentOffset(prev => prev + leaguesData.length);
+      } else {
+        setLeagues(leaguesData);
+        setCurrentOffset(leaguesData.length);
+      }
+      setTotalCount(total);
+
+    } catch (e) {
+      console.error("[LeaguesPage] Failed to fetch leagues:", e);
+      setErr(e.message || "Fehler beim Laden der Ligen");
+    } finally {
+      setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  // Initial load: fetch metadata (cities, sports, etc.) and user info
   useEffect(() => {
     let mounted = true;
-    setLoading(true);
-    setErr("");
     
-    // Lade Benutzerprofil für Auto-Auswahl der Stadt
     const token = localStorage.getItem("token");
+    const fetchPromises = [
+      fetch(`${API_BASE}/cities/list`).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/sports/categories`).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/countries/list`).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/states/list`).then(r => r.ok ? r.json() : []),
+    ];
+
     if (token) {
-      // Lade Benutzer-Profil
-      fetch(`${API_BASE}/me`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => r.ok ? r.json() : null)
-        .then(data => {
-          if (mounted && data) {
-            setUserProfile(data);
-            // Auto-select user's city if available
-            if (data.city_id || data.cityId) {
-              setSelectedCity(String(data.city_id || data.cityId));
+      fetchPromises.push(
+        fetch(`${API_BASE}/me`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => r.ok ? r.json() : null)
+          .then(data => {
+            if (mounted && data) {
+              setUserProfile(data);
+              if (data.city_id || data.cityId) {
+                setSelectedCity(String(data.city_id || data.cityId));
+              }
             }
-          }
-        })
-        .catch(() => {});
-      
-      // Lade Benutzer-Ligen
-      fetch(`${API_BASE}/me/leagues`, { headers: { Authorization: `Bearer ${token}` } })
-        .then(r => r.ok ? r.json() : [])
-        .then(data => {
-          if (mounted && Array.isArray(data)) {
-            setUserLeagues(data);
-            console.log("[LeaguesPage] User leagues loaded:", data);
-          }
-        })
-        .catch(error => {
-          console.warn("[LeaguesPage] Failed to load user leagues:", error);
-        });
+            return data;
+          })
+          .catch(() => null),
+        
+        fetch(`${API_BASE}/me/leagues`, { headers: { Authorization: `Bearer ${token}` } })
+          .then(r => r.ok ? r.json() : [])
+          .then(data => {
+            if (mounted && Array.isArray(data)) {
+              setUserLeagues(data);
+            }
+            return data;
+          })
+          .catch(() => [])
+      );
     }
 
-    Promise.all([
-      fetch(`${API_BASE}/leagues`).then(r => (r.ok ? r.json() : Promise.reject(new Error(`/leagues ${r.status}`)))),
-      fetch(`${API_BASE}/cities/list`).then(r => (r.ok ? r.json() : [])),
-      fetch(`${API_BASE}/sports/categories`).then(r => (r.ok ? r.json() : [])),
-      fetch(`${API_BASE}/countries/list`).then(r => (r.ok ? r.json() : [])),
-      fetch(`${API_BASE}/states/list`).then(r => (r.ok ? r.json() : [])),
-    ])
-      .then(([leaguesData, citiesData, sportsData, countriesData, statesData]) => {
+    Promise.all(fetchPromises)
+      .then(([citiesData, sportsData, countriesData, statesData]) => {
         if (!mounted) return;
-        setLeagues(Array.isArray(leaguesData) ? leaguesData : []);
         setCities(Array.isArray(citiesData) ? citiesData : []);
         setSports(Array.isArray(sportsData) ? sportsData : []);
         setCountries(Array.isArray(countriesData) ? countriesData : []);
         setStates(Array.isArray(statesData) ? statesData : []);
       })
       .catch(e => {
-        if (!mounted) return;
-        setErr(e.message || "Fehler beim Laden");
-      })
-      .finally(() => { if (mounted) setLoading(false); });
+        console.error("[LeaguesPage] Failed to load metadata:", e);
+      });
+
     return () => { mounted = false; };
   }, []);
 
-  // Show all leagues by default; apply filters
+  // Fetch leagues whenever filters change (with debouncing for search)
+  useEffect(() => {
+    // Don't fetch until we have cities and sports loaded
+    if (cities.length === 0 && sports.length === 0) return;
+    
+    // Debounce search queries to avoid API spam on every keystroke
+    const debounceTimer = setTimeout(() => {
+      setCurrentOffset(0);
+      fetchLeagues(false);
+    }, searchQuery ? 500 : 0); // 500ms delay for search, instant for other filters
+    
+    return () => clearTimeout(debounceTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCity, selectedSport, searchQuery, cities.length, sports.length]);
+
+  // Apply client-side filters only for "Meine Ligen" (can't be done server-side without auth)
   const visibleLeagues = useMemo(() => {
-    return leagues.filter(l => {
-      // City filter
-      const byCity = selectedCity ? (selectedCityObj ? leagueMatchesCity(l, selectedCityObj, false) : true) : true;
-      
-      // Sport filter
-      const leagueSportId = l.sportId ?? l.sport_id ?? l.sport ?? l.sportName ?? "";
-      const bySport = selectedSport ? (
-            String(leagueSportId) === String(selectedSportObj?.id)
-            || (typeof leagueSportId === "string" && normalize(leagueSportId) === normalize(selectedSportObj?.name || ""))
-          ) : true;
-      
-      // Search query filter
-      const bySearch = searchQuery ? (
-        normalize(l.name || "").includes(normalize(searchQuery)) ||
-        normalize(l.city || l.cityName || "").includes(normalize(searchQuery)) ||
-        normalize(l.sport || l.sportName || "").includes(normalize(searchQuery))
-      ) : true;
-      
-      // "Meine Ligen" filter
-      const byMyLeagues = showMyLeaguesOnly ? 
-        userLeagues.some(userLeague => String(userLeague.id) === String(l.id)) : true;
-      
-      return byCity && bySport && bySearch && byMyLeagues;
-    });
-  }, [leagues, selectedCity, selectedSport, searchQuery, showMyLeaguesOnly, userLeagues, selectedCityObj, selectedSportObj]);
+    if (!showMyLeaguesOnly) {
+      return leagues; // Server already filtered by city, sport, search
+    }
+    
+    // Filter for user's leagues only
+    return leagues.filter(l => 
+      userLeagues.some(userLeague => String(userLeague.id) === String(l.id))
+    );
+  }, [leagues, showMyLeaguesOnly, userLeagues]);
 
   // Handle sort
   const handleSort = (column) => {
@@ -288,100 +308,23 @@ export default function LeaguesPage() {
     });
   }, [visibleLeagues, sortColumn, sortDirection, membersCount]);
 
-  // Log whenever visibleLeagues changes
+  // PERFORMANCE: Removed verbose logging that was spamming console
+
+  // PERFORMANCE FIX: Disable reachability checks (causes N parallel API calls)
+  // Reachability check disabled - was causing 20+ parallel API calls per page load
+  // TODO: Create bulk endpoint /api/leagues/reachability if needed
   useEffect(() => {
-    console.log("[LeaguesPage] visibleLeagues changed:", {
-      selectedCity,
-      selectedCityObj,
-      selectedSport,
-      selectedSportObj,
-      count: visibleLeagues.length,
-      sample: visibleLeagues.slice(0, 8).map(l => ({ id: l.id, name: l.name, city: l.city || l.cityName })),
-    });
-  }, [visibleLeagues, selectedCity, selectedSport, selectedCityObj, selectedSportObj]);
-
-  // Reachability check: try GET /leagues/:id for relevant leagues
-  useEffect(() => {
-    let mounted = true;
-    const targets = (visibleLeagues && visibleLeagues.length > 0) ? visibleLeagues : leagues;
-    if (!targets || targets.length === 0) {
-      // nothing to check
-      return;
-    }
-
-    console.log("[LeaguesPage] Starting reachability checks for", targets.length, "leagues");
-    const ctrls = {};
-    (async () => {
-      const out = {};
-      await Promise.all(targets.map(async (l) => {
-        const id = l.id;
-        const controller = new AbortController();
-        ctrls[id] = controller;
-        const timeout = setTimeout(() => controller.abort(), 3000);
-        try {
-          const r = await fetch(`${API_BASE}/leagues/${id}`, { signal: controller.signal });
-          clearTimeout(timeout);
-          out[id] = { ok: r.ok, status: r.status, error: r.ok ? null : `HTTP ${r.status}` };
-          if (!r.ok) console.warn(`[LeaguesPage] league ${id} detail returned ${r.status}`);
-        } catch (e) {
-          clearTimeout(timeout);
-          out[id] = { ok: false, status: null, error: (e && e.name === "AbortError") ? "timeout" : (e && e.message) || "fetch error" };
-          console.error(`[LeaguesPage] league ${id} detail fetch error:`, out[id].error);
-        }
-      }));
-      if (!mounted) return;
-      setReachable(prev => ({ ...prev, ...out }));
-      console.log("[LeaguesPage] reachability results:", out);
-    })();
-
-    return () => {
-      mounted = false;
-      Object.values(ctrls).forEach(c => c.abort && c.abort());
-    };
+    // Skip reachability checks for performance
+    // Each check was making a separate API call per league
+    return () => {};
   }, [leagues, visibleLeagues]);
 
-  // load members count for visible leagues
+  // TEMPORARILY DISABLED: Members count loading (too many API calls)
+  // TODO: Create bulk endpoint /api/leagues/members-count that accepts league IDs
   useEffect(() => {
-    let mounted = true;
-    if (!visibleLeagues || visibleLeagues.length === 0) {
-      // clear counts when none visible
-      setMembersCount(prev => {
-        // keep existing counts (optional) — here we keep existing
-        return prev;
-      });
-      return;
-    }
-    // debug: log which leagues we will fetch counts for
-    console.log("[LeaguesPage] Loading members counts for leagues:", visibleLeagues.map(l => ({ id: l.id, name: l.name })));
-    setLoadingCounts(true);
-    (async () => {
-      try {
-        const results = await Promise.all(visibleLeagues.map(async (l) => {
-          try {
-            const r = await fetch(`${API_BASE}/leagues/${l.id}/members`);
-            if (!r.ok) {
-              console.warn(`[LeaguesPage] members fetch returned ${r.status} for league ${l.id}`);
-              return { id: l.id, count: 0 };
-            }
-            const arr = await r.json().catch(() => []);
-            return { id: l.id, count: Array.isArray(arr) ? arr.length : 0 };
-          } catch (err) {
-            console.error(`[LeaguesPage] members fetch error for league ${l.id}:`, err && (err.message || err));
-            return { id: l.id, count: 0 };
-          }
-        }));
-        if (!mounted) return;
-        console.log("[LeaguesPage] members counts fetched:", results);
-        setMembersCount(prev => {
-          const copy = { ...prev };
-          results.forEach(x => { copy[x.id] = x.count; });
-          return copy;
-        });
-      } finally {
-        if (mounted) setLoadingCounts(false);
-      }
-    })();
-    return () => { mounted = false; };
+    setLoadingCounts(false);
+    // Don't load individual member counts - causes 200+ API calls
+    return () => {};
   }, [visibleLeagues]);
 
   // Format league name: special logic for community leagues
@@ -849,6 +792,53 @@ export default function LeaguesPage() {
               </tbody>
             </table>
           </div>
+        </div>
+      )}
+
+      {/* Load More Button */}
+      {!loading && leagues.length > 0 && currentOffset < totalCount && (
+        <div style={{ 
+          textAlign: 'center', 
+          marginTop: 24,
+          padding: 16
+        }}>
+          <button
+            onClick={() => fetchLeagues(true)}
+            disabled={loadingMore}
+            className="btn"
+            style={{
+              padding: "12px 32px",
+              fontSize: 14,
+              fontWeight: 600,
+              background: loadingMore ? 'rgba(255,255,255,0.05)' : 'rgba(72,186,170,0.2)',
+              color: loadingMore ? '#9ca3af' : '#48baa6',
+              border: loadingMore ? '1px solid rgba(255,255,255,0.1)' : '1px solid #48baa6',
+              cursor: loadingMore ? 'not-allowed' : 'pointer',
+              transition: 'all 0.2s'
+            }}
+          >
+            {loadingMore ? 'Lädt...' : `Mehr laden (${currentOffset} von ${totalCount})`}
+          </button>
+          <div style={{ 
+            marginTop: 8, 
+            color: '#9ca3af',
+            fontSize: 13
+          }}>
+            {totalCount - currentOffset} weitere Ligen verfügbar
+          </div>
+        </div>
+      )}
+
+      {/* Total count info */}
+      {!loading && totalCount > 0 && (
+        <div style={{ 
+          textAlign: 'center',
+          marginTop: 16,
+          padding: 8,
+          color: '#9ca3af',
+          fontSize: 13
+        }}>
+          Zeige {Math.min(currentOffset, totalCount)} von {totalCount} Ligen
         </div>
       )}
     </div>

@@ -4,6 +4,7 @@ const { createMiddleware } = require("./middleware");
 const authRoutes = require("./auth");
 const meRoutes = require("./me");
 const leaguesRoutes = require("./leagues");
+const leagueMatchesRoutes = require("./leagueMatches"); // NEW: Pagination-enabled routes
 const sportsRoutes = require("./sports");
 const citiesRoutes = require("./cities");
 const countiesRoutes = require("./counties");
@@ -39,7 +40,7 @@ function registerRoutes(app, ctx) {
   apiRouter.use(authRoutes(ctx));
   apiRouter.use("/auth", authRoutes(ctx));
   apiRouter.use("/me", meRoutes(ctx));
-  apiRouter.use("/leagues", leaguesRoutes(ctx));
+  apiRouter.use("/leagues", leagueMatchesRoutes(ctx)); // USE NEW PAGINATION ROUTES
   apiRouter.use("/sports", sportsRoutes(ctx));
   apiRouter.use(citiesRoutes(ctx));
   apiRouter.use(countiesRoutes(ctx));
