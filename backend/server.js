@@ -423,6 +423,10 @@ if (jobKnex) {
 // and optional knexfile instance, deduplicated by id. Prefers adapter (the one used by Admin).
 app.get("/leagues", async (req, res) => {
   try {
+    // Parse limit and offset from query params
+    const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
+    const offset = Math.max(parseInt(req.query.offset) || 0, 0);
+    
     // gather available knex instances (adapter preferred)
     const kAdapter = (db && db.knex && db.knex.client) ? db.knex : null;   // prefer this (admin uses adapter)
     const kDirect = (knexDirect && knexDirect.client) ? knexDirect : null;
@@ -456,7 +460,9 @@ app.get("/leagues", async (req, res) => {
             (hasLeagueSportCol ? knexInstance.raw("COALESCE(s.name, l.sport, '') as sport") : knexInstance.raw("COALESCE(s.name, '') as sport")),
             "l.name"
           )
-          .orderBy("l.id", "asc");
+          .orderBy("l.id", "asc")
+          .limit(limit)
+          .offset(offset);
 
         return { rows: Array.isArray(rows) ? rows : [], dbFile };
       } catch (e) {
