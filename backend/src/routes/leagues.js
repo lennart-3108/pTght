@@ -248,12 +248,10 @@ module.exports = function leaguesRoutes(ctx) {
         .leftJoin("sports as s", "l.sport_id", "s.id")
         .select(
           "l.id",
-          "l.city_id",
-          "l.sport_id",
-          { cityId: "c.id" },
+          { cityId: k.raw("COALESCE(c.id, l.city_id)") },
+          { sportId: k.raw("COALESCE(s.id, l.sport_id)") },
           // only reference l.city if that column actually exists, otherwise fallback to c.name or empty string
           (hasLeagueCityCol ? k.raw("COALESCE(c.name, l.city) as city") : k.raw("COALESCE(c.name, '') as city")),
-          { sportId: "s.id" },
           (hasLeagueSportCol ? k.raw("COALESCE(s.name, l.sport) as sport") : k.raw("COALESCE(s.name, '') as sport")),
           "l.name",
           ...(hasPublicState ? ["l.publicState"] : [])
@@ -289,12 +287,10 @@ module.exports = function leaguesRoutes(ctx) {
         .select(
           "l.id",
           "l.name",
-          "l.city_id",
-          "l.sport_id",
-          { cityId: "c.id" },
+          { cityId: k.raw("COALESCE(c.id, l.city_id)") },
+          { sportId: k.raw("COALESCE(s.id, l.sport_id)") },
           // only reference l.city if that column actually exists, otherwise fallback to c.name or empty string
           (hasLeagueCityCol2 ? k.raw("COALESCE(c.name, l.city) as city") : k.raw("COALESCE(c.name, '') as city")),
-          { sportId: "s.id" },
           (hasLeagueSportCol2 ? k.raw("COALESCE(s.name, l.sport) as sport") : k.raw("COALESCE(s.name, '') as sport")),
           ...(hasPublicState ? ["l.publicState"] : [])
         )
