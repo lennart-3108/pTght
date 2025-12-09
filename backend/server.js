@@ -406,11 +406,12 @@ const jobKnex = (db && db.knex && db.knex.client) ? db.knex : knexDirect;
 // optional verbose job logger
 const jobLog = (process.env.JOBS_VERBOSE === '1') ? (...a) => console.log(...a) : () => {};
 if (jobKnex) {
-  ensureCommunityLeagues(jobKnex, () => jobLog("Community-Ligen synchronisiert."));
-  setInterval(() => ensureCommunityLeagues(jobKnex, () => jobLog("Community-Ligen synchronisiert.")), 60 * 1000); // alle 60s prüfen
+  // DISABLED: Creates thousands of leagues automatically (one per city per sport)
+  // ensureCommunityLeagues(jobKnex, () => jobLog("Community-Ligen synchronisiert."));
+  // setInterval(() => ensureCommunityLeagues(jobKnex, () => jobLog("Community-Ligen synchronisiert.")), 60 * 1000); // alle 60s prüfen
   // Auto-pair community leagues every 5 minutes
-  autoPairCommunity(jobKnex, (...a) => jobLog(...a));
-  setInterval(() => autoPairCommunity(jobKnex, (...a) => jobLog(...a)), 5 * 60 * 1000);
+  // autoPairCommunity(jobKnex, (...a) => jobLog(...a));
+  // setInterval(() => autoPairCommunity(jobKnex, (...a) => jobLog(...a)), 5 * 60 * 1000);
   // Ensure seasons for all leagues at startup and every day
   ensureSeasons(jobKnex, (...a) => jobLog(...a));
   setInterval(() => ensureSeasons(jobKnex, (...a) => jobLog(...a)), 24 * 60 * 60 * 1000);
@@ -423,9 +424,14 @@ if (jobKnex) {
 // and optional knexfile instance, deduplicated by id. Prefers adapter (the one used by Admin).
 app.get("/leagues", async (req, res) => {
   try {
-    // Parse limit and offset from query params
+    // Parse pagination params
     const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
     const offset = Math.max(parseInt(req.query.offset) || 0, 0);
+    
+    // Parse filter params
+    const cityId = req.query.cityId ? parseInt(req.query.cityId) : null;
+    const sportId = req.query.sportId ? parseInt(req.query.sportId) : null;
+    const search = req.query.search ? String(req.query.search).toLowerCase() : null;
     
     // gather available knex instances (adapter preferred)
     const kAdapter = (db && db.knex && db.knex.client) ? db.knex : null;   // prefer this (admin uses adapter)
@@ -442,16 +448,51 @@ app.get("/leagues", async (req, res) => {
         // 1) Prüfe zuerst, ob die Tabelle 'leagues' überhaupt existiert. Wenn nein: Quelle überspringen.
         const hasLeagues = await knexInstance.schema.hasTable("leagues").catch(() => false);
         if (!hasLeagues) {
-          return { rows: [], dbFile, skippedReason: "no leagues table" };
+          return { rows: [], total: 0, dbFile, skippedReason: "no leagues table" };
         }
 
         const info = await knexInstance("leagues").columnInfo().catch(() => ({}));
         const hasLeagueCityCol = Object.prototype.hasOwnProperty.call(info, "city");
         const hasLeagueSportCol = Object.prototype.hasOwnProperty.call(info, "sport");
 
-        const rows = await knexInstance("leagues as l")
+        // Build count query first (separate from rows query)
+        let countQuery = knexInstance("leagues as l");
+        if (cityId) {
+          countQuery = countQuery.where("l.city_id", cityId);
+        }
+        if (sportId) {
+          countQuery = countQuery.where("l.sport_id", sportId);
+        }
+        if (search) {
+          countQuery = countQuery.where(function() {
+            this.whereRaw("LOWER(l.name) LIKE ?", [`%${search}%`]);
+          });
+        }
+        const totalResult = await countQuery.count({ total: "*" }).first();
+        const total = Number(totalResult?.total || 0);
+
+        // Build main query with filters and joins
+        let query = knexInstance("leagues as l")
           .leftJoin("cities as c", "l.city_id", "c.id")
-          .leftJoin("sports as s", "l.sport_id", "s.id")
+          .leftJoin("sports as s", "l.sport_id", "s.id");
+
+        // Apply same filters
+        if (cityId) {
+          query = query.where("l.city_id", cityId);
+        }
+        if (sportId) {
+          query = query.where("l.sport_id", sportId);
+        }
+        if (search) {
+          query = query.where(function() {
+            this.whereRaw("LOWER(l.name) LIKE ?", [`%${search}%`])
+              .orWhereRaw("LOWER(c.name) LIKE ?", [`%${search}%`])
+              .orWhereRaw("LOWER(s.name) LIKE ?", [`%${search}%`]);
+          });
+        }
+
+        // Get paginated rows
+        const rows = await query
           .select(
             "l.id",
             { cityId: "l.city_id" },
@@ -464,18 +505,23 @@ app.get("/leagues", async (req, res) => {
           .limit(limit)
           .offset(offset);
 
-        return { rows: Array.isArray(rows) ? rows : [], dbFile };
+        return { rows: Array.isArray(rows) ? rows : [], total, dbFile };
       } catch (e) {
-        return { rows: [], dbFile: null, error: e };
+        return { rows: [], total: 0, dbFile: null, error: e };
       }
     }
 
     // If adapter is available, try it first (admin UI uses adapter; prefer its data)
     if (kAdapter) {
       const adapterRes = await readFrom(kAdapter);
-      if (!adapterRes.error && Array.isArray(adapterRes.rows) && adapterRes.rows.length > 0) {
-        logDebug(`[GET /leagues] using adapter dbFile=${adapterRes.dbFile || "<unknown>"} rows=${adapterRes.rows.length}`);
-        return res.json(adapterRes.rows);
+      if (!adapterRes.error && Array.isArray(adapterRes.rows)) {
+        logDebug(`[GET /leagues] using adapter dbFile=${adapterRes.dbFile || "<unknown>"} rows=${adapterRes.rows.length} total=${adapterRes.total}`);
+        return res.json({
+          data: adapterRes.rows,
+          total: adapterRes.total,
+          limit,
+          offset
+        });
       }
       if (adapterRes.error) {
         console.warn("[GET /leagues] adapter read error:", adapterRes.error && (adapterRes.error.stack || adapterRes.error.message || adapterRes.error));
@@ -500,13 +546,15 @@ app.get("/leagues", async (req, res) => {
       } else if (r && r.error) {
         console.warn(`[GET /leagues] source[${idx}] read error:`, r.error && (r.error.stack || r.error.message || r.error));
       } else {
-        logDebug(`[GET /leagues] source[${idx}] dbFile=${r.dbFile || "<unknown>"} rows=${(r.rows || []).length}`);
+        logDebug(`[GET /leagues] source[${idx}] dbFile=${r.dbFile || "<unknown>"} rows=${(r.rows || []).length} total=${r.total || 0}`);
       }
     });
 
     // merge and deduplicate by id (prefer earlier sources)
     const mergedMap = new Map();
+    let maxTotal = 0;
     for (const r of results) {
+      if (r.total > maxTotal) maxTotal = r.total;
       for (const row of r.rows || []) {
         const key = String(row.id);
         if (!mergedMap.has(key)) mergedMap.set(key, row);
@@ -516,9 +564,14 @@ app.get("/leagues", async (req, res) => {
     const merged = Array.from(mergedMap.values()).sort((a, b) => Number(a.id) - Number(b.id));
 
     // Debug info if counts differ from what admin shows
-    //logDebug(`[GET /leagues] returning merged rows=${merged.length} (sources=${results.length})`);
+    logDebug(`[GET /leagues] returning merged rows=${merged.length} total=${maxTotal} (sources=${results.length})`);
 
-    return res.json(merged);
+    return res.json({
+      data: merged,
+      total: maxTotal,
+      limit,
+      offset
+    });
   } catch (e) {
     console.error("GET /leagues (combined) failed:", e && (e.stack || e.message || e));
     return res.status(500).json({ error: "Datenbankfehler", details: (e && e.message) || String(e) });
@@ -1796,20 +1849,21 @@ app.use('/api', apiRouter);
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Ensure persistent developer test dataset (runs once at startup or reload)
-try {
-  const { ensureTestLocation } = require('./src/jobs/ensureTestLocation');
-  (async () => {
-    try {
-      const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
-      if (k) await ensureTestLocation(k);
-      else console.warn('[ensureTestLocation] skipped (no knex)');
-    } catch (e) {
-      console.warn('[ensureTestLocation] failed:', e && (e.message || e));
-    }
-  })();
-} catch (e) {
-  console.warn('[ensureTestLocation] not available:', e && (e.message || e));
-}
+// DISABLED: Creating too many leagues automatically
+// try {
+//   const { ensureTestLocation } = require('./src/jobs/ensureTestLocation');
+//   (async () => {
+//     try {
+//       const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+//       if (k) await ensureTestLocation(k);
+//       else console.warn('[ensureTestLocation] skipped (no knex)');
+//     } catch (e) {
+//       console.warn('[ensureTestLocation] failed:', e && (e.message || e));
+//     }
+//   })();
+// } catch (e) {
+//   console.warn('[ensureTestLocation] not available:', e && (e.message || e));
+// }
 
 // Start background job: release expired holds
 try {
