@@ -248,6 +248,8 @@ module.exports = function leaguesRoutes(ctx) {
         .leftJoin("sports as s", "l.sport_id", "s.id")
         .select(
           "l.id",
+          "l.city_id",
+          "l.sport_id",
           { cityId: "c.id" },
           // only reference l.city if that column actually exists, otherwise fallback to c.name or empty string
           (hasLeagueCityCol ? k.raw("COALESCE(c.name, l.city) as city") : k.raw("COALESCE(c.name, '') as city")),
@@ -287,6 +289,8 @@ module.exports = function leaguesRoutes(ctx) {
         .select(
           "l.id",
           "l.name",
+          "l.city_id",
+          "l.sport_id",
           { cityId: "c.id" },
           // only reference l.city if that column actually exists, otherwise fallback to c.name or empty string
           (hasLeagueCityCol2 ? k.raw("COALESCE(c.name, l.city) as city") : k.raw("COALESCE(c.name, '') as city")),
