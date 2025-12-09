@@ -330,3 +330,56 @@ src/pages/LeaguesPage.js
   Line 235:6:  React Hook useMemo has a missing dependency: 'leagueMatchesCity'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
 
 webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/pages/AdminPage.js
+  Line 60:6:  React Hook useEffect has a missing dependency: 'loadSchema'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/EditProfilePage.js
+  Line 10:10:  'user' is assigned a value but never used  no-unused-vars
+
+src/pages/LeaguesPage.js
+  Line 29:10:  'userProfile' is assigned a value but never used                                                                    no-unused-vars
+  Line 235:6:  React Hook useMemo has a missing dependency: 'leagueMatchesCity'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/StartPage.js
+  Line 28:10:   'leagues' is assigned a value but never used                                                                                                                                                                                                                                                                                                                       no-unused-vars
+  Line 38:10:   'openMatches' is assigned a value but never used                                                                                                                                                                                                                                                                                                                   no-unused-vars
+  Line 38:23:   'setOpenMatches' is assigned a value but never used                                                                                                                                                                                                                                                                                                                no-unused-vars
+  Line 39:21:   'setSearching' is assigned a value but never used                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  Line 42:10:   'gpsLoading' is assigned a value but never used                                                                                                                                                                                                                                                                                                                    no-unused-vars
+  Line 352:23:  'Name' is assigned a value but never used                                                                                                                                                                                                                                                                                                                          no-unused-vars
+  Line 420:23:  'Name' is assigned a value but never used                                                                                                                                                                                                                                                                                                                          no-unused-vars
+  Line 622:27:  'initialsFor' is assigned a value but never used                                                                                                                                                                                                                                                                                                                   no-unused-vars
+  Line 749:19:  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+  Line 750:19:  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/pages/AdminPage.js
+  Line 60:6:  React Hook useEffect has a missing dependency: 'loadSchema'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/EditProfilePage.js
+  Line 10:10:  'user' is assigned a value but never used  no-unused-vars
+
+src/pages/LeaguesPage.js
+  Line 29:10:  'userProfile' is assigned a value but never used                                                                    no-unused-vars
+  Line 235:6:  React Hook useMemo has a missing dependency: 'leagueMatchesCity'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/StartPage.js
+  Line 28:10:   'leagues' is assigned a value but never used                                                                                                                                                                                                                                                                                                                       no-unused-vars
+  Line 38:10:   'openMatches' is assigned a value but never used                                                                                                                                                                                                                                                                                                                   no-unused-vars
+  Line 38:23:   'setOpenMatches' is assigned a value but never used                                                                                                                                                                                                                                                                                                                no-unused-vars
+  Line 39:21:   'setSearching' is assigned a value but never used                                                                                                                                                                                                                                                                                                                  no-unused-vars
+  Line 42:10:   'gpsLoading' is assigned a value but never used                                                                                                                                                                                                                                                                                                                    no-unused-vars
+  Line 352:23:  'Name' is assigned a value but never used                                                                                                                                                                                                                                                                                                                          no-unused-vars
+  Line 420:23:  'Name' is assigned a value but never used                                                                                                                                                                                                                                                                                                                          no-unused-vars
+  Line 622:27:  'initialsFor' is assigned a value but never used                                                                                                                                                                                                                                                                                                                   no-unused-vars
+  Line 749:19:  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+  Line 750:19:  The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles. Learn more: https://github.com/jsx-eslint/eslint-plugin-jsx-a11y/blob/HEAD/docs/rules/anchor-is-valid.md  jsx-a11y/anchor-is-valid
+
+webpack compiled with 1 warning
