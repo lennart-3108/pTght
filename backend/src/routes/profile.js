@@ -90,6 +90,15 @@ module.exports = function profileRoutes(ctx) {
       if (Object.prototype.hasOwnProperty.call(info, 'birth_date') && typeof req.body?.birth_date !== 'undefined') {
         patch.birth_date = req.body.birth_date ? String(req.body.birth_date).trim() : null;
       }
+      if (Object.prototype.hasOwnProperty.call(info, 'birthday') && typeof req.body?.birthday !== 'undefined') {
+        patch.birthday = req.body.birthday ? String(req.body.birthday).trim() : null;
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'city_id') && typeof req.body?.city_id !== 'undefined') {
+        patch.city_id = req.body.city_id ? Number(req.body.city_id) : null;
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'district_id') && typeof req.body?.district_id !== 'undefined') {
+        patch.district_id = req.body.district_id ? Number(req.body.district_id) : null;
+      }
       if (Object.prototype.hasOwnProperty.call(info, 'gender') && typeof req.body?.gender !== 'undefined') {
         patch.gender = req.body.gender ? String(req.body.gender).trim() : null;
       }

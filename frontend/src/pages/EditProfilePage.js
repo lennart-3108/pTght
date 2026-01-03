@@ -15,12 +15,13 @@ export default function EditProfilePage() {
   const [formData, setFormData] = useState({
     firstname: '',
     lastname: '',
-    username: '',
     email: '',
     bio: '',
     location: '',
     phone: '',
     birth_date: '',
+    city_id: null,
+    district_id: null,
     gender: ''
   });
 
@@ -81,12 +82,13 @@ export default function EditProfilePage() {
         setFormData({
           firstname: userData.firstname || '',
           lastname: userData.lastname || '',
-          username: userData.username || '',
           email: userData.email || '',
           bio: fullUser.bio || '',
           location: fullUser.location || '',
           phone: fullUser.phone || '',
-          birth_date: fullUser.birth_date || '',
+          birth_date: userData.birthday || fullUser.birth_date || '',
+          city_id: userData.city_id || fullUser.city_id || null,
+          district_id: userData.district_id || fullUser.district_id || null,
           gender: fullUser.gender || ''
         });
         
@@ -98,6 +100,15 @@ export default function EditProfilePage() {
         navigate('/profile');
       });
   }, [navigate]);
+
+  // When cities list arrives, populate location display name if missing but IDs exist
+  useEffect(() => {
+    if (formData.location || !formData.city_id || !Array.isArray(cities) || !cities.length) return;
+    const cityName = cities.find(c => String(c.id) === String(formData.city_id))?.name;
+    if (cityName) {
+      setFormData(prev => ({ ...prev, location: cityName }));
+    }
+  }, [cities, formData.city_id, formData.location]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -283,9 +294,14 @@ export default function EditProfilePage() {
               countries={countries}
               states={states}
               districts={districts}
-              value={formData.location}
-              onChange={(cityName) => {
-                setFormData({ ...formData, location: cityName });
+              value={formData.location || (formData.city_id ? (cities.find(c => String(c.id) === String(formData.city_id))?.name || '') : '')}
+              onChange={(cityName, cityId, stateId, countryId, districtId) => {
+                setFormData({
+                  ...formData,
+                  location: cityName || '',
+                  city_id: cityId || null,
+                  district_id: districtId || null
+                });
               }}
               placeholder="Standort wählen"
               onLoadDistricts={(cityId) => {
@@ -324,17 +340,10 @@ export default function EditProfilePage() {
           {/* Gender */}
           <div style={sectionStyle}>
             <label style={labelStyle}>Geschlecht</label>
-            <select
+            <GenderSelector
               value={formData.gender}
-              onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
-              style={inputStyle}
-            >
-              <option value="">Bitte wählen</option>
-              <option value="male">Männlich</option>
-              <option value="female">Weiblich</option>
-              <option value="diverse">Divers</option>
-              <option value="prefer_not_to_say">Keine Angabe</option>
-            </select>
+              onChange={(value) => setFormData({ ...formData, gender: value })}
+            />
           </div>
 
           {/* Save Button */}
@@ -382,6 +391,106 @@ export default function EditProfilePage() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Shared Gender Selector (same look as RegisterPage)
+function GenderSelector({ value, onChange }) {
+  const [showDropdown, setShowDropdown] = React.useState(false);
+
+  const genderOptions = [
+    { value: 'male', label: 'Männlich', icon: '♂' },
+    { value: 'female', label: 'Weiblich', icon: '♀' },
+    { value: 'diverse', label: 'Divers', icon: '⚧' },
+    { value: 'prefer_not_to_say', label: 'Keine Angabe', icon: '–' }
+  ];
+
+  const selectedOption = genderOptions.find(opt => opt.value === value);
+
+  return (
+    <div style={{ position: 'relative', zIndex: showDropdown ? 99999 : 1 }}>
+      <div
+        onClick={() => setShowDropdown(!showDropdown)}
+        style={{
+          padding: '12px 16px',
+          borderRadius: 10,
+          border: '1px solid #2f6b57',
+          background: '#0b1e19',
+          color: value ? '#e8efe8' : '#9ca3af',
+          fontSize: 15,
+          width: '100%',
+          cursor: 'pointer',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          userSelect: 'none',
+          transition: 'all 0.2s',
+          boxSizing: 'border-box'
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.borderColor = '#48baa6'}
+        onMouseLeave={(e) => e.currentTarget.style.borderColor = '#2f6b57'}
+      >
+        <span>
+          {selectedOption ? `${selectedOption.icon} ${selectedOption.label}` : 'Bitte wählen'}
+        </span>
+        <span style={{ fontSize: 12, color: '#6b8578' }}>
+          {showDropdown ? '▲' : '▼'}
+        </span>
+      </div>
+
+      {showDropdown && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          right: 0,
+          marginTop: 4,
+          background: '#0b1e19',
+          border: '1px solid #2f6b57',
+          borderRadius: 10,
+          zIndex: 100000,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          overflow: 'hidden'
+        }}>
+          {genderOptions.map((option, idx) => (
+            <div
+              key={option.value}
+              onClick={() => {
+                onChange(option.value);
+                setShowDropdown(false);
+              }}
+              style={{
+                padding: '12px 16px',
+                cursor: 'pointer',
+                background: value === option.value ? '#113528' : 'transparent',
+                borderBottom: idx < genderOptions.length - 1 ? '1px solid #1a3329' : 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                fontSize: 14,
+                color: value === option.value ? '#48baa6' : '#e8efe8',
+                fontWeight: value === option.value ? 600 : 500,
+                transition: 'all 0.15s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = '#0e2521';
+                e.currentTarget.style.color = '#48baa6';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = value === option.value ? '#113528' : 'transparent';
+                e.currentTarget.style.color = value === option.value ? '#48baa6' : '#e8efe8';
+              }}
+            >
+              <span style={{ fontSize: 16 }}>{option.icon}</span>
+              <span>{option.label}</span>
+              {value === option.value && (
+                <span style={{ marginLeft: 'auto', color: '#48baa6' }}>✓</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

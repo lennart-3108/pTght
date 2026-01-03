@@ -1489,7 +1489,14 @@ apiRouter.get('/states/list', async (req, res) => {
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
     if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
     const hasStates = await k.schema.hasTable('states').catch(() => false);
-    if (!hasStates) return res.json([]);
+    if (!hasStates) {
+      const hasCounties = await k.schema.hasTable('counties').catch(() => false);
+      if (!hasCounties) return res.json([]);
+      const rows = await k('counties')
+        .select('id', 'name', 'code', { countryId: 'country_id' }, 'latitude', 'longitude')
+        .orderBy('name');
+      return res.json(rows || []);
+    }
     const rows = await k('states')
       .select('id', { countryId: 'country_id' }, 'code', 'name', 'type')
       .orderBy('name');
@@ -1505,7 +1512,14 @@ app.get('/states/list', async (req, res) => {
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
     if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
     const hasStates = await k.schema.hasTable('states').catch(() => false);
-    if (!hasStates) return res.json([]);
+    if (!hasStates) {
+      const hasCounties = await k.schema.hasTable('counties').catch(() => false);
+      if (!hasCounties) return res.json([]);
+      const rows = await k('counties')
+        .select('id', 'name', 'code', { countryId: 'country_id' }, 'latitude', 'longitude')
+        .orderBy('name');
+      return res.json(rows || []);
+    }
     const rows = await k('states')
       .select('id', { countryId: 'country_id' }, 'code', 'name', 'type')
       .orderBy('name');

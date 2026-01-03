@@ -1,23 +1,24 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const { renderEmailTemplate } = require("../emailTemplate");
 
 module.exports = function authRoutes(ctx) {
   const router = express.Router();
   const { db, SECRET, transporter, mailerState, SESSION_EPOCH } = ctx;
 
   router.post("/register", (req, res) => {
-    const { firstname, lastname, birthday, email, password, sports } = req.body;
-    if (!firstname || !lastname || !birthday || !email || !password || !sports?.length) {
+    const { firstname, lastname, birthday, email, password, sports, city_id, district_id, gender } = req.body || {};
+    if (!firstname || !lastname || !birthday || !email || !password) {
       return res.status(400).json({ error: "Alle Felder sind erforderlich" });
     }
     const confirmationToken = jwt.sign({ email, epoch: SESSION_EPOCH || 1 }, SECRET, { expiresIn: "1d" });
     const hashedPassword = bcrypt.hashSync(password, 10);
 
     db.run(
-      `INSERT INTO users (firstname, lastname, birthday, email, password, confirmation_token, is_confirmed)
-       VALUES (?, ?, ?, ?, ?, ?, 0)`,
-      [firstname, lastname, birthday, email, hashedPassword, confirmationToken],
+      `INSERT INTO users (firstname, lastname, birthday, email, password, confirmation_token, is_confirmed, city_id, district_id, gender)
+       VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
+      [firstname, lastname, birthday, email, hashedPassword, confirmationToken, city_id || null, district_id || null, gender || null],
       function (err) {
         if (err) {
           if (err.code === "SQLITE_CONSTRAINT") {
@@ -27,7 +28,8 @@ module.exports = function authRoutes(ctx) {
         }
 
         const newUserId = this.lastID;
-        sports.forEach(sportName => {
+        const sportsArr = Array.isArray(sports) ? sports : [];
+        sportsArr.forEach(sportName => {
           db.get(`SELECT id FROM sports WHERE name = ?`, [sportName], (e, sport) => {
             if (sport) db.run(`INSERT INTO user_sports (user_id, sport_id) VALUES (?, ?)`, [newUserId, sport.id]);
           });
@@ -50,15 +52,16 @@ module.exports = function authRoutes(ctx) {
 
         if (mailerState?.enabled && transporter) {
           console.log("Mailer aktiviert, versende E-Mail an:", email);
-          ctx.sendMail(
-            email,
-            "E-Mail bestätigen",
-            `
-              <p>Hallo ${firstname},</p>
-              <p>bitte bestätige deine E-Mail-Adresse, indem du auf den folgenden Link klickst:</p>
-              <p><a href="${confirmUrl}">${confirmUrl}</a></p>
-            `
-          ).then(() => {
+          const subject = "E-Mail bestätigen";
+          const html = renderEmailTemplate({
+            title: "E-Mail bestätigen",
+            body: `<p>Hallo ${firstname},</p><p>bitte bestätige deine E-Mail-Adresse, indem du auf den folgenden Link klickst:</p><p><a href="${confirmUrl}">${confirmUrl}</a></p>`,
+            ctaLabel: "E-Mail bestätigen",
+            ctaUrl: confirmUrl,
+            previewText: "Bitte E-Mail bestätigen",
+          });
+
+          ctx.sendMail(email, subject, html).then(() => {
             console.log("E-Mail erfolgreich versendet an:", email);
             return sendSuccess();
           }).catch((mailErr) => {
@@ -158,7 +161,11 @@ module.exports = function authRoutes(ctx) {
             try {
               if (ctx && ctx.mailerState && ctx.mailerState.enabled && ctx.transporter) {
                 const subject = 'Match League – Passwort geändert';
-                const html = `<p>Hallo,</p><p>dies ist eine automatische Bestätigung, dass dein Passwort erfolgreich geändert wurde.</p>`;
+                const html = renderEmailTemplate({
+                  title: 'Passwort geändert',
+                  body: '<p>Hallo,</p><p>dies ist eine automatische Bestätigung, dass dein Passwort erfolgreich geändert wurde.</p>',
+                  previewText: 'Passwort wurde geändert',
+                });
                 ctx.sendMail(user.email, subject, html).then(() => {
                   console.log('[reset-password] confirmation email sent to', user.email);
                 }).catch((mailErr) => {
@@ -216,7 +223,13 @@ module.exports = function authRoutes(ctx) {
 
                 if (ctx && ctx.mailerState && ctx.mailerState.enabled && ctx.transporter && ctx.sendMail) {
                   const subject = 'E-Mail bestätigen';
-                  const html = `<p>Hallo ${user.firstname || ''},</p><p>bitte bestätige deine E-Mail-Adresse, indem du auf den folgenden Link klickst:</p><p><a href="${confirmUrl}">${confirmUrl}</a></p>`;
+                  const html = renderEmailTemplate({
+                    title: 'E-Mail bestätigen',
+                    body: `<p>Hallo ${user.firstname || ''},</p><p>bitte bestätige deine E-Mail-Adresse, indem du auf den folgenden Link klickst:</p><p><a href="${confirmUrl}">${confirmUrl}</a></p>`,
+                    ctaLabel: 'E-Mail bestätigen',
+                    ctaUrl: confirmUrl,
+                    previewText: 'Bitte E-Mail bestätigen',
+                  });
                   ctx.sendMail(email, subject, html).then(() => {
                     console.log('[resend-confirmation] email sent to', email);
                     // record cooldown timestamp

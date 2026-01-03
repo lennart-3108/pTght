@@ -1,4 +1,5 @@
 const express = require("express");
+const { renderEmailTemplate } = require("../emailTemplate");
 
 module.exports = function mailerRoutes(ctx) {
   const router = express.Router();
@@ -21,11 +22,13 @@ module.exports = function mailerRoutes(ctx) {
       const to = req.body?.to;
       if (!to) return res.status(400).json({ error: "Empfängeradresse 'to' fehlt" });
 
-      const id = await sendMail(
-        to,
-        "MatchLeague – Testmail",
-        "<p>Dies ist eine <b>Testmail</b> von MatchLeague.</p>"
-      );
+      const subject = "MatchLeague – Testmail";
+      const html = renderEmailTemplate({
+        title: "Testmail",
+        body: "<p>Dies ist eine <b>Testmail</b> von MatchLeague.</p>",
+        previewText: "Testmail von MatchLeague",
+      });
+      const id = await sendMail(to, subject, html);
       return res.json({ message: "Testmail gesendet", id: id || null });
     } catch (e) {
       return res.status(500).json({ error: "E-Mail-Versand fehlgeschlagen", detail: e?.message || String(e) });

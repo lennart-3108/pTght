@@ -406,7 +406,7 @@
     right: 0;
     z-index: 1100;
     background: #0c221d;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    border-bottom: none;
     display: block;
     max-height: 0;
     overflow-y: hidden;
@@ -415,6 +415,7 @@
   .ml-header__menu.is-open {
     max-height: 50vh;
     overflow-y: auto;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   }
   .ml-nav {
     display: grid;

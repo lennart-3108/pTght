@@ -92,28 +92,94 @@ export default function WelcomePage({ setToken, setIsAdminFlag }) {
         <img src={matchLeagueLogo} alt="MatchLeague" style={{ width: 160, height: 'auto' }} />
         <div>
           <h1 style={{ margin: 0 }}>Willkommen bei Match League</h1>
-          <p style={{ marginTop: 6, color: '#555' }}>Verbinde dich mit Spielern, tritt Ligen bei und verfolge Spiele.</p>
         </div>
       </div>
 
   <div style={{ marginTop: 20, padding: 20, borderRadius: 8, background: panelBg, border: panelBorder, boxShadow: '0 6px 18px rgba(0,0,0,0.06)' }}>
         {confirmed ? (
           <div>
-            <h2 style={{ color: '#555' }}>✅ Registrierung bestätigt</h2>
-            <p>Dein Konto wurde erfolgreich bestätigt. Schön, dass du dabei bist!</p>
-            <p style={{ color: '#555' }}>Du wirst jetzt eingeloggt und weitergeleitet — drücke "Los geht's", um zur Startseite zu gelangen.</p>
-            <div style={{ marginTop: 12 }}>
-              <button onClick={handleContinue} style={{ marginRight: 8, background: btnGreen, color: '#fff', padding: '10px 18px', borderRadius: 10, border: 'none', cursor: 'pointer' }} onMouseOver={e => e.currentTarget.style.background = btnGreenHover} onMouseOut={e => e.currentTarget.style.background = btnGreen}>Los geht's</button>
-              <Link to="/profile"><button style={{ background: btnGreen, color: '#fff', padding: '10px 18px', borderRadius: 10, border: 'none', cursor: 'pointer' }}>Profil bearbeiten</button></Link>
+            <h2 style={{ 
+              color: '#debc7c', 
+              fontSize: 28, 
+              fontWeight: 700, 
+              marginBottom: 8,
+              letterSpacing: '-0.02em'
+            }}>
+              Schön, dass du da bist!
+            </h2>
+            
+            <div style={{ 
+              marginBottom: 24, 
+              paddingBottom: 24, 
+              borderBottom: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              <p style={{ 
+                color: '#e5e7eb', 
+                fontSize: 16, 
+                marginBottom: 12,
+                lineHeight: 1.6
+              }}>
+                Match League verbindet Sportler, Teams und Locations – vom spontanen Match bis zur Liga.
+              </p>
+              <p style={{ 
+                color: '#e5e7eb', 
+                fontSize: 15,
+                lineHeight: 1.6,
+                marginBottom: 0
+              }}>
+                Finde passende Matches, tritt Ligen bei und bleib mit deiner Sport-Community verbunden.
+              </p>
+            </div>
+
+            <div style={{ 
+              background: 'rgba(222, 188, 124, 0.1)', 
+              border: '1px solid rgba(222, 188, 124, 0.2)',
+              borderRadius: 8,
+              padding: 16,
+              marginBottom: 24
+            }}>
+              <p style={{ 
+                color: '#debc7c', 
+                fontSize: 16, 
+                fontWeight: 600,
+                marginBottom: 6,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8
+              }}>
+                <span style={{ fontSize: 20 }}>✓</span> Dein Konto ist jetzt aktiv
+              </p>
+              <p style={{ 
+                color: '#e5e7eb', 
+                fontSize: 14,
+                marginBottom: 0,
+                lineHeight: 1.5
+              }}>
+                Du kannst direkt loslegen und dein nächstes Spiel starten.
+              </p>
+            </div>
+
+            <div>
+              <button 
+                onClick={handleContinue} 
+                className="btn-gold" 
+                style={{ 
+                  padding: '12px 32px', 
+                  fontSize: 16, 
+                  fontWeight: 700 
+                }}
+              >
+                Los geht's
+              </button>
             </div>
           </div>
         ) : (
           <div>
-            <h2 style={{ color: error ? 'crimson' : '#333' }}>{error ? 'Fehler bei der Bestätigung' : 'Fast fertig'}</h2>
+            <h2 style={{ color: error ? '#ef4444' : '#e5e7eb' }}>{error ? 'Fehler bei der Bestätigung' : 'Fast fertig'}</h2>
             {error ? (
-              <p style={{ color: '#555' }}>Der Bestätigungslink ist ungültig oder abgelaufen. Bitte fordere eine neue Bestätigungs-Mail an oder kontaktiere den Support.</p>
+              <p style={{ color: '#9ca3af' }}>Der Bestätigungslink ist ungültig oder abgelaufen. Bitte fordere eine neue Bestätigungs-Mail an oder kontaktiere den Support.</p>
             ) : (
-              <p style={{ color: '#555' }}>Bitte bestätige deine E-Mail-Adresse. Prüfe ggf. den Spam-Ordner.</p>
+              <p style={{ color: '#9ca3af' }}>Bitte bestätige deine E-Mail-Adresse. Prüfe ggf. den Spam-Ordner.</p>
             )}
             <div style={{ marginTop: 12 }}>
               <Link to="/login"><button style={{ marginRight: 8, background: btnGreen, color: '#fff', padding: '10px 14px', borderRadius: 10, border: 'none', cursor: 'pointer' }}>Zum Login</button></Link>
@@ -122,22 +188,7 @@ export default function WelcomePage({ setToken, setIsAdminFlag }) {
           </div>
         )}
 
-        {/* CTA when user isn't member of a league */}
-        <div style={{ marginTop: 20 }}>
-          {joinedAnyLeague === null ? (
-            <div style={{ color: '#888' }}>Überprüfe deine Mitgliedschaften…</div>
-          ) : joinedAnyLeague === false ? (
-            // CTA box: use a slightly darker green-tinted surface instead of pure white
-            <div style={{ padding: 12, background: '#0d270dff', borderRadius: 6, border: '1px solid rgba(0,0,0,0.04)' }}>
-              <strong style={{ color: '#1f4a1f' }}>Du bist noch in keiner Liga angemeldet.</strong>
-              <div style={{ marginTop: 8 }}>
-                <Link to="/leagues"><button style={{ background: btnGreen, color: '#fff', padding: '10px 18px', borderRadius: 8, border: 'none', cursor: 'pointer' }}>Alle Ligen ansehen und beitreten</button></Link>
-              </div>
-            </div>
-          ) : (
-            <div style={{ color: '#555' }}>Super — du bist bereits Mitglied in mindestens einer Liga. Viel Spaß!</div>
-          )}
-        </div>
+        {/* CTA when user isn't member of a league removed per request */}
       </div>
     </div>
   );
