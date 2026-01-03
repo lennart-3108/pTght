@@ -89,21 +89,13 @@ module.exports = function usersRoutes(ctx) {
       if (!Number.isFinite(id)) return res.status(400).json({ error: "Ungültige ID" });
 
       const cols = await dbAllAsync(`PRAGMA table_info(users)`);
-      const hasAvatar = Array.isArray(cols) && cols.some(c => String(c.name || "").toLowerCase() === "avatar_url");
-      const hasOpenFlag = Array.isArray(cols) && cols.some(c => String(c.name || "").toLowerCase() === "open_for_matches");
-      const hasFavSports = Array.isArray(cols) && cols.some(c => String(c.name || "").toLowerCase() === "favorite_sports");
-
-      const selectColumns = ["id", "firstname", "lastname", "email"];
-      if (hasAvatar) selectColumns.push("avatar_url");
-      if (hasOpenFlag) selectColumns.push("open_for_matches");
-      if (hasFavSports) selectColumns.push("favorite_sports");
-
-      const user = await dbGetAsync(`SELECT ${selectColumns.join(", ")} FROM users WHERE id = ?`, [id]);
+      // Select all columns to ensure profile fields are returned
+      const user = await dbGetAsync(`SELECT * FROM users WHERE id = ?`, [id]);
       if (!user) return res.status(404).json({ error: "Nutzer nicht gefunden" });
 
-      const avatar_url = hasAvatar ? (user.avatar_url || null) : null;
-      const open_for_matches = hasOpenFlag ? !!user.open_for_matches : null;
-      const favorite_sports = hasFavSports ? parseFavoriteSports(user.favorite_sports) : [];
+      const avatar_url = Object.prototype.hasOwnProperty.call(user, 'avatar_url') ? (user.avatar_url || null) : null;
+      const open_for_matches = Object.prototype.hasOwnProperty.call(user, 'open_for_matches') ? !!user.open_for_matches : null;
+      const favorite_sports = Object.prototype.hasOwnProperty.call(user, 'favorite_sports') ? parseFavoriteSports(user.favorite_sports) : [];
 
       let sports = [];
       const userSportsTable = await dbGetAsync(`SELECT name FROM sqlite_master WHERE type='table' AND name='user_sports'`);
@@ -131,7 +123,7 @@ module.exports = function usersRoutes(ctx) {
         }
       }
 
-      return res.json({
+      const responseData = {
         id: user.id,
         firstname: user.firstname,
         lastname: user.lastname,
@@ -139,8 +131,14 @@ module.exports = function usersRoutes(ctx) {
         avatar_url,
         open_for_matches,
         favorite_sports,
-        sports: sports || []
-      });
+        sports: sports || [],
+        birthday: Object.prototype.hasOwnProperty.call(user, 'birthday') ? user.birthday : null,
+        city_id: Object.prototype.hasOwnProperty.call(user, 'city_id') ? user.city_id : null,
+        district_id: Object.prototype.hasOwnProperty.call(user, 'district_id') ? user.district_id : null,
+        gender: Object.prototype.hasOwnProperty.call(user, 'gender') ? user.gender : null
+      };
+
+      return res.json(responseData);
     } catch (e) {
       return res.status(500).json({ error: "Datenbankfehler", details: e?.message || String(e) });
     }

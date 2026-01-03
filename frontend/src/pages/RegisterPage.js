@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 // using native fetch instead of axios for smaller dependency surface
 import { API_BASE } from "../config";
+import LocationSelector from "../components/LocationSelector";
 
 const SPORT_OPTIONS = [
   "Fußball",
@@ -19,6 +20,11 @@ export default function RegisterPage() {
     birthday: "",
     email: "",
     password: "",
+    passwordConfirm: "",
+    city_id: null,
+    city_name: "",
+    district_id: null,
+    gender: "",
     sports: [],
   });
   const [message, setMessage] = useState("");
@@ -40,6 +46,47 @@ export default function RegisterPage() {
         ? prev.sports.filter(s => s !== value)
         : [...prev.sports, value]
     }));
+  }
+
+  // Location data for selector
+  const [cities, setCities] = useState([]);
+  const [states, setStates] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [districts, setDistricts] = useState([]);
+
+  useEffect(() => {
+    let mounted = true;
+    Promise.all([
+      fetch(`${API_BASE}/cities/list`).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/states/list`).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/countries/list`).then(r => r.ok ? r.json() : []),
+    ]).then(([citiesData, statesData, countriesData]) => {
+      if (!mounted) return;
+      setCities(Array.isArray(citiesData) ? citiesData : []);
+      setStates(Array.isArray(statesData) ? statesData : []);
+      setCountries(Array.isArray(countriesData) ? countriesData : []);
+    }).catch(() => {});
+    return () => { mounted = false; };
+  }, []);
+
+  function handleLocationChange(name, cityId, stateId, countryId, districtId) {
+    setForm(prev => ({
+      ...prev,
+      city_id: cityId || null,
+      city_name: name || "",
+      district_id: districtId || null
+    }));
+  }
+
+  async function handleLoadDistricts(cityId) {
+    try {
+      const res = await fetch(`${API_BASE}/cities/${cityId}/districts`);
+      if (!res.ok) return setDistricts([]);
+      const data = await res.json();
+      setDistricts(Array.isArray(data) ? data : []);
+    } catch (e) {
+      setDistricts([]);
+    }
   }
 
   async function handleSubmit(e) {
@@ -100,7 +147,7 @@ export default function RegisterPage() {
         border: '1px solid rgba(255,255,255,0.08)',
         boxShadow: '0 8px 32px -8px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.3)',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'visible'
       }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at 85% 20%, rgba(72,186,170,0.15), transparent 60%)' }} />
         <div style={{ position: 'relative' }}>
@@ -196,6 +243,64 @@ export default function RegisterPage() {
               color: '#e5e7eb',
               fontSize: 14
             }}>
+              E-Mail
+            </label>
+            <input 
+              required 
+              name="email" 
+              type="email" 
+              value={form.email} 
+              onChange={handleChange}
+              placeholder="max@beispiel.de"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: '1px solid rgba(255,255,255,0.12)',
+                borderRadius: 8,
+                fontSize: 15,
+                transition: 'border-color 0.2s',
+                outline: 'none',
+                boxSizing: 'border-box',
+                background: 'rgba(255,255,255,0.05)',
+                color: '#e5e7eb'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#48baa6'}
+              onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
+            />
+          </div>
+
+          <div style={{ marginBottom: 28 }}>
+            <label style={{ 
+              display: 'block',
+              marginBottom: 12,
+              fontWeight: 600,
+              color: '#e5e7eb',
+              fontSize: 14
+            }}>
+              Standort (optional)
+            </label>
+            <div style={{ maxWidth: 520 }}>
+              <LocationSelector
+                countries={countries}
+                states={states}
+                cities={cities}
+                districts={districts}
+                value={form.city_name}
+                onChange={handleLocationChange}
+                onLoadDistricts={handleLoadDistricts}
+                placeholder="Stadt oder Bezirk wählen"
+              />
+            </div>
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ 
+              display: 'block',
+              marginBottom: 8,
+              fontWeight: 600,
+              color: '#e5e7eb',
+              fontSize: 14
+            }}>
               Geburtstag
             </label>
             <input 
@@ -223,40 +328,6 @@ export default function RegisterPage() {
           </div>
 
           <div style={{ marginBottom: 20 }}>
-            <label style={{ 
-              display: 'block',
-              marginBottom: 8,
-              fontWeight: 600,
-              color: '#e5e7eb',
-              fontSize: 14
-            }}>
-              E-Mail
-            </label>
-            <input 
-              required 
-              name="email" 
-              type="email" 
-              value={form.email} 
-              onChange={handleChange}
-              placeholder="max@beispiel.de"
-              style={{
-                width: '100%',
-                padding: '12px 16px',
-                border: '1px solid rgba(255,255,255,0.12)',
-                borderRadius: 8,
-                fontSize: 15,
-                transition: 'border-color 0.2s',
-                outline: 'none',
-                boxSizing: 'border-box',
-                background: 'rgba(255,255,255,0.05)',
-                color: '#e5e7eb'
-              }}
-              onFocus={(e) => e.target.style.borderColor = '#48baa6'}
-              onBlur={(e) => e.target.style.borderColor = 'rgba(255,255,255,0.12)'}
-            />
-          </div>
-
-          <div style={{ marginBottom: 24 }}>
             <label style={{ 
               display: 'block',
               marginBottom: 8,
@@ -292,46 +363,66 @@ export default function RegisterPage() {
             />
           </div>
 
-          <div style={{ marginBottom: 28 }}>
+          <div style={{ marginBottom: 24 }}>
             <label style={{ 
               display: 'block',
-              marginBottom: 12,
+              marginBottom: 8,
               fontWeight: 600,
               color: '#e5e7eb',
               fontSize: 14
             }}>
-              Sportarten (optional)
+              Passwort bestätigen
             </label>
-            <div style={{ 
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: 12
+            <input 
+              required 
+              name="passwordConfirm" 
+              type="password" 
+              value={form.passwordConfirm} 
+              onChange={handleChange} 
+              minLength={6} 
+              autoComplete="new-password"
+              placeholder="Passwort wiederholen"
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                border: `1px solid ${form.passwordConfirm && form.password !== form.passwordConfirm ? '#ef4444' : 'rgba(255,255,255,0.12)'}`,
+                borderRadius: 8,
+                fontSize: 15,
+                transition: 'border-color 0.2s',
+                outline: 'none',
+                boxSizing: 'border-box',
+                background: 'rgba(255,255,255,0.05)',
+                color: '#e5e7eb'
+              }}
+              onFocus={(e) => e.target.style.borderColor = '#48baa6'}
+              onBlur={(e) => e.target.style.borderColor = form.passwordConfirm && form.password !== form.passwordConfirm ? '#ef4444' : 'rgba(255,255,255,0.12)'}
+            />
+            {form.passwordConfirm && form.password !== form.passwordConfirm && (
+              <div style={{ marginTop: 6, fontSize: 13, color: '#ef4444' }}>
+                Passwörter stimmen nicht überein
+              </div>
+            )}
+            {form.passwordConfirm && form.password === form.passwordConfirm && form.password.length >= 6 && (
+              <div style={{ marginTop: 6, fontSize: 13, color: '#48baa6' }}>
+                ✓ Passwörter stimmen überein
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ 
+              display: 'block',
+              marginBottom: 8,
+              fontWeight: 600,
+              color: '#e5e7eb',
+              fontSize: 14
             }}>
-              {SPORT_OPTIONS.map(sport => (
-                <label 
-                  key={sport} 
-                  style={{ 
-                    display: 'flex',
-                    alignItems: 'center',
-                    padding: '10px 12px',
-                    border: form.sports.includes(sport) ? '1px solid #48baa6' : '1px solid rgba(255,255,255,0.12)',
-                    borderRadius: 8,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    background: form.sports.includes(sport) ? 'rgba(72,186,170,0.15)' : 'rgba(255,255,255,0.03)'
-                  }}
-                >
-                  <input
-                    type="checkbox"
-                    value={sport}
-                    checked={form.sports.includes(sport)}
-                    onChange={handleSportsChange}
-                    style={{ marginRight: 8, cursor: 'pointer' }}
-                  />
-                  <span style={{ fontSize: 14, color: '#e5e7eb' }}>{sport}</span>
-                </label>
-              ))}
-            </div>
+              Geschlecht
+            </label>
+            <GenderSelector 
+              value={form.gender} 
+              onChange={(value) => setForm(prev => ({ ...prev, gender: value }))}
+            />
           </div>
 
           <button 
@@ -386,6 +477,107 @@ export default function RegisterPage() {
         </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// Gender Selector Component
+function GenderSelector({ value, onChange }) {
+  const [showDropdown, setShowDropdown] = React.useState(false);
+  
+  const genderOptions = [
+    { value: 'male', label: 'Männlich', icon: '♂' },
+    { value: 'female', label: 'Weiblich', icon: '♀' },
+    { value: 'other', label: 'Divers', icon: '⚧' }
+  ];
+
+  const selectedOption = genderOptions.find(opt => opt.value === value);
+
+  return (
+    <div style={{ position: 'relative', zIndex: showDropdown ? 99999 : 1 }}>
+      {/* Display field */}
+      <div
+        onClick={() => setShowDropdown(!showDropdown)}
+        style={{
+          padding: '12px 16px',
+          borderRadius: 10,
+          border: '1px solid #2f6b57',
+          background: '#0b1e19',
+          color: value ? '#e8efe8' : '#9ca3af',
+          fontSize: 15,
+          width: '100%',
+          cursor: 'pointer',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          userSelect: 'none',
+          transition: 'all 0.2s',
+          boxSizing: 'border-box'
+        }}
+        onMouseEnter={(e) => e.target.style.borderColor = '#48baa6'}
+        onMouseLeave={(e) => e.target.style.borderColor = '#2f6b57'}
+      >
+        <span>
+          {selectedOption ? `${selectedOption.icon} ${selectedOption.label}` : '-- Geschlecht wählen --'}
+        </span>
+        <span style={{ fontSize: 12, color: '#6b8578' }}>
+          {showDropdown ? '▲' : '▼'}
+        </span>
+      </div>
+
+      {/* Dropdown menu */}
+      {showDropdown && (
+        <div style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          right: 0,
+          marginTop: 4,
+          background: '#0b1e19',
+          border: '1px solid #2f6b57',
+          borderRadius: 10,
+          zIndex: 100000,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+          overflow: 'hidden'
+        }}>
+          {genderOptions.map((option, idx) => (
+            <div
+              key={option.value}
+              onClick={() => {
+                onChange(option.value);
+                setShowDropdown(false);
+              }}
+              style={{
+                padding: '12px 16px',
+                cursor: 'pointer',
+                background: value === option.value ? '#113528' : 'transparent',
+                borderBottom: idx < genderOptions.length - 1 ? '1px solid #1a3329' : 'none',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                fontSize: 14,
+                color: value === option.value ? '#48baa6' : '#e8efe8',
+                fontWeight: value === option.value ? 600 : 500,
+                transition: 'all 0.15s'
+              }}
+              onMouseEnter={(e) => {
+                e.target.style.background = '#0e2521';
+                e.target.style.color = '#48baa6';
+              }}
+              onMouseLeave={(e) => {
+                e.target.style.background = value === option.value ? '#113528' : 'transparent';
+                e.target.style.color = value === option.value ? '#48baa6' : '#e8efe8';
+              }}
+            >
+              <span style={{ fontSize: 16 }}>{option.icon}</span>
+              <span>{option.label}</span>
+              {value === option.value && (
+                <span style={{ marginLeft: 'auto', color: '#48baa6' }}>✓</span>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

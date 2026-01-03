@@ -1,4 +1,5 @@
 const express = require("express");
+const { renderEmailTemplate } = require("../emailTemplate");
 const { createMiddleware } = require("./middleware");
 
 const authRoutes = require("./auth");
@@ -89,11 +90,13 @@ function registerRoutes(app, ctx) {
       if (!t) return res.status(503).json({ error: "Mailer not configured" });
 
       const to = (req.body && req.body.to) || t.options?.auth?.user;
-      await ctx.sendMail(
-        to,
-        "MatchLeague – Test-E-Mail",
-        "<p>Dies ist eine <b>Test-E-Mail</b> vom Admin-Panel.</p>"
-      );
+      const subject = "MatchLeague – Test-E-Mail";
+      const html = renderEmailTemplate({
+        title: "Test-E-Mail",
+        body: "<p>Dies ist eine <b>Test-E-Mail</b> vom Admin-Panel.</p>",
+        previewText: "Test-E-Mail vom Admin-Panel",
+      });
+      await ctx.sendMail(to, subject, html);
       res.json({ success: true });
     } catch (e) {
       res.status(500).json({ error: e.message || "Send failed" });

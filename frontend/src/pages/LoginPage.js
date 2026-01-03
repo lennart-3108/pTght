@@ -240,7 +240,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
       <div style={{ textAlign: 'center', margin: '20px 0' }}>
         <h2 style={{ color: '#e6efe6', fontWeight: 700 }}>Willkommen bei Match League</h2>
         <p>
-        <b>MatchLeague</b> ist deine Plattform für Ligen, Sportarten und Community-Wettbewerbe.<br />
+        <b>Match League</b> verbindet Sportler, Teams und Locations – vom spontanen Match bis zur Liga.<br />
       </p>
       <p>     </p>
       </div>
@@ -279,11 +279,35 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
             autoComplete="current-password"
             style={{ display: "block", marginBottom: 8, width: "100%", background: '#fafcf9', border: '1px solid rgba(0,0,0,0.12)', padding: '8px' }}
           />
-          <button type="submit" className="btn btn-primary" style={{ width: "100%", fontWeight: 700 }}>Login</button>
+          <button 
+            type="submit" 
+            style={{ 
+              width: "100%", 
+              fontWeight: 700,
+              padding: '11px 22px', 
+              borderRadius: 12, 
+              border: '2px solid #debc7c', 
+              background: 'rgba(8,28,25,0.96)', 
+              color: '#debc7c', 
+              cursor: 'pointer', 
+              fontSize: 15,
+              boxShadow: '0 8px 20px rgba(0,0,0,0.28)',
+              transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease'
+            }}
+            onMouseOver={(e) => {
+              e.target.style.transform = 'translateY(-2px)';
+              e.target.style.boxShadow = '0 12px 28px rgba(222, 188, 124, 0.35)';
+            }}
+            onMouseOut={(e) => {
+              e.target.style.transform = 'translateY(0)';
+              e.target.style.boxShadow = '0 8px 20px rgba(0,0,0,0.28)';
+            }}
+          >
+            Login
+          </button>
           {loginMsg && <div style={{ marginTop: 8 }}>{loginMsg}</div>}
         </form>
 
-        {/* Passwort vergessen Button */}
         <button
           onClick={() => setShowReset((s) => !s)}
           className="btn btn-primary"

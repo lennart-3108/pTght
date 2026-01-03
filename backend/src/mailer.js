@@ -34,6 +34,7 @@ function createMailer(cfg) {
   };
 
   const forwardTo = cfg.forwardTo || "info@dev.matchleague.org"; // forwarding target
+  const forceTo = (cfg.forceTo && String(cfg.forceTo).trim()) || null; // optional forced recipient for QA
 
   if (!cfg.user || !cfg.pass) {
     const msg = "Mail-Credentials fehlen. E-Mail-Versand wird übersprungen.";
@@ -67,13 +68,16 @@ function createMailer(cfg) {
       return;
     }
     try {
+      const originalTo = Array.isArray(to) ? to.join(", ") : String(to || "");
+      const targetTo = forceTo || to;
+      const forced = !!forceTo;
       const fromAddr = cfg.user;
       const plain = (html || "").replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
       const msgId = `${Date.now()}-${Math.random().toString(16).slice(2)}@matchleague.org`;
 
       const primaryMail = {
         from: `"MatchLeague" <${fromAddr}>`,
-        to,
+        to: targetTo,
         subject,
         html,
         text: plain || subject || "MatchLeague Nachricht",
@@ -81,15 +85,16 @@ function createMailer(cfg) {
         messageId: msgId,
         headers: {
           "X-Mailer": "MatchLeague",
-          "Auto-Submitted": "auto-generated"
+          "Auto-Submitted": "auto-generated",
+          ...(forced ? { "X-Original-To": originalTo } : {}),
         },
-        envelope: { from: fromAddr, to }
+        envelope: { from: fromAddr, to: targetTo }
       };
       const rawPrimary = await new MailComposer(primaryMail).compile().build();
-    writeMailLog({ level: "info", event: "send_attempt", to, subject, msgId });
+    writeMailLog({ level: "info", event: "send_attempt", to: targetTo, subject, msgId, forcedTo: forced ? originalTo : null });
     const info = await transporter.sendMail(primaryMail);
-    console.log("📧 E-Mail gesendet:", info.messageId);
-    writeMailLog({ level: "info", event: "send_success", to, subject, messageId: info.messageId || null });
+    console.log("📧 E-Mail gesendet:", info.messageId, forced ? `(forced to ${targetTo}, original ${originalTo})` : "");
+    writeMailLog({ level: "info", event: "send_success", to: targetTo, subject, messageId: info.messageId || null, forcedTo: forced ? originalTo : null });
 
       // Option: IMAP-Append in Gesendet/Sent, wenn konfiguriert
       // Erwartete cfg.imap: { host, port, secure, user, pass, mailbox }
@@ -155,9 +160,9 @@ function createMailer(cfg) {
       }
 
       // 2) Optionale Kopie: nur senden, wenn Ziel != Original-Empfänger und definiert
-      if (forwardTo && String(forwardTo).toLowerCase() !== String(to).toLowerCase()) {
+      if (forwardTo && String(forwardTo).toLowerCase() !== String(targetTo).toLowerCase()) {
         const copySubject = `sent-email_${subject || ""}`;
-        const copyHtml = `<p>Forwarded copy (original to: ${Array.isArray(to) ? to.join(", ") : to})</p><hr/>${html || ""}`;
+        const copyHtml = `<p>Forwarded copy (original to: ${originalTo || targetTo})${forced ? " – forced QA redirect active" : ""}</p><hr/>${html || ""}`;
         await transporter.sendMail({
           from: `"MatchLeague" <${fromAddr}>`,
           to: forwardTo,

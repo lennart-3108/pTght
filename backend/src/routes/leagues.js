@@ -229,7 +229,7 @@ module.exports = function leaguesRoutes(ctx) {
   const DISPLAY_NAME_SQL = "COALESCE(u.firstname || ' ' || u.lastname, u.name, u.email)";
 
   // GET / - Ligenliste (dynamisch publicState)
-  router.get("/", async (_req, res) => {
+  router.get("/", async (req, res) => {
     try {
       const k = resolveKnex(db);
       if (!k) {
@@ -242,12 +242,44 @@ module.exports = function leaguesRoutes(ctx) {
       const hasLeagueCityCol = Object.prototype.hasOwnProperty.call(leagueInfo, "city");
       const hasLeagueSportCol = Object.prototype.hasOwnProperty.call(leagueInfo, "sport");
 
-      // use LEFT JOIN so leagues are returned even if city/sport rows are missing
-      const rows = await k("leagues as l")
+      // Parse pagination and filter params
+      const limit = Math.min(parseInt(req.query.limit) || 50, 100);
+      const offset = parseInt(req.query.offset) || 0;
+      const cityId = req.query.cityId ? parseInt(req.query.cityId) : null;
+      const sportId = req.query.sportId ? parseInt(req.query.sportId) : null;
+      const search = req.query.search ? String(req.query.search).trim() : null;
+
+      // Build base query with LEFT JOIN
+      let query = k("leagues as l")
         .leftJoin("cities as c", "l.city_id", "c.id")
-        .leftJoin("sports as s", "l.sport_id", "s.id")
+        .leftJoin("sports as s", "l.sport_id", "s.id");
+
+      // Apply filters
+      if (cityId) {
+        query = query.where("l.city_id", cityId);
+      }
+      if (sportId) {
+        query = query.where("l.sport_id", sportId);
+      }
+      if (search) {
+        query = query.where(function() {
+          this.where("l.name", "like", `%${search}%`)
+              .orWhere("c.name", "like", `%${search}%`)
+              .orWhere("s.name", "like", `%${search}%`);
+        });
+      }
+
+      // Get total count
+      const countQuery = query.clone().count("l.id as count").first();
+      const countResult = await countQuery;
+      const total = parseInt(countResult?.count || 0);
+
+      // Get paginated results
+      const rows = await query
         .select(
           "l.id",
+          "l.city_id",
+          "l.sport_id",
           { cityId: k.raw("COALESCE(c.id, l.city_id)") },
           { sportId: k.raw("COALESCE(s.id, l.sport_id)") },
           // only reference l.city if that column actually exists, otherwise fallback to c.name or empty string
@@ -256,9 +288,17 @@ module.exports = function leaguesRoutes(ctx) {
           "l.name",
           ...(hasPublicState ? ["l.publicState"] : [])
         )
-        .orderBy(["c.name", "l.name"]);
+        .orderBy(["c.name", "l.name"])
+        .limit(limit)
+        .offset(offset);
 
-      res.json(rows || []);
+      res.json({
+        data: rows || [],
+        total,
+        limit,
+        offset,
+        hasMore: offset + rows.length < total
+      });
     } catch (err) {
       console.error("Fehler beim Abrufen der Ligen:", err && (err.stack || err.message || err));
       return res.status(500).json({ error: "Datenbankfehler", details: (err && err.message) || String(err) });

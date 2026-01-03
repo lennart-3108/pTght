@@ -57,17 +57,9 @@ module.exports = function meRoutes({ db }) {
 
       // Dynamisch passende Spalten whlen
       const has = (c) => Object.prototype.hasOwnProperty.call(info, c);
-      const cols = ["id", "email"]; // immer selektieren
-      if (has("firstname")) cols.push({ firstname: "firstname" });
-      if (has("lastname")) cols.push({ lastname: "lastname" });
-      if (!has("firstname") && !has("lastname") && has("name")) cols.push({ name: "name" });
-      if (has("is_admin")) cols.push({ isAdmin: "is_admin" });
-      if (has("latitude")) cols.push({ latitude: "latitude" });
-      if (has("longitude")) cols.push({ longitude: "longitude" });
-      if (has("location_updated_at")) cols.push({ location_updated_at: "location_updated_at" });
-
+      // Select all columns to avoid missing optional profile fields
       const row = await k("users")
-        .select(cols)
+        .select("*")
         .where({ id: req.user.id })
         .first();
 
@@ -99,6 +91,12 @@ module.exports = function meRoutes({ db }) {
       if (row.latitude !== undefined) out.latitude = row.latitude;
       if (row.longitude !== undefined) out.longitude = row.longitude;
       if (row.location_updated_at !== undefined) out.location_updated_at = row.location_updated_at;
+
+      // Add optional profile fields (fallback to null if missing)
+      out.birthday = Object.prototype.hasOwnProperty.call(row, 'birthday') ? row.birthday : null;
+      out.city_id = Object.prototype.hasOwnProperty.call(row, 'city_id') ? row.city_id : null;
+      out.district_id = Object.prototype.hasOwnProperty.call(row, 'district_id') ? row.district_id : null;
+      out.gender = Object.prototype.hasOwnProperty.call(row, 'gender') ? row.gender : null;
 
       return res.json(out);
     } catch (e) {
