@@ -91,7 +91,7 @@ export default function ChatsPage() {
           const activity = formatTimestamp(chat.lastActivityAt || last?.createdAt);
           const href = chat.type === 'direct'
             ? `/chat/user/${chat.opponentUserId}`
-            : `/matches/${chat.matchId}`;
+            : `/matches/${chat.matchId}/chat`;
           const typeLabel = chat.type === 'direct' ? 'Privater Chat' : 'Match-Chat';
           return (
             <Link
@@ -141,7 +141,7 @@ export default function ChatsPage() {
                       {chat.homeScore}:{chat.awayScore}
                     </div>
                   )}
-                  <div style={{ fontSize: 13, color: "#7ca895" }}>{chat.type === 'direct' ? 'Zum Chat' : 'Zum Match'}</div>
+                  <div style={{ fontSize: 13, color: "#7ca895" }}>Zum Chat</div>
                 </div>
               </div>
             </Link>

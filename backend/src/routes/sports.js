@@ -26,18 +26,25 @@ module.exports = function sportsRoutes(ctx) {
 
   // Kategorien mit ihren Sportarten (hierarchisch)
   router.get("/categories", (_req, res) => {
-    // Get all sports from sports table
+    // Get all sports with their category info
     db.all(`
       SELECT 
-        id, 
-        name,
-        type,
-        category,
-        parent_id,
-        team_size,
-        sport_type
-      FROM sports
-      ORDER BY name
+        s.id, 
+        s.name,
+        s.type,
+        s.category,
+        s.parent_id,
+        s.team_size,
+        s.sport_type,
+        s.category_id,
+        sc.id as cat_id,
+        sc.name as cat_name,
+        sc.slug as cat_slug,
+        sc.icon as cat_icon,
+        sc.sort_order as cat_sort
+      FROM sports s
+      LEFT JOIN sport_categories sc ON s.category_id = sc.id
+      ORDER BY sc.sort_order, s.name
     `, [], (err, sports) => {
       if (err) {
         console.error('[sports/categories] Database error:', err);
@@ -49,16 +56,24 @@ module.exports = function sportsRoutes(ctx) {
         return res.json([]);
       }
       
-      // Group by type (Single/Team) as categories
+      // Group by sport_categories
       const categoryMap = {};
       
       sports.forEach(sport => {
-        const catKey = sport.type || 'Sonstige';
-        if (!categoryMap[catKey]) {
-          categoryMap[catKey] = {
-            id: catKey,
-            name: catKey === 'Single' ? 'Einzelsportarten' : catKey === 'Team' ? 'Teamsportarten' : catKey,
-            slug: catKey.toLowerCase(),
+        // Use category from sport_categories table if available
+        const catId = sport.cat_id || 'uncategorized';
+        const catName = sport.cat_name || 'Sonstige';
+        const catSlug = sport.cat_slug || 'other';
+        const catIcon = sport.cat_icon || '🏆';
+        const catSort = sport.cat_sort || 99;
+        
+        if (!categoryMap[catId]) {
+          categoryMap[catId] = {
+            id: catId,
+            name: catName,
+            slug: catSlug,
+            icon: catIcon,
+            sort_order: catSort,
             sports: []
           };
         }
@@ -68,7 +83,7 @@ module.exports = function sportsRoutes(ctx) {
           // Find variants for this sport
           const variants = sports.filter(v => v.parent_id === sport.id);
           
-          categoryMap[catKey].sports.push({
+          categoryMap[catId].sports.push({
             id: sport.id,
             name: sport.name,
             type: sport.type,
@@ -85,7 +100,8 @@ module.exports = function sportsRoutes(ctx) {
         }
       });
       
-      const result = Object.values(categoryMap);
+      // Sort by sort_order and convert to array
+      const result = Object.values(categoryMap).sort((a, b) => a.sort_order - b.sort_order);
       console.log(`[sports/categories] Returning ${result.length} categories with ${sports.length} total sports`);
       res.json(result);
     });

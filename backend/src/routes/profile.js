@@ -164,18 +164,34 @@ module.exports = function profileRoutes(ctx) {
       // ALWAYS filter to only show matches without opponent (regardless of status column)
       base.whereNull('m.away_user_id').whereNull('m.away_team_id');
 
+      const hasKickoffEndAt = Object.prototype.hasOwnProperty.call(info, 'kickoff_end_at');
+      const hasWhenType = Object.prototype.hasOwnProperty.call(info, 'when_type');
+      const hasRangeDays = Object.prototype.hasOwnProperty.call(info, 'range_days');
+      
+      const selectFields = [
+        'm.id',
+        'm.kickoff_at',
+        'm.league_id as leagueId',
+        'm.home_user_id',
+        'm.away_user_id',
+        'm.home_team_id',
+        'm.away_team_id'
+      ];
+      
+      if (hasKickoffEndAt) selectFields.push('m.kickoff_end_at');
+      if (hasWhenType) selectFields.push('m.when_type');
+      if (hasRangeDays) selectFields.push('m.range_days');
+      if (hasStatus) selectFields.push('m.status');
+      if (hasLeagues) selectFields.push('l.name as league');
+      if (hasSports && hasLeagues) selectFields.push('s.name as sport');
+      if (hasCities && hasLeagues) selectFields.push('c.name as city');
+      if (hasStates && hasCities) selectFields.push('st.name as state');
+      if (hasCountries && hasCities) selectFields.push('co.name as country');
+      
       const rows = await base
-        .select(
-          'm.id', 'm.kickoff_at',
-          { leagueId: 'm.league_id' },
-          hasLeagues ? { league: 'l.name' } : { league: null },
-          hasSports && hasLeagues ? { sport: 's.name' } : { sport: null },
-          hasCities && hasLeagues ? { city: 'c.name' } : { city: null },
-          hasStates && hasCities ? { state: 'st.name' } : { state: null },
-          hasCountries && hasCities ? { country: 'co.name' } : { country: null },
-          'm.home_user_id', 'm.away_user_id', 'm.home_team_id', 'm.away_team_id',
-          ...(hasStatus ? [{ status: 'm.status' }] : [])
-        )
+        .select(selectFields)
+        .orderByRaw('CASE WHEN m.kickoff_at IS NULL THEN 1 ELSE 0 END')
+        .orderBy('m.kickoff_at', 'asc')
         .orderBy('m.id', 'desc');
 
       // Enrich with user and team names
@@ -312,6 +328,12 @@ module.exports = function profileRoutes(ctx) {
       if (Object.prototype.hasOwnProperty.call(info, 'kickoff_end_at')) {
         const whenEnd = req.body?.kickoff_end_at ? new Date(req.body.kickoff_end_at) : null;
         rec.kickoff_end_at = whenEnd && !isNaN(whenEnd) ? whenEnd.toISOString() : null;
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'when_type') && req.body?.when_type) {
+        rec.when_type = String(req.body.when_type).trim();
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'range_days') && req.body?.range_days) {
+        rec.range_days = Number(req.body.range_days);
       }
       if (Object.prototype.hasOwnProperty.call(info, 'location_id') && req.body?.location_id) {
         rec.location_id = Number(req.body.location_id);

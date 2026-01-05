@@ -3,11 +3,13 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { API_BASE } from '../config';
 import Avatar from '../components/Avatar';
 import LocationSelector from '../components/LocationSelector';
+import SportSelector from '../components/SportSelector';
 
 export default function SearchMatchDialog() {
   const navigate = useNavigate();
   const [sp, setSp] = useSearchParams();
   const [sports, setSports] = useState([]);
+  const [sportCategories, setSportCategories] = useState([]);
   const [cities, setCities] = useState([]);
   const [searching, setSearching] = useState(false);
   const [rows, setRows] = useState([]);
@@ -44,12 +46,14 @@ export default function SearchMatchDialog() {
     let mounted = true;
     Promise.all([
       fetch(`${API_BASE}/sports/list`).then(r => r.ok ? r.json() : []),
+      fetch(`${API_BASE}/sports/categories`).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/cities/list`).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/countries/list`).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/states/list`).then(r => r.ok ? r.json() : []),
-    ]).then(([ss, cs, cos, sts]) => {
+    ]).then(([ss, scat, cs, cos, sts]) => {
       if (!mounted) return;
       setSports(Array.isArray(ss) ? ss : []);
+      setSportCategories(Array.isArray(scat) ? scat : []);
       setCities(Array.isArray(cs) ? cs : []);
       // Store in window for LocationSelector
       window.__countriesData = Array.isArray(cos) ? cos : [];
@@ -173,11 +177,37 @@ export default function SearchMatchDialog() {
     try {
       setCreating(true);
       setCreateErr('');
-      // Create league-less open friendly match
+      
+      // Build request body with time range information
+      const body = {
+        sportId: Number(cmSportId),
+        cityId: Number(cmCityId),
+        when_type: cmWhenType || null,
+      };
+      
+      // Add kickoff times based on when_type
+      if (cmWhenType === 'exact' && cmExactDate) {
+        const exactDateTime = new Date(`${cmExactDate}T${cmExactTime || '14:00'}`);
+        body.kickoff_at = exactDateTime.toISOString();
+      } else if (cmWhenType === 'range' && cmRangeDays) {
+        const now = new Date();
+        const end = new Date(now);
+        end.setDate(end.getDate() + Number(cmRangeDays));
+        body.kickoff_at = now.toISOString();
+        body.kickoff_end_at = end.toISOString();
+        body.range_days = Number(cmRangeDays);
+      } else if (cmWhenType === 'fixed' && cmFixedStart && cmFixedEnd) {
+        body.kickoff_at = new Date(cmFixedStart).toISOString();
+        body.kickoff_end_at = new Date(cmFixedEnd).toISOString();
+      } else if (cmWhen) {
+        // Fallback for direct cmWhen value
+        body.kickoff_at = new Date(cmWhen).toISOString();
+      }
+      
       const resp = await fetch(`${API_BASE}/open-matches`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ sportId: Number(cmSportId), cityId: Number(cmCityId), kickoff_at: cmWhen ? new Date(cmWhen).toISOString() : null })
+        body: JSON.stringify(body)
       });
       if (!resp.ok) {
         const t = await resp.json().catch(() => ({}));
@@ -197,10 +227,14 @@ export default function SearchMatchDialog() {
     <div style={{ maxWidth: 1000, margin: '20px auto', padding: 16 }}>
       <h1 style={{ marginTop: 0 }}>Match suchen</h1>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
-        <select value={sportId} onChange={(e) => setSportId(e.target.value)} style={{ padding: '10px 14px', borderRadius: 10, border: 'none', background: '#113528', color: '#e8efe8', minWidth: 200 }}>
-          <option value="">Sportart</option>
-          {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-        </select>
+        <div style={{ minWidth: 200 }}>
+          <SportSelector
+            sports={sportCategories}
+            value={sportId ? (sports.find(s => String(s.id) === String(sportId))?.name || '') : ''}
+            onChange={(sportName, sportIdVal) => setSportId(sportIdVal)}
+            placeholder="Sportart wählen"
+          />
+        </div>
         
         <div style={{ minWidth: 200, position: 'relative' }}>
           <LocationSelector
@@ -232,12 +266,30 @@ export default function SearchMatchDialog() {
           const bName = m.away || m.away_name || 'Gegner gesucht';
           const status = (m.status || 'Ausstehend');
           
-          // Format date
+          // Format date based on when_type
           let dateText = 'Datum: offen';
-          if (m.kickoff_at) {
+          
+          if (m.when_type === 'range' && m.range_days) {
+            dateText = `In den nächsten ${m.range_days} Tage${m.range_days !== 1 ? 'n' : ''}`;
+          } else if (m.when_type === 'fixed' && m.kickoff_at && m.kickoff_end_at) {
+            try {
+              const start = new Date(m.kickoff_at);
+              const end = new Date(m.kickoff_end_at);
+              dateText = `Zeitraum: ${start.toLocaleDateString('de-DE')} - ${end.toLocaleDateString('de-DE')}`;
+            } catch (e) {
+              dateText = 'Zeitraum: offen';
+            }
+          } else if (m.when_type === 'exact' && m.kickoff_at) {
             try {
               const date = new Date(m.kickoff_at);
-              dateText = `Datum: ${date.toLocaleDateString('de-DE')} ${date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
+              dateText = `${date.toLocaleDateString('de-DE')} ${date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
+            } catch (e) {
+              dateText = 'Datum: offen';
+            }
+          } else if (m.kickoff_at) {
+            try {
+              const date = new Date(m.kickoff_at);
+              dateText = `${date.toLocaleDateString('de-DE')} ${date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}`;
             } catch (e) {
               dateText = 'Datum: offen';
             }
@@ -339,10 +391,12 @@ export default function SearchMatchDialog() {
                 </div>
                 
                 <div style={{ display: 'grid', gap: 10, marginLeft: 36 }}>
-                  <select value={cmSportId} onChange={(e)=>setCmSportId(e.target.value)} style={{ padding: '12px 14px', borderRadius: 10, border: '2px solid #2f6b57', background: '#0e2a22', color: '#e8efe8', fontSize: 14, fontWeight: 500 }}>
-                    <option value="">🏃 Sportart wählen</option>
-                    {sports.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                  </select>
+                  <SportSelector
+                    sports={sportCategories}
+                    value={cmSportId ? (sports.find(s => String(s.id) === String(cmSportId))?.name || '') : ''}
+                    onChange={(sportName, sportIdVal) => setCmSportId(sportIdVal)}
+                    placeholder="🏃 Sportart wählen"
+                  />
                   
                   <LocationSelector
                     cities={cities}

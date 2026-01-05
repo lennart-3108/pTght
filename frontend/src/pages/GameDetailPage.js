@@ -3,12 +3,12 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 import { handleInvalidToken } from "../utils/auth";
 import { useResponsive } from "../hooks/useResponsive";
-import MatchChat from "../components/MatchChat";
 import Counter from "../components/Counter";
 import TimeCounter from "../components/TimeCounter";
 import Avatar from "../components/Avatar";
 import BookingConfirmationPopup from "../components/BookingConfirmationPopup";
 import BookingWidget from "../components/BookingWidget";
+import LocationSelector from "../components/LocationSelector";
 
 export default function GameDetailPage() {
   const { gameId } = useParams();
@@ -50,6 +50,8 @@ export default function GameDetailPage() {
   });
   const [scheduleMinutes, setScheduleMinutes] = useState(0);
   const [booking, setBooking] = useState(null); // Store confirmed booking data
+  const [chatUnread, setChatUnread] = useState(false); // Chat unread status
+  const [userProfile, setUserProfile] = useState(null); // User profile with location
 
   // Layout policy: keep three cards always side-by-side; enable horizontal scrolling on small screens
 
@@ -77,6 +79,39 @@ export default function GameDetailPage() {
       })
       .then(bookingData => mounted && setBooking(bookingData))
       .catch(() => {}); // Silently fail if no booking
+    
+    // Fetch chat unread status
+    if (token) {
+      fetch(`${API_BASE}/matches/${gameId}/chat`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(async (r) => {
+          if (!r.ok) return null;
+          const data = await r.json().catch(() => null);
+          return data;
+        })
+        .then(data => {
+          if (mounted && data?.meta) {
+            setChatUnread(data.meta.unread > 0);
+          }
+        })
+        .catch(() => {});
+      
+      // Fetch user profile for location preference
+      fetch(`${API_BASE}/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+        .then(async (r) => {
+          if (!r.ok) return null;
+          return r.json().catch(() => null);
+        })
+        .then(profile => {
+          if (mounted && profile) {
+            setUserProfile(profile);
+          }
+        })
+        .catch(() => {});
+    }
     
     return () => { mounted = false; };
   }, [gameId]);
@@ -165,7 +200,7 @@ export default function GameDetailPage() {
   // fetch standings (completed matches) to compute simple table positions
   const [standings, setStandings] = useState([]);
   // control schedule form visibility
-  const [showSchedule, setShowSchedule] = useState(false);
+  const [showSchedule, setShowSchedule] = useState(true);
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -515,6 +550,41 @@ export default function GameDetailPage() {
           
           {/* Action buttons moved to top right */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {token && game && (
+              <Link
+                to={`/matches/${gameId}/chat`}
+                style={{
+                  padding: '8px 12px',
+                  borderRadius: 8,
+                  border: '1px solid #2f6b57',
+                  background: '#0e2a22',
+                  color: '#dfe',
+                  fontSize: 14,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  position: 'relative'
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+                  <path d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V14C20 15.1046 19.1046 16 18 16H11.5L7 19.5V16H6C4.89543 16 4 15.1046 4 14V6Z" fill="none" stroke="currentColor" />
+                </svg>
+                Match-Chat
+                {chatUnread && (
+                  <span style={{
+                    position: 'absolute',
+                    top: -4,
+                    right: -4,
+                    width: 12,
+                    height: 12,
+                    background: '#ff4444',
+                    borderRadius: '50%',
+                    border: '2px solid #0c1f1a'
+                  }} />
+                )}
+              </Link>
+            )}
             {(token && game && game.home_score == null && game.away_score == null && !booking && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
               <button onClick={() => setShowSchedule(s => !s)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', fontSize: 14 }}>
                 {game.kickoff_at ? 'Termin ändern' : 'Termin festlegen'}
@@ -526,13 +596,58 @@ export default function GameDetailPage() {
           </div>
         </div>
 
+        {/* Mitspieler gesucht Info - für Match Creator */}
+        {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
+          <div style={{ 
+            marginTop: 16,
+            padding: '20px', 
+            background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.2), rgba(47, 107, 87, 0.1))',
+            border: '2px solid rgba(222, 188, 124, 0.4)',
+            borderRadius: 14,
+            textAlign: 'center',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
+          }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#debc7c', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <span style={{ fontSize: 24 }}>👥</span>
+              Mitspieler gesucht
+            </div>
+            <div style={{ color: '#c5d9ce', fontSize: 14, lineHeight: 1.6, marginBottom: 10 }}>
+              Dein Match ist veröffentlicht und für alle Spieler sichtbar.
+            </div>
+            <div style={{ 
+              display: 'inline-block',
+              padding: '6px 14px',
+              background: 'rgba(222, 188, 124, 0.15)',
+              border: '1px solid rgba(222, 188, 124, 0.3)',
+              borderRadius: 20,
+              fontSize: 12,
+              color: '#debc7c',
+              fontWeight: 600
+            }}>
+              🎯 Spiel aktiv
+            </div>
+          </div>
+        )}
+
         {/* Date + status in one line */}
         <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 20 }}>
-            {game.kickoff_at && game.kickoff_end_at ? (
-              <span>Von {formatDate(game.kickoff_at)} bis {formatDate(game.kickoff_end_at)}</span>
+            {game.when_type === 'range' && game.range_days ? (
+              <span>In den nächsten {game.range_days} Tag{game.range_days !== 1 ? 'en' : ''}</span>
+            ) : game.when_type === 'fixed' && game.kickoff_at && game.kickoff_end_at ? (
+              <span>Zeitraum: {formatDate(game.kickoff_at)} - {formatDate(game.kickoff_end_at)}</span>
+            ) : game.when_type === 'exact' && game.kickoff_at ? (
+              <>
+                {formatDate(game.kickoff_at)}
+                {formatTime(game.kickoff_at) && <span style={{ marginLeft: 8, color: '#9db' }}>{formatTime(game.kickoff_at)}</span>}
+              </>
+            ) : game.kickoff_at && game.kickoff_end_at ? (
+              <span>Zeitraum: {formatDate(game.kickoff_at)} - {formatDate(game.kickoff_end_at)}</span>
             ) : game.kickoff_at ? (
-              formatDate(game.kickoff_at)
+              <>
+                {formatDate(game.kickoff_at)}
+                {formatTime(game.kickoff_at) && <span style={{ marginLeft: 8, color: '#9db' }}>{formatTime(game.kickoff_at)}</span>}
+              </>
             ) : game.kickoff_end_at ? (
               'Zeitraum flexibel'
             ) : (
@@ -543,7 +658,7 @@ export default function GameDetailPage() {
             <span style={{ width: 8, height: 8, background: '#ffd35d', borderRadius: 999 }} />
             <span style={{ color: '#ffd35d' }}>{isCompleted ? 'Beendet' : 'Ausstehend'}</span>
           </div>
-          {game.kickoff_at && (
+          {game.when_type !== 'range' && game.kickoff_at && (
             <div style={{ color: '#9db', fontSize: 14 }}>{relativeFromNow(game.kickoff_at)}</div>
           )}
           {game.kickoff_end_at && !game.kickoff_at && (
@@ -554,7 +669,7 @@ export default function GameDetailPage() {
         {/* Date mode indicator when not yet assigned opponent */}
         {(game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away)) && (
           <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {game.kickoff_at && game.kickoff_end_at && (
+            {game.when_type === 'range' && game.range_days && (
               <div style={{ 
                 padding: '6px 12px', 
                 background: 'rgba(47, 107, 87, 0.2)', 
@@ -563,10 +678,10 @@ export default function GameDetailPage() {
                 fontSize: 13,
                 color: '#9db'
               }}>
-                � Zeitraum
+                📅 In den nächsten {game.range_days} Tag{game.range_days !== 1 ? 'en' : ''}
               </div>
             )}
-            {game.kickoff_at && !game.kickoff_end_at && (
+            {game.when_type === 'fixed' && game.kickoff_at && game.kickoff_end_at && (
               <div style={{ 
                 padding: '6px 12px', 
                 background: 'rgba(47, 107, 87, 0.2)', 
@@ -575,10 +690,22 @@ export default function GameDetailPage() {
                 fontSize: 13,
                 color: '#9db'
               }}>
-                � Festes Datum
+                📅 Zeitraum: {formatDate(game.kickoff_at)} - {formatDate(game.kickoff_end_at)}
               </div>
             )}
-            {!game.kickoff_at && !game.kickoff_end_at && (
+            {game.when_type === 'exact' && game.kickoff_at && (
+              <div style={{ 
+                padding: '6px 12px', 
+                background: 'rgba(47, 107, 87, 0.2)', 
+                border: '1px solid rgba(47, 107, 87, 0.4)',
+                borderRadius: 8,
+                fontSize: 13,
+                color: '#9db'
+              }}>
+                📅 Festes Datum
+              </div>
+            )}
+            {!game.when_type && !game.kickoff_at && !game.kickoff_end_at && (
               <div style={{ 
                 padding: '6px 12px', 
                 background: 'rgba(47, 107, 87, 0.2)', 
@@ -626,6 +753,35 @@ export default function GameDetailPage() {
               </>
             )}
             <div style={{ color: '#9db' }}>{tablePositions[playerA.name] ? `${tablePositions[playerA.name].rank}. Rang` : '—'}</div>
+            
+            {/* Letzte 5 Spiele Statistik */}
+            {playerA.id && histA.length > 0 && (
+              <div style={{ marginTop: 8, fontSize: 13, color: '#9db' }}>
+                <div style={{ marginBottom: 4, fontWeight: 600 }}>Letzte 5 Spiele:</div>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                  {histA.slice(0, 5).map(h => {
+                    const won = (h.home === playerA.name && h.home_score > h.away_score) || 
+                                (h.away === playerA.name && h.away_score > h.home_score);
+                    const draw = h.home_score === h.away_score;
+                    return (
+                      <span key={h.id} style={{
+                        width: 20,
+                        height: 20,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: won ? '#2d5f3f' : draw ? '#5f5f2d' : '#5f2d2d',
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 700
+                      }}>
+                        {won ? 'S' : draw ? 'U' : 'N'}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
           
           {/* Center section with VS or Counters */}
@@ -713,6 +869,35 @@ export default function GameDetailPage() {
               </>
             )}
             <div style={{ color: '#9db' }}>{tablePositions[playerB.name] ? `${tablePositions[playerB.name].rank}. Rang` : '—'}</div>
+            
+            {/* Letzte 5 Spiele Statistik */}
+            {playerB.id && histB.length > 0 && (
+              <div style={{ marginTop: 8, fontSize: 13, color: '#9db' }}>
+                <div style={{ marginBottom: 4, fontWeight: 600 }}>Letzte 5 Spiele:</div>
+                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                  {histB.slice(0, 5).map(h => {
+                    const won = (h.home === playerB.name && h.home_score > h.away_score) || 
+                                (h.away === playerB.name && h.away_score > h.home_score);
+                    const draw = h.home_score === h.away_score;
+                    return (
+                      <span key={h.id} style={{
+                        width: 20,
+                        height: 20,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        background: won ? '#2d5f3f' : draw ? '#5f5f2d' : '#5f2d2d',
+                        borderRadius: 4,
+                        fontSize: 11,
+                        fontWeight: 700
+                      }}>
+                        {won ? 'S' : draw ? 'U' : 'N'}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -754,6 +939,7 @@ export default function GameDetailPage() {
             message={scheduleMsg}
             loading={scheduleLoading}
             game={game}
+            userProfile={userProfile}
             onBookingConfirmed={(bookingData) => {
               // Update booking state in main component
               setBooking(bookingData);
@@ -765,50 +951,13 @@ export default function GameDetailPage() {
           />
         )}
 
-        {/* Join match when opponent not yet assigned */}
-        {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away)) && (
+        {/* Join match when opponent not yet assigned (nur für andere Spieler, nicht für Creator) */}
+        {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && !(viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId))) && (
           <div style={{ marginTop: 16 }}>
             {(() => {
               // Check if this is an Open Match (friendly match) - these don't have weekly limits
               const isOpenMatch = game.league === 'Open Matches' || (game.league && game.league.includes('Open Matches'));
               const canJoin = isOpenMatch || !hasWeeklyMatch;
-              
-              // Check if viewer is the match creator
-              const isCreator = viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId);
-              
-              if (isCreator) {
-                // Message for match creator
-                return (
-                  <div style={{ 
-                    padding: '20px', 
-                    background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.2), rgba(47, 107, 87, 0.1))',
-                    border: '2px solid rgba(222, 188, 124, 0.4)',
-                    borderRadius: 14,
-                    textAlign: 'center',
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
-                  }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: '#debc7c', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 24 }}>⏳</span>
-                      Warte auf Gegner...
-                    </div>
-                    <div style={{ color: '#c5d9ce', fontSize: 14, lineHeight: 1.6, marginBottom: 10 }}>
-                      Dein Match ist veröffentlicht und für alle Spieler sichtbar.
-                    </div>
-                    <div style={{ 
-                      display: 'inline-block',
-                      padding: '6px 14px',
-                      background: 'rgba(222, 188, 124, 0.15)',
-                      border: '1px solid rgba(222, 188, 124, 0.3)',
-                      borderRadius: 20,
-                      fontSize: 12,
-                      color: '#debc7c',
-                      fontWeight: 600
-                    }}>
-                      🎯 Spiel aktiv
-                    </div>
-                  </div>
-                );
-              }
               
               // Invitation for other players
               return (
@@ -887,81 +1036,77 @@ export default function GameDetailPage() {
 
       </div>
 
-      <MatchChat matchId={gameId} token={token} />
-
-      {/* Past games table */}
-      <div style={{ marginTop: 16 }}>
-        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 320px', minWidth: 260 }}>
-            <h4>Vergangene Spiele – {playerA.name}</h4>
-            {histA.length === 0 ? <div>Keine vorherigen Spiele in dieser Liga.</div> : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', background: '#071511' }}>
-                <thead>
-                  <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    <th>Datum</th><th>Gegner</th><th>Ergebnis</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {histA.map(h => (
-                    <tr key={h.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                      <td style={{ padding: 8 }}>{formatDate(h.date)} {formatTime(h.date) && <span style={{ color: '#96a' }}>· {formatTime(h.date)}</span>}</td>
-                      <td style={{ padding: 8 }}>{h.home === playerA.name ? h.away : h.home}</td>
-                      <td style={{ padding: 8 }}>{h.score || 'Ausstehend'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
-
-          <div style={{ flex: '1 1 320px', minWidth: 260 }}>
-            <h4>Vergangene Spiele – {playerB.name}</h4>
-            {histB.length === 0 ? <div>Keine vorherigen Spiele in dieser Liga.</div> : (
-              <table style={{ width: '100%', borderCollapse: 'collapse', background: '#071511' }}>
-                <thead>
-                  <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-                    <th>Datum</th><th>Gegner</th><th>Ergebnis</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {histB.map(h => (
-                    <tr key={h.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                      <td style={{ padding: 8 }}>{formatDate(h.date)} {formatTime(h.date) && <span style={{ color: '#96a' }}>· {formatTime(h.date)}</span>}</td>
-                      <td style={{ padding: 8 }}>{h.home === playerB.name ? h.away : h.home}</td>
-                      <td style={{ padding: 8 }}>{h.score || 'Ausstehend'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-          </div>
+      {game.leagueId && (
+        <div style={{ marginTop: 18 }}>
+          <Link to={`/league/${game.leagueId}`}>← Zurück zur Liga</Link>
         </div>
-      </div>
-
-      <div style={{ marginTop: 18 }}>
-        <Link to={`/league/${game.leagueId || ''}`}>← Zurück zur Liga</Link>
-      </div>
+      )}
     </div>
   );
 }
 
 // Collapsible schedule section with counter-based time selection
-function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, setHours, setMinutes, onSubmit, onSuggest, location, setLocation, message, loading, game, onBookingConfirmed }) {
+function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, setHours, setMinutes, onSubmit, onSuggest, location, setLocation, message, loading, game, userProfile, onBookingConfirmed }) {
   const [locationMode, setLocationMode] = useState('booking'); // Default to 'booking' to show slots
   const [availableSlots, setAvailableSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [slotsError, setSlotsError] = useState('');
   const [searchCity, setSearchCity] = useState(''); // City filter for slot search
   const [cities, setCities] = useState([]);
+  const [countries, setCountries] = useState([]);
+  const [states, setStates] = useState([]);
+  const [districts, setDistricts] = useState([]);
+  const [selectedLocationName, setSelectedLocationName] = useState('');
+  const [selectedCityId, setSelectedCityId] = useState(null);
   const [bookingPopup, setBookingPopup] = useState(null); // Selected slot for booking
 
-  // Load cities list
+  // Load location data
   useEffect(() => {
     fetch(`${API_BASE}/cities/list`)
       .then(r => r.ok ? r.json() : [])
       .then(data => setCities(Array.isArray(data) ? data : []))
       .catch(() => setCities([]));
+    
+    fetch(`${API_BASE}/countries`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setCountries(Array.isArray(data) ? data : []))
+      .catch(() => setCountries([]));
+    
+    fetch(`${API_BASE}/states`)
+      .then(r => r.ok ? r.json() : [])
+      .then(data => setStates(Array.isArray(data) ? data : []))
+      .catch(() => setStates([]));
   }, []);
+
+  // Pre-select user's location if available
+  useEffect(() => {
+    if (userProfile?.city_name && !selectedLocationName) {
+      setSelectedLocationName(userProfile.city_name);
+      if (userProfile.city_id) {
+        setSelectedCityId(userProfile.city_id);
+        setSearchCity(userProfile.city_name);
+      }
+    }
+  }, [userProfile, selectedLocationName]);
+
+  const handleLoadDistricts = async (cityId) => {
+    try {
+      const res = await fetch(`${API_BASE}/districts?city_id=${cityId}`);
+      if (res.ok) {
+        const data = await res.json();
+        setDistricts(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      console.error('Failed to load districts:', err);
+    }
+  };
+
+  const handleLocationChange = (name, cityId, stateId, countryId, districtId) => {
+    setSelectedLocationName(name);
+    setSelectedCityId(cityId);
+    setSearchCity(name);
+    setLocation(name);
+  };
 
   async function searchAvailableSlots() {
     if (!dateStr) return;
@@ -1067,19 +1212,15 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
           {locationMode === 'manual' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <label style={{ color: '#9db', fontSize: '14px', fontWeight: '500' }}>Ort / Adresse</label>
-              <input
-                type="text"
-                placeholder="z.B. Sportpark Mitte, Hauptstr. 123, 28195 Bremen"
-                value={location}
-                onChange={(e) => setLocation(e.target.value)}
-                style={{ 
-                  padding: '10px 12px', 
-                  borderRadius: 8, 
-                  border: '1px solid #26493c', 
-                  background: '#0f2a20', 
-                  color: '#e8efe8',
-                  fontSize: 14
-                }}
+              <LocationSelector
+                cities={cities}
+                countries={countries}
+                states={states}
+                districts={districts}
+                value={selectedLocationName}
+                onChange={handleLocationChange}
+                onLoadDistricts={handleLoadDistricts}
+                placeholder="Standort wählen"
               />
             </div>
           )}
