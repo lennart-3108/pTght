@@ -14,6 +14,7 @@ import CreatePage from "./pages/CreatePage"; // neu
 import UserDetailPage from "./pages/UserDetailPage"; // neu
 import UserChatPage from "./pages/UserChatPage"; // neu
 import GameDetailPage from "./pages/GameDetailPage"; // neu
+import MatchChatPage from "./pages/MatchChatPage"; // match chat page
 import SearchMatchDialog from "./pages/SearchMatchDialog"; // neu
 import AdminPage from "./pages/AdminPage"; // neu
 import ProfilePage from "./pages/ProfilePage"; // user profile
@@ -242,6 +243,24 @@ function App() {
             element={
               <ProtectedRoute token={token} setToken={setToken}>
                 <GameDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Match-Chat */}
+          <Route
+            path="/matches/:matchId/chat"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <MatchChatPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Match-Chat */}
+          <Route
+            path="/matches/:matchId/chat"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <MatchChatPage />
               </ProtectedRoute>
             }
           />
