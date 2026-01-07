@@ -1,5 +1,6 @@
 const express = require('express');
 const { isAuthenticated } = require('../middleware/auth');
+const { renderEmailTemplate } = require('../src/emailTemplate');
 
 module.exports = function matchesRoutes({ db }) {
   const router = express.Router();
@@ -796,8 +797,12 @@ module.exports = function matchesRoutes({ db }) {
           const when = new Date(patch.kickoff_at).toLocaleString();
           for (const u of users || []) {
             const name = (u.firstname || u.lastname) ? `${u.firstname || ''} ${u.lastname || ''}`.trim() : (u.name || u.email || 'Spieler');
-            const body = `<p>Hallo ${name},</p><p>Dein Match (ID ${g.id}) wurde geplant für <b>${when}</b>.</p>`;
-            await sendMail(u.email, subject, body);
+            const html = renderEmailTemplate({
+              title: 'Match geplant',
+              body: `<p>Hallo ${name},</p><p>Dein Match (ID ${g.id}) wurde geplant für <b>${when}</b>.</p>`,
+              previewText: 'Match geplant',
+            });
+            await sendMail(u.email, subject, html);
           }
         }
       } catch (e) {
@@ -1152,8 +1157,12 @@ module.exports = function matchesRoutes({ db }) {
           const score = `${hs}:${as}`;
           for (const u of users || []) {
             const name = (u.firstname || u.lastname) ? `${u.firstname || ''} ${u.lastname || ''}`.trim() : (u.name || u.email || 'Spieler');
-            const body = `<p>Hallo ${name},</p><p>Dein Match (ID ${g.id}) wurde abgeschlossen. Ergebnis: <b>${score}</b>.</p>`;
-            await sendMail(u.email, subject, body);
+            const html = renderEmailTemplate({
+              title: 'Match abgeschlossen',
+              body: `<p>Hallo ${name},</p><p>Dein Match (ID ${g.id}) wurde abgeschlossen. Ergebnis: <b>${score}</b>.</p>`,
+              previewText: 'Match abgeschlossen',
+            });
+            await sendMail(u.email, subject, html);
           }
         }
       } catch (e) {
