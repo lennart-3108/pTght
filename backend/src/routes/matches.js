@@ -1548,6 +1548,35 @@ module.exports = function matchesRoutes(ctx) {
         formatActionBody('📅 Terminvorschlag gesendet', proposedDatetime, note)
       );
 
+      // Create notification for recipient
+      try {
+        const currentUser = await k('users').where({ id: viewerId }).first();
+        const userName = currentUser?.firstname || currentUser?.name || `User ${viewerId}`;
+        const leagueInfo = match.league_id ? await k('leagues').where({ id: match.league_id }).first() : null;
+        const leagueName = leagueInfo?.name || '';
+        const formattedDate = new Date(proposedDatetime).toLocaleString('de-DE', { 
+          weekday: 'short', 
+          day: '2-digit', 
+          month: '2-digit', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+        
+        await k('notifications').insert({
+          user_id: otherUserId,
+          type: 'schedule_proposal',
+          match_id: matchId,
+          from_user_id: viewerId,
+          proposal_id: proposalId,
+          title: 'Terminvorschlag erhalten',
+          message: `${userName} hat dir einen Terminvorschlag gesendet: ${formattedDate}`,
+          created_at: new Date().toISOString(),
+          is_read: 0
+        }).catch(() => {}); // Ignore notification errors
+      } catch (notifErr) {
+        // Ignore notification errors - don't fail the main request
+      }
+
       res.status(201).json({ id: proposalId, status: 'sent', datetime: proposedDatetime });
     } catch (e) {
       console.error('Propose datetime failed', e && (e.stack || e.message || e));

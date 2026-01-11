@@ -911,7 +911,10 @@ async function newsHandler(req, res) {
       }
 
       // Check for schedule proposals (Terminvorschläge)
+      // Load from both match_schedule_proposals (old) and notifications (new)
       const hasProposals = await k.schema.hasTable('match_schedule_proposals').catch(() => false);
+      const hasNotifications = await k.schema.hasTable('notifications').catch(() => false);
+      
       if (hasProposals && matchTable && hasUsers) {
         const buildDisplayName = (row) => {
           const parts = [row.firstname || "", row.lastname || ""]
@@ -977,6 +980,68 @@ async function newsHandler(req, res) {
             avatarUrl: r.avatarUrl || null,
             leagueName: r.leagueName || null,
           });
+        }
+      }
+
+      // Load from notifications table (newer approach)
+      if (hasNotifications) {
+        const notifRows = await k('notifications')
+          .leftJoin('users', 'notifications.from_user_id', 'users.id')
+          .leftJoin('matches', 'notifications.match_id', 'matches.id')
+          .leftJoin('leagues', 'matches.league_id', 'leagues.id')
+          .where('notifications.user_id', userId)
+          .whereIn('notifications.type', ['schedule_proposal', 'availability_shared'])
+          .whereRaw('DATE(notifications.created_at) >= DATE(?, \"-14 days\")', [new Date().toISOString()])
+          .select([
+            'notifications.id as notifId',
+            'notifications.type',
+            'notifications.created_at as timestamp',
+            'notifications.title',
+            'notifications.message',
+            'notifications.match_id as matchId',
+            'notifications.from_user_id as fromUserId',
+            'notifications.proposal_id as proposalId',
+            'users.firstname',
+            'users.lastname',
+            'users.name as userName',
+            'users.avatar_url as avatarUrl',
+            'leagues.name as leagueName'
+          ])
+          .orderBy('notifications.created_at', 'desc')
+          .limit(30)
+          .catch(() => []);
+
+        for (const n of (notifRows || [])) {
+          const fromName = n.firstname || n.userName || `User ${n.fromUserId}`;
+          
+          if (n.type === 'schedule_proposal' && n.proposalId) {
+            items.push({
+              id: `notif-proposal-${n.notifId}`,
+              type: 'schedule_proposal',
+              timestamp: n.timestamp,
+              title: n.title || 'Terminvorschlag erhalten',
+              details: n.message || `${fromName} hat dir einen Terminvorschlag gesendet.`,
+              matchId: n.matchId,
+              proposalId: n.proposalId,
+              proposerUserId: n.fromUserId,
+              proposerName: fromName,
+              avatarUrl: n.avatarUrl || null,
+              leagueName: n.leagueName || null,
+            });
+          } else if (n.type === 'availability_shared') {
+            items.push({
+              id: `notif-availability-${n.notifId}`,
+              type: 'availability_shared',
+              timestamp: n.timestamp,
+              title: n.title || 'Verfügbarkeiten eingetragen',
+              details: n.message || `${fromName} hat Verfügbarkeiten eingetragen.`,
+              matchId: n.matchId,
+              fromUserId: n.fromUserId,
+              fromUserName: fromName,
+              avatarUrl: n.avatarUrl || null,
+              leagueName: n.leagueName || null
+            });
+          }
         }
       }
 
@@ -1052,52 +1117,6 @@ async function newsHandler(req, res) {
               joinedUserName: joinerName,
               avatarUrl: r.avatarUrl || null,
               leagueName: r.leagueName || null,
-            });
-          }
-        }
-
-        // Show availability_shared notifications
-        const hasNotifications = await k.schema.hasTable('notifications').catch(() => false);
-        if (hasNotifications) {
-          const availabilityNotifs = await k('notifications')
-            .leftJoin('users', 'notifications.from_user_id', 'users.id')
-            .leftJoin('matches', 'notifications.match_id', 'matches.id')
-            .leftJoin('leagues', 'matches.league_id', 'leagues.id')
-            .where({
-              'notifications.user_id': userId,
-              'notifications.type': 'availability_shared'
-            })
-            .whereRaw('DATE(notifications.created_at) >= DATE(?, "-7 days")', [new Date().toISOString()])
-            .select([
-              'notifications.id as notifId',
-              'notifications.created_at as timestamp',
-              'notifications.title',
-              'notifications.message',
-              'notifications.match_id as matchId',
-              'notifications.from_user_id as fromUserId',
-              'users.firstname',
-              'users.lastname',
-              'users.name as userName',
-              'users.avatar_url as avatarUrl',
-              'leagues.name as leagueName'
-            ])
-            .orderBy('notifications.created_at', 'desc')
-            .limit(10)
-            .catch(() => []);
-
-          for (const n of (availabilityNotifs || [])) {
-            const fromName = n.firstname || n.userName || `User ${n.fromUserId}`;
-            items.push({
-              id: `availability-shared-${n.notifId}`,
-              type: 'availability_shared',
-              timestamp: n.timestamp,
-              title: n.title || 'Verfügbarkeiten eingetragen',
-              details: n.message || `${fromName} hat Verfügbarkeiten eingetragen.`,
-              matchId: n.matchId,
-              fromUserId: n.fromUserId,
-              fromUserName: fromName,
-              avatarUrl: n.avatarUrl || null,
-              leagueName: n.leagueName || null
             });
           }
         }
