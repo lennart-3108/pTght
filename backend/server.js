@@ -990,7 +990,7 @@ async function newsHandler(req, res) {
           .leftJoin('matches', 'notifications.match_id', 'matches.id')
           .leftJoin('leagues', 'matches.league_id', 'leagues.id')
           .where('notifications.user_id', userId)
-          .whereIn('notifications.type', ['schedule_proposal', 'availability_shared'])
+          .whereIn('notifications.type', ['schedule_proposal', 'schedule_accepted', 'schedule_rejected', 'availability_shared'])
           .whereRaw('DATE(notifications.created_at) >= DATE(?, \"-14 days\")', [new Date().toISOString()])
           .select([
             'notifications.id as notifId',
@@ -1027,6 +1027,32 @@ async function newsHandler(req, res) {
               proposerName: fromName,
               avatarUrl: n.avatarUrl || null,
               leagueName: n.leagueName || null,
+            });
+          } else if (n.type === 'schedule_accepted') {
+            items.push({
+              id: `notif-accepted-${n.notifId}`,
+              type: 'schedule_accepted',
+              timestamp: n.timestamp,
+              title: n.title || 'Terminvorschlag angenommen',
+              details: n.message || `${fromName} hat deinen Terminvorschlag angenommen.`,
+              matchId: n.matchId,
+              fromUserId: n.fromUserId,
+              fromUserName: fromName,
+              avatarUrl: n.avatarUrl || null,
+              leagueName: n.leagueName || null
+            });
+          } else if (n.type === 'schedule_rejected') {
+            items.push({
+              id: `notif-rejected-${n.notifId}`,
+              type: 'schedule_rejected',
+              timestamp: n.timestamp,
+              title: n.title || 'Terminvorschlag abgelehnt',
+              details: n.message || `${fromName} hat deinen Terminvorschlag abgelehnt.`,
+              matchId: n.matchId,
+              fromUserId: n.fromUserId,
+              fromUserName: fromName,
+              avatarUrl: n.avatarUrl || null,
+              leagueName: n.leagueName || null
             });
           } else if (n.type === 'availability_shared') {
             items.push({
