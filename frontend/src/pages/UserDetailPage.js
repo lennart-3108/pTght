@@ -1834,20 +1834,18 @@ export default function UserDetailPage() {
                         }
                         
                         const data = await res.json();
-                        let newAvatarUrl = data.url || data.avatar_url;
-                        // Add cache-busting timestamp to force image reload
-                        if (newAvatarUrl) {
-                          const separator = newAvatarUrl.includes('?') ? '&' : '?';
-                          newAvatarUrl = `${newAvatarUrl}${separator}t=${Date.now()}`;
-                        }
-                        // Update user state with new avatar URL - this will trigger re-render
-                        setUser(prev => ({ ...prev, avatar_url: newAvatarUrl }));
+                        
+                        // Show success message
                         setShowAvatarUpload(false);
                         setAvatarImage(null);
                         setAvatarScale(1);
+                        
+                        // Show confirmation and redirect to profile for full reload
+                        alert('✅ Profilbild erfolgreich hochgeladen!');
+                        window.location.href = `/user/${user.id}`;
                       } catch (err) {
                         console.error('Avatar upload error:', err);
-                        alert(err.message || 'Fehler beim Hochladen');
+                        alert('❌ ' + (err.message || 'Fehler beim Hochladen'));
                       } finally {
                         setUploadingAvatar(false);
                       }
