@@ -118,10 +118,30 @@ export default function MatchChat({ matchId, token }) {
   function renderMessage(msg) {
     // Team cannot send; only users send messages (even in team matches).
     const isOwn = viewerUserId != null && Number(msg.senderUserId) === Number(viewerUserId);
+    const isAction = (msg && (msg.kind === 'action' || (typeof msg.action === 'string' && msg.action))) || (typeof msg.body === 'string' && msg.body.startsWith('📅'));
     const align = isOwn ? 'row-reverse' : 'row';
-    const bubbleColor = isOwn ? '#1f5c47' : '#16342c';
+    const bubbleColor = isAction ? '#12382c' : (isOwn ? '#1f5c47' : '#16342c');
     const name = msg.senderUserName || msg.senderTeamName || (msg.senderUserId ? `User ${msg.senderUserId}` : 'Unbekannt');
     const avatarUrl = msg.senderUserAvatar || '';
+
+    if (isAction) {
+      const labelMap = {
+        schedule_proposed: 'Termin-Manager',
+        schedule_accepted: 'Termin-Manager',
+        schedule_rejected: 'Termin-Manager',
+        schedule_counter_proposed: 'Termin-Manager'
+      };
+      const label = labelMap[msg.action] || 'Termin-Manager';
+      return (
+        <div key={msg.id} style={{ display: 'flex', flexDirection: 'row', gap: 8, marginBottom: 12, alignItems: 'flex-end', justifyContent: 'center' }}>
+          <div style={{ maxWidth: '85%', background: bubbleColor, borderRadius: 12, padding: '10px 12px', color: '#e5f4ec', border: '1px solid #285243' }}>
+            <div style={{ fontSize: 12, color: '#debc7c', marginBottom: 6, fontWeight: 700 }}>{label}</div>
+            <div style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }}>{msg.body}</div>
+            <div style={{ fontSize: 11, color: '#7fa392', marginTop: 6 }}>{formatTimestamp(msg.createdAt)}</div>
+          </div>
+        </div>
+      );
+    }
     return (
       <div key={msg.id} style={{ display: 'flex', flexDirection: align, gap: 8, marginBottom: 12, alignItems: 'flex-end' }}>
         <Avatar userId={msg.senderUserId} name={name} src={avatarUrl} size={32} />

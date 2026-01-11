@@ -14,6 +14,21 @@ module.exports = function matchesRoutes({ db }) {
     return null;
   }
 
+  // Resolve whether a match lives in the new "matches" table or the legacy "games" table
+  async function resolveMatchTable(k, id) {
+    const hasMatches = await k.schema.hasTable('matches').catch(() => false);
+    if (hasMatches) {
+      const row = await k('matches').where('id', id).first().catch(() => null);
+      if (row) return { table: 'matches', row };
+    }
+    const hasGames = await k.schema.hasTable('games').catch(() => false);
+    if (hasGames) {
+      const row = await k('games').where('id', id).first().catch(() => null);
+      if (row) return { table: 'games', row };
+    }
+    return { table: null, row: null };
+  }
+
   // Helpers: compute current ISO week (Mon-Sun) window and weekly-limit checks
   function getCurrentWeekWindow() {
     const now = new Date();
@@ -74,6 +89,88 @@ module.exports = function matchesRoutes({ db }) {
       table.text('created_at').notNullable().defaultTo(k.raw('CURRENT_TIMESTAMP'));
       table.index(['match_id'], 'idx_match_messages_match');
     });
+  }
+
+  async function ensureTerminManagerTables(k) {
+    const hasMatches = await k.schema.hasTable('matches').catch(() => false);
+    if (!hasMatches) return;
+
+    const hasUsers = await k.schema.hasTable('users').catch(() => false);
+
+    const hasOptions = await k.schema.hasTable('match_time_options').catch(() => false);
+    if (!hasOptions) {
+      await k.schema.createTable('match_time_options', (t) => {
+        t.increments('id').primary();
+        t.integer('match_id').notNullable().references('id').inTable('matches').onDelete('CASCADE');
+        t.text('starts_at').notNullable();
+        if (hasUsers) t.integer('created_by_user_id').references('id').inTable('users').onDelete('SET NULL');
+        else t.integer('created_by_user_id').nullable();
+        t.text('created_at').notNullable().defaultTo(k.raw('CURRENT_TIMESTAMP'));
+        t.index(['match_id'], 'idx_match_time_options_match');
+        t.index(['match_id', 'starts_at'], 'idx_match_time_options_match_starts');
+      });
+    }
+
+    const hasProposals = await k.schema.hasTable('match_schedule_proposals').catch(() => false);
+    if (!hasProposals) {
+      await k.schema.createTable('match_schedule_proposals', (t) => {
+        t.increments('id').primary();
+        t.integer('match_id').notNullable().references('id').inTable('matches').onDelete('CASCADE');
+        t.integer('proposer_user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
+        t.integer('recipient_user_id').notNullable().references('id').inTable('users').onDelete('CASCADE');
+        t.integer('option_id').notNullable().references('id').inTable('match_time_options').onDelete('CASCADE');
+        t.string('status', 20).notNullable().defaultTo('sent');
+        t.text('note').nullable();
+        t.text('created_at').notNullable().defaultTo(k.raw('CURRENT_TIMESTAMP'));
+        t.text('responded_at').nullable();
+        t.index(['match_id'], 'idx_match_schedule_proposals_match');
+        t.index(['match_id', 'status'], 'idx_match_schedule_proposals_match_status');
+      });
+    }
+
+    // match_messages action columns (best-effort)
+    const hasMM = await k.schema.hasTable('match_messages').catch(() => false);
+    if (hasMM) {
+      const info = await k('match_messages').columnInfo().catch(() => ({}));
+      const needKind = !Object.prototype.hasOwnProperty.call(info, 'kind');
+      const needAction = !Object.prototype.hasOwnProperty.call(info, 'action');
+      const needData = !Object.prototype.hasOwnProperty.call(info, 'data');
+      if (needKind || needAction || needData) {
+        await k.schema.table('match_messages', (t) => {
+          if (needKind) t.string('kind', 20).nullable();
+          if (needAction) t.string('action', 50).nullable();
+          if (needData) t.text('data').nullable();
+        });
+      }
+    }
+  }
+
+  function formatStartsAt(iso) {
+    try {
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return String(iso || '');
+      return d.toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    } catch {
+      return String(iso || '');
+    }
+  }
+
+  async function insertActionMessage(k, { matchId, senderUserId, senderTeamId, action, body, data }) {
+    await ensureMatchMessagesTable(k);
+    const info = await k('match_messages').columnInfo().catch(() => ({}));
+    const rec = {
+      match_id: matchId,
+      body: body,
+      sender_user_id: senderUserId || null,
+      sender_team_id: senderTeamId || null,
+      created_at: new Date().toISOString(),
+    };
+    if (Object.prototype.hasOwnProperty.call(info, 'kind')) rec.kind = 'action';
+    if (Object.prototype.hasOwnProperty.call(info, 'action')) rec.action = action;
+    if (Object.prototype.hasOwnProperty.call(info, 'data')) rec.data = data ? JSON.stringify(data) : null;
+    const inserted = await k('match_messages').insert(rec);
+    const newId = Array.isArray(inserted) ? inserted[0] : inserted;
+    return fetchMessageById(k, newId);
   }
 
   function buildUserDisplayExpression(usersInfo, alias) {
@@ -146,12 +243,19 @@ module.exports = function matchesRoutes({ db }) {
   async function fetchMessages(k, matchId) {
     const hasUsers = await k.schema.hasTable('users').catch(() => false);
     const hasTeams = await k.schema.hasTable('teams').catch(() => false);
+    const mmInfo = await k('match_messages').columnInfo().catch(() => ({}));
+    const hasKind = Object.prototype.hasOwnProperty.call(mmInfo, 'kind');
+    const hasAction = Object.prototype.hasOwnProperty.call(mmInfo, 'action');
+    const hasData = Object.prototype.hasOwnProperty.call(mmInfo, 'data');
     const usersInfo = hasUsers ? await k('users').columnInfo().catch(() => ({})) : {};
     const userExpr = hasUsers ? buildUserDisplayExpression(usersInfo, 'u') : null;
     const hasUserAvatar = hasUsers && Object.prototype.hasOwnProperty.call(usersInfo, 'avatar_url');
     const cols = [
       { id: 'mm.id' },
       { body: 'mm.body' },
+      ...(hasKind ? [{ kind: 'mm.kind' }] : [k.raw('NULL as kind')]),
+      ...(hasAction ? [{ action: 'mm.action' }] : [k.raw('NULL as action')]),
+      ...(hasData ? [{ data: 'mm.data' }] : [k.raw('NULL as data')]),
       { created_at: 'mm.created_at' },
       { sender_user_id: 'mm.sender_user_id' },
       { sender_team_id: 'mm.sender_team_id' },
@@ -177,12 +281,19 @@ module.exports = function matchesRoutes({ db }) {
   async function fetchMessageById(k, id) {
     const hasUsers = await k.schema.hasTable('users').catch(() => false);
     const hasTeams = await k.schema.hasTable('teams').catch(() => false);
+    const mmInfo = await k('match_messages').columnInfo().catch(() => ({}));
+    const hasKind = Object.prototype.hasOwnProperty.call(mmInfo, 'kind');
+    const hasAction = Object.prototype.hasOwnProperty.call(mmInfo, 'action');
+    const hasData = Object.prototype.hasOwnProperty.call(mmInfo, 'data');
     const usersInfo = hasUsers ? await k('users').columnInfo().catch(() => ({})) : {};
     const userExpr = hasUsers ? buildUserDisplayExpression(usersInfo, 'u') : null;
     const hasUserAvatar = hasUsers && Object.prototype.hasOwnProperty.call(usersInfo, 'avatar_url');
     const cols = [
       { id: 'mm.id' },
       { body: 'mm.body' },
+      ...(hasKind ? [{ kind: 'mm.kind' }] : [k.raw('NULL as kind')]),
+      ...(hasAction ? [{ action: 'mm.action' }] : [k.raw('NULL as action')]),
+      ...(hasData ? [{ data: 'mm.data' }] : [k.raw('NULL as data')]),
       { created_at: 'mm.created_at' },
       { sender_user_id: 'mm.sender_user_id' },
       { sender_team_id: 'mm.sender_team_id' },
@@ -1175,6 +1286,351 @@ module.exports = function matchesRoutes({ db }) {
     }
   });
 
+  // Termin-Manager
+  router.get('/:id/termin-manager', isAuthenticated, async (req, res) => {
+    try {
+      const matchId = Number(req.params.id);
+      if (!Number.isFinite(matchId) || matchId <= 0) return res.status(400).json({ error: 'INVALID_MATCH_ID' });
+
+      const k = getKnex();
+      if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+      await ensureTerminManagerTables(k);
+
+      const match = await loadMatch(k, matchId);
+      if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+      const participant = await resolveParticipant(k, match, req.user.id);
+      if (!participant.allowed) return res.status(403).json({ error: 'NOT_PARTICIPANT' });
+
+      const viewerUserId = Number(req.user.id) || null;
+      const isOwner = match.home_user_id != null && Number(match.home_user_id) === Number(req.user.id);
+
+      const hasOptions = await k.schema.hasTable('match_time_options').catch(() => false);
+      const hasProposals = await k.schema.hasTable('match_schedule_proposals').catch(() => false);
+      if (!hasOptions || !hasProposals) {
+        return res.json({ meta: { viewerUserId, isOwner }, options: [], proposal: null });
+      }
+
+      const options = await k('match_time_options')
+        .where({ match_id: matchId })
+        .orderBy('starts_at', 'asc')
+        .select(['id', { startsAt: 'starts_at' }]);
+
+      const proposalRow = await k({ p: 'match_schedule_proposals' })
+        .leftJoin({ o: 'match_time_options' }, 'o.id', 'p.option_id')
+        .where('p.match_id', matchId)
+        .andWhere('p.status', 'sent')
+        .orderBy('p.created_at', 'desc')
+        .first([
+          { id: 'p.id' },
+          { matchId: 'p.match_id' },
+          { proposerUserId: 'p.proposer_user_id' },
+          { recipientUserId: 'p.recipient_user_id' },
+          { optionId: 'p.option_id' },
+          { status: 'p.status' },
+          { note: 'p.note' },
+          { createdAt: 'p.created_at' },
+          { startsAt: 'o.starts_at' },
+        ]);
+
+      const proposal = proposalRow ? proposalRow : null;
+      return res.json({ meta: { viewerUserId, isOwner }, options: Array.isArray(options) ? options : [], proposal });
+    } catch (e) {
+      console.error('Termin-Manager load failed', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'TERMIN_MANAGER_LOAD_FAILED' });
+    }
+  });
+
+  router.post('/:id/termin-manager/options', isAuthenticated, async (req, res) => {
+    try {
+      const matchId = Number(req.params.id);
+      const startsAt = typeof req.body?.startsAt === 'string' ? req.body.startsAt : null;
+      if (!Number.isFinite(matchId) || matchId <= 0) return res.status(400).json({ error: 'INVALID_MATCH_ID' });
+      if (!startsAt) return res.status(400).json({ error: 'INVALID_STARTS_AT' });
+
+      const d = new Date(startsAt);
+      if (Number.isNaN(d.getTime())) return res.status(400).json({ error: 'INVALID_STARTS_AT' });
+
+      const k = getKnex();
+      if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+      await ensureTerminManagerTables(k);
+
+      const match = await loadMatch(k, matchId);
+      if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+      const participant = await resolveParticipant(k, match, req.user.id);
+      if (!participant.allowed) return res.status(403).json({ error: 'NOT_PARTICIPANT' });
+
+      const isOwner = match.home_user_id != null && Number(match.home_user_id) === Number(req.user.id);
+      if (!isOwner) return res.status(403).json({ error: 'ONLY_OWNER_CAN_ADD_OPTIONS' });
+
+      const inserted = await k('match_time_options').insert({
+        match_id: matchId,
+        starts_at: d.toISOString(),
+        created_by_user_id: Number(req.user.id) || null,
+        created_at: new Date().toISOString(),
+      });
+      const newId = Array.isArray(inserted) ? inserted[0] : inserted;
+      return res.status(201).json({ option: { id: newId, startsAt: d.toISOString() } });
+    } catch (e) {
+      console.error('Add time option failed', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'ADD_OPTION_FAILED' });
+    }
+  });
+
+  router.delete('/:id/termin-manager/options/:optionId', isAuthenticated, async (req, res) => {
+    try {
+      const matchId = Number(req.params.id);
+      const optionId = Number(req.params.optionId);
+      if (!Number.isFinite(matchId) || matchId <= 0) return res.status(400).json({ error: 'INVALID_MATCH_ID' });
+      if (!Number.isFinite(optionId) || optionId <= 0) return res.status(400).json({ error: 'INVALID_OPTION_ID' });
+
+      const k = getKnex();
+      if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+      await ensureTerminManagerTables(k);
+
+      const match = await loadMatch(k, matchId);
+      if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+      const participant = await resolveParticipant(k, match, req.user.id);
+      if (!participant.allowed) return res.status(403).json({ error: 'NOT_PARTICIPANT' });
+
+      const isOwner = match.home_user_id != null && Number(match.home_user_id) === Number(req.user.id);
+      if (!isOwner) return res.status(403).json({ error: 'ONLY_OWNER_CAN_REMOVE_OPTIONS' });
+
+      const row = await k('match_time_options').where({ id: optionId }).first();
+      if (!row || Number(row.match_id) !== matchId) return res.status(404).json({ error: 'OPTION_NOT_FOUND' });
+
+      await k('match_time_options').where({ id: optionId }).del();
+      return res.json({ removed: true });
+    } catch (e) {
+      console.error('Remove time option failed', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'REMOVE_OPTION_FAILED' });
+    }
+  });
+
+  router.post('/:id/termin-manager/proposals', isAuthenticated, async (req, res) => {
+    try {
+      const matchId = Number(req.params.id);
+      const optionId = Number(req.body?.optionId);
+      const note = typeof req.body?.note === 'string' ? req.body.note.trim() : '';
+      if (!Number.isFinite(matchId) || matchId <= 0) return res.status(400).json({ error: 'INVALID_MATCH_ID' });
+      if (!Number.isFinite(optionId) || optionId <= 0) return res.status(400).json({ error: 'INVALID_OPTION_ID' });
+
+      const k = getKnex();
+      if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+      await ensureTerminManagerTables(k);
+
+      const match = await loadMatch(k, matchId);
+      if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+      const participant = await resolveParticipant(k, match, req.user.id);
+      if (!participant.allowed) return res.status(403).json({ error: 'NOT_PARTICIPANT' });
+
+      if (match.home_user_id == null || match.away_user_id == null) {
+        return res.status(400).json({ error: 'OPPONENT_NOT_ASSIGNED' });
+      }
+
+      const proposerUserId = Number(req.user.id);
+      const recipientUserId = Number(match.home_user_id) === proposerUserId ? Number(match.away_user_id) : Number(match.home_user_id);
+
+      const opt = await k('match_time_options').where({ id: optionId }).first();
+      if (!opt || Number(opt.match_id) !== matchId) return res.status(404).json({ error: 'OPTION_NOT_FOUND' });
+
+      // close any previous active proposal
+      await k('match_schedule_proposals')
+        .where({ match_id: matchId, status: 'sent' })
+        .update({ status: 'countered', responded_at: new Date().toISOString() })
+        .catch(() => {});
+
+      const inserted = await k('match_schedule_proposals').insert({
+        match_id: matchId,
+        proposer_user_id: proposerUserId,
+        recipient_user_id: recipientUserId,
+        option_id: optionId,
+        status: 'sent',
+        note: note || null,
+        created_at: new Date().toISOString(),
+        responded_at: null,
+      });
+      const newId = Array.isArray(inserted) ? inserted[0] : inserted;
+
+      const startsAt = opt.starts_at;
+      const msgBody = `📅 Terminvorschlag gesendet: ${formatStartsAt(startsAt)}${note ? `\n\n${note}` : ''}`;
+      await insertActionMessage(k, {
+        matchId,
+        senderUserId: proposerUserId,
+        senderTeamId: participant.teamId || null,
+        action: 'schedule_proposed',
+        body: msgBody,
+        data: { proposalId: newId, optionId, startsAt },
+      });
+
+      return res.status(201).json({ ok: true, id: newId });
+    } catch (e) {
+      console.error('Send proposal failed', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'SEND_PROPOSAL_FAILED' });
+    }
+  });
+
+  router.post('/:id/termin-manager/proposals/:proposalId/accept', isAuthenticated, async (req, res) => {
+    try {
+      const matchId = Number(req.params.id);
+      const proposalId = Number(req.params.proposalId);
+      const note = typeof req.body?.note === 'string' ? req.body.note.trim() : '';
+      if (!Number.isFinite(matchId) || matchId <= 0) return res.status(400).json({ error: 'INVALID_MATCH_ID' });
+      if (!Number.isFinite(proposalId) || proposalId <= 0) return res.status(400).json({ error: 'INVALID_PROPOSAL_ID' });
+
+      const k = getKnex();
+      if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+      await ensureTerminManagerTables(k);
+
+      const match = await loadMatch(k, matchId);
+      if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+      const participant = await resolveParticipant(k, match, req.user.id);
+      if (!participant.allowed) return res.status(403).json({ error: 'NOT_PARTICIPANT' });
+
+      const row = await k({ p: 'match_schedule_proposals' })
+        .leftJoin({ o: 'match_time_options' }, 'o.id', 'p.option_id')
+        .where('p.id', proposalId)
+        .andWhere('p.match_id', matchId)
+        .first(['p.*', { starts_at: 'o.starts_at' }]);
+      if (!row) return res.status(404).json({ error: 'PROPOSAL_NOT_FOUND' });
+      if (row.status !== 'sent') return res.status(400).json({ error: 'PROPOSAL_NOT_ACTIVE' });
+
+      const viewerId = Number(req.user.id);
+      if (Number(row.recipient_user_id) !== viewerId) return res.status(403).json({ error: 'ONLY_RECIPIENT_CAN_ACCEPT' });
+
+      await k('match_schedule_proposals').where({ id: proposalId }).update({ status: 'accepted', responded_at: new Date().toISOString(), note: row.note || null });
+      // set match kickoff
+      if (row.starts_at) {
+        await k('matches').where({ id: matchId }).update({ kickoff_at: row.starts_at, status: 'scheduled' }).catch(async () => {
+          await k('matches').where({ id: matchId }).update({ kickoff_at: row.starts_at }).catch(() => {});
+        });
+      }
+
+      const msgBody = `📅 Terminvorschlag angenommen: ${formatStartsAt(row.starts_at)}${note ? `\n\n${note}` : ''}`;
+      await insertActionMessage(k, {
+        matchId,
+        senderUserId: viewerId,
+        senderTeamId: participant.teamId || null,
+        action: 'schedule_accepted',
+        body: msgBody,
+        data: { proposalId, optionId: row.option_id, startsAt: row.starts_at },
+      });
+
+      return res.json({ ok: true });
+    } catch (e) {
+      console.error('Accept proposal failed', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'ACCEPT_FAILED' });
+    }
+  });
+
+  router.post('/:id/termin-manager/proposals/:proposalId/reject', isAuthenticated, async (req, res) => {
+    try {
+      const matchId = Number(req.params.id);
+      const proposalId = Number(req.params.proposalId);
+      const note = typeof req.body?.note === 'string' ? req.body.note.trim() : '';
+      if (!Number.isFinite(matchId) || matchId <= 0) return res.status(400).json({ error: 'INVALID_MATCH_ID' });
+      if (!Number.isFinite(proposalId) || proposalId <= 0) return res.status(400).json({ error: 'INVALID_PROPOSAL_ID' });
+
+      const k = getKnex();
+      if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+      await ensureTerminManagerTables(k);
+
+      const match = await loadMatch(k, matchId);
+      if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+      const participant = await resolveParticipant(k, match, req.user.id);
+      if (!participant.allowed) return res.status(403).json({ error: 'NOT_PARTICIPANT' });
+
+      const row = await k({ p: 'match_schedule_proposals' })
+        .leftJoin({ o: 'match_time_options' }, 'o.id', 'p.option_id')
+        .where('p.id', proposalId)
+        .andWhere('p.match_id', matchId)
+        .first(['p.*', { starts_at: 'o.starts_at' }]);
+      if (!row) return res.status(404).json({ error: 'PROPOSAL_NOT_FOUND' });
+      if (row.status !== 'sent') return res.status(400).json({ error: 'PROPOSAL_NOT_ACTIVE' });
+
+      const viewerId = Number(req.user.id);
+      if (Number(row.recipient_user_id) !== viewerId) return res.status(403).json({ error: 'ONLY_RECIPIENT_CAN_REJECT' });
+
+      await k('match_schedule_proposals').where({ id: proposalId }).update({ status: 'rejected', responded_at: new Date().toISOString() });
+
+      const msgBody = `📅 Terminvorschlag abgelehnt: ${formatStartsAt(row.starts_at)}${note ? `\n\n${note}` : ''}`;
+      await insertActionMessage(k, {
+        matchId,
+        senderUserId: viewerId,
+        senderTeamId: participant.teamId || null,
+        action: 'schedule_rejected',
+        body: msgBody,
+        data: { proposalId, optionId: row.option_id, startsAt: row.starts_at },
+      });
+
+      return res.json({ ok: true });
+    } catch (e) {
+      console.error('Reject proposal failed', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'REJECT_FAILED' });
+    }
+  });
+
+  router.post('/:id/termin-manager/proposals/:proposalId/counter', isAuthenticated, async (req, res) => {
+    try {
+      const matchId = Number(req.params.id);
+      const proposalId = Number(req.params.proposalId);
+      const optionId = Number(req.body?.optionId);
+      const note = typeof req.body?.note === 'string' ? req.body.note.trim() : '';
+      if (!Number.isFinite(matchId) || matchId <= 0) return res.status(400).json({ error: 'INVALID_MATCH_ID' });
+      if (!Number.isFinite(proposalId) || proposalId <= 0) return res.status(400).json({ error: 'INVALID_PROPOSAL_ID' });
+      if (!Number.isFinite(optionId) || optionId <= 0) return res.status(400).json({ error: 'INVALID_OPTION_ID' });
+
+      const k = getKnex();
+      if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+      await ensureTerminManagerTables(k);
+
+      const match = await loadMatch(k, matchId);
+      if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+      const participant = await resolveParticipant(k, match, req.user.id);
+      if (!participant.allowed) return res.status(403).json({ error: 'NOT_PARTICIPANT' });
+
+      const row = await k('match_schedule_proposals').where({ id: proposalId, match_id: matchId }).first();
+      if (!row) return res.status(404).json({ error: 'PROPOSAL_NOT_FOUND' });
+      if (row.status !== 'sent') return res.status(400).json({ error: 'PROPOSAL_NOT_ACTIVE' });
+
+      const viewerId = Number(req.user.id);
+      if (Number(row.recipient_user_id) !== viewerId) return res.status(403).json({ error: 'ONLY_RECIPIENT_CAN_COUNTER' });
+
+      const opt = await k('match_time_options').where({ id: optionId }).first();
+      if (!opt || Number(opt.match_id) !== matchId) return res.status(404).json({ error: 'OPTION_NOT_FOUND' });
+
+      // mark current proposal as countered
+      await k('match_schedule_proposals').where({ id: proposalId }).update({ status: 'countered', responded_at: new Date().toISOString() });
+
+      // create new active proposal back to original proposer
+      const inserted = await k('match_schedule_proposals').insert({
+        match_id: matchId,
+        proposer_user_id: viewerId,
+        recipient_user_id: Number(row.proposer_user_id),
+        option_id: optionId,
+        status: 'sent',
+        note: note || null,
+        created_at: new Date().toISOString(),
+        responded_at: null,
+      });
+      const newId = Array.isArray(inserted) ? inserted[0] : inserted;
+
+      const msgBody = `📅 Gegenvorschlag gesendet: ${formatStartsAt(opt.starts_at)}${note ? `\n\n${note}` : ''}`;
+      await insertActionMessage(k, {
+        matchId,
+        senderUserId: viewerId,
+        senderTeamId: participant.teamId || null,
+        action: 'schedule_counter_proposed',
+        body: msgBody,
+        data: { proposalId: newId, optionId, startsAt: opt.starts_at },
+      });
+
+      return res.status(201).json({ ok: true, id: newId });
+    } catch (e) {
+      console.error('Counter proposal failed', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'COUNTER_FAILED' });
+    }
+  });
+
   // Delete a pending match ("Absagen" = hard delete)
   // Rules:
   // - Match must exist and be pending (no scores yet)
@@ -1268,6 +1724,9 @@ module.exports = function matchesRoutes({ db }) {
       const messages = (rows || []).map((row) => ({
         id: row.id,
         body: row.body,
+        kind: row.kind || null,
+        action: row.action || null,
+        data: row.data || null,
         createdAt: row.created_at,
         senderUserId: row.sender_user_id,
         senderTeamId: row.sender_team_id,
@@ -1311,6 +1770,9 @@ module.exports = function matchesRoutes({ db }) {
       const payload = row ? {
         id: row.id,
         body: row.body,
+        kind: row.kind || null,
+        action: row.action || null,
+        data: row.data || null,
         createdAt: row.created_at,
         senderUserId: row.sender_user_id,
         senderTeamId: row.sender_team_id,
@@ -1320,6 +1782,9 @@ module.exports = function matchesRoutes({ db }) {
       } : {
         id: newId,
         body: insertRec.body,
+        kind: null,
+        action: null,
+        data: null,
         createdAt: insertRec.created_at,
         senderUserId: insertRec.sender_user_id,
         senderTeamId: insertRec.sender_team_id,

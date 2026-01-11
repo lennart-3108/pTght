@@ -8,6 +8,7 @@ import TimeCounter from "../components/TimeCounter";
 import Avatar from "../components/Avatar";
 import BookingConfirmationPopup from "../components/BookingConfirmationPopup";
 import BookingWidget from "../components/BookingWidget";
+import TerminManagerKalender from "../components/TerminManagerKalender";
 import LocationSelector from "../components/LocationSelector";
 
 export default function GameDetailPage() {
@@ -22,6 +23,27 @@ export default function GameDetailPage() {
   const [loading, setLoading] = useState(true);
   // auth token for optional result submission
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+  // decode JWT (locally) to get the current viewer's user id without extra /me call
+  function decodeJwt(t) {
+    try {
+      const p = t.split(".")[1];
+      const json = atob(p.replace(/-/g, "+").replace(/_/g, "/"));
+      return JSON.parse(
+        decodeURIComponent(
+          json
+            .split("")
+            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+            .join("")
+        )
+      );
+    } catch {
+      return null;
+    }
+  }
+
+  const viewer = token ? decodeJwt(token) : null;
+  const viewerId = viewer && (viewer.id || viewer.userId || viewer.user_id);
   const [hScore, setHScore] = useState(0);
   const [aScore, setAScore] = useState(0);
   const [submitMsg, setSubmitMsg] = useState('');
@@ -52,6 +74,8 @@ export default function GameDetailPage() {
   const [booking, setBooking] = useState(null); // Store confirmed booking data
   const [chatUnread, setChatUnread] = useState(false); // Chat unread status
   const [userProfile, setUserProfile] = useState(null); // User profile with location
+  const [proposalActionMsg, setProposalActionMsg] = useState('');
+  const [proposalActionLoading, setProposalActionLoading] = useState(false);
 
   // Layout policy: keep three cards always side-by-side; enable horizontal scrolling on small screens
 
@@ -201,6 +225,46 @@ export default function GameDetailPage() {
   const [standings, setStandings] = useState([]);
   // control schedule form visibility
   const [showSchedule, setShowSchedule] = useState(true);
+  // Termin-Manager
+  const [showTerminManager, setShowTerminManager] = useState(false);
+  const [terminMeta, setTerminMeta] = useState(null);
+  const [terminProposal, setTerminProposal] = useState(null);
+    // Load termin-manager status to show the correct button label
+    useEffect(() => {
+      if (!token || !gameId) return;
+      if (!game) return;
+      // Only relevant when both sides are assigned and match not completed
+      if (!(game.home_score == null && game.away_score == null && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away)))) return;
+
+      let cancelled = false;
+      const controller = new AbortController();
+      (async () => {
+        try {
+          const res = await fetch(`${API_BASE}/matches/${gameId}/termin-manager`, {
+            headers: { Authorization: `Bearer ${token}` },
+            signal: controller.signal
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) return;
+          if (cancelled) return;
+          setTerminMeta(data?.meta || null);
+          setTerminProposal(data?.proposal || null);
+        } catch {
+          // ignore
+        }
+      })();
+      return () => {
+        cancelled = true;
+        controller.abort();
+      };
+    }, [token, gameId, game]);
+
+    const terminButtonLabel = useMemo(() => {
+      const viewerUserId = terminMeta?.viewerUserId || viewerId || null;
+      if (!terminProposal || terminProposal.status !== 'sent') return 'Termin vereinbaren';
+      if (viewerUserId != null && Number(terminProposal.proposerUserId) === Number(viewerUserId)) return 'Einladung gesendet';
+      return 'Termin vorschlag erhalten';
+    }, [terminProposal, terminMeta, viewerId]);
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -284,23 +348,49 @@ export default function GameDetailPage() {
   const playerA = { name: game.home_user_name || game.home || "-", id: game.home_user_id || null };
   const playerB = { name: game.away_user_name || game.away || "-", id: game.away_user_id || null };
 
-  // decode JWT (locally) to get the current viewer's user id without extra /me call
-  function decodeJwt(t) {
-    try {
-      const p = t.split(".")[1];
-      const json = atob(p.replace(/-/g, "+").replace(/_/g, "/"));
-      return JSON.parse(decodeURIComponent(
-        json.split("").map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2)).join("")
-      ));
-    } catch { return null; }
-  }
-  const viewer = token ? decodeJwt(token) : null;
-  const viewerId = viewer && (viewer.id || viewer.userId || viewer.user_id);
   const isParticipant = viewerId && (
     (game.home_user_id != null && String(game.home_user_id) === String(viewerId)) ||
     (game.away_user_id != null && String(game.away_user_id) === String(viewerId))
   );
   const isCompleted = (game.home_score != null && game.away_score != null);
+
+  const statusLabel = (() => {
+    if (game.home_score != null && game.away_score != null) return 'Absolviert';
+    
+    // Check if match is scheduled (status = 'scheduled' or has accepted proposal)
+    if (game.status === 'scheduled' || (terminProposal && terminProposal.status === 'accepted')) {
+      return 'Match geplant';
+    }
+
+    const now = new Date();
+
+    // For open time windows (fixed/range), a match is not "absolviert" just because the window started.
+    // Only after the window end has passed, we treat it as "Absolviert / ohne Ergebnis".
+    const isOpenWindow = game.when_type === 'fixed' || game.when_type === 'range' || (!!game.kickoff_end_at && game.when_type !== 'exact');
+    if (isOpenWindow) {
+      if (!game.kickoff_end_at) return 'Termin ausstehend';
+      const end = new Date(game.kickoff_end_at);
+      if (Number.isNaN(end.getTime())) return 'Match ausstehend';
+      if (now.getTime() >= end.getTime()) return 'Absolviert / ohne Ergebnis';
+      return 'Match ausstehend';
+    }
+
+    if (!game.kickoff_at) return 'Termin ausstehend';
+    const kickoff = new Date(game.kickoff_at);
+    if (Number.isNaN(kickoff.getTime())) return 'Match ausstehend';
+
+    const diffMs = now.getTime() - kickoff.getTime();
+    if (diffMs >= 0) {
+      const diffMin = diffMs / 60000;
+      if (diffMin < 60) return 'Live';
+      if (diffMin < 120) return 'Laufend';
+      return 'Absolviert / ohne Ergebnis';
+    }
+
+    const sameDay = now.getFullYear() === kickoff.getFullYear() && now.getMonth() === kickoff.getMonth() && now.getDate() === kickoff.getDate();
+    if (sameDay) return 'Heute';
+    return 'Match ausstehend';
+  })();
 
   // compute simple table positions from standings (win=3, draw=1, loss=0)
   function computeTablePositions(rows) {
@@ -540,10 +630,295 @@ export default function GameDetailPage() {
     }
   }
 
+  async function acceptProposal(proposalId) {
+    if (!token) return;
+    setProposalActionLoading(true);
+    setProposalActionMsg('');
+    try {
+      const res = await fetch(`${API_BASE}/matches/${gameId}/termin-manager/proposals/${proposalId}/accept`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Fehler beim Annehmen');
+      setProposalActionMsg('✅ Termin angenommen! Match-Startdatum wurde gesetzt.');
+      // Reload termin manager data
+      const terminRes = await fetch(`${API_BASE}/matches/${gameId}/termin-manager`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const terminData = await terminRes.json().catch(() => ({}));
+      if (terminRes.ok) {
+        setTerminMeta(terminData?.meta || null);
+        setTerminProposal(terminData?.proposal || null);
+      }
+      // Reload game data to get updated kickoff_at
+      const gameRes = await fetch(`${API_BASE}/matches/${gameId}`);
+      const gameData = await gameRes.json().catch(() => ({}));
+      if (gameRes.ok) setGame(gameData);
+    } catch (e) {
+      setProposalActionMsg(e.message || 'Fehler');
+    } finally {
+      setProposalActionLoading(false);
+    }
+  }
+
+  async function rejectProposal(proposalId) {
+    if (!token) return;
+    setProposalActionLoading(true);
+    setProposalActionMsg('');
+    try {
+      const res = await fetch(`${API_BASE}/matches/${gameId}/termin-manager/proposals/${proposalId}/reject`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Fehler beim Ablehnen');
+      setProposalActionMsg('Terminvorschlag abgelehnt');
+      // Reload termin manager data
+      const terminRes = await fetch(`${API_BASE}/matches/${gameId}/termin-manager`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const terminData = await terminRes.json().catch(() => ({}));
+      if (terminRes.ok) {
+        setTerminMeta(terminData?.meta || null);
+        setTerminProposal(terminData?.proposal || null);
+      }
+      setTimeout(() => setProposalActionMsg(''), 3000);
+    } catch (e) {
+      setProposalActionMsg(e.message || 'Fehler');
+    } finally {
+      setProposalActionLoading(false);
+    }
+  }
+
+  function counterProposal() {
+    setShowTerminManager(true);
+  }
+
   return (
     <div style={containerStyle}>
       {/* Hero match card */}
       <div style={{ ...cardStyle, padding: 20, background: 'linear-gradient(145deg, #102a22, #0c1f1a)' }}>
+        {/* Join CTA for open matches (viewer is not host and opponent missing) */}
+        {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && !(viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId))) && (() => {
+          const isOpenMatch = game.league === 'Open Matches' || (game.league && game.league.includes('Open Matches'));
+          const canJoin = isOpenMatch || !hasWeeklyMatch;
+          return (
+            <div style={{
+              padding: '20px',
+              background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.25), rgba(47, 107, 87, 0.15))',
+              border: '2px solid rgba(222, 188, 124, 0.5)',
+              borderRadius: 14,
+              marginBottom: 16,
+              boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
+            }}>
+              <div style={{ fontSize: 18, fontWeight: 700, color: '#debc7c', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <span style={{ fontSize: 24 }}>🏆</span>
+                Mitspieler gesucht!
+              </div>
+              <div style={{ color: '#e8efe8', fontSize: 14, marginBottom: 16, lineHeight: 1.5 }}>
+                {playerA.name} sucht einen Gegner für dieses Match. Tritt bei und fordere ihn heraus!
+              </div>
+              <button
+                onClick={joinMatch}
+                disabled={!canJoin}
+                style={{
+                  padding: '14px 24px',
+                  borderRadius: 12,
+                  border: 'none',
+                  background: canJoin ? 'linear-gradient(135deg, #debc7c, #c9a75f)' : 'rgba(58, 74, 69, 0.5)',
+                  color: canJoin ? '#10261f' : '#666',
+                  cursor: canJoin ? 'pointer' : 'not-allowed',
+                  fontWeight: 700,
+                  fontSize: 15,
+                  width: '100%',
+                  boxShadow: canJoin ? '0 6px 16px rgba(222, 188, 124, 0.4)' : 'none',
+                  transition: 'all 0.3s ease',
+                  transform: canJoin ? 'scale(1)' : 'scale(0.98)'
+                }}
+                onMouseEnter={(e) => {
+                  if (canJoin) {
+                    e.target.style.transform = 'scale(1.02)';
+                    e.target.style.boxShadow = '0 8px 20px rgba(222, 188, 124, 0.5)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (canJoin) {
+                    e.target.style.transform = 'scale(1)';
+                    e.target.style.boxShadow = '0 6px 16px rgba(222, 188, 124, 0.4)';
+                  }
+                }}
+              >
+                {isOpenMatch ? '✨ Jetzt beitreten' : '⚔️ Challenge annehmen'}
+              </button>
+              {!canJoin && !isOpenMatch && (
+                <div style={{ marginTop: 10, color: '#ccc', fontSize: 13, textAlign: 'center' }}>
+                  Du hast diese Woche bereits ein Match in dieser Liga.
+                </div>
+              )}
+            </div>
+          );
+        })()}
+        
+        {/* Terminvorschlag Widget - 1:1 wie im Termin Manager */}
+        {terminProposal && terminProposal.status === 'sent' && (() => {
+          const viewerIdNum = Number(viewerId);
+          const byYou = viewerIdNum && Number(terminProposal.proposerUserId) === viewerIdNum;
+          const canAccept = viewerIdNum && Number(terminProposal.recipientUserId) === viewerIdNum;
+          const dt = terminProposal.proposed_datetime ? new Date(terminProposal.proposed_datetime) : null;
+          
+          return (
+            <div style={{ marginTop: 16 }}>
+              <div style={{ 
+                marginBottom: 8,
+                fontSize: 14,
+                fontWeight: 600,
+                color: '#debc7c'
+              }}>
+                📅 Terminvorschlag
+              </div>
+              
+              {proposalActionMsg && (
+                <div style={{
+                  padding: 10,
+                  marginBottom: 10,
+                  borderRadius: 8,
+                  background: proposalActionMsg.includes('✅') || proposalActionMsg.includes('angenommen') ? 'rgba(74, 157, 95, 0.15)' : 'rgba(255, 107, 107, 0.15)',
+                  border: `1px solid ${proposalActionMsg.includes('✅') || proposalActionMsg.includes('angenommen') ? '#4a9d5f' : '#ff6b6b'}`,
+                  color: proposalActionMsg.includes('✅') || proposalActionMsg.includes('angenommen') ? '#6bff9d' : '#ff6b6b',
+                  fontSize: 13
+                }}>
+                  {proposalActionMsg}
+                </div>
+              )}
+              
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 12,
+                padding: '12px 14px',
+                backgroundColor: '#0f2a20',
+                border: '1px solid #26493c',
+                borderRadius: 10
+              }}>
+                <div>
+                  <div style={{ fontWeight: 700, color: '#e8efe8' }}>
+                    {dt ? dt.toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'Terminvorschlag'}
+                  </div>
+                  <div style={{ color: '#9db', fontSize: 13 }}>
+                    {byYou ? 'von dir' : 'vom Gegner'} · Status: <span style={{ color: '#c9a75f' }}>ausstehend</span>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {canAccept ? (
+                    <>
+                      <button 
+                        onClick={() => acceptProposal(terminProposal.id)} 
+                        disabled={proposalActionLoading}
+                        style={{
+                          background: 'linear-gradient(135deg, #debc7c, #c9a75f)',
+                          color: '#10261f',
+                          border: 'none',
+                          padding: '10px 16px',
+                          fontSize: 14,
+                          fontWeight: 700,
+                          cursor: proposalActionLoading ? 'not-allowed' : 'pointer',
+                          borderRadius: 10,
+                          opacity: proposalActionLoading ? 0.5 : 1
+                        }}
+                      >
+                        Annehmen
+                      </button>
+                      <button 
+                        onClick={counterProposal}
+                        disabled={proposalActionLoading}
+                        style={{
+                          background: 'rgba(222, 188, 124, 0.15)',
+                          color: '#debc7c',
+                          border: '1px solid #c9a75f',
+                          padding: '10px 14px',
+                          fontSize: 14,
+                          fontWeight: 600,
+                          cursor: proposalActionLoading ? 'not-allowed' : 'pointer',
+                          borderRadius: 10
+                        }}
+                      >
+                        Gegenvorschlag
+                      </button>
+                      <button 
+                        onClick={() => rejectProposal(terminProposal.id)}
+                        disabled={proposalActionLoading}
+                        style={{
+                          background: 'rgba(38, 73, 60, 0.6)',
+                          color: '#cfe',
+                          border: '1px solid #26493c',
+                          padding: '10px 14px',
+                          fontSize: 14,
+                          fontWeight: 600,
+                          cursor: proposalActionLoading ? 'not-allowed' : 'pointer',
+                          borderRadius: 10
+                        }}
+                      >
+                        Ablehnen
+                      </button>
+                    </>
+                  ) : (
+                    <button 
+                      onClick={() => setShowTerminManager(true)}
+                      style={{
+                        background: 'rgba(38, 73, 60, 0.6)',
+                        color: '#cfe',
+                        border: '1px solid #26493c',
+                        padding: '10px 14px',
+                        fontSize: 14,
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        borderRadius: 10
+                      }}
+                    >
+                      Details ansehen
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+        
+        {/* Mitspieler gesucht Info - für Match Creator (oben im Hero) */}
+        {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
+          <div style={{ 
+            marginTop: 16,
+            padding: '20px', 
+            background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.2), rgba(47, 107, 87, 0.1))',
+            border: '2px solid rgba(222, 188, 124, 0.4)',
+            borderRadius: 14,
+            textAlign: 'center',
+            boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
+          }}>
+            <div style={{ fontSize: 18, fontWeight: 700, color: '#debc7c', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <span style={{ fontSize: 24 }}>👥</span>
+              Mitspieler gesucht
+            </div>
+            <div style={{ color: '#c5d9ce', fontSize: 14, lineHeight: 1.6, marginBottom: 10 }}>
+              Dein Match ist veröffentlicht und für alle Spieler sichtbar.
+            </div>
+            <div style={{ 
+              display: 'inline-block',
+              padding: '6px 14px',
+              background: 'rgba(222, 188, 124, 0.15)',
+              border: '1px solid rgba(222, 188, 124, 0.3)',
+              borderRadius: 20,
+              fontSize: 12,
+              color: '#debc7c',
+              fontWeight: 600
+            }}>
+              🎯 Spiel aktiv
+            </div>
+          </div>
+        )}
+
         {/* Header row with action buttons */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 24, fontWeight: 700 }}>{game.league || 'Liga'}</div>
@@ -586,53 +961,25 @@ export default function GameDetailPage() {
               </Link>
             )}
             {(token && game && game.home_score == null && game.away_score == null && !booking && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
-              <button onClick={() => setShowSchedule(s => !s)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', fontSize: 14 }}>
-                {game.kickoff_at ? 'Termin ändern' : 'Termin festlegen'}
+              <button onClick={() => setShowTerminManager(true)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', fontSize: 14 }}>
+                {terminButtonLabel}
               </button>
             )}
-            {(token && game && game.home_score == null && game.away_score == null) && (
+            {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
               <button onClick={cancelMatch} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #553f3f', background: '#2a1b1b', color: '#e9d8d8', fontSize: 14 }}>ABSAGEN</button>
             )}
           </div>
         </div>
 
-        {/* Mitspieler gesucht Info - für Match Creator */}
-        {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
-          <div style={{ 
-            marginTop: 16,
-            padding: '20px', 
-            background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.2), rgba(47, 107, 87, 0.1))',
-            border: '2px solid rgba(222, 188, 124, 0.4)',
-            borderRadius: 14,
-            textAlign: 'center',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
-          }}>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#debc7c', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <span style={{ fontSize: 24 }}>👥</span>
-              Mitspieler gesucht
-            </div>
-            <div style={{ color: '#c5d9ce', fontSize: 14, lineHeight: 1.6, marginBottom: 10 }}>
-              Dein Match ist veröffentlicht und für alle Spieler sichtbar.
-            </div>
-            <div style={{ 
-              display: 'inline-block',
-              padding: '6px 14px',
-              background: 'rgba(222, 188, 124, 0.15)',
-              border: '1px solid rgba(222, 188, 124, 0.3)',
-              borderRadius: 20,
-              fontSize: 12,
-              color: '#debc7c',
-              fontWeight: 600
-            }}>
-              🎯 Spiel aktiv
-            </div>
-          </div>
-        )}
-
         {/* Date + status in one line */}
         <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ fontSize: 20 }}>
-            {game.when_type === 'range' && game.range_days ? (
+            {(game.status === 'scheduled' || (terminProposal && terminProposal.status === 'accepted')) && game.kickoff_at ? (
+              <>
+                {formatDate(game.kickoff_at)}
+                {formatTime(game.kickoff_at) && <span style={{ marginLeft: 8, color: '#9db' }}>{formatTime(game.kickoff_at)}</span>}
+              </>
+            ) : game.when_type === 'range' && game.range_days ? (
               <span>In den nächsten {game.range_days} Tag{game.range_days !== 1 ? 'en' : ''}</span>
             ) : game.when_type === 'fixed' && game.kickoff_at && game.kickoff_end_at ? (
               <span>Zeitraum: {formatDate(game.kickoff_at)} - {formatDate(game.kickoff_end_at)}</span>
@@ -651,15 +998,18 @@ export default function GameDetailPage() {
             ) : game.kickoff_end_at ? (
               'Zeitraum flexibel'
             ) : (
-              'Termin offen'
+              'Termin ausstehend'
             )}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <span style={{ width: 8, height: 8, background: '#ffd35d', borderRadius: 999 }} />
-            <span style={{ color: '#ffd35d' }}>{isCompleted ? 'Beendet' : 'Ausstehend'}</span>
+            <span style={{ color: '#ffd35d' }}>{statusLabel || (isCompleted ? 'Absolviert' : 'Match ausstehend')}</span>
           </div>
-          {game.when_type !== 'range' && game.kickoff_at && (
+          {game.when_type === 'exact' && game.kickoff_at && (
             <div style={{ color: '#9db', fontSize: 14 }}>{relativeFromNow(game.kickoff_at)}</div>
+          )}
+          {(game.when_type === 'fixed' || game.when_type === 'range') && game.kickoff_end_at && (
+            <div style={{ color: '#9db', fontSize: 14 }}>{relativeFromNow(game.kickoff_end_at)}</div>
           )}
           {game.kickoff_end_at && !game.kickoff_at && (
             <div style={{ color: '#9db', fontSize: 14 }}>Bis {formatDate(game.kickoff_end_at)}</div>
@@ -786,7 +1136,7 @@ export default function GameDetailPage() {
           
           {/* Center section with VS or Counters */}
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
-            {(token && isParticipant && (game.home_score == null && game.away_score == null)) ? (
+            {(token && isParticipant && (game.home_score == null && game.away_score == null) && !!game.kickoff_at) ? (
               <>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                   <Counter
@@ -832,6 +1182,7 @@ export default function GameDetailPage() {
                     fontWeight: 500
                   }}>
                     {cannotReason === 'KICKOFF_NOT_SET' ? '📅 Termin noch nicht festgelegt' : 
+                     cannotReason === 'KICKOFF_NOT_REACHED' ? '⏰ Ergebnis kann erst ab Startdatum eingetragen werden' :
                      cannotReason === 'LEAGUE_MEMBERS_ONLY' ? '🔒 Nur Liga-Mitglieder' : cannotReason}
                   </div>
                 )}
@@ -842,7 +1193,14 @@ export default function GameDetailPage() {
                 )}
               </>
             ) : (
-              <div style={{ fontSize: 40, color: '#cde' }}>VS</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: 40, color: '#cde' }}>VS</div>
+                {(token && isParticipant && (game.home_score == null && game.away_score == null) && !game.kickoff_at) && (
+                  <div style={{ marginTop: 10, fontSize: 13, color: '#ffc864', background: 'rgba(255, 200, 100, 0.08)', border: '1px solid rgba(255, 200, 100, 0.25)', borderRadius: 10, padding: '8px 10px', maxWidth: 360 }}>
+                    📅 Ergebnis erst möglich, wenn ein Termin festgelegt ist.
+                  </div>
+                )}
+              </div>
             )}
           </div>
           
@@ -921,6 +1279,38 @@ export default function GameDetailPage() {
         {/* Booking Widget - Show confirmed booking if exists */}
         {booking && <BookingWidget booking={booking} onCancel={handleCancelBooking} />}
 
+        {token && game && showTerminManager && (
+          <TerminManagerKalender
+            matchId={gameId}
+            token={token}
+            matchInfo={{
+              home_player: game.home_player,
+              away_player: game.away_player,
+              sport: game.sport,
+              league: game.league_name
+            }}
+            onInvitationSent={() => {
+              setShowTerminManager(false);
+              window.location.reload();
+            }}
+            onClose={() => {
+              setShowTerminManager(false);
+              // refresh label state after close
+              setTimeout(() => {
+                if (!token) return;
+                fetch(`${API_BASE}/matches/${gameId}/termin-manager`, { headers: { Authorization: `Bearer ${token}` } })
+                  .then((r) => r.json().then((d) => ({ ok: r.ok, d })).catch(() => ({ ok: r.ok, d: {} })))
+                  .then(({ ok, d }) => {
+                    if (!ok) return;
+                    setTerminMeta(d?.meta || null);
+                    setTerminProposal(d?.proposal || null);
+                  })
+                  .catch(() => {});
+              }, 200);
+            }}
+          />
+        )}
+
         {/* Schedule form (toggled) - Hide when booking exists */}
         {(token && game && isParticipant && game.home_score == null && game.away_score == null && showSchedule && !booking) && (
           <ScheduleSection
@@ -951,89 +1341,7 @@ export default function GameDetailPage() {
           />
         )}
 
-        {/* Join match when opponent not yet assigned (nur für andere Spieler, nicht für Creator) */}
-        {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && !(viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId))) && (
-          <div style={{ marginTop: 16 }}>
-            {(() => {
-              // Check if this is an Open Match (friendly match) - these don't have weekly limits
-              const isOpenMatch = game.league === 'Open Matches' || (game.league && game.league.includes('Open Matches'));
-              const canJoin = isOpenMatch || !hasWeeklyMatch;
-              
-              // Invitation for other players
-              return (
-                <>
-                  <div style={{ 
-                    padding: '20px', 
-                    background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.25), rgba(47, 107, 87, 0.15))',
-                    border: '2px solid rgba(222, 188, 124, 0.5)',
-                    borderRadius: 14,
-                    marginBottom: 12,
-                    boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
-                  }}>
-                    <div style={{ fontSize: 18, fontWeight: 700, color: '#debc7c', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <span style={{ fontSize: 24 }}>🏆</span>
-                      Mitspieler gesucht!
-                    </div>
-                    <div style={{ color: '#e8efe8', fontSize: 14, marginBottom: 16, lineHeight: 1.5 }}>
-                      {playerA.name} sucht einen Gegner für dieses Match. Tritt bei und fordere ihn heraus!
-                    </div>
-                    <button 
-                      onClick={joinMatch} 
-                      disabled={!canJoin} 
-                      style={{ 
-                        padding: '14px 24px', 
-                        borderRadius: 12, 
-                        border: 'none',
-                        background: canJoin ? 'linear-gradient(135deg, #debc7c, #c9a75f)' : 'rgba(58, 74, 69, 0.5)', 
-                        color: canJoin ? '#10261f' : '#666',
-                        cursor: canJoin ? 'pointer' : 'not-allowed',
-                        fontWeight: 700,
-                        fontSize: 15,
-                        width: '100%',
-                        boxShadow: canJoin ? '0 6px 16px rgba(222, 188, 124, 0.4)' : 'none',
-                        transition: 'all 0.3s ease',
-                        transform: canJoin ? 'scale(1)' : 'scale(0.98)'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (canJoin) {
-                          e.target.style.transform = 'scale(1.02)';
-                          e.target.style.boxShadow = '0 8px 20px rgba(222, 188, 124, 0.5)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (canJoin) {
-                          e.target.style.transform = 'scale(1)';
-                          e.target.style.boxShadow = '0 6px 16px rgba(222, 188, 124, 0.4)';
-                        }
-                      }}
-                    >
-                      {isOpenMatch ? '✨ Jetzt beitreten' : '⚔️ Challenge annehmen'}
-                    </button>
-                    {!canJoin && !isOpenMatch && (
-                      <div style={{ marginTop: 10, color: '#ccc', fontSize: 13, textAlign: 'center' }}>
-                        Du hast diese Woche bereits ein Match in dieser Liga.
-                      </div>
-                    )}
-                  </div>
-                  {joinMsg && (
-                    <div style={{ 
-                      marginTop: 8, 
-                      padding: '10px',
-                      borderRadius: 8,
-                      background: joinMsg.includes('Beigetreten') ? 'rgba(153, 255, 153, 0.1)' : 'rgba(255, 153, 153, 0.1)',
-                      color: joinMsg.includes('Beigetreten') ? '#9f9' : '#fcc',
-                      textAlign: 'center'
-                    }}>
-                      {joinMsg}
-                    </div>
-                  )}
-                </>
-              );
-            })()}
-          </div>
-        )}
-
-
+        {/* Join match CTA wird oben im Hero angezeigt */}
       </div>
 
       {game.leagueId && (

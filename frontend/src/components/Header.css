@@ -5,8 +5,10 @@
   color: #e6efe9;
   height: var(--ml-header-height);
   box-sizing: border-box;
-  position: relative;
+  position: sticky;
+  top: 0;
   width: 100%;
+  z-index: 1000;
 }
 
 .ml-header__logo {
@@ -26,7 +28,7 @@
   padding: 0; 
 }
 .ml-logo-full { 
-  height: var(--ml-header-height); /* Full header height - 100%! */
+  height: var(--ml-header-height); /* Same as header height */
   width: auto; 
   display: block; 
   margin: 0; 
@@ -210,11 +212,14 @@
 }
 
 /* Mobile: Ensure popover stays within viewport */
-@media (max-width: 480px) {
+@media (max-width: 768px) {
   .ml-actionWrap > .ml-popover {
-    right: -16px; /* Offset to align with screen edge */
-    width: calc(100vw - 16px); /* Full width minus small margin */
-    max-width: 360px;
+    position: fixed !important;
+    right: 8px !important;
+    left: 8px !important;
+    width: auto !important;
+    max-width: none !important;
+    top: calc(var(--ml-header-height) + 12px) !important;
   }
 }
 .ml-popover__header {
@@ -364,6 +369,37 @@
 .ml-popover__itemLink:hover {
   background: rgba(255, 255, 255, 0.12);
   border-color: rgba(255, 255, 255, 0.3);
+}
+.ml-popover__itemActionBtn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 140ms ease;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #f2fff8;
+}
+.ml-popover__itemActionBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.ml-popover__itemActionBtn--primary {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+.ml-popover__itemActionBtn--primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #45a049, #3d8b40);
+  border-color: rgba(255, 255, 255, 0.3);
+}
+.ml-popover__itemActionBtn--secondary {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.08);
+}
+.ml-popover__itemActionBtn--secondary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.25);
 }
 .ml-popover__pill {
   font-size: 10px;

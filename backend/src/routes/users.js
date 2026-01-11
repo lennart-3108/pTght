@@ -536,5 +536,167 @@ module.exports = function usersRoutes(ctx) {
       return res.json({ ok: true, url: `/chat/user/${targetId}` });
     });
 
+  // Avatar likes and comments
+  let avatarTablesEnsured = false;
+  async function ensureAvatarTables() {
+    if (avatarTablesEnsured) return true;
+    await dbRunAsync(
+      `CREATE TABLE IF NOT EXISTS avatar_likes (
+        user_id INTEGER NOT NULL,
+        liker_id INTEGER NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (user_id, liker_id)
+      )`
+    );
+    await dbRunAsync(
+      `CREATE TABLE IF NOT EXISTS avatar_comments (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        commenter_id INTEGER NOT NULL,
+        text TEXT NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+      )`
+    );
+    avatarTablesEnsured = true;
+    return true;
+  }
+
+  // GET avatar likes count and whether current user liked
+  router.get('/users/:id/avatar/likes', isAuthenticated, async (req, res) => {
+    try {
+      await ensureAvatarTables();
+      const userId = Number(req.params.id);
+      const currentUserId = req.user?.id;
+      
+      const count = await dbGetAsync(
+        'SELECT COUNT(*) as count FROM avatar_likes WHERE user_id = ?',
+        [userId]
+      );
+      
+      let userLiked = false;
+      if (currentUserId) {
+        const like = await dbGetAsync(
+          'SELECT 1 FROM avatar_likes WHERE user_id = ? AND liker_id = ?',
+          [userId, currentUserId]
+        );
+        userLiked = !!like;
+      }
+      
+      res.json({ count: count?.count || 0, userLiked });
+    } catch (err) {
+      console.error('Error fetching avatar likes:', err);
+      res.status(500).json({ error: 'Datenbankfehler' });
+    }
+  });
+
+  // POST like avatar
+  router.post('/users/:id/avatar/like', isAuthenticated, async (req, res) => {
+    try {
+      await ensureAvatarTables();
+      const userId = Number(req.params.id);
+      const likerId = req.user?.id;
+      
+      if (!likerId) return res.status(401).json({ error: 'Nicht autorisiert' });
+      
+      await dbRunAsync(
+        'INSERT OR IGNORE INTO avatar_likes (user_id, liker_id) VALUES (?, ?)',
+        [userId, likerId]
+      );
+      
+      res.json({ ok: true });
+    } catch (err) {
+      console.error('Error liking avatar:', err);
+      res.status(500).json({ error: 'Datenbankfehler' });
+    }
+  });
+
+  // DELETE unlike avatar
+  router.delete('/users/:id/avatar/like', isAuthenticated, async (req, res) => {
+    try {
+      await ensureAvatarTables();
+      const userId = Number(req.params.id);
+      const likerId = req.user?.id;
+      
+      if (!likerId) return res.status(401).json({ error: 'Nicht autorisiert' });
+      
+      await dbRunAsync(
+        'DELETE FROM avatar_likes WHERE user_id = ? AND liker_id = ?',
+        [userId, likerId]
+      );
+      
+      res.json({ ok: true });
+    } catch (err) {
+      console.error('Error unliking avatar:', err);
+      res.status(500).json({ error: 'Datenbankfehler' });
+    }
+  });
+
+  // GET avatar comments
+  router.get('/users/:id/avatar/comments', async (req, res) => {
+    try {
+      await ensureAvatarTables();
+      const userId = Number(req.params.id);
+      
+      const comments = await dbAllAsync(
+        `SELECT 
+          ac.id, 
+          ac.text, 
+          ac.created_at,
+          u.id as commenter_id,
+          u.firstname,
+          u.lastname,
+          u.name,
+          u.email
+        FROM avatar_comments ac
+        LEFT JOIN users u ON u.id = ac.commenter_id
+        WHERE ac.user_id = ?
+        ORDER BY ac.created_at DESC`,
+        [userId]
+      );
+      
+      const formatted = (comments || []).map(c => ({
+        id: c.id,
+        text: c.text,
+        username: buildDisplayName(c),
+        created_at: c.created_at
+      }));
+      
+      res.json(formatted);
+    } catch (err) {
+      console.error('Error fetching avatar comments:', err);
+      res.status(500).json({ error: 'Datenbankfehler' });
+    }
+  });
+
+  // POST avatar comment
+  router.post('/users/:id/avatar/comment', isAuthenticated, async (req, res) => {
+    try {
+      await ensureAvatarTables();
+      const userId = Number(req.params.id);
+      const commenterId = req.user?.id;
+      const { text } = req.body;
+      
+      if (!commenterId) return res.status(401).json({ error: 'Nicht autorisiert' });
+      if (!text || !text.trim()) return res.status(400).json({ error: 'Text erforderlich' });
+      
+      const result = await dbRunAsync(
+        'INSERT INTO avatar_comments (user_id, commenter_id, text) VALUES (?, ?, ?)',
+        [userId, commenterId, text.trim()]
+      );
+      
+      const commenter = await dbGetAsync('SELECT * FROM users WHERE id = ?', [commenterId]);
+      
+      res.json({
+        id: result.lastID,
+        text: text.trim(),
+        username: buildDisplayName(commenter || {}),
+        created_at: new Date().toISOString()
+      });
+    } catch (err) {
+      console.error('Error posting avatar comment:', err);
+      res.status(500).json({ error: 'Datenbankfehler' });
+    }
+  });
+
   return router;
 };

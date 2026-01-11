@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 import AuthNoticeBanner from "../components/AuthNoticeBanner";
 // large hero logo not currently used here
-import smallLogo from "../images/logo.png";
+import smallLogo from "../images/logo/matchleague_logo_4x4-removebg-preview.png";
 // dynamically load all images from the background folder
 function importAllBackgrounds(r) {
   // map to { key, src } so we can sort by filename
@@ -102,6 +102,18 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
   const [resetPassword, setResetPassword] = useState("");
   const [resetMsg, setResetMsg] = useState("");
 
+  // Email confirmation popup states
+  const [showEmailConfirmPopup, setShowEmailConfirmPopup] = useState(false);
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState("");
+  const [resendMsg, setResendMsg] = useState("");
+  const [resending, setResending] = useState(false);
+
+  // Password reset popup states
+  const [showPasswordResetPopup, setShowPasswordResetPopup] = useState(false);
+  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const [resetError, setResetError] = useState("");
+  const [sendingReset, setSendingReset] = useState(false);
+
   const API = (typeof API_BASE === 'string' && API_BASE.trim()) ? API_BASE : '/api';
 
   // Login-Handler (hier an dein Backend anpassen!)
@@ -116,6 +128,13 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
       });
       const data = await res.json();
       if (!res.ok) {
+        // Check if error is "E-Mail noch nicht bestätigt"
+        if (data.error === "E-Mail noch nicht bestätigt") {
+          setUnconfirmedEmail(email);
+          setShowEmailConfirmPopup(true);
+          setResendMsg("");
+          return;
+        }
         setLoginMsg(data.error || "Login fehlgeschlagen.");
         return;
       }
@@ -158,6 +177,58 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
       navigate("/");
     } catch {
       setLoginMsg("Server nicht erreichbar.");
+    }
+  };
+
+  // Resend confirmation email handler
+  const handleResendConfirmation = async () => {
+    setResendMsg("");
+    setResending(true);
+    try {
+      const res = await fetch(`${API}/resend-confirmation`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: unconfirmedEmail }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setResendMsg("✅ Bestätigungs-E-Mail wurde erneut versendet!");
+      } else {
+        // Handle rate limiting with user-friendly message
+        if (res.status === 429 || data.error?.includes('Too many') || data.retry_after) {
+          const retryMinutes = data.retry_after ? Math.ceil(data.retry_after / 60) : 5;
+          setResendMsg(`⏱️ Bitte warte noch ${retryMinutes} Minuten, bevor du die E-Mail erneut anforderst.`);
+        } else {
+          setResendMsg(data.error || "Fehler beim Versenden der E-Mail.");
+        }
+      }
+    } catch {
+      setResendMsg("Server nicht erreichbar.");
+    } finally {
+      setResending(false);
+    }
+  };
+
+  // Send password reset email
+  const handleSendPasswordReset = async () => {
+    setResetError("");
+    setSendingReset(true);
+    try {
+      const res = await fetch(`${API}/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setResetEmailSent(true);
+      } else {
+        setResetError(data.error || "Fehler beim Versenden der E-Mail.");
+      }
+    } catch {
+      setResetError("Server nicht erreichbar.");
+    } finally {
+      setSendingReset(false);
     }
   };
 
@@ -270,15 +341,52 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
             autoComplete="email"
             style={{ display: "block", marginBottom: 8, width: "100%", background: '#fafcf9', border: '1px solid rgba(0,0,0,0.12)', padding: '8px' }}
           />
-          <input
-            type="password"
-            placeholder="Passwort"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            style={{ display: "block", marginBottom: 8, width: "100%", background: '#fafcf9', border: '1px solid rgba(0,0,0,0.12)', padding: '8px' }}
-          />
+          <div style={{ position: 'relative', marginBottom: 8 }}>
+            <input
+              type="password"
+              placeholder="Passwort"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+              style={{ display: "block", width: "100%", background: '#fafcf9', border: '1px solid rgba(0,0,0,0.12)', padding: '8px', paddingRight: '36px' }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPasswordResetPopup(true)}
+              style={{
+                position: 'absolute',
+                right: '8px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'transparent',
+                border: 'none',
+                color: '#48baaa',
+                fontSize: '16px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                width: '24px',
+                height: '24px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                opacity: 0.7,
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.opacity = '1';
+                e.target.style.background = 'rgba(72, 186, 170, 0.1)';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.opacity = '0.7';
+                e.target.style.background = 'transparent';
+              }}
+              title="Passwort vergessen?"
+            >
+              ?
+            </button>
+          </div>
           <button 
             type="submit" 
             style={{ 
@@ -306,16 +414,67 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
             Login
           </button>
           {loginMsg && <div style={{ marginTop: 8 }}>{loginMsg}</div>}
-        </form>
 
-        <button
-          onClick={() => setShowReset((s) => !s)}
-          className="btn btn-primary"
-          style={{ marginTop: 24, width: "100%", fontWeight: 700 }}
-          type="button"
-        >
-          Passwort vergessen?
-        </button>
+          {/* Email confirmation notice - small popup below login */}
+          {showEmailConfirmPopup && (
+            <div style={{
+              marginTop: 16,
+              padding: '16px 20px',
+              background: 'rgba(245, 197, 66, 0.1)',
+              border: '1px solid #f5c542',
+              borderRadius: 12,
+              textAlign: 'center'
+            }}>
+              <div style={{ 
+                fontSize: 14, 
+                color: '#f5c542',
+                fontWeight: 600,
+                marginBottom: 8
+              }}>
+                E-Mail noch nicht bestätigt
+              </div>
+              <div style={{ 
+                fontSize: 13, 
+                color: '#fff',
+                opacity: 0.85,
+                marginBottom: 12
+              }}>
+                Bitte bestätige <strong style={{ color: '#f5c542' }}>{unconfirmedEmail}</strong>
+              </div>
+              <button
+                onClick={handleResendConfirmation}
+                disabled={resending}
+                style={{
+                  width: '100%',
+                  padding: '10px 16px',
+                  background: resending ? 'rgba(245, 197, 66, 0.3)' : '#f5c542',
+                  border: 'none',
+                  borderRadius: 8,
+                  color: '#071716',
+                  fontSize: 14,
+                  fontWeight: 700,
+                  cursor: resending ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {resending ? 'Wird gesendet...' : 'E-Mail erneut senden'}
+              </button>
+              {resendMsg && (
+                <div style={{
+                  marginTop: 10,
+                  padding: '8px 12px',
+                  borderRadius: 6,
+                  background: resendMsg.includes('✅') ? 'rgba(34, 197, 94, 0.15)' : resendMsg.includes('Too many') ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                  border: `1px solid ${resendMsg.includes('✅') ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+                  fontSize: 12,
+                  color: '#fff'
+                }}>
+                  {resendMsg}
+                </div>
+              )}
+            </div>
+          )}
+        </form>
 
         {/* Register button */}
         <button
@@ -326,37 +485,6 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
         >
           Registrieren
         </button>
-
-        {/* Reset-Formular */}
-        {showReset && (
-          <form
-            onSubmit={handleReset}
-            style={{ marginTop: 16, border: "1px solid #eee", padding: 16, borderRadius: 8 }}
-          >
-            <h4 style={{ fontWeight: 700 }}>Passwort zurücksetzen</h4>
-            <input
-              type="text"
-              placeholder="Benutzername oder E-Mail"
-              value={resetUsername}
-              onChange={e => setResetUsername(e.target.value)}
-              required
-              autoComplete="username"
-              style={{ display: "block", marginBottom: 8, width: "100%" }}
-            />
-            <input
-              type="password"
-              placeholder="Neues Passwort"
-              value={resetPassword}
-              onChange={e => setResetPassword(e.target.value)}
-              required
-              minLength={6}
-              autoComplete="new-password"
-              style={{ display: "block", marginBottom: 8, width: "100%" }}
-            />
-              <button type="submit" className="btn btn-primary" style={{ width: "100%", fontWeight: 700 }}>Zurücksetzen</button>
-            {resetMsg && <div style={{ marginTop: 8 }}>{resetMsg}</div>}
-          </form>
-        )}
 
         {/* Community Statistik */}
         <div style={{ marginTop: 40, paddingTop: 32, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
@@ -373,8 +501,270 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
         </div>
         </div>
       </div>
+
+      {/* Password Reset Popup */}
+      {showPasswordResetPopup && (
+        <div 
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.85)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            backdropFilter: 'blur(8px)',
+            padding: 20
+          }}
+          onClick={() => {
+            setShowPasswordResetPopup(false);
+            setResetEmailSent(false);
+            setResetError("");
+          }}
+        >
+          <div 
+            style={{
+              background: 'linear-gradient(135deg, #0c2a1f 0%, #071716 100%)',
+              border: '2px solid #48baaa',
+              borderRadius: 16,
+              padding: '32px 28px',
+              maxWidth: 420,
+              width: '100%',
+              boxShadow: '0 20px 60px rgba(72, 186, 170, 0.25)',
+              position: 'relative'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => {
+                setShowPasswordResetPopup(false);
+                setResetEmailSent(false);
+                setResetError("");
+              }}
+              style={{
+                position: 'absolute',
+                top: 12,
+                right: 12,
+                background: 'transparent',
+                border: 'none',
+                color: '#48baaa',
+                fontSize: 24,
+                cursor: 'pointer',
+                width: 32,
+                height: 32,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                opacity: 0.7,
+                transition: 'opacity 0.2s'
+              }}
+              onMouseOver={(e) => e.target.style.opacity = '1'}
+              onMouseOut={(e) => e.target.style.opacity = '0.7'}
+            >
+              ×
+            </button>
+
+            {!resetEmailSent ? (
+              <>
+                {/* Icon */}
+                <div style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: '50%',
+                  background: 'rgba(72, 186, 170, 0.15)',
+                  border: '2px solid #48baaa',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 20px',
+                  fontSize: 32
+                }}>
+                  🔒
+                </div>
+
+                {/* Title */}
+                <h3 style={{
+                  color: '#48baaa',
+                  fontWeight: 700,
+                  fontSize: 22,
+                  margin: '0 0 12px',
+                  textAlign: 'center'
+                }}>
+                  Passwort vergessen?
+                </h3>
+
+                {/* Message */}
+                <p style={{
+                  color: '#fff',
+                  opacity: 0.9,
+                  fontSize: 15,
+                  lineHeight: 1.6,
+                  margin: '0 0 24px',
+                  textAlign: 'center'
+                }}>
+                  Möchtest du einen Link zum Zurücksetzen deines Passworts per E-Mail an <strong style={{ color: '#48baaa' }}>{email || 'deine E-Mail-Adresse'}</strong> erhalten?
+                </p>
+
+                {resetError && (
+                  <div style={{
+                    padding: '12px 16px',
+                    borderRadius: 8,
+                    background: 'rgba(239, 68, 68, 0.15)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#fff',
+                    fontSize: 14,
+                    textAlign: 'center',
+                    marginBottom: 16
+                  }}>
+                    {resetError}
+                  </div>
+                )}
+
+                {/* Buttons */}
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button
+                    onClick={() => {
+                      setShowPasswordResetPopup(false);
+                      setResetError("");
+                    }}
+                    style={{
+                      flex: 1,
+                      padding: '12px 20px',
+                      background: 'transparent',
+                      border: '2px solid rgba(72, 186, 170, 0.3)',
+                      borderRadius: 10,
+                      color: '#fff',
+                      fontSize: 15,
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s'
+                    }}
+                    onMouseOver={(e) => {
+                      e.target.style.background = 'rgba(72, 186, 170, 0.1)';
+                      e.target.style.borderColor = '#48baaa';
+                    }}
+                    onMouseOut={(e) => {
+                      e.target.style.background = 'transparent';
+                      e.target.style.borderColor = 'rgba(72, 186, 170, 0.3)';
+                    }}
+                  >
+                    Abbrechen
+                  </button>
+                  <button
+                    onClick={handleSendPasswordReset}
+                    disabled={sendingReset || !email}
+                    style={{
+                      flex: 1,
+                      padding: '12px 20px',
+                      background: sendingReset || !email ? 'rgba(72, 186, 170, 0.3)' : '#48baaa',
+                      border: 'none',
+                      borderRadius: 10,
+                      color: '#071716',
+                      fontSize: 15,
+                      fontWeight: 700,
+                      cursor: sendingReset || !email ? 'not-allowed' : 'pointer',
+                      transition: 'all 0.2s',
+                      boxShadow: '0 4px 16px rgba(72, 186, 170, 0.3)'
+                    }}
+                    onMouseOver={(e) => {
+                      if (!sendingReset && email) {
+                        e.target.style.transform = 'translateY(-2px)';
+                        e.target.style.boxShadow = '0 6px 20px rgba(72, 186, 170, 0.4)';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (!sendingReset && email) {
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = '0 4px 16px rgba(72, 186, 170, 0.3)';
+                      }
+                    }}
+                  >
+                    {sendingReset ? 'Wird gesendet...' : 'Ja, E-Mail senden'}
+                  </button>
+                </div>
+
+                {!email && (
+                  <p style={{
+                    color: '#fff',
+                    opacity: 0.6,
+                    fontSize: 12,
+                    margin: '12px 0 0',
+                    textAlign: 'center'
+                  }}>
+                    Bitte gib zuerst deine E-Mail-Adresse im Login-Formular ein.
+                  </p>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Success icon */}
+                <div style={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: '50%',
+                  background: 'rgba(34, 197, 94, 0.15)',
+                  border: '2px solid #22c55e',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 20px',
+                  fontSize: 32
+                }}>
+                  ✓
+                </div>
+
+                {/* Success title */}
+                <h3 style={{
+                  color: '#22c55e',
+                  fontWeight: 700,
+                  fontSize: 22,
+                  margin: '0 0 12px',
+                  textAlign: 'center'
+                }}>
+                  E-Mail versendet!
+                </h3>
+
+                {/* Success message */}
+                <p style={{
+                  color: '#fff',
+                  opacity: 0.9,
+                  fontSize: 15,
+                  lineHeight: 1.6,
+                  margin: '0 0 24px',
+                  textAlign: 'center'
+                }}>
+                  Wir haben dir einen Link zum Zurücksetzen deines Passworts an <strong style={{ color: '#22c55e' }}>{email}</strong> gesendet. Bitte überprüfe dein Postfach.
+                </p>
+
+                <button
+                  onClick={() => {
+                    setShowPasswordResetPopup(false);
+                    setResetEmailSent(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '12px 20px',
+                    background: '#22c55e',
+                    border: 'none',
+                    borderRadius: 10,
+                    color: '#071716',
+                    fontSize: 15,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  Schließen
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-

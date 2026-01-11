@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
-import smallLogo from "../images/logo.png";
+import smallLogo from "../images/logo/matchleague_logo_4x4-removebg-preview.png";
 import Avatar from "../components/Avatar";
 import LocationSelector from "../components/LocationSelector";
 import SportSelector from "../components/SportSelector";
@@ -47,6 +47,10 @@ export default function StartPage() {
   const [leagueMembers, setLeagueMembers] = useState([]);
   const [leagueGames, setLeagueGames] = useState({ upcoming: [], completed: [] });
   const [selectedMyLeagueId, setSelectedMyLeagueId] = useState("");
+  // news feed state
+  const [newsFilter, setNewsFilter] = useState('popular'); // 'popular' | 'home' | 'all'
+  const [newsFeed, setNewsFeed] = useState([]);
+  const [newsLoading, setNewsLoading] = useState(false);
   // current user id extraction from token for centering table
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const myUserId = useMemo(() => {
@@ -69,6 +73,20 @@ export default function StartPage() {
     return m ? m[0] : null;
   };
 
+  const upcomingWithOpponent = useMemo(() => {
+    const hasParticipant = (game, side) => {
+      const id = game?.[`${side}_user_id`] ?? game?.[`${side}UserId`] ?? game?.[`${side}_id`] ?? game?.[`${side}Id`];
+      const name = game?.[side];
+      if (id != null) return true;
+      if (typeof name === 'string') {
+        const trimmed = name.trim();
+        return trimmed !== '' && trimmed !== '?';
+      }
+      return false;
+    };
+    return (myGames.upcoming || []).filter((g) => hasParticipant(g, 'home') && hasParticipant(g, 'away'));
+  }, [myGames.upcoming]);
+
   // rotate backgrounds every 5s
   useEffect(() => {
     if (!backgrounds.length) return;
@@ -78,7 +96,7 @@ export default function StartPage() {
 
 
   // Auto-detect location via GPS
-  const detectLocation = async () => {
+  const detectLocation = async (shouldSet = () => true) => {
     if (!navigator.geolocation) {
       console.warn('[StartPage] Geolocation not supported');
       alert('Dein Browser unterstützt keine Standortermittlung.');
@@ -99,24 +117,27 @@ export default function StartPage() {
       console.log('[StartPage] GPS coords:', { latitude, longitude });
 
       // Query backend for nearest city
-      const response = await fetch(`${API_BASE}/location/nearest?lat=${latitude}&lon=${longitude}`);
+      const response = await fetch(`${API_BASE}/locations/nearest?lat=${latitude}&lon=${longitude}`);
       
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.warn('[StartPage] Location API error:', errorData);
-        throw new Error('Die Standortermittlung ist aktuell nicht verfügbar. Bitte wähle deine Stadt manuell aus.');
+        alert('Fehler beim Abrufen der nächsten Stadt. Bitte wähle deine Stadt manuell aus.');
+        return;
       }
 
       const data = await response.json();
       console.log('[StartPage] Nearest location:', data);
 
       if (data.city && data.city.id) {
+        if (!shouldSet()) return false;
         setSelectedCity(String(data.city.id));
         setSelectedCityName(data.city.name);
         console.log(`[StartPage] Auto-set location: ${data.city.name}${data.state ? ', ' + data.state.name : ''}${data.country ? ', ' + data.country.name : ''}`);
-      } else {
-        alert('Keine Stadt in deiner Nähe gefunden. Bitte wähle deine Stadt manuell aus.');
+        return true;
       }
+      alert('Keine Stadt in deiner Nähe gefunden. Bitte wähle deine Stadt manuell aus.');
+      return false;
     } catch (error) {
       console.warn('[StartPage] Location detection failed:', error);
       if (error.code === 1) {
@@ -128,8 +149,32 @@ export default function StartPage() {
       } else {
         alert(error.message || 'Fehler bei der Standortermittlung. Bitte wähle deine Stadt manuell aus.');
       }
+      return false;
     } finally {
       setGpsLoading(false);
+    }
+  };
+
+  const applyProfileCity = async (shouldSet = () => true) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) return false;
+      const res = await fetch(`${API_BASE}/profile`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) return false;
+      const data = await res.json();
+      const profileCityId = data?.city_id || data?.cityId || data?.city?.id;
+      if (!profileCityId) return false;
+      if (!shouldSet()) return false;
+      const cityObj = cities.find(c => String(c.id) === String(profileCityId));
+      setSelectedCity(String(profileCityId));
+      setSelectedCityName(cityObj?.name || data?.city?.name || selectedCityName || '');
+      if (cityObj) {
+        setSelectedCityName(cityObj.name);
+      }
+      return true;
+    } catch (e) {
+      console.warn('[StartPage] applyProfileCity failed', e);
+      return false;
     }
   };
 
@@ -231,16 +276,93 @@ export default function StartPage() {
         // store countries for state filtering fallback via cities list (if needed)
         // Note: states are exposed via cities/list response entries
 
-        // Auto-detect location via GPS for logged-in users
+        // Load news feed
+        loadNewsFeed('popular');
+
+        // Auto-location priority: 1) GPS, 2) Profil-Stadt, 3) erste Liga-Stadt
         const token = localStorage.getItem('token');
-        if (token) {
-          detectLocation();
-        }
+        (async () => {
+          let located = false;
+          if (token) {
+            located = await detectLocation(() => mounted);
+            if (!located) {
+              located = await applyProfileCity(() => mounted);
+            }
+          }
+
+          let meLeagues = [];
+          try {
+            meLeagues = token
+              ? await fetch(`${API_BASE}/me/leagues`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : [])
+              : [];
+            if (!located) {
+              const firstCity = (meLeagues || []).find(l => l.cityId)?.cityId;
+              if (firstCity && mounted) {
+                setSelectedCity(String(firstCity));
+                const cityObj = Array.isArray(cs) && cs.find(c => String(c.id) === String(firstCity));
+                if (cityObj) setSelectedCityName(cityObj.name);
+              }
+            }
+            if (mounted) {
+              setMyLeagues(Array.isArray(meLeagues) ? meLeagues : []);
+            }
+            const myGamesResp = token
+              ? await fetch(`${API_BASE}/me/games`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : { upcoming: [], completed: [] })
+              : { upcoming: [], completed: [] };
+            if (mounted) {
+              setMyGames({
+                upcoming: Array.isArray(myGamesResp.upcoming) ? myGamesResp.upcoming : [],
+                completed: Array.isArray(myGamesResp.completed) ? myGamesResp.completed : [],
+              });
+            }
+            if ((meLeagues || []).length && mounted) {
+              const lid = meLeagues[0].id || meLeagues[0].leagueId;
+              setSelectedMyLeagueId(String(lid || ""));
+              if (lid) {
+                const [st, members, games] = await Promise.all([
+                  fetch(`${API_BASE}/leagues/${lid}/standings?format=table`).then(r => r.ok ? r.json() : []),
+                  fetch(`${API_BASE}/leagues/${lid}/members`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : []),
+                  fetch(`${API_BASE}/leagues/${lid}/games`).then(r => r.ok ? r.json() : { upcoming: [], completed: [] })
+                ]);
+                if (mounted) {
+                  setStandings({ leagueId: String(lid), rows: Array.isArray(st) ? st : [] });
+                  setLeagueMembers(Array.isArray(members) ? members : []);
+                  setLeagueGames({
+                    upcoming: Array.isArray(games.upcoming) ? games.upcoming : [],
+                    completed: Array.isArray(games.completed) ? games.completed : []
+                  });
+                }
+              }
+            }
+          } catch {}
+        })();
       })
       .catch(e => { if (mounted) setErr(e.message || "Fehler beim Laden."); })
       .finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
   }, []);
+
+  // Load news feed
+  const loadNewsFeed = async (filter = 'popular') => {
+    setNewsLoading(true);
+    try {
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await fetch(`${API_BASE}/news/feed?filter=${filter}&days=7&limit=3`, { headers });
+      if (!res.ok) throw new Error('Failed to load news feed');
+      const data = await res.json();
+      setNewsFeed(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('[StartPage] News feed error:', err);
+      setNewsFeed([]);
+    } finally {
+      setNewsLoading(false);
+    }
+  };
+
+  // Update news feed when filter changes
+  useEffect(() => {
+    loadNewsFeed(newsFilter);
+  }, [newsFilter]);
 
   if (loading) return <div style={{ padding: 24 }}>Lade Startseite ...</div>;
   if (err) return <div style={{ padding: 24, color: "crimson" }}>Fehler: {err}</div>;
@@ -257,11 +379,22 @@ export default function StartPage() {
           <div className="hero-inner">
             <div className="hero-stripe">
               <img src={smallLogo} alt="ML" className="hero-small-logo" />
-              <h1 className="hero-title">Match League</h1>
+              <h1 className="hero-title">Match League<sup style={{ fontSize: '0.5em', marginLeft: '2px' }}>™</sup></h1>
             </div>
             <p className="hero-sub"><b>Willkommen bei MatchLeague. Connect. Match. Win.</b></p>
-            <div className="hero-controls" style={{ display: 'flex', gap: 12, alignItems: 'center', marginTop: 18, flexWrap: 'wrap', position: 'relative', zIndex: 20 }}>
-              <div style={{ minWidth: 220, position: 'relative' }}>
+            <div
+              className="hero-controls"
+              style={{
+                marginTop: 18,
+                position: 'relative',
+                zIndex: 20,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+                width: '100%'
+              }}
+            >
+              <div style={{ position: 'relative' }}>
                 <SportSelector
                   sports={sports}
                   value={selectedSportName}
@@ -273,7 +406,7 @@ export default function StartPage() {
                 />
               </div>
               
-              <div style={{ minWidth: 220, position: 'relative' }}>
+              <div style={{ position: 'relative' }}>
                 <LocationSelector
                   cities={cities}
                   countries={countries}
@@ -296,7 +429,7 @@ export default function StartPage() {
                   if (selectedCity) qp.set('cityId', selectedCity);
                   navigate(`/match-search?${qp.toString()}`);
                 }}
-                style={{ background: '#debc7c', color: '#10261f', padding: '11px 22px', borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 15, boxShadow: '0 8px 20px rgba(0,0,0,0.28)' }}
+                style={{ background: '#debc7c', color: '#10261f', padding: '11px 22px', borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 15, boxShadow: '0 8px 20px rgba(0,0,0,0.28)', width: '100%' }}
                 disabled={searching}
               >{searching ? 'Suche…' : 'Match suchen'}</button>
 
@@ -316,9 +449,9 @@ export default function StartPage() {
                   cursor: 'pointer', 
                   fontWeight: 700, 
                   fontSize: 15, 
-                  marginLeft: 4,
                   boxShadow: '0 8px 20px rgba(0,0,0,0.28)',
-                  transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease'
+                  transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease',
+                  width: '100%'
                 }}
               >Liga suchen</button>
             </div>
@@ -336,11 +469,11 @@ export default function StartPage() {
             <h3 style={{ margin: 0 }}>Kommende Spiele</h3>
             <span />
           </div>
-          {(!myGames.upcoming || myGames.upcoming.length === 0) ? (
+          {(upcomingWithOpponent.length === 0) ? (
             <div style={{ color: '#9db' }}>Keine anstehenden Spiele.</div>
           ) : (
             <div style={{ display: 'grid', gap: 8 }}>
-              {myGames.upcoming.slice(0, 3).map(g => {
+              {upcomingWithOpponent.slice(0, 3).map(g => {
                 const toId = (v) => {
                   if (v == null) return null;
                   if (typeof v === 'number') return String(v);
@@ -702,71 +835,147 @@ export default function StartPage() {
         </section>
       </div>
 
-      {/* Row 3: Newsfeed */}
+      {/* Row 3: Newsfeed mit 3 Filtern */}
       <section className="ml-card" style={{ marginTop: 16 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', marginBottom: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', marginBottom: 12 }}>
           <h3 style={{ margin: 0 }}>Neuigkeiten</h3>
-          <div style={{ color: '#9db', fontSize: 12 }}><Link to="/news">Alle</Link></div>
+          <div style={{ color: '#9db', fontSize: 12 }}><Link to="/news">Alle anzeigen</Link></div>
         </div>
 
-        {/* Top strip: Local Game News + Sponsored - simple stacking */}
-        <div className="ml-news-grid">
-          {/* Local Game News */}
-          <div className="ml-bordered" style={{ padding: 10 }}>
-            <div style={{ fontWeight: 700, marginBottom: 8, color: '#dfe' }}>Local Game News</div>
-            <div style={{ display: 'grid', gap: 10 }}>
-              {(leagueGames.completed || []).slice(0, 3).map((g, idx) => (
-                <div key={g.id || idx} style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', gap: 8 }}>
-                  <div>
-                    <div style={{ color: '#9db', fontSize: 12 }}>{g.league || standings?.leagueName || 'Community Liga'}</div>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'auto auto auto', gap: 10, alignItems: 'center' }}>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                        <Avatar userId={toId(g,'home')} name={g.home} size={28} />
-                        <span>{g.home}</span>
-                      </div>
-                      <div style={{ fontWeight: 800 }}>{(g.home_score!=null && g.away_score!=null) ? `${g.home_score}:${g.away_score}` : '— : —'}</div>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                        <Avatar userId={toId(g,'away')} name={g.away} size={28} />
-                        <span>{g.away}</span>
-                      </div>
-                    </div>
-                    <div style={{ color: '#9db', fontSize: 12 }}>{g.kickoff_at ? new Date(g.kickoff_at).toLocaleString('de-DE', { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : ''}</div>
-                  </div>
-                  <Link to={`/matches/${g.id}`} style={{ color: '#debc7c', fontWeight: 700, textDecoration: 'none' }}>Details</Link>
-                </div>
-              ))}
-            </div>
-          </div>
-          {/* Sponsored Local Stories */}
-          <div className="ml-bordered" style={{ padding: 10 }}>
-            <div style={{ fontWeight: 700, marginBottom: 8, color: '#dfe' }}>Sponsored Local Stories</div>
-            <div style={{ display: 'grid', gap: 10 }}>
-              <div className="ml-card" style={{ padding: 8 }}>
-                <div style={{ height: 64, background: 'linear-gradient(135deg,#1b3b31,#294c40)', borderRadius: 8, marginBottom: 8 }} />
-                <div style={{ fontWeight: 700 }}>Bremen Sports Center</div>
-                <div style={{ color: '#9db', fontSize: 12 }}>20% Rabatt für MatchLeague Teams</div>
-                <div style={{ marginTop: 6, display: 'flex', gap: 8 }}>
-                  <a href="#" className="ml-btn-secondary">Zum Angebot</a>
-                  <a href="#" className="ml-btn-secondary">Zur Anzeige</a>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Filter Tabs */}
+        <div style={{ display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid #2f6b57', paddingBottom: 8 }}>
+          <button
+            onClick={() => setNewsFilter('popular')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px 8px 0 0',
+              border: 'none',
+              background: newsFilter === 'popular' ? '#1a3c33' : 'transparent',
+              color: newsFilter === 'popular' ? '#debc7c' : '#9db',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 13,
+              transition: 'all 0.2s'
+            }}
+          >
+            🔥 Populär
+          </button>
+          <button
+            onClick={() => setNewsFilter('home')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px 8px 0 0',
+              border: 'none',
+              background: newsFilter === 'home' ? '#1a3c33' : 'transparent',
+              color: newsFilter === 'home' ? '#debc7c' : '#9db',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 13,
+              transition: 'all 0.2s'
+            }}
+          >
+            🏠 Mein Ort
+          </button>
+          <button
+            onClick={() => setNewsFilter('all')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px 8px 0 0',
+              border: 'none',
+              background: newsFilter === 'all' ? '#1a3c33' : 'transparent',
+              color: newsFilter === 'all' ? '#debc7c' : '#9db',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 13,
+              transition: 'all 0.2s'
+            }}
+          >
+            🌍 Alle
+          </button>
+          <button
+            onClick={() => setNewsFilter('friends')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px 8px 0 0',
+              border: 'none',
+              background: newsFilter === 'friends' ? '#1a3c33' : 'transparent',
+              color: newsFilter === 'friends' ? '#debc7c' : '#9db',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 13,
+              transition: 'all 0.2s'
+            }}
+          >
+            👥 Freunde
+          </button>
         </div>
 
-        {/* Posts */}
-        <div style={{ display: 'grid', gap: 12, marginTop: 12 }}>
-          {[1,2].map(i => (
-            <div key={i} className="ml-card" style={{ display: 'grid', gap: 8 }}>
-              <div style={{ height: 160, borderRadius: 10, overflow: 'hidden', background: 'url(https://images.unsplash.com/photo-1517649763962-0c623066013b?q=80&w=1200&auto=format&fit=crop) center/cover no-repeat' }} />
-              <div style={{ fontSize: 18, fontWeight: 700 }}>What a fantastic season!</div>
-              <div style={{ color: '#dfe' }}>Thanks to my teammates and everyone who helped organizing our league matches!</div>
-              <div style={{ display: 'flex', gap: 12, color: '#9db' }}>
-                <span>👍</span><span>💬</span><span>↗︎</span>
+        {newsLoading ? (
+          <div style={{ padding: 20, textAlign: 'center', color: '#9db' }}>Lade Neuigkeiten...</div>
+        ) : newsFeed.length === 0 ? (
+          <div style={{ padding: 20, textAlign: 'center', color: '#9db' }}>Keine Neuigkeiten gefunden</div>
+        ) : (
+          <div style={{ display: 'grid', gap: 20 }}>
+            {newsFeed.map(dayGroup => (
+              <div key={dayGroup.date} style={{ display: 'grid', gap: 10 }}>
+                <div style={{ fontSize: 14, fontWeight: 700, color: '#debc7c', borderBottom: '1px solid #2f6b57', paddingBottom: 4 }}>
+                  {new Date(dayGroup.date).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}
+                </div>
+                <div style={{ display: 'grid', gap: 12 }}>
+                  {dayGroup.matches.map(match => {
+                    const photos = match.photos ? (typeof match.photos === 'string' ? JSON.parse(match.photos) : match.photos) : [];
+                    const coverPhoto = match.cover_photo || (photos.length > 0 ? photos[0] : null);
+                    
+                    return (
+                      <Link 
+                        key={match.id} 
+                        to={`/matches/${match.id}`} 
+                        className="ml-card" 
+                        style={{ display: 'grid', gap: 10, textDecoration: 'none', color: 'inherit', transition: 'transform 0.2s' }}
+                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                      >
+                        {coverPhoto && (
+                          <div style={{ 
+                            height: 160, 
+                            borderRadius: 10, 
+                            overflow: 'hidden', 
+                            background: `url(${coverPhoto}) center/cover no-repeat` 
+                          }} />
+                        )}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'auto auto auto', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <Avatar userId={match.home_user_id} name={match.home} size={40} />
+                            <span style={{ fontWeight: 700 }}>{match.home}</span>
+                          </div>
+                          <div style={{ fontSize: 20, fontWeight: 900, color: '#debc7c' }}>
+                            {match.home_score != null && match.away_score != null ? `${match.home_score}:${match.away_score}` : 'VS'}
+                          </div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontWeight: 700 }}>{match.away}</span>
+                            <Avatar userId={match.away_user_id} name={match.away} size={40} />
+                          </div>
+                        </div>
+                        <div style={{ color: '#9db', fontSize: 12, textAlign: 'center' }}>
+                          {match.league} · {match.sport} · {match.city}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #2f6b57' }}>
+                          <div style={{ display: 'flex', gap: 16, color: '#9db', fontSize: 13 }}>
+                            <span>👍 {match.likes || 0}</span>
+                            <span>📸 {photos.length}</span>
+                          </div>
+                          <div style={{ fontSize: 12, color: '#9db' }}>
+                            {new Date(match.kickoff_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Extra Listen (Alle Ligen/Sportarten/Städte) entfernt auf Wunsch */}

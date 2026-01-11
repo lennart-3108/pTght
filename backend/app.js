@@ -1,4 +1,4 @@
-!const express = require("express");
+const express = require("express");
 const sportsRoutes = require("./routes/sports");
 const leaguesRouter = require("./routes/leagues");
 const matchesRouter = require("./routes/matches");

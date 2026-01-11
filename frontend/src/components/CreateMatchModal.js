@@ -99,28 +99,44 @@ export default function CreateMatchModal({ sports, cities, onClose, onSuccess })
         position: 'fixed', 
         inset: 0, 
         background: 'rgba(0,0,0,0.6)', 
-        display: 'grid', 
-        placeItems: 'center', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
         zIndex: 1000, 
-        overflow: 'auto', 
-        padding: '20px 0' 
+        overflowY: 'auto', 
+        padding: '20px' 
       }} 
       onClick={onClose}
     >
       <div 
         className="ml-card" 
         style={{ 
-          width: 560, 
-          maxWidth: '94vw', 
+          width: '100%', 
+          maxWidth: 560, 
           maxHeight: '90vh', 
           overflowY: 'auto', 
           margin: 'auto' 
         }} 
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 style={{ marginTop: 0, marginBottom: 8, fontSize: 22 }}>
-          Öffentliches Match erstellen
-        </h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 8 }}>
+          <h2 style={{ marginTop: 0, marginBottom: 0, fontSize: 22 }}>
+            Öffentliches Match erstellen
+          </h2>
+          <button 
+            onClick={onClose}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: '#e8efe8',
+              fontSize: 28,
+              cursor: 'pointer',
+              padding: 0,
+              lineHeight: 1,
+              marginTop: -4
+            }}
+          >×</button>
+        </div>
         <p style={{ margin: '0 0 16px 0', color: '#9db', fontSize: 14, lineHeight: 1.5 }}>
           Erstelle ein öffentliches Match, das andere Spieler finden und beitreten können. Wähle Sportart, Stadt und einen verfügbaren Platz.
         </p>

@@ -26,15 +26,15 @@ function renderEmailTemplate({
 }) {
   const safeFooter = Array.isArray(footerLines) ? footerLines : [];
   const button = ctaLabel && ctaUrl
-    ? `<tr><td style="padding: 14px 0 2px; text-align: center;"><a href="${ctaUrl}" style="display: inline-block; padding: 14px 22px; background: ${COLORS.accent}; color: ${COLORS.accentText}; text-decoration: none; font-weight: 700; border-radius: 12px; box-shadow: 0 10px 24px rgba(0,0,0,0.28); letter-spacing: 0.2px;">${ctaLabel}</a></td></tr>`
+    ? `<tr><td style="padding: 14px 0 2px !important; text-align: center !important;"><a href="${ctaUrl}" style="display: inline-block !important; padding: 14px 22px !important; background: ${COLORS.accent} !important; color: ${COLORS.accentText} !important; text-decoration: none !important; font-weight: 700 !important; border-radius: 12px !important; box-shadow: 0 10px 24px rgba(0,0,0,0.28) !important; letter-spacing: 0.2px !important;">${ctaLabel}</a></td></tr>`
     : "";
 
   const noticeBlock = notice
-    ? `<tr><td style="padding: 0 0 14px;"><div style="background: rgba(245,197,66,0.12); color: ${COLORS.text}; border: 1px solid rgba(245,197,66,0.45); border-radius: 12px; padding: 12px 14px; font-size: 13px; line-height: 1.55; font-weight: 600;">${notice}</div></td></tr>`
+    ? `<tr><td style="padding: 0 0 14px !important;"><div style="background: rgba(245,197,66,0.12) !important; color: ${COLORS.text} !important; border: 1px solid rgba(245,197,66,0.45) !important; border-radius: 12px !important; padding: 12px 14px !important; font-size: 13px !important; line-height: 1.55 !important; font-weight: 600 !important;">${notice}</div></td></tr>`
     : "";
 
   const footer = safeFooter.length
-    ? `<tr><td style="padding-top: 10px; font-size: 12px; color: #cbd5e1; line-height: 1.6;">${safeFooter.map(l => `<div>${l}</div>`).join("")}</td></tr>`
+    ? `<tr><td style="padding-top: 10px !important; font-size: 12px !important; color: #cbd5e1 !important; line-height: 1.6 !important;">${safeFooter.map(l => `<div>${l}</div>`).join("")}</td></tr>`
     : "";
 
   const sanitizedBody = typeof body === "string" ? body : "";
@@ -44,34 +44,46 @@ function renderEmailTemplate({
     <head>
       <meta charset="UTF-8" />
       <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+      <meta name="color-scheme" content="light" />
+      <meta name="supported-color-schemes" content="light" />
       <title>${title}</title>
+      <style type="text/css">
+        @media (prefers-color-scheme: dark) {
+          .dark-mode-override { background-color: ${COLORS.pageBg} !important; }
+          .card-bg-override { background-color: ${COLORS.cardBg} !important; }
+          .text-override { color: ${COLORS.text} !important; }
+          .headline-override { color: ${COLORS.headline} !important; }
+        }
+        body, table, td { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+        table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+      </style>
     </head>
-    <body style="margin:0; padding:0; background: ${COLORS.pageBg}; font-family: 'Helvetica Neue', Arial, sans-serif; color: ${COLORS.text};">
-      <span style="display:none; visibility:hidden; opacity:0; color:transparent; height:0; width:0; overflow:hidden;">${previewText}</span>
-      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background: ${COLORS.pageBg}; padding: 28px 0;">
+    <body style="margin:0 !important; padding:0 !important; background: ${COLORS.pageBg} !important; font-family: 'Helvetica Neue', Arial, sans-serif !important; color: ${COLORS.text} !important;" class="dark-mode-override">
+      <span style="display:none !important; visibility:hidden !important; opacity:0 !important; color:transparent !important; height:0 !important; width:0 !important; overflow:hidden !important;">${previewText}</span>
+      <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background: ${COLORS.pageBg} !important; padding: 28px 0 !important;" class="dark-mode-override">
         <tr>
-          <td align="center" style="padding: 0 16px;">
-            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 680px; background: ${COLORS.cardBg}; border-radius: 20px; box-shadow: 0 16px 42px rgba(0,0,0,0.32); overflow: hidden;">
+          <td align="center" style="padding: 0 16px !important;">
+            <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 680px !important; background: ${COLORS.cardBg} !important; border-radius: 20px !important; box-shadow: 0 16px 42px rgba(0,0,0,0.32) !important; overflow: hidden !important;" class="card-bg-override">
               <tr>
-                <td style="padding: 28px 24px 18px; text-align: center; background: ${COLORS.headerBg};">
-                  <img src="${LOGO_DATA_URL}" alt="MatchLeague" style="max-width: 200px; width: 100%; height: auto; display: block; margin: 0 auto;" />
+                <td style="padding: 28px 24px 18px !important; text-align: center !important; background: ${COLORS.headerBg} !important;">
+                  <img src="${LOGO_DATA_URL}" alt="MatchLeague" style="max-width: 200px !important; width: 100% !important; height: auto !important; display: block !important; margin: 0 auto !important;" />
                 </td>
               </tr>
               <tr>
-                <td style="padding: 24px 24px 18px; background: ${COLORS.cardBg};">
-                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background: ${COLORS.pageBg}; border-radius: 16px; padding: 22px 20px; color: ${COLORS.text}; border: 1px solid rgba(245,197,66,0.18);">
-                    <tr><td style="font-size: 24px; font-weight: 800; padding-bottom: 10px; color: ${COLORS.headline}; text-align: left;">${title}</td></tr>
+                <td style="padding: 24px 24px 18px !important; background: ${COLORS.cardBg} !important;" class="card-bg-override">
+                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="background: ${COLORS.pageBg} !important; border-radius: 16px !important; padding: 22px 20px !important; color: ${COLORS.text} !important; border: 1px solid rgba(245,197,66,0.18) !important;" class="dark-mode-override text-override">
+                    <tr><td style="font-size: 24px !important; font-weight: 800 !important; padding-bottom: 10px !important; color: ${COLORS.headline} !important; text-align: left !important;" class="headline-override">${title}</td></tr>
                     ${noticeBlock}
-                    <tr><td style="font-size: 15px; line-height: 1.72; color: ${COLORS.text};">${sanitizedBody}</td></tr>
+                    <tr><td style="font-size: 15px !important; line-height: 1.72 !important; color: ${COLORS.text} !important;" class="text-override">${sanitizedBody}</td></tr>
                     ${button}
                   </table>
                 </td>
               </tr>
               <tr>
-                <td style="padding: 0 24px 22px; background: ${COLORS.footerBg}; border-top: 2px solid ${COLORS.accent};">
-                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="color: #cbd5e1;">
+                <td style="padding: 0 24px 22px !important; background: ${COLORS.footerBg} !important; border-top: 2px solid ${COLORS.accent} !important;">
+                  <table role="presentation" border="0" cellpadding="0" cellspacing="0" width="100%" style="color: #cbd5e1 !important;">
                     ${footer}
-                    <tr><td style="font-size: 12px; color: #d1d5db; padding-top: 10px;">MatchLeague · Automatisierte Nachricht</td></tr>
+                    <tr><td style="font-size: 12px !important; color: #d1d5db !important; padding-top: 10px !important;">MatchLeague · Automatisierte Nachricht</td></tr>
                   </table>
                 </td>
               </tr>

@@ -275,6 +275,79 @@ module.exports = function authRoutes(ctx) {
         );
       });
 
+  // Forgot password - send reset link via email
+  router.post("/forgot-password", (req, res) => {
+    const { email } = req.body || {};
+    if (!email) return res.status(400).json({ success: false, error: "E-Mail erforderlich" });
+
+    // Find user by email
+    db.get(
+      `SELECT id, firstname, email FROM users WHERE email = ?`,
+      [email],
+      (err, user) => {
+        if (err) {
+          console.error('[forgot-password] db.get error', err && (err.stack || err.message || err));
+          return res.status(500).json({ success: false, error: "Datenbankfehler" });
+        }
+        // Don't reveal if user exists or not for security
+        if (!user) {
+          console.log('[forgot-password] user not found:', email);
+          return res.json({ success: true, message: "Falls ein Konto mit dieser E-Mail existiert, wurde ein Reset-Link versendet." });
+        }
+
+        // Generate password reset token (valid for 1 hour)
+        const resetToken = jwt.sign({ email, type: 'password-reset', epoch: SESSION_EPOCH || 1 }, SECRET, { expiresIn: "1h" });
+
+        // Store token in database
+        db.run(
+          `UPDATE users SET confirmation_token = ? WHERE id = ?`,
+          [resetToken, user.id],
+          function (updateErr) {
+            if (updateErr) {
+              console.error('[forgot-password] db.run update error', updateErr && (updateErr.stack || updateErr.message || updateErr));
+              return res.status(500).json({ success: false, error: "Fehler beim Erstellen des Reset-Links" });
+            }
+
+            // Build reset URL
+            const fallbackPort = process.env.PORT || 5001;
+            const inferredHost = req && req.get && req.get('host') ? req.get('host') : `localhost:${fallbackPort}`;
+            const inferredProto = req && req.protocol ? req.protocol : (process.env.BACKEND_PROTO || 'http');
+            const publicPrefix = (req && typeof req.baseUrl === 'string') ? req.baseUrl : '';
+            const backendBase = process.env.BACKEND_PUBLIC_URL || `${inferredProto}://${inferredHost}${publicPrefix}`;
+            const resetUrl = `${backendBase}/reset-password/${resetToken}`;
+
+            // Send email
+            if (ctx && ctx.mailerState && ctx.mailerState.enabled && ctx.transporter && ctx.sendMail) {
+              const subject = 'Match League – Passwort zurücksetzen';
+              const html = renderEmailTemplate({
+                title: 'Passwort zurücksetzen',
+                body: `<p>Hallo ${user.firstname || ''},</p><p>du hast eine Anfrage zum Zurücksetzen deines Passworts gestellt. Klicke auf den folgenden Link, um ein neues Passwort festzulegen:</p><p><a href="${resetUrl}">${resetUrl}</a></p><p>Dieser Link ist 1 Stunde lang gültig.</p><p>Falls du diese Anfrage nicht gestellt hast, ignoriere diese E-Mail einfach.</p>`,
+                ctaLabel: 'Passwort zurücksetzen',
+                ctaUrl: resetUrl,
+                previewText: 'Passwort zurücksetzen',
+              });
+
+              ctx.sendMail(email, subject, html).then(() => {
+                console.log('[forgot-password] reset email sent to', email);
+                return res.json({ success: true, message: "Reset-Link wurde versendet." });
+              }).catch((mailErr) => {
+                console.error('[forgot-password] sendMail error', mailErr && (mailErr.stack || mailErr.message || mailErr));
+                return res.status(500).json({ success: false, error: "Fehler beim Versenden der E-Mail" });
+              });
+            } else {
+              console.log('[forgot-password] mailer not enabled; resetUrl:', resetUrl);
+              return res.json({ 
+                success: true, 
+                message: "Mailer nicht aktiviert (dev)", 
+                ...(process.env.NODE_ENV === 'development' ? { resetUrl } : {})
+              });
+            }
+          }
+        );
+      }
+    );
+  });
+
   router.get("/confirm/:token", (req, res) => {
     const { token } = req.params;
     let email = null;
@@ -300,40 +373,56 @@ module.exports = function authRoutes(ctx) {
         return res.redirect(`${frontendBaseErr}/registration-success?confirmed=0&error=user_not_found`);
       }
 
-      db.run(
-        `UPDATE users SET is_confirmed=1, confirmation_token=NULL WHERE email=? AND confirmation_token=?`,
-        [email, token],
-        function (err) {
-          if (err) {
-            console.error('[confirm] db.run error', err && (err.stack || err.message || err));
-            const frontendBaseErr = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
-            return res.redirect(`${frontendBaseErr}/registration-success?confirmed=0&error=db_error`);
-          }
-          if (this.changes === 0) {
-            const frontendBaseErr = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
-            return res.redirect(`${frontendBaseErr}/registration-success?confirmed=0&error=invalid_or_used_token`);
-          }
+      // Check if already confirmed
+      db.get(`SELECT is_confirmed FROM users WHERE email = ?`, [email], (checkErr, confirmRow) => {
+        if (checkErr) {
+          console.error('[confirm] db.get check error', checkErr);
+          const frontendBaseErr = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
+          return res.redirect(`${frontendBaseErr}/registration-success?confirmed=0&error=db_error`);
+        }
 
-          // create an opaque one-time token and store it in ctx.oneTimeAuthTokens
-          try {
-            const oneTime = Math.random().toString(36).slice(2) + Date.now().toString(36);
-            const expiresAt = Date.now() + 1000 * 60 * 15; // valid 15 minutes
-            // store minimal info for exchange
-            if (req && req.app && req.app.locals && req.app.locals.ctx) {
-              req.app.locals.ctx.oneTimeAuthTokens.set(oneTime, { userId: userRow.id, is_admin: !!userRow.is_admin, expiresAt });
-            } else if (global && global._app_ctx && global._app_ctx.oneTimeAuthTokens) {
-              global._app_ctx.oneTimeAuthTokens.set(oneTime, { userId: userRow.id, is_admin: !!userRow.is_admin, expiresAt });
+        if (confirmRow && confirmRow.is_confirmed) {
+          // Already confirmed - still redirect to success page
+          const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
+          return res.redirect(`${frontendBase}/registration-success?confirmed=1&already=1`);
+        }
+
+        // Confirm user (accept any valid token for this email, not just the one in DB)
+        db.run(
+          `UPDATE users SET is_confirmed=1, confirmation_token=NULL WHERE email=?`,
+          [email],
+          function (err) {
+            if (err) {
+              console.error('[confirm] db.run error', err && (err.stack || err.message || err));
+              const frontendBaseErr = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
+              return res.redirect(`${frontendBaseErr}/registration-success?confirmed=0&error=db_error`);
+            }
+            if (this.changes === 0) {
+              const frontendBaseErr = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
+              return res.redirect(`${frontendBaseErr}/registration-success?confirmed=0&error=update_failed`);
             }
 
-            const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
-            return res.redirect(`${frontendBase}/registration-success?confirmed=1&one_time=${encodeURIComponent(oneTime)}`);
-          } catch (e) {
-            console.error('[confirm] one-time token store failed', e && (e.stack || e.message));
-            const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
-            return res.redirect(`${frontendBase}/registration-success?confirmed=1`);
+            // create an opaque one-time token and store it in ctx.oneTimeAuthTokens
+            try {
+              const oneTime = Math.random().toString(36).slice(2) + Date.now().toString(36);
+              const expiresAt = Date.now() + 1000 * 60 * 15; // valid 15 minutes
+              // store minimal info for exchange
+              if (req && req.app && req.app.locals && req.app.locals.ctx) {
+                req.app.locals.ctx.oneTimeAuthTokens.set(oneTime, { userId: userRow.id, is_admin: !!userRow.is_admin, expiresAt });
+              } else if (global && global._app_ctx && global._app_ctx.oneTimeAuthTokens) {
+                global._app_ctx.oneTimeAuthTokens.set(oneTime, { userId: userRow.id, is_admin: !!userRow.is_admin, expiresAt });
+              }
+
+              const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
+              return res.redirect(`${frontendBase}/registration-success?confirmed=1&one_time=${encodeURIComponent(oneTime)}`);
+            } catch (e) {
+              console.error('[confirm] one-time token store failed', e && (e.stack || e.message));
+              const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
+              return res.redirect(`${frontendBase}/registration-success?confirmed=1`);
+            }
           }
-        }
-      );
+        );
+      });
     });
   });
 
@@ -365,6 +454,115 @@ module.exports = function authRoutes(ctx) {
       store.delete(one_time);
       return res.json({ token: jwtToken, is_admin: !!userRow.is_admin });
     });
+  });
+
+  // Handle password reset link - redirect to frontend with token
+  router.get("/reset-password/:token", (req, res) => {
+    const { token } = req.params;
+    
+    // Verify token is valid
+    try {
+      const payload = jwt.verify(token, SECRET);
+      if (payload.type !== 'password-reset') {
+        throw new Error("Invalid token type");
+      }
+      
+      // Redirect to frontend password reset page with token
+      const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
+      return res.redirect(`${frontendBase}/reset-password?token=${token}`);
+    } catch (e) {
+      console.error('[reset-password-link] token verification failed', e.message);
+      const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
+      return res.redirect(`${frontendBase}/reset-password?error=invalid_token`);
+    }
+  });
+
+  // Set new password with reset token
+  router.post("/reset-password-with-token", (req, res) => {
+    const { token, newPassword } = req.body || {};
+    
+    if (!token || !newPassword) {
+      return res.status(400).json({ success: false, error: "Token und neues Passwort erforderlich" });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, error: "Passwort muss mindestens 6 Zeichen lang sein" });
+    }
+
+    // Verify token
+    let email;
+    try {
+      const payload = jwt.verify(token, SECRET);
+      if (payload.type !== 'password-reset') {
+        throw new Error("Invalid token type");
+      }
+      email = payload.email;
+      if (!email) throw new Error("No email in token");
+    } catch (e) {
+      console.error('[reset-password-with-token] token verification failed', e.message);
+      return res.status(400).json({ success: false, error: "Ungültiger oder abgelaufener Token" });
+    }
+
+    // Find user and verify token matches
+    db.get(
+      `SELECT id, email, confirmation_token FROM users WHERE email = ?`,
+      [email],
+      (err, user) => {
+        if (err) {
+          console.error('[reset-password-with-token] db.get error', err);
+          return res.status(500).json({ success: false, error: "Datenbankfehler" });
+        }
+        
+        if (!user) {
+          return res.status(404).json({ success: false, error: "Benutzer nicht gefunden" });
+        }
+
+        // Verify token matches what's stored (prevents token reuse)
+        if (user.confirmation_token !== token) {
+          return res.status(400).json({ success: false, error: "Token wurde bereits verwendet oder ist ungültig" });
+        }
+
+        // Hash new password
+        let hashed;
+        try {
+          hashed = bcrypt.hashSync(newPassword, 10);
+        } catch (hErr) {
+          console.error('[reset-password-with-token] bcrypt error', hErr);
+          return res.status(500).json({ success: false, error: "Fehler beim Verschlüsseln des Passworts" });
+        }
+
+        // Update password and clear token
+        db.run(
+          `UPDATE users SET password = ?, confirmation_token = NULL WHERE id = ?`,
+          [hashed, user.id],
+          function (updateErr) {
+            if (updateErr) {
+              console.error('[reset-password-with-token] db.run update error', updateErr);
+              return res.status(500).json({ success: false, error: "Fehler beim Aktualisieren des Passworts" });
+            }
+
+            // Send confirmation email
+            try {
+              if (ctx && ctx.mailerState && ctx.mailerState.enabled && ctx.transporter) {
+                const subject = 'Match League – Passwort geändert';
+                const html = renderEmailTemplate({
+                  title: 'Passwort erfolgreich geändert',
+                  body: '<p>Hallo,</p><p>dein Passwort wurde erfolgreich geändert. Du kannst dich jetzt mit deinem neuen Passwort anmelden.</p><p>Falls du diese Änderung nicht vorgenommen hast, kontaktiere bitte sofort den Support.</p>',
+                  previewText: 'Passwort wurde geändert',
+                });
+                ctx.sendMail(user.email, subject, html).catch((mailErr) => {
+                  console.error('[reset-password-with-token] sendMail error', mailErr);
+                });
+              }
+            } catch (e) {
+              console.error('[reset-password-with-token] sendMail unexpected error', e);
+            }
+
+            return res.json({ success: true, message: "Passwort erfolgreich geändert" });
+          }
+        );
+      }
+    );
   });
 
   return router;

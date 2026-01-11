@@ -13,4 +13,9 @@ function makeAuth(JWT_SECRET) {
   };
 }
 
-module.exports = { makeAuth };
+// Default middleware instance (will fail if used without JWT_SECRET)
+const isAuthenticated = (req, res, next) => {
+  res.status(500).json({ error: 'AUTH_NOT_CONFIGURED' });
+};
+
+module.exports = { makeAuth, isAuthenticated };

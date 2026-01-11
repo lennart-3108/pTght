@@ -164,6 +164,102 @@ module.exports = function locationRoutes(ctx) {
   });
 
   /**
+   * GET /locations/nearest - Find nearest city by GPS coordinates
+   * Note: Must be before /:id route
+   */
+  router.get('/nearest', async (req, res) => {
+    try {
+      const { lat, lon } = req.query;
+      if (!lat || !lon) return res.status(400).json({ error: 'Missing lat or lon parameter' });
+      
+      const latitude = parseFloat(lat);
+      const longitude = parseFloat(lon);
+      if (isNaN(latitude) || isNaN(longitude)) {
+        return res.status(400).json({ error: 'Invalid coordinates' });
+      }
+
+      const hasCities = await knex.schema.hasTable('cities').catch(() => false);
+      if (!hasCities) return res.json({ city: null });
+
+      // Check if cities table has latitude/longitude columns
+      const hasCoords = await knex.schema.hasColumn('cities', 'latitude').catch(() => false);
+      if (!hasCoords) {
+        console.log('[GET /locations/nearest] Cities table does not have coordinate columns yet');
+        return res.json({ city: null });
+      }
+
+      // Get all cities with coordinates
+      const cities = await knex('cities')
+        .select('cities.id', 'cities.name', 'cities.latitude', 'cities.longitude',
+                'cities.country_id', 'cities.state_id')
+        .whereNotNull('cities.latitude')
+        .whereNotNull('cities.longitude');
+
+      if (!cities || cities.length === 0) {
+        return res.json({ city: null });
+      }
+
+      // Calculate distances and find nearest using Haversine formula
+      let nearest = null;
+      let minDistance = Infinity;
+
+      for (const city of cities) {
+        const cityLat = parseFloat(city.latitude);
+        const cityLon = parseFloat(city.longitude);
+        if (isNaN(cityLat) || isNaN(cityLon)) continue;
+
+        // Haversine distance in km
+        const R = 6371; // Earth radius in km
+        const dLat = (cityLat - latitude) * Math.PI / 180;
+        const dLon = (cityLon - longitude) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(latitude * Math.PI / 180) * Math.cos(cityLat * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        const distance = R * c;
+
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearest = city;
+        }
+      }
+
+      if (!nearest) {
+        return res.json({ city: null });
+      }
+
+      // Get country and state info if available
+      let country = null;
+      let state = null;
+
+      const hasCountries = await knex.schema.hasTable('countries').catch(() => false);
+      const hasStates = await knex.schema.hasTable('states').catch(() => false);
+
+      if (hasCountries && nearest.country_id) {
+        country = await knex('countries').where({ id: nearest.country_id }).first().catch(() => null);
+      }
+      if (hasStates && nearest.state_id) {
+        state = await knex('states').where({ id: nearest.state_id }).first().catch(() => null);
+      }
+
+      res.json({
+        city: {
+          id: nearest.id,
+          name: nearest.name,
+          latitude: nearest.latitude,
+          longitude: nearest.longitude
+        },
+        country: country ? { id: country.id, name: country.name } : null,
+        state: state ? { id: state.id, name: state.name } : null,
+        distance: Math.round(minDistance * 10) / 10 // km, rounded to 1 decimal
+      });
+    } catch (error) {
+      console.error('[GET /locations/nearest] error:', error);
+      return res.status(500).json({ error: 'Failed to find nearest city' });
+    }
+  });
+
+  /**
    * GET /locations/:id - Get location by ID
    */
   router.get('/:id', async (req, res) => {
