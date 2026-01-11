@@ -684,6 +684,7 @@ export default function UserDetailPage() {
                 <Avatar 
                   userId={user.id} 
                   name={displayName} 
+                  src={user.avatar_url}
                   size={isMobile ? 80 : 120} 
                   style={{ 
                     border: isMobile ? "2px solid rgba(88,204,171,0.45)" : "3px solid rgba(88,204,171,0.45)", 
@@ -1839,6 +1840,7 @@ export default function UserDetailPage() {
                           const separator = newAvatarUrl.includes('?') ? '&' : '?';
                           newAvatarUrl = `${newAvatarUrl}${separator}t=${Date.now()}`;
                         }
+                        // Update user state with new avatar URL - this will trigger re-render
                         setUser(prev => ({ ...prev, avatar_url: newAvatarUrl }));
                         setShowAvatarUpload(false);
                         setAvatarImage(null);
