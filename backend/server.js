@@ -780,72 +780,6 @@ app.get("/me/games", isAuthenticated, async (req, res) => {
   }
 });
 
-// Create an open friendly match without league
-// This mirrors the implementation in src/routes/profile.js, but is mounted
-// directly here to avoid any router ordering/caching issues for POST.
-app.post('/open-matches', isAuthenticated, async (req, res) => {
-  try {
-    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
-    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
-    const hasMatches = await k.schema.hasTable('matches').catch(() => false);
-    if (!hasMatches) return res.status(500).json({ error: 'NO_MATCHES_TABLE' });
-    const hasLeagues = await k.schema.hasTable('leagues').catch(() => false);
-    if (!hasLeagues) return res.status(500).json({ error: 'NO_LEAGUES_TABLE' });
-
-    const sportId = Number(req.body?.sportId) || null;
-    const cityId = Number(req.body?.cityId) || null;
-    if (!sportId || !cityId) return res.status(400).json({ error: 'sportId and cityId are required' });
-
-    // ensure 'Open Matches' league exists for sport/city
-    let leagueId = null;
-    const existing = await k('leagues').where({ name: 'Open Matches', sport_id: sportId, city_id: cityId }).first().catch(() => null);
-    if (existing && existing.id) leagueId = Number(existing.id);
-    else {
-      try {
-        const insL = await k('leagues').insert({ name: 'Open Matches', sport_id: sportId, city_id: cityId });
-        leagueId = Array.isArray(insL) ? insL[0] : insL;
-      } catch (e) {
-        const retry = await k('leagues').where({ name: 'Open Matches', sport_id: sportId, city_id: cityId }).first().catch(() => null);
-        leagueId = retry && retry.id ? Number(retry.id) : null;
-      }
-    }
-    if (!leagueId) return res.status(500).json({ error: 'OPEN_LEAGUE_CREATE_FAILED' });
-
-    const info = await k('matches').columnInfo().catch(() => ({}));
-
-    const rec = {
-      league_id: leagueId,
-      home_user_id: req.user.id || null,
-      home_team_id: null,
-      away_user_id: null,
-      away_team_id: null,
-      home_score: null,
-      away_score: null,
-    };
-    if (Object.prototype.hasOwnProperty.call(info, 'kickoff_at')) {
-      const when = req.body?.kickoff_at ? new Date(req.body.kickoff_at) : null;
-      rec.kickoff_at = when && !isNaN(when) ? when.toISOString() : null;
-    }
-    if (Object.prototype.hasOwnProperty.call(info, 'kickoff_end_at')) {
-      const whenEnd = req.body?.kickoff_end_at ? new Date(req.body.kickoff_end_at) : null;
-      rec.kickoff_end_at = whenEnd && !isNaN(whenEnd) ? whenEnd.toISOString() : null;
-    }
-    if (Object.prototype.hasOwnProperty.call(info, 'location_id') && req.body?.location_id) {
-      rec.location_id = Number(req.body.location_id);
-    }
-    if (Object.prototype.hasOwnProperty.call(info, 'status')) rec.status = 'open';
-    if (Object.prototype.hasOwnProperty.call(info, 'created_at')) rec.created_at = new Date().toISOString();
-
-    const ins = await k('matches').insert(rec);
-    const id = Array.isArray(ins) ? ins[0] : ins;
-    const row = await k('matches').where({ id }).first();
-    return res.status(201).json(row || { id });
-  } catch (e) {
-    console.error('[POST /open-matches] failed (server.js)', e && (e.stack || e.message || e));
-    return res.status(500).json({ error: 'DB_ERROR' });
-  }
-});
-
 async function newsHandler(req, res) {
   const started = Date.now();
   const startedIso = new Date(started).toISOString();
@@ -858,120 +792,322 @@ async function newsHandler(req, res) {
     const userId = req.user.id;
 
     const work = (async () => {
-      const matchTable = (await k.schema.hasTable("matches")) ? "matches" : ((await k.schema.hasTable("games")) ? "games" : null);
-      if (!matchTable) return [];
-
-      const info = await k(matchTable).columnInfo().catch(() => ({}));
-      const hasHomeUserId = Object.prototype.hasOwnProperty.call(info, "home_user_id");
-      const hasAwayUserId = Object.prototype.hasOwnProperty.call(info, "away_user_id");
-      const hasHomeTeamId = Object.prototype.hasOwnProperty.call(info, "home_team_id");
-      const hasAwayTeamId = Object.prototype.hasOwnProperty.call(info, "away_team_id");
-      const hasHomeScore = Object.prototype.hasOwnProperty.call(info, "home_score");
-      const hasAwayScore = Object.prototype.hasOwnProperty.call(info, "away_score");
-      const hasCreatedAt = Object.prototype.hasOwnProperty.call(info, "created_at");
-      const hasKickoffAt = Object.prototype.hasOwnProperty.call(info, "kickoff_at");
-      const hasUpdatedAt = Object.prototype.hasOwnProperty.call(info, "updated_at");
-      const hasCompletedAt = Object.prototype.hasOwnProperty.call(info, "completed_at");
-
-      const hasLeagues = await k.schema.hasTable("leagues").catch(() => false);
-      const hasSports = await k.schema.hasTable("sports").catch(() => false);
-      const hasTeamMembers = await k.schema.hasTable("team_members").catch(() => false);
-      const hasUserLeagues = await k.schema.hasTable("user_leagues").catch(() => false);
-
-      let leagueIds = [];
-      if (hasUserLeagues) {
-        const entries = await k("user_leagues").where({ user_id: userId }).select("league_id");
-        leagueIds = (entries || []).map((r) => r.league_id).filter((v) => v != null);
-      }
-
-      const base = k({ m: matchTable });
-      if (hasLeagues) base.leftJoin({ l: "leagues" }, "l.id", "m.league_id");
-      if (hasSports && hasLeagues) base.leftJoin({ s: "sports" }, "s.id", "l.sport_id");
-
-      base.select({ matchId: "m.id" });
-      base.select({ leagueId: "m.league_id" });
-      base.select(hasLeagues ? { leagueName: "l.name" } : k.raw("'' as leagueName"));
-      base.select(hasSports && hasLeagues ? { sportName: "s.name" } : k.raw("'' as sportName"));
-      if (hasHomeScore) base.select({ homeScore: "m.home_score" }); else base.select(k.raw("NULL as homeScore"));
-      if (hasAwayScore) base.select({ awayScore: "m.away_score" }); else base.select(k.raw("NULL as awayScore"));
-      if (hasHomeUserId) base.select({ homeUserId: "m.home_user_id" }); else base.select(k.raw("NULL as homeUserId"));
-      if (hasAwayUserId) base.select({ awayUserId: "m.away_user_id" }); else base.select(k.raw("NULL as awayUserId"));
-      if (hasHomeTeamId) base.select({ homeTeamId: "m.home_team_id" }); else base.select(k.raw("NULL as homeTeamId"));
-      if (hasAwayTeamId) base.select({ awayTeamId: "m.away_team_id" }); else base.select(k.raw("NULL as awayTeamId"));
-      if (hasCreatedAt) base.select({ createdAt: "m.created_at" }); else base.select(k.raw("NULL as createdAt"));
-      if (hasKickoffAt) base.select({ kickoffAt: "m.kickoff_at" }); else base.select(k.raw("NULL as kickoffAt"));
-      if (hasUpdatedAt) base.select({ updatedAt: "m.updated_at" }); else base.select(k.raw("NULL as updatedAt"));
-      if (hasCompletedAt) base.select({ completedAt: "m.completed_at" }); else base.select(k.raw("NULL as completedAt"));
-
-      base.where(function () {
-        if (leagueIds.length) this.orWhereIn("m.league_id", leagueIds);
-        if (hasHomeUserId) this.orWhere("m.home_user_id", userId);
-        if (hasAwayUserId) this.orWhere("m.away_user_id", userId);
-        if (hasTeamMembers && hasHomeTeamId) {
-          this.orWhereExists(function () {
-            this.select(1)
-              .from({ tm: "team_members" })
-              .whereColumn("tm.team_id", "m.home_team_id")
-              .andWhere("tm.user_id", userId);
-          });
-        }
-        if (hasTeamMembers && hasAwayTeamId) {
-          this.orWhereExists(function () {
-            this.select(1)
-              .from({ tm: "team_members" })
-              .whereColumn("tm.team_id", "m.away_team_id")
-              .andWhere("tm.user_id", userId);
-          });
-        }
-      });
-
-      const orderColumn = hasUpdatedAt ? "m.updated_at" : (hasCompletedAt ? "m.completed_at" : (hasCreatedAt ? "m.created_at" : "m.id"));
-      base.orderBy(orderColumn, "desc").limit(100);
-
-      const rows = await base;
-      if (!rows || !rows.length) return [];
-
       const items = [];
 
-      const formatLeague = (m) => {
-        if (m.leagueName) return m.leagueName;
-        if (m.leagueId != null) return `Liga #${m.leagueId}`;
-        return "Liga";
-      };
+      const hasUsers = await k.schema.hasTable("users").catch(() => false);
+      const matchTable = (await k.schema.hasTable("matches")) ? "matches" : ((await k.schema.hasTable("games")) ? "games" : null);
+      if (matchTable) {
+        const info = await k(matchTable).columnInfo().catch(() => ({}));
+        const hasHomeUserId = Object.prototype.hasOwnProperty.call(info, "home_user_id");
+        const hasAwayUserId = Object.prototype.hasOwnProperty.call(info, "away_user_id");
+        const hasHomeTeamId = Object.prototype.hasOwnProperty.call(info, "home_team_id");
+        const hasAwayTeamId = Object.prototype.hasOwnProperty.call(info, "away_team_id");
+        const hasHomeScore = Object.prototype.hasOwnProperty.call(info, "home_score");
+        const hasAwayScore = Object.prototype.hasOwnProperty.call(info, "away_score");
+        const hasCreatedAt = Object.prototype.hasOwnProperty.call(info, "created_at");
+        const hasKickoffAt = Object.prototype.hasOwnProperty.call(info, "kickoff_at");
+        const hasUpdatedAt = Object.prototype.hasOwnProperty.call(info, "updated_at");
+        const hasCompletedAt = Object.prototype.hasOwnProperty.call(info, "completed_at");
 
-      function pickTimestamp(m) {
-        const order = [m.updatedAt, m.completedAt, m.createdAt, m.kickoffAt];
-        return order.find((v) => v != null) || null;
-      }
+        const hasLeagues = await k.schema.hasTable("leagues").catch(() => false);
+        const hasSports = await k.schema.hasTable("sports").catch(() => false);
+        const hasTeamMembers = await k.schema.hasTable("team_members").catch(() => false);
+        const hasUserLeagues = await k.schema.hasTable("user_leagues").catch(() => false);
 
-      for (const m of rows) {
-        const tsCreated = m.createdAt || m.kickoffAt || null;
-        const timestamp = pickTimestamp(m);
-        const leagueLabel = formatLeague(m);
-        items.push({
-          id: `match-${m.matchId}-created`,
-          type: "match_created",
-          matchId: m.matchId,
-          leagueId: m.leagueId,
-          leagueName: m.leagueName || null,
-          sportName: m.sportName || null,
-          timestamp: tsCreated || timestamp,
-          title: `Neues Match in ${leagueLabel}`,
-          details: "Es wurde ein neues Match erstellt.",
+        let leagueIds = [];
+        if (hasUserLeagues) {
+          const entries = await k("user_leagues").where({ user_id: userId }).select("league_id");
+          leagueIds = (entries || []).map((r) => r.league_id).filter((v) => v != null);
+        }
+
+        const base = k({ m: matchTable });
+        if (hasLeagues) base.leftJoin({ l: "leagues" }, "l.id", "m.league_id");
+        if (hasSports && hasLeagues) base.leftJoin({ s: "sports" }, "s.id", "l.sport_id");
+
+        base.select({ matchId: "m.id" });
+        base.select({ leagueId: "m.league_id" });
+        base.select(hasLeagues ? { leagueName: "l.name" } : k.raw("'' as leagueName"));
+        base.select(hasSports && hasLeagues ? { sportName: "s.name" } : k.raw("'' as sportName"));
+        if (hasHomeScore) base.select({ homeScore: "m.home_score" }); else base.select(k.raw("NULL as homeScore"));
+        if (hasAwayScore) base.select({ awayScore: "m.away_score" }); else base.select(k.raw("NULL as awayScore"));
+        if (hasHomeUserId) base.select({ homeUserId: "m.home_user_id" }); else base.select(k.raw("NULL as homeUserId"));
+        if (hasAwayUserId) base.select({ awayUserId: "m.away_user_id" }); else base.select(k.raw("NULL as awayUserId"));
+        if (hasHomeTeamId) base.select({ homeTeamId: "m.home_team_id" }); else base.select(k.raw("NULL as homeTeamId"));
+        if (hasAwayTeamId) base.select({ awayTeamId: "m.away_team_id" }); else base.select(k.raw("NULL as awayTeamId"));
+        if (hasCreatedAt) base.select({ createdAt: "m.created_at" }); else base.select(k.raw("NULL as createdAt"));
+        if (hasKickoffAt) base.select({ kickoffAt: "m.kickoff_at" }); else base.select(k.raw("NULL as kickoffAt"));
+        if (hasUpdatedAt) base.select({ updatedAt: "m.updated_at" }); else base.select(k.raw("NULL as updatedAt"));
+        if (hasCompletedAt) base.select({ completedAt: "m.completed_at" }); else base.select(k.raw("NULL as completedAt"));
+
+        base.where(function () {
+          if (leagueIds.length) this.orWhereIn("m.league_id", leagueIds);
+          if (hasHomeUserId) this.orWhere("m.home_user_id", userId);
+          if (hasAwayUserId) this.orWhere("m.away_user_id", userId);
+          if (hasTeamMembers && hasHomeTeamId) {
+            this.orWhereExists(function () {
+              this.select(1)
+                .from({ tm: "team_members" })
+                .whereColumn("tm.team_id", "m.home_team_id")
+                .andWhere("tm.user_id", userId);
+            });
+          }
+          if (hasTeamMembers && hasAwayTeamId) {
+            this.orWhereExists(function () {
+              this.select(1)
+                .from({ tm: "team_members" })
+                .whereColumn("tm.team_id", "m.away_team_id")
+                .andWhere("tm.user_id", userId);
+            });
+          }
         });
 
-        if (hasHomeScore && hasAwayScore && m.homeScore != null && m.awayScore != null) {
-          const resultTs = m.completedAt || m.updatedAt || tsCreated || timestamp;
+        const orderColumn = hasUpdatedAt ? "m.updated_at" : (hasCompletedAt ? "m.completed_at" : (hasCreatedAt ? "m.created_at" : "m.id"));
+        base.orderBy(orderColumn, "desc").limit(100);
+
+        const rows = await base;
+
+        const formatLeague = (m) => {
+          if (m.leagueName) return m.leagueName;
+          if (m.leagueId != null) return `Liga #${m.leagueId}`;
+          return "Liga";
+        };
+
+        function pickTimestamp(m) {
+          const order = [m.updatedAt, m.completedAt, m.createdAt, m.kickoffAt];
+          return order.find((v) => v != null) || null;
+        }
+
+        for (const m of (rows || [])) {
+          const tsCreated = m.createdAt || m.kickoffAt || null;
+          const timestamp = pickTimestamp(m);
+          const leagueLabel = formatLeague(m);
           items.push({
-            id: `match-${m.matchId}-result`,
-            type: "match_result",
+            id: `match-${m.matchId}-created`,
+            type: "match_created",
             matchId: m.matchId,
             leagueId: m.leagueId,
             leagueName: m.leagueName || null,
             sportName: m.sportName || null,
-            timestamp: resultTs,
-            title: `Ergebnis im Match ${m.matchId}`,
-            details: `Endstand ${m.homeScore}:${m.awayScore}`,
+            timestamp: tsCreated || timestamp,
+            title: `Neues Match in ${leagueLabel}`,
+            details: "Es wurde ein neues Match erstellt.",
+          });
+
+          if (hasHomeScore && hasAwayScore && m.homeScore != null && m.awayScore != null) {
+            const resultTs = m.completedAt || m.updatedAt || tsCreated || timestamp;
+            items.push({
+              id: `match-${m.matchId}-result`,
+              type: "match_result",
+              matchId: m.matchId,
+              leagueId: m.leagueId,
+              leagueName: m.leagueName || null,
+              sportName: m.sportName || null,
+              timestamp: resultTs,
+              title: `Ergebnis im Match ${m.matchId}`,
+              details: `Endstand ${m.homeScore}:${m.awayScore}`,
+            });
+          }
+        }
+      }
+
+      // Check for schedule proposals (Terminvorschläge)
+      const hasProposals = await k.schema.hasTable('match_schedule_proposals').catch(() => false);
+      if (hasProposals && matchTable && hasUsers) {
+        const buildDisplayName = (row) => {
+          const parts = [row.firstname || "", row.lastname || ""]
+            .map((s) => String(s || "").trim())
+            .filter(Boolean);
+          if (parts.length) return parts.join(" ");
+          if (row.name && String(row.name).trim()) return String(row.name).trim();
+          if (row.email && String(row.email).trim()) return String(row.email).trim();
+          return row.userId ? `User ${row.userId}` : "Unbekannt";
+        };
+
+        const proposalRows = await k({ msp: 'match_schedule_proposals' })
+          .leftJoin({ u: 'users' }, 'u.id', 'msp.proposer_user_id')
+          .leftJoin({ m: matchTable }, 'm.id', 'msp.match_id')
+          .leftJoin({ l: 'leagues' }, 'l.id', 'm.league_id')
+          .where('msp.recipient_user_id', userId)
+          .where('msp.status', 'sent')
+          .select([
+            k.raw('msp.id as proposalId'),
+            k.raw('msp.match_id as matchId'),
+            k.raw('msp.proposer_user_id as proposerUserId'),
+            k.raw('msp.proposed_datetime as proposedDatetime'),
+            k.raw('msp.created_at as createdAt'),
+            k.raw('u.firstname as firstname'),
+            k.raw('u.lastname as lastname'),
+            k.raw('u.name as name'),
+            k.raw('u.email as email'),
+            k.raw('u.avatar_url as avatarUrl'),
+            k.raw('l.name as leagueName'),
+          ])
+          .orderBy('msp.created_at', 'desc')
+          .limit(20)
+          .catch(() => []);
+
+        for (const r of (proposalRows || [])) {
+          const proposerUserId = Number(r.proposerUserId);
+          if (!Number.isFinite(proposerUserId) || proposerUserId <= 0) continue;
+          const proposerName = buildDisplayName({
+            userId: proposerUserId,
+            firstname: r.firstname,
+            lastname: r.lastname,
+            name: r.name,
+            email: r.email,
+          });
+          const dt = r.proposedDatetime ? new Date(r.proposedDatetime).toLocaleString('de-DE', { 
+            weekday: 'short', 
+            day: '2-digit', 
+            month: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          }) : 'Termin';
+          
+          items.push({
+            id: `schedule-proposal-${r.proposalId}`,
+            type: 'schedule_proposal',
+            timestamp: r.createdAt || null,
+            title: 'Terminvorschlag erhalten',
+            details: `${proposerName} hat dir einen Terminvorschlag gesendet: ${dt}`,
+            matchId: r.matchId,
+            proposalId: r.proposalId,
+            proposerUserId,
+            proposerName,
+            avatarUrl: r.avatarUrl || null,
+            leagueName: r.leagueName || null,
+          });
+        }
+      }
+
+      // Check for players joining matches
+      if (matchTable && hasUsers) {
+        const buildDisplayName = (row) => {
+          const parts = [row.firstname || "", row.lastname || ""]
+            .map((s) => String(s || "").trim())
+            .filter(Boolean);
+          if (parts.length) return parts.join(" ");
+          if (row.name && String(row.name).trim()) return String(row.name).trim();
+          if (row.email && String(row.email).trim()) return String(row.email).trim();
+          return row.userId ? `User ${row.userId}` : "Unbekannt";
+        };
+
+        const matchInfo = await k(matchTable).columnInfo().catch(() => ({}));
+        const hasHomeUserId = Object.prototype.hasOwnProperty.call(matchInfo, "home_user_id");
+        const hasAwayUserId = Object.prototype.hasOwnProperty.call(matchInfo, "away_user_id");
+        const hasCreatedAt = Object.prototype.hasOwnProperty.call(matchInfo, "created_at");
+        const hasUpdatedAt = Object.prototype.hasOwnProperty.call(matchInfo, "updated_at");
+
+        if (hasHomeUserId && hasAwayUserId) {
+          // Find matches where current user is home and someone recently joined as away
+          const joinedMatches = await k({ m: matchTable })
+            .leftJoin({ u: 'users' }, 'u.id', 'm.away_user_id')
+            .leftJoin({ l: 'leagues' }, 'l.id', 'm.league_id')
+            .where('m.home_user_id', userId)
+            .whereNotNull('m.away_user_id')
+            .select([
+              k.raw('m.id as matchId'),
+              k.raw('m.away_user_id as awayUserId'),
+              hasUpdatedAt ? k.raw('m.updated_at as updatedAt') : k.raw('NULL as updatedAt'),
+              hasCreatedAt ? k.raw('m.created_at as createdAt') : k.raw('NULL as createdAt'),
+              k.raw('u.firstname as firstname'),
+              k.raw('u.lastname as lastname'),
+              k.raw('u.name as name'),
+              k.raw('u.email as email'),
+              k.raw('u.avatar_url as avatarUrl'),
+              k.raw('l.name as leagueName'),
+            ])
+            .orderBy(hasUpdatedAt ? 'm.updated_at' : 'm.created_at', 'desc')
+            .limit(20)
+            .catch(() => []);
+
+          for (const r of (joinedMatches || [])) {
+            const awayUserId = Number(r.awayUserId);
+            if (!Number.isFinite(awayUserId) || awayUserId <= 0) continue;
+            
+            // Only show recent joins (within last 7 days)
+            const timestamp = r.updatedAt || r.createdAt;
+            if (timestamp) {
+              const joinDate = new Date(timestamp);
+              const daysSince = (Date.now() - joinDate.getTime()) / (1000 * 60 * 60 * 24);
+              if (daysSince > 7) continue;
+            }
+            
+            const joinerName = buildDisplayName({
+              userId: awayUserId,
+              firstname: r.firstname,
+              lastname: r.lastname,
+              name: r.name,
+              email: r.email,
+            });
+            
+            items.push({
+              id: `player-joined-${r.matchId}-${awayUserId}`,
+              type: 'player_joined',
+              timestamp: timestamp || null,
+              title: 'Spieler beigetreten',
+              details: `${joinerName} ist deinem Match beigetreten.`,
+              matchId: r.matchId,
+              joinedUserId: awayUserId,
+              joinedUserName: joinerName,
+              avatarUrl: r.avatarUrl || null,
+              leagueName: r.leagueName || null,
+            });
+          }
+        }
+      }
+
+      const hasFriendships = await k.schema.hasTable('user_friendships').catch(() => false);
+      if (hasFriendships && hasUsers) {
+        const buildDisplayName = (row) => {
+          const parts = [row.fromFirstname || "", row.fromLastname || ""]
+            .map((s) => String(s || "").trim())
+            .filter(Boolean);
+          if (parts.length) return parts.join(" ");
+          if (row.fromName && String(row.fromName).trim()) return String(row.fromName).trim();
+          if (row.fromEmail && String(row.fromEmail).trim()) return String(row.fromEmail).trim();
+          return row.fromUserId ? `User ${row.fromUserId}` : "Unbekannt";
+        };
+
+        const reqRows = await k({ uf: 'user_friendships' })
+          .leftJoin({ u: 'users' }, 'u.id', 'uf.initiator_id')
+          .where('uf.status', 'pending')
+          .andWhere(function () {
+            this.where('uf.user_low', userId).orWhere('uf.user_high', userId);
+          })
+          .andWhere('uf.initiator_id', '!=', userId)
+          .select([
+            k.raw('uf.initiator_id as fromUserId'),
+            k.raw('uf.created_at as createdAt'),
+            k.raw('u.firstname as fromFirstname'),
+            k.raw('u.lastname as fromLastname'),
+            k.raw('u.name as fromName'),
+            k.raw('u.email as fromEmail'),
+            k.raw('u.avatar_url as fromAvatarUrl'),
+          ])
+          .orderBy('uf.created_at', 'desc')
+          .limit(50)
+          .catch(() => []);
+
+        for (const r of (reqRows || [])) {
+          const fromUserId = Number(r.fromUserId);
+          if (!Number.isFinite(fromUserId) || fromUserId <= 0) continue;
+          const fromUserName = buildDisplayName({
+            fromUserId,
+            fromFirstname: r.fromFirstname,
+            fromLastname: r.fromLastname,
+            fromName: r.fromName,
+            fromEmail: r.fromEmail,
+          });
+          items.push({
+            id: `friend-request-${fromUserId}-to-${userId}`,
+            type: 'friend_request',
+            timestamp: r.createdAt || null,
+            title: 'Freundschaftsanfrage',
+            details: `${fromUserName} hat dir eine Freundschaftsanfrage gesendet.`,
+            fromUserId,
+            fromUserName,
+            fromAvatarUrl: r.fromAvatarUrl || null,
           });
         }
       }
@@ -1045,7 +1181,8 @@ apiRouter.use("/leagues", leagueMatchesRoutes({ db: knexDirect || db }));
 
 const sportsRoutes = require("./src/routes/sports");
 const citiesRoutes = require("./src/routes/cities");
-const matchesRoutes = require("./routes/matches");
+const matchesRoutes = require("./src/routes/matches");
+const matchesRoutesLegacy = require("./routes/matches");
 const chatsRoutes = require("./routes/chats");
 
 // Mount routes BEFORE any 404 handler
@@ -1064,7 +1201,9 @@ if (process.env.DEBUG_BOOT === '1' || canLog('debug')) {
     source: knexDirect && knexDirect.client ? 'knexDirect' : (db && db.knex && db.knex.client) ? 'adapter.knex' : (db ? 'adapter' : 'none')
   });
 }
-apiRouter.use("/matches", matchesRoutes({ db: resolvedKnexForRoutes }));
+// Mount both new (for time-slots etc) and legacy (for join etc) matches routes
+apiRouter.use("/matches", matchesRoutes({ db: resolvedKnexForRoutes, SECRET: cfg.JWT_SECRET, SESSION_EPOCH: cfg.SESSION_EPOCH }));
+apiRouter.use("/matches", matchesRoutesLegacy({ db: resolvedKnexForRoutes }));
 apiRouter.use("/chats", chatsRoutes({ db: resolvedKnexForRoutes }));
 
 // Also mount some location routes at /assets for convenience
@@ -1855,6 +1994,113 @@ apiRouter.use('/bookings', bookingRoutes);
 apiRouter.use('/booking-stats', bookingStatsRoutes);
 apiRouter.use('/slot-generator', slotGeneratorRoutes);
 apiRouter.use('/booking-subscriptions', bookingSubscriptionsRoutes);
+
+// News/Feed routes
+const newsRoutes = require('./src/routes/news');
+apiRouter.use('/news', newsRoutes);
+
+// Open Matches route - moved here to be accessible under /api
+apiRouter.post('/open-matches', isAuthenticated, async (req, res) => {
+  try {
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+    const hasMatches = await k.schema.hasTable('matches').catch(() => false);
+    if (!hasMatches) return res.status(500).json({ error: 'NO_MATCHES_TABLE' });
+    const hasLeagues = await k.schema.hasTable('leagues').catch(() => false);
+    if (!hasLeagues) return res.status(500).json({ error: 'NO_LEAGUES_TABLE' });
+
+    const sportId = Number(req.body?.sportId) || null;
+    const cityId = Number(req.body?.cityId) || null;
+    if (!sportId || !cityId) return res.status(400).json({ error: 'sportId and cityId are required' });
+
+    // ensure 'Open Matches' league exists for sport/city
+    let leagueId = null;
+    const existing = await k('leagues').where({ name: 'Open Matches', sport_id: sportId, city_id: cityId }).first().catch(() => null);
+    if (existing && existing.id) leagueId = Number(existing.id);
+    else {
+      try {
+        const insL = await k('leagues').insert({ name: 'Open Matches', sport_id: sportId, city_id: cityId });
+        leagueId = Array.isArray(insL) ? insL[0] : insL;
+      } catch (e) {
+        const retry = await k('leagues').where({ name: 'Open Matches', sport_id: sportId, city_id: cityId }).first().catch(() => null);
+        leagueId = retry && retry.id ? Number(retry.id) : null;
+      }
+    }
+    if (!leagueId) return res.status(500).json({ error: 'OPEN_LEAGUE_CREATE_FAILED' });
+
+    const info = await k('matches').columnInfo().catch(() => ({}));
+
+    const rec = {
+      league_id: leagueId,
+      home_user_id: req.user.id || null,
+      home_team_id: null,
+      away_user_id: null,
+      away_team_id: null,
+      home_score: null,
+      away_score: null,
+    };
+    if (Object.prototype.hasOwnProperty.call(info, 'kickoff_at')) {
+      const when = req.body?.kickoff_at ? new Date(req.body.kickoff_at) : null;
+      rec.kickoff_at = when && !isNaN(when) ? when.toISOString() : null;
+    }
+    if (Object.prototype.hasOwnProperty.call(info, 'kickoff_end_at')) {
+      const whenEnd = req.body?.kickoff_end_at ? new Date(req.body.kickoff_end_at) : null;
+      rec.kickoff_end_at = whenEnd && !isNaN(whenEnd) ? whenEnd.toISOString() : null;
+    }
+    if (Object.prototype.hasOwnProperty.call(info, 'when_type') && req.body?.when_type) {
+      rec.when_type = String(req.body.when_type).trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(info, 'range_days') && req.body?.range_days) {
+      rec.range_days = Number(req.body.range_days);
+    }
+    if (Object.prototype.hasOwnProperty.call(info, 'player_level') && req.body?.player_level) {
+      rec.player_level = String(req.body.player_level).trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(info, 'time_of_day') && req.body?.time_of_day) {
+      rec.time_of_day = String(req.body.time_of_day).trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(info, 'time_from') && req.body?.time_from) {
+      rec.time_from = String(req.body.time_from).trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(info, 'time_to') && req.body?.time_to) {
+      rec.time_to = String(req.body.time_to).trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(info, 'location_id') && req.body?.location_id) {
+      rec.location_id = Number(req.body.location_id);
+    }
+    if (Object.prototype.hasOwnProperty.call(info, 'slot_duration') && req.body?.slot_duration) {
+      rec.slot_duration = Number(req.body.slot_duration);
+    }
+    if (Object.prototype.hasOwnProperty.call(info, 'status')) rec.status = 'open';
+    if (Object.prototype.hasOwnProperty.call(info, 'created_at')) rec.created_at = new Date().toISOString();
+
+    const ins = await k('matches').insert(rec);
+    const id = Array.isArray(ins) ? ins[0] : ins;
+    
+    // Speichere Verfügbarkeits-Frames wenn vorhanden
+    if (req.body?.availability && Array.isArray(req.body.availability) && req.body.availability.length > 0) {
+      const hasFramesTable = await k.schema.hasTable('match_time_frames').catch(() => false);
+      if (hasFramesTable) {
+        for (const slot of req.body.availability) {
+          await k('match_time_frames').insert({
+            match_id: id,
+            created_by: req.user.id,
+            date: slot.date,
+            time_start: slot.timeStart,
+            time_end: slot.timeEnd,
+            created_at: new Date().toISOString()
+          }).catch(e => console.error('Failed to insert availability frame:', e));
+        }
+      }
+    }
+    
+    const row = await k('matches').where({ id }).first();
+    return res.status(201).json(row || { id });
+  } catch (e) {
+    console.error('[POST /api/open-matches] failed', e && (e.stack || e.message || e));
+    return res.status(500).json({ error: 'DB_ERROR' });
+  }
+});
 
 // Mount all remaining API routes under /api prefix
 app.use('/api', apiRouter);

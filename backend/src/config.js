@@ -17,7 +17,8 @@ function loadConfig() {
   const MAIL_PASS = process.env.MAIL_PASS;  // Neu: UDAG-Passwort
   const MAIL_DEBUG = process.env.MAIL_DEBUG === "1";
   // Force all outgoing mail to a fixed recipient (useful for QA/staging)
-  const MAIL_FORCE_TO = process.env.MAIL_FORCE_TO || (process.env.NODE_ENV === "production" ? "" : "lennart.3108@icloud.com");
+  // Only use if explicitly set in .env (no default)
+  const MAIL_FORCE_TO = process.env.MAIL_FORCE_TO || null;
   // Optional forwarding/copy target for sent emails (used by mailer)
   // Prefer explicit FORWARD_TO, then MAIL_FROM, then MAIL_USER; fallback to an org default
   const FORWARD_TO = process.env.FORWARD_TO || process.env.MAIL_FROM || MAIL_USER || "info@matchleague.org";

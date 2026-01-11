@@ -139,8 +139,8 @@ button:hover, .btn:hover {
 .hero-carousel {
   position: relative;
   width: 100%;
-  height: 55vh; /* a bit taller so dropdowns and buttons have air */
-  min-height: 420px; /* ensure comfortable space for controls */
+  height: 30vh; /* viel kompakter */
+  min-height: 320px; /* reduzierte min-height */
   overflow: visible; /* allow dropdown menus to extend beyond banner */
 }
 .hero-slide {
@@ -177,32 +177,41 @@ button:hover, .btn:hover {
 .hero-controls { 
   pointer-events: auto; 
   display: flex;
+  flex-direction: column;
   gap: 12px;
-  flex-wrap: wrap;
+  width: 100%;
+}
+.hero-controls > * {
+  width: 100%;
+}
+.hero-controls > button {
+  align-self: stretch;
 }
 .hero-stripe {
   display: inline-flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   background: rgba(8,28,25,0.85);
-  padding: 14px 22px;
+  padding: 10px 16px;
   transform: skewX(-12deg);
 }
-.hero-stripe .hero-small-logo { width: 56px; height: 56px; transform: skewX(12deg); }
-.hero-title { font-size: 34px; margin: 0; color: #e6efe6; transform: skewX(12deg); }
+.hero-stripe .hero-small-logo { 
+  width: 50px; 
+  height: 50px; 
+  transform: skewX(12deg); 
+  object-fit: contain; 
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+.hero-title { font-size: 36px; margin: 0; color: #e6efe6; transform: skewX(12deg); }
 .hero-sub { color: rgba(230,239,230,0.9); margin-top: 12px; pointer-events: none; }
 
 /* Simple responsive: stack when not enough space */
 @media (max-width: 768px) {
-  .hero-carousel { height: 75vh; } /* 3/4 der Bildschirmhöhe auf mobil */
+  .hero-carousel { height: 40vh; } /* auch auf mobil kompakter */
   .hero-title { font-size: 28px; }
   .hero-controls { 
-    flex-direction: column;
     gap: 8px;
-  }
-  .hero-controls select,
-  .hero-controls button {
-    width: 100%;
   }
 }
 
@@ -237,6 +246,11 @@ button:hover, .btn:hover {
   border: 1px solid #1a3c33; 
   width: 100%;
   box-sizing: border-box;
+}
+
+/* Hide scrollbar in cards but keep scroll functionality */
+.ml-card::-webkit-scrollbar {
+  display: none;
 }
 
 .ml-bordered { border: 1px solid #1a3c33; border-radius: 12px; }

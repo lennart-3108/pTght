@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useRef } from "react";
 import { Link, useParams } from "react-router-dom";
 import { API_BASE } from "../config";
 import Avatar from "../components/Avatar";
 import { useResponsive } from "../hooks/useResponsive";
+import AvatarEditor from "react-avatar-editor";
 
 // Responsive page styling function (now dynamic)
 const getPageStyle = (isMobile) => ({
@@ -210,6 +211,16 @@ export default function UserDetailPage() {
   const [toggleBusy, setToggleBusy] = useState(false);
   const [feedFilters, setFeedFilters] = useState({ friends: true, team: true, public: true });
   const [activeFeedCategory, setActiveFeedCategory] = useState("all"); // "all", "matches", "friends", "public"
+  const [showAvatarViewer, setShowAvatarViewer] = useState(false);
+  const [showAvatarUpload, setShowAvatarUpload] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarComments, setAvatarComments] = useState([]);
+  const [avatarLikes, setAvatarLikes] = useState(0);
+  const [avatarLiked, setAvatarLiked] = useState(false);
+  const [newComment, setNewComment] = useState("");
+  const [avatarImage, setAvatarImage] = useState(null);
+  const [avatarScale, setAvatarScale] = useState(1);
+  const editorRef = useRef(null);
 
   const isOwnProfile = user && Number(user.id) === Number(viewerId);
 
@@ -442,6 +453,38 @@ export default function UserDetailPage() {
     };
   }, [activeLeagueId]);
 
+  // Load avatar likes and comments when viewer is opened
+  useEffect(() => {
+    if (!showAvatarViewer || !user) return;
+    
+    let mounted = true;
+    
+    (async () => {
+      try {
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        
+        // Load likes
+        const likesRes = await fetch(`${API_BASE}/users/${user.id}/avatar/likes`, { headers });
+        if (likesRes.ok && mounted) {
+          const likesData = await likesRes.json();
+          setAvatarLikes(likesData.count || 0);
+          setAvatarLiked(likesData.userLiked || false);
+        }
+        
+        // Load comments
+        const commentsRes = await fetch(`${API_BASE}/users/${user.id}/avatar/comments`, { headers });
+        if (commentsRes.ok && mounted) {
+          const commentsData = await commentsRes.json();
+          setAvatarComments(Array.isArray(commentsData) ? commentsData : []);
+        }
+      } catch (err) {
+        console.error('Error loading avatar data:', err);
+      }
+    })();
+    
+    return () => { mounted = false; };
+  }, [showAvatarViewer, user, token]);
+
   const displayName = useMemo(() => {
     if (!user) return "";
     const name = `${user.firstname || ""} ${user.lastname || ""}`.trim();
@@ -633,32 +676,70 @@ export default function UserDetailPage() {
           
           {/* Avatar & Sports */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 16 }}>
-            <Avatar 
-              userId={user.id} 
-              name={displayName} 
-              size={isMobile ? 80 : 120} 
-              style={{ 
-                border: isMobile ? "2px solid rgba(88,204,171,0.45)" : "3px solid rgba(88,204,171,0.45)", 
-                boxShadow: isMobile ? "0 6px 16px rgba(9,23,17,0.6)" : "0 12px 32px rgba(9,23,17,0.6)" 
-              }} 
-            />
+            <div style={{ position: "relative" }}>
+              <div
+                onClick={() => setShowAvatarViewer(true)}
+                style={{ cursor: "pointer" }}
+              >
+                <Avatar 
+                  userId={user.id} 
+                  name={displayName} 
+                  size={isMobile ? 80 : 120} 
+                  style={{ 
+                    border: isMobile ? "2px solid rgba(88,204,171,0.45)" : "3px solid rgba(88,204,171,0.45)", 
+                    boxShadow: isMobile ? "0 6px 16px rgba(9,23,17,0.6)" : "0 12px 32px rgba(9,23,17,0.6)" 
+                  }} 
+                />
+              </div>
+              {isOwnProfile && (
+                <button
+                  onClick={() => setShowAvatarUpload(true)}
+                  style={{
+                    position: "absolute",
+                    bottom: 0,
+                    right: 0,
+                    width: isMobile ? 28 : 36,
+                    height: isMobile ? 28 : 36,
+                    borderRadius: "50%",
+                    background: "linear-gradient(135deg, rgba(92,200,165,0.95), rgba(72,201,169,0.95))",
+                    border: "2px solid rgba(9,26,21,0.9)",
+                    color: "#0a1a15",
+                    fontSize: isMobile ? 18 : 22,
+                    fontWeight: "bold",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    boxShadow: "0 4px 12px rgba(0,0,0,0.4)",
+                    transition: "transform 0.2s ease",
+                    padding: 0,
+                    lineHeight: 1
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.transform = "scale(1.1)"}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = "scale(1)"}
+                  title="Neues Profilbild hochladen"
+                >
+                  +
+                </button>
+              )}
+            </div>
             <div style={{ display: "flex", flexWrap: "wrap", gap: 6, justifyContent: "center", maxWidth: 160 }}>
               {sportsChips.length ? sportsChips.map((chip) => (
                 <span key={chip} style={{ 
-                  padding: "4px 8px", 
+                  padding: "6px 10px", 
                   borderRadius: 12, 
                   border: "1px solid rgba(92,200,165,0.4)", 
                   background: "rgba(16,60,46,0.8)", 
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: 500
                 }}>{chip}</span>
               )) : (
                 <span style={{ 
-                  padding: "4px 8px", 
+                  padding: "6px 10px", 
                   borderRadius: 12, 
                   background: "rgba(14,44,34,0.7)", 
                   border: "1px solid rgba(92,200,165,0.2)", 
-                  fontSize: 11 
+                  fontSize: 12 
                 }}>Allrounder</span>
               )}
             </div>
@@ -671,11 +752,11 @@ export default function UserDetailPage() {
                   display: "flex", 
                   alignItems: "center", 
                   gap: 4, 
-                  padding: "3px 6px", 
-                  borderRadius: 8, 
+                  padding: "4px 8px", 
+                  borderRadius: 10, 
                   background: "linear-gradient(135deg, rgba(255,215,0,0.2), rgba(218,165,32,0.15))", 
                   border: "1px solid rgba(255,215,0,0.4)",
-                  fontSize: 9,
+                  fontSize: 11,
                   fontWeight: 600,
                   color: "#ffd700"
                 }}>
@@ -690,11 +771,11 @@ export default function UserDetailPage() {
                   display: "flex", 
                   alignItems: "center", 
                   gap: 3, 
-                  padding: "3px 6px", 
-                  borderRadius: 8, 
+                  padding: "4px 8px", 
+                  borderRadius: 10, 
                   background: "linear-gradient(135deg, rgba(127,217,186,0.25), rgba(72,201,169,0.15))", 
                   border: "1px solid rgba(127,217,186,0.5)",
-                  fontSize: 9,
+                  fontSize: 11,
                   fontWeight: 600,
                   color: "#7fd9ba"
                 }}>
@@ -709,11 +790,11 @@ export default function UserDetailPage() {
                   display: "flex", 
                   alignItems: "center", 
                   gap: 3, 
-                  padding: "3px 6px", 
-                  borderRadius: 8, 
+                  padding: "4px 8px", 
+                  borderRadius: 10, 
                   background: "linear-gradient(135deg, rgba(138,43,226,0.2), rgba(75,0,130,0.15))", 
                   border: "1px solid rgba(138,43,226,0.4)",
-                  fontSize: 9,
+                  fontSize: 11,
                   fontWeight: 600,
                   color: "#ba55d3"
                 }}>
@@ -728,11 +809,11 @@ export default function UserDetailPage() {
                   display: "flex", 
                   alignItems: "center", 
                   gap: 3, 
-                  padding: "3px 6px", 
-                  borderRadius: 8, 
+                  padding: "4px 8px", 
+                  borderRadius: 10, 
                   background: "linear-gradient(135deg, rgba(255,140,0,0.2), rgba(255,69,0,0.15))", 
                   border: "1px solid rgba(255,140,0,0.4)",
-                  fontSize: 9,
+                  fontSize: 11,
                   fontWeight: 600,
                   color: "#ff8c00"
                 }}>
@@ -747,11 +828,11 @@ export default function UserDetailPage() {
                   display: "flex", 
                   alignItems: "center", 
                   gap: 3, 
-                  padding: "3px 6px", 
-                  borderRadius: 8, 
+                  padding: "4px 8px", 
+                  borderRadius: 10, 
                   background: "linear-gradient(135deg, rgba(50,205,50,0.2), rgba(34,139,34,0.15))", 
                   border: "1px solid rgba(50,205,50,0.4)",
-                  fontSize: 9,
+                  fontSize: 11,
                   fontWeight: 600,
                   color: "#32cd32"
                 }}>
@@ -773,12 +854,12 @@ export default function UserDetailPage() {
                 <div style={{ marginTop: 12, display: "flex", gap: 8, flexWrap: "wrap" }}>
                   {heroBadges.map((badge) => (
                     <span key={badge} style={{ 
-                      padding: "4px 10px", 
+                      padding: "6px 12px", 
                       borderRadius: 16, 
                       border: "1px solid rgba(120,216,177,0.6)", 
                       background: "rgba(12,39,31,0.65)", 
                       color: "#c0f0dc", 
-                      fontSize: 11,
+                      fontSize: 12,
                       fontWeight: 500
                     }}>{badge}</span>
                   ))}
@@ -1594,6 +1675,389 @@ export default function UserDetailPage() {
           ) : null;
         })()}
       </section>
+
+      {/* Avatar Upload Dialog */}
+      {showAvatarUpload && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.9)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+          padding: 20
+        }} onClick={() => {
+          setShowAvatarUpload(false);
+          setAvatarImage(null);
+          setAvatarScale(1);
+        }}>
+          <div style={{
+            background: "linear-gradient(135deg, rgba(9,26,21,0.98), rgba(18,44,37,0.98))",
+            borderRadius: 24,
+            padding: 32,
+            maxWidth: 500,
+            width: "100%",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.6)",
+            border: "1px solid rgba(92,200,165,0.3)"
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h2 style={{ margin: 0, fontSize: 24, color: "#e8efe8" }}>Profilbild hochladen</h2>
+              <button 
+                onClick={() => {
+                  setShowAvatarUpload(false);
+                  setAvatarImage(null);
+                  setAvatarScale(1);
+                }}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#e8efe8",
+                  fontSize: 28,
+                  cursor: "pointer",
+                  padding: 0,
+                  lineHeight: 1
+                }}
+              >×</button>
+            </div>
+            
+            {!avatarImage ? (
+              <>
+                <input 
+                  type="file" 
+                  accept="image/*"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                      setAvatarImage(reader.result);
+                      setAvatarScale(1);
+                    };
+                    reader.readAsDataURL(file);
+                  }}
+                  style={{
+                    width: "100%",
+                    padding: 12,
+                    background: "rgba(14,44,34,0.7)",
+                    border: "1px solid rgba(92,200,165,0.4)",
+                    borderRadius: 12,
+                    color: "#e8efe8",
+                    marginBottom: 16
+                  }}
+                />
+                <p style={{ color: "#bfead4", fontSize: 14, marginTop: 12 }}>
+                  Wähle ein Bild aus und schneide es dann zu.
+                </p>
+              </>
+            ) : (
+              <>
+                <div style={{ 
+                  display: 'flex', 
+                  justifyContent: 'center', 
+                  marginBottom: 20,
+                  position: 'relative'
+                }}>
+                  <AvatarEditor
+                    ref={editorRef}
+                    image={avatarImage}
+                    width={250}
+                    height={250}
+                    border={50}
+                    borderRadius={125}
+                    color={[8, 28, 25, 0.8]}
+                    scale={avatarScale}
+                    rotate={0}
+                  />
+                </div>
+                
+                <div style={{ marginBottom: 20 }}>
+                  <label style={{ color: "#bfead4", fontSize: 14, marginBottom: 8, display: 'block' }}>
+                    Zoom
+                  </label>
+                  <input
+                    type="range"
+                    min="1"
+                    max="3"
+                    step="0.01"
+                    value={avatarScale}
+                    onChange={(e) => setAvatarScale(parseFloat(e.target.value))}
+                    style={{
+                      width: "100%",
+                      accentColor: "#5cc8a5"
+                    }}
+                  />
+                </div>
+                
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <button 
+                    onClick={() => {
+                      setAvatarImage(null);
+                      setAvatarScale(1);
+                    }}
+                    style={{
+                      flex: 1,
+                      background: "rgba(14,44,34,0.7)",
+                      border: "1px solid rgba(92,200,165,0.4)",
+                      color: "#bfead4",
+                      padding: "10px 20px",
+                      borderRadius: 12,
+                      cursor: "pointer",
+                      fontWeight: 600
+                    }}
+                  >
+                    Neues Bild
+                  </button>
+                  
+                  <button 
+                    onClick={async () => {
+                      if (!editorRef.current) return;
+                      
+                      setUploadingAvatar(true);
+                      try {
+                        const canvas = editorRef.current.getImageScaledToCanvas();
+                        const dataUrl = canvas.toDataURL('image/png');
+                        
+                        const res = await fetch(`${API_BASE}/users/${user.id}/avatar`, {
+                          method: 'POST',
+                          headers: { 
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}` 
+                          },
+                          body: JSON.stringify({ avatar: dataUrl })
+                        });
+                        
+                        if (!res.ok) {
+                          const errorData = await res.json().catch(() => ({}));
+                          throw new Error(errorData.error || 'Upload fehlgeschlagen');
+                        }
+                        
+                        const data = await res.json();
+                        let newAvatarUrl = data.url || data.avatar_url;
+                        // Add cache-busting timestamp to force image reload
+                        if (newAvatarUrl) {
+                          const separator = newAvatarUrl.includes('?') ? '&' : '?';
+                          newAvatarUrl = `${newAvatarUrl}${separator}t=${Date.now()}`;
+                        }
+                        setUser(prev => ({ ...prev, avatar_url: newAvatarUrl }));
+                        setShowAvatarUpload(false);
+                        setAvatarImage(null);
+                        setAvatarScale(1);
+                      } catch (err) {
+                        console.error('Avatar upload error:', err);
+                        alert(err.message || 'Fehler beim Hochladen');
+                      } finally {
+                        setUploadingAvatar(false);
+                      }
+                    }}
+                    disabled={uploadingAvatar}
+                    style={{
+                      flex: 1,
+                      background: uploadingAvatar ? "rgba(92,200,165,0.3)" : "rgba(92,200,165,0.9)",
+                      border: "none",
+                      color: "#0a1f18",
+                      padding: "10px 20px",
+                      borderRadius: 12,
+                      cursor: uploadingAvatar ? "not-allowed" : "pointer",
+                      fontWeight: 700
+                    }}
+                  >
+                    {uploadingAvatar ? 'Lädt...' : 'Speichern'}
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Avatar Viewer Dialog */}
+      {showAvatarViewer && (
+        <div style={{
+          position: "fixed",
+          inset: 0,
+          background: "rgba(0,0,0,0.9)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          zIndex: 9999,
+          padding: 20
+        }} onClick={() => setShowAvatarViewer(false)}>
+          <div style={{
+            background: "linear-gradient(135deg, rgba(9,26,21,0.98), rgba(18,44,37,0.98))",
+            borderRadius: 24,
+            padding: 32,
+            maxWidth: 700,
+            width: "100%",
+            maxHeight: "90vh",
+            overflow: "auto",
+            boxShadow: "0 24px 60px rgba(0,0,0,0.6)",
+            border: "1px solid rgba(92,200,165,0.3)"
+          }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+              <h2 style={{ margin: 0, fontSize: 24, color: "#e8efe8" }}>Profilbild</h2>
+              <button 
+                onClick={() => setShowAvatarViewer(false)}
+                style={{
+                  background: "transparent",
+                  border: "none",
+                  color: "#e8efe8",
+                  fontSize: 32,
+                  cursor: "pointer",
+                  padding: 0,
+                  lineHeight: 1
+                }}
+              >×</button>
+            </div>
+            
+            {/* Large Avatar */}
+            <div style={{ 
+              width: "100%", 
+              aspectRatio: "1", 
+              borderRadius: 16, 
+              overflow: "hidden",
+              marginBottom: 20,
+              background: "rgba(14,44,34,0.5)"
+            }}>
+              <Avatar 
+                userId={user.id} 
+                name={displayName} 
+                size={600}
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            </div>
+
+            {/* Likes */}
+            <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 12 }}>
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`${API_BASE}/users/${user.id}/avatar/like`, {
+                      method: avatarLiked ? 'DELETE' : 'POST',
+                      headers: { Authorization: `Bearer ${token}` }
+                    });
+                    if (res.ok) {
+                      setAvatarLiked(!avatarLiked);
+                      setAvatarLikes(prev => avatarLiked ? prev - 1 : prev + 1);
+                    }
+                  } catch (err) {
+                    console.error('Like error:', err);
+                  }
+                }}
+                style={{
+                  background: avatarLiked ? "rgba(255,92,92,0.3)" : "rgba(14,44,34,0.7)",
+                  border: `1px solid ${avatarLiked ? "rgba(255,92,92,0.6)" : "rgba(92,200,165,0.4)"}`,
+                  color: avatarLiked ? "#ff5c5c" : "#bfead4",
+                  padding: "8px 16px",
+                  borderRadius: 12,
+                  cursor: "pointer",
+                  fontSize: 16
+                }}
+              >
+                {avatarLiked ? "❤️" : "🤍"} {avatarLikes}
+              </button>
+            </div>
+
+            {/* Comments */}
+            <div style={{ marginBottom: 20 }}>
+              <h3 style={{ margin: "0 0 12px 0", fontSize: 18, color: "#e8efe8" }}>Kommentare</h3>
+              <div style={{ maxHeight: 200, overflow: "auto", marginBottom: 12 }}>
+                {avatarComments.length === 0 ? (
+                  <p style={{ color: "#a9cabd", fontSize: 14 }}>Noch keine Kommentare</p>
+                ) : (
+                  avatarComments.map((comment, idx) => (
+                    <div key={idx} style={{ 
+                      padding: 10, 
+                      background: "rgba(14,44,34,0.5)", 
+                      borderRadius: 8, 
+                      marginBottom: 8,
+                      border: "1px solid rgba(92,200,165,0.2)"
+                    }}>
+                      <div style={{ fontWeight: 600, color: "#7fd9ba", fontSize: 13, marginBottom: 4 }}>
+                        {comment.username}
+                      </div>
+                      <div style={{ color: "#e8efe8", fontSize: 14 }}>{comment.text}</div>
+                    </div>
+                  ))
+                )}
+              </div>
+              
+              {/* Add Comment */}
+              <div style={{ display: "flex", gap: 8 }}>
+                <input 
+                  type="text"
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  placeholder="Kommentar schreiben..."
+                  style={{
+                    flex: 1,
+                    padding: 10,
+                    background: "rgba(14,44,34,0.7)",
+                    border: "1px solid rgba(92,200,165,0.4)",
+                    borderRadius: 12,
+                    color: "#e8efe8",
+                    fontSize: 14
+                  }}
+                  onKeyPress={async (e) => {
+                    if (e.key === 'Enter' && newComment.trim()) {
+                      try {
+                        const res = await fetch(`${API_BASE}/users/${user.id}/avatar/comment`, {
+                          method: 'POST',
+                          headers: { 
+                            'Content-Type': 'application/json',
+                            Authorization: `Bearer ${token}` 
+                          },
+                          body: JSON.stringify({ text: newComment })
+                        });
+                        if (res.ok) {
+                          const comment = await res.json();
+                          setAvatarComments(prev => [...prev, comment]);
+                          setNewComment('');
+                        }
+                      } catch (err) {
+                        console.error('Comment error:', err);
+                      }
+                    }
+                  }}
+                />
+                <button
+                  onClick={async () => {
+                    if (!newComment.trim()) return;
+                    try {
+                      const res = await fetch(`${API_BASE}/users/${user.id}/avatar/comment`, {
+                        method: 'POST',
+                        headers: { 
+                          'Content-Type': 'application/json',
+                          Authorization: `Bearer ${token}` 
+                        },
+                        body: JSON.stringify({ text: newComment })
+                      });
+                      if (res.ok) {
+                        const comment = await res.json();
+                        setAvatarComments(prev => [...prev, comment]);
+                        setNewComment('');
+                      }
+                    } catch (err) {
+                      console.error('Comment error:', err);
+                    }
+                  }}
+                  style={{
+                    background: "rgba(92,200,165,0.3)",
+                    border: "1px solid rgba(92,200,165,0.6)",
+                    color: "#7fd9ba",
+                    padding: "10px 20px",
+                    borderRadius: 12,
+                    cursor: "pointer",
+                    fontSize: 14
+                  }}
+                >
+                  Senden
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

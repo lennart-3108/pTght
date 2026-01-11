@@ -6,9 +6,15 @@ function createMiddleware(ctx) {
   function requireAuth(req, res, next) {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
-    if (!token) return res.sendStatus(401);
+    if (!token) {
+      console.log('[requireAuth] No token provided');
+      return res.sendStatus(401);
+    }
     jwt.verify(token, SECRET, (err, user) => {
-      if (err) return res.sendStatus(403);
+      if (err) {
+        console.log('[requireAuth] JWT verification failed:', err.name, err.message);
+        return res.sendStatus(403);
+      }
       // Enforce global session epoch if available on ctx/global
       try {
         const epoch = user && typeof user.epoch === 'number' ? user.epoch : null;
@@ -18,10 +24,12 @@ function createMiddleware(ctx) {
             ? global._app_ctx.SESSION_EPOCH
             : null;
         if (currentEpoch && epoch && epoch !== currentEpoch) {
+          console.log('[requireAuth] Epoch mismatch:', epoch, 'vs', currentEpoch);
           return res.sendStatus(401);
         }
       } catch (_) {
         // if epoch check fails unexpectedly, fall back to treating token as invalid
+        console.log('[requireAuth] Epoch check failed');
         return res.sendStatus(401);
       }
       req.user = user;

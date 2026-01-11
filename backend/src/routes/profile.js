@@ -167,6 +167,38 @@ module.exports = function profileRoutes(ctx) {
       const hasKickoffEndAt = Object.prototype.hasOwnProperty.call(info, 'kickoff_end_at');
       const hasWhenType = Object.prototype.hasOwnProperty.call(info, 'when_type');
       const hasRangeDays = Object.prototype.hasOwnProperty.call(info, 'range_days');
+      const hasPlayerLevel = Object.prototype.hasOwnProperty.call(info, 'player_level');
+      
+      // Date filtering: default next 14 days, or custom range
+      const rangeDays = req.query.rangeDays ? Number(req.query.rangeDays) : 14;
+      const fromDate = req.query.fromDate ? new Date(req.query.fromDate) : null;
+      const toDate = req.query.toDate ? new Date(req.query.toDate) : null;
+      
+      if (fromDate && toDate && !isNaN(fromDate) && !isNaN(toDate)) {
+        // Custom date range
+        if (hasKickoffEndAt) {
+          base.andWhere(function() {
+            this.whereBetween('m.kickoff_at', [fromDate.toISOString(), toDate.toISOString()])
+              .orWhereBetween('m.kickoff_end_at', [fromDate.toISOString(), toDate.toISOString()]);
+          });
+        } else {
+          base.whereBetween('m.kickoff_at', [fromDate.toISOString(), toDate.toISOString()]);
+        }
+      } else if (rangeDays && !isNaN(rangeDays)) {
+        // Next X days from now
+        const now = new Date();
+        const endDate = new Date(now);
+        endDate.setDate(endDate.getDate() + rangeDays);
+        
+        if (hasKickoffEndAt) {
+          base.andWhere(function() {
+            this.whereBetween('m.kickoff_at', [now.toISOString(), endDate.toISOString()])
+              .orWhereBetween('m.kickoff_end_at', [now.toISOString(), endDate.toISOString()]);
+          });
+        } else {
+          base.whereBetween('m.kickoff_at', [now.toISOString(), endDate.toISOString()]);
+        }
+      }
       
       const selectFields = [
         'm.id',
@@ -181,6 +213,7 @@ module.exports = function profileRoutes(ctx) {
       if (hasKickoffEndAt) selectFields.push('m.kickoff_end_at');
       if (hasWhenType) selectFields.push('m.when_type');
       if (hasRangeDays) selectFields.push('m.range_days');
+      if (hasPlayerLevel) selectFields.push('m.player_level');
       if (hasStatus) selectFields.push('m.status');
       if (hasLeagues) selectFields.push('l.name as league');
       if (hasSports && hasLeagues) selectFields.push('s.name as sport');
@@ -188,10 +221,13 @@ module.exports = function profileRoutes(ctx) {
       if (hasStates && hasCities) selectFields.push('st.name as state');
       if (hasCountries && hasCities) selectFields.push('co.name as country');
       
+      // Sort by end date (kickoff_end_at) ascending - soonest ending first
       const rows = await base
         .select(selectFields)
-        .orderByRaw('CASE WHEN m.kickoff_at IS NULL THEN 1 ELSE 0 END')
-        .orderBy('m.kickoff_at', 'asc')
+        .orderByRaw(hasKickoffEndAt 
+          ? 'CASE WHEN m.kickoff_end_at IS NULL THEN 1 ELSE 0 END'
+          : 'CASE WHEN m.kickoff_at IS NULL THEN 1 ELSE 0 END')
+        .orderBy(hasKickoffEndAt ? 'm.kickoff_end_at' : 'm.kickoff_at', 'asc')
         .orderBy('m.id', 'desc');
 
       // Enrich with user and team names
@@ -335,6 +371,18 @@ module.exports = function profileRoutes(ctx) {
       if (Object.prototype.hasOwnProperty.call(info, 'range_days') && req.body?.range_days) {
         rec.range_days = Number(req.body.range_days);
       }
+      if (Object.prototype.hasOwnProperty.call(info, 'player_level') && req.body?.player_level) {
+        rec.player_level = String(req.body.player_level).trim();
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'time_of_day') && req.body?.time_of_day) {
+        rec.time_of_day = String(req.body.time_of_day).trim();
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'time_from') && req.body?.time_from) {
+        rec.time_from = String(req.body.time_from).trim();
+      }
+      if (Object.prototype.hasOwnProperty.call(info, 'time_to') && req.body?.time_to) {
+        rec.time_to = String(req.body.time_to).trim();
+      }
       if (Object.prototype.hasOwnProperty.call(info, 'location_id') && req.body?.location_id) {
         rec.location_id = Number(req.body.location_id);
       }
@@ -343,6 +391,43 @@ module.exports = function profileRoutes(ctx) {
 
       const ins = await k('matches').insert(rec);
       const id = Array.isArray(ins) ? ins[0] : ins;
+
+      // Save availability slots if provided (match creation availability)
+      const availability = req.body?.availability || [];
+      if (Array.isArray(availability) && availability.length > 0) {
+        const hasDays = await k.schema.hasTable('match_availability_days').catch(() => false);
+        const hasWindows = await k.schema.hasTable('match_availability_windows').catch(() => false);
+        if (hasDays && hasWindows) {
+          // Group availability by date
+          const grouped = {};
+          availability.forEach((slot) => {
+            if (!slot.date || !slot.timeStart || !slot.timeEnd) return;
+            if (!grouped[slot.date]) grouped[slot.date] = [];
+            grouped[slot.date].push({ timeStart: slot.timeStart, timeEnd: slot.timeEnd });
+          });
+
+          // Insert days and windows
+          for (const [date, windows] of Object.entries(grouped)) {
+            const dayIns = await k('match_availability_days').insert({
+              match_id: id,
+              user_id: req.user.id,
+              date,
+              created_at: new Date().toISOString()
+            });
+            const dayId = Array.isArray(dayIns) ? dayIns[0] : dayIns;
+
+            for (const w of windows) {
+              await k('match_availability_windows').insert({
+                day_id: dayId,
+                time_start: w.timeStart,
+                time_end: w.timeEnd,
+                created_at: new Date().toISOString()
+              });
+            }
+          }
+        }
+      }
+
       const row = await k('matches').where({ id }).first();
       return res.status(201).json(row);
     } catch (e) {

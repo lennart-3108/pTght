@@ -1,9 +1,23 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import matchLeagueLogo from "../images/matchleague_logo.png"; // use long branded logo
+import matchLeagueLogo from "../images/header/match_league_header_long.png"; // use long branded logo
 import { API_BASE, fetchWithTimeout } from "../config";
 import Avatar from "./Avatar";
 import "./Header.css";
+
+function extractUserIdFromToken(token) {
+  if (!token) return null;
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    const payload = JSON.parse(atob(parts[1]));
+    const rawId = payload?.user?.id ?? payload?.userId ?? payload?.sub ?? payload?.id ?? null;
+    const numeric = Number(rawId);
+    return Number.isFinite(numeric) ? numeric : null;
+  } catch {
+    return null;
+  }
+}
 
 function formatShortTimestamp(value) {
   if (!value) return "";
@@ -64,6 +78,8 @@ export default function Header() {
   const [notifications, setNotifications] = useState([]);
   const [notifLoading, setNotifLoading] = useState(false);
   const [notifError, setNotifError] = useState("");
+  const [acceptingFriendRequests, setAcceptingFriendRequests] = useState({});
+  const [proposalActions, setProposalActions] = useState({});
   const [chatThreads, setChatThreads] = useState([]);
   const [chatsLoading, setChatsLoading] = useState(false);
   const [chatsError, setChatsError] = useState("");
@@ -142,6 +158,7 @@ export default function Header() {
 
   const isAdmin = localStorage.getItem("is_admin") === "1";
   const token = localStorage.getItem("token");
+  const myUserId = useMemo(() => extractUserIdFromToken(token), [token]);
 
   function handleLogout(e) {
     e.preventDefault();
@@ -226,6 +243,90 @@ export default function Header() {
       try { console.log("[Header] /news finished", { tookMs: Date.now() - started }); } catch {}
     }
   }, [token]);
+
+  const acceptFriendRequest = useCallback(async (fromUserId) => {
+    const id = Number(fromUserId);
+    if (!token) return;
+    if (!Number.isFinite(id) || id <= 0) return;
+    if (acceptingFriendRequests[id]) return;
+    setAcceptingFriendRequests((prev) => ({ ...prev, [id]: true }));
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/users/${id}/friendships`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 2500,
+      });
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "");
+        throw new Error(msg || "Freundschaftsanfrage konnte nicht angenommen werden.");
+      }
+      await fetchNotifications();
+    } catch (e) {
+      if (isMountedRef.current) setNotifError(e?.message || "Freundschaftsanfrage konnte nicht angenommen werden.");
+    } finally {
+      if (isMountedRef.current) {
+        setAcceptingFriendRequests((prev) => {
+          const next = { ...prev };
+          delete next[id];
+          return next;
+        });
+      }
+    }
+  }, [token, fetchNotifications, acceptingFriendRequests]);
+
+  const acceptProposal = useCallback(async (matchId, proposalId) => {
+    if (!token || proposalActions[proposalId]) return;
+    setProposalActions((prev) => ({ ...prev, [proposalId]: 'accepting' }));
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/matches/${matchId}/termin-manager/proposals/${proposalId}/accept`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 3000,
+      });
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "");
+        throw new Error(msg || "Terminvorschlag konnte nicht angenommen werden.");
+      }
+      await fetchNotifications();
+    } catch (e) {
+      if (isMountedRef.current) setNotifError(e?.message || "Terminvorschlag konnte nicht angenommen werden.");
+    } finally {
+      if (isMountedRef.current) {
+        setProposalActions((prev) => {
+          const next = { ...prev };
+          delete next[proposalId];
+          return next;
+        });
+      }
+    }
+  }, [token, fetchNotifications, proposalActions]);
+
+  const rejectProposal = useCallback(async (matchId, proposalId) => {
+    if (!token || proposalActions[proposalId]) return;
+    setProposalActions((prev) => ({ ...prev, [proposalId]: 'rejecting' }));
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/matches/${matchId}/termin-manager/proposals/${proposalId}/reject`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+        timeout: 3000,
+      });
+      if (!res.ok) {
+        const msg = await res.text().catch(() => "");
+        throw new Error(msg || "Terminvorschlag konnte nicht abgelehnt werden.");
+      }
+      await fetchNotifications();
+    } catch (e) {
+      if (isMountedRef.current) setNotifError(e?.message || "Terminvorschlag konnte nicht abgelehnt werden.");
+    } finally {
+      if (isMountedRef.current) {
+        setProposalActions((prev) => {
+          const next = { ...prev };
+          delete next[proposalId];
+          return next;
+        });
+      }
+    }
+  }, [token, fetchNotifications, proposalActions]);
 
   const fetchChats = useCallback(async ({ showLoader = false } = {}) => {
     if (!token) return;
@@ -450,7 +551,7 @@ export default function Header() {
 
           {token && (
             <>
-              <Link to="/profile" className="ml-nav__item" onClick={handleNavigate}>Profil</Link>
+              <Link to={`/user/${myUserId}`} className="ml-nav__item" onClick={handleNavigate}>Profil</Link>
               <Link to="/teams" className="ml-nav__item" onClick={handleNavigate}>Teams</Link>
               <Link to="/leagues" className="ml-nav__item" onClick={handleNavigate}>Ligen</Link>
               <Link to="/booking" className="ml-nav__item" onClick={handleNavigate}>Platz buchen</Link>
@@ -512,30 +613,160 @@ export default function Header() {
                       <div className="ml-popover__error">{notifError}</div>
                     ) : latestNotifications.length ? (
                       <ul className="ml-popover__list">
-                        {latestNotifications.map((item) => (
-                          <li key={item.id} className="ml-popover__item">
-                            <div className="ml-popover__itemRow">
-                              <div className="ml-popover__itemTitle">{item.title}</div>
-                            </div>
-                            <div className="ml-popover__itemMeta">
-                              {formatShortTimestamp(item.timestamp)}
-                              {item.leagueName ? ` · ${item.leagueName}` : ""}
-                              {item.sportName ? ` · ${item.sportName}` : ""}
-                            </div>
-                            {item.details && (
-                              <div className="ml-popover__itemText">{truncate(item.details, 180)}</div>
-                            )}
-                            {item.matchId ? (
-                              <Link
-                                to={`/matches/${item.matchId}`}
-                                className="ml-popover__itemLink"
-                                onClick={handleNavigate}
-                              >
-                                Zum Match
-                              </Link>
-                            ) : null}
-                          </li>
-                        ))}
+                        {latestNotifications.map((item) => {
+                          if (item?.type === "friend_request" && item?.fromUserId) {
+                            const fromName = item.fromUserName || item.fromName || `User ${item.fromUserId}`;
+                            const busy = !!acceptingFriendRequests[Number(item.fromUserId)];
+                            const details = item.details || `${fromName} hat dir eine Freundschaftsanfrage gesendet.`;
+                            return (
+                              <li key={item.id} className="ml-popover__item">
+                                <div className="ml-popover__itemLinkBody">
+                                  <div className="ml-popover__avatar">
+                                    <Link
+                                      to={`/user/${item.fromUserId}`}
+                                      onClick={handleNavigate}
+                                      aria-label={`Profil von ${fromName}`}
+                                      style={{ display: "block", width: "100%", height: "100%", textDecoration: "none", color: "inherit" }}
+                                    >
+                                      <Avatar
+                                        userId={item.fromUserId}
+                                        name={fromName}
+                                        src={item.fromAvatarUrl}
+                                        size={38}
+                                      />
+                                    </Link>
+                                  </div>
+                                  <div className="ml-popover__itemContent">
+                                    <div className="ml-popover__itemRow">
+                                      <div className="ml-popover__itemTitle">{item.title || "Freundschaftsanfrage"}</div>
+                                      <button
+                                        type="button"
+                                        className="ml-popover__itemLink"
+                                        disabled={busy}
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          e.stopPropagation();
+                                          acceptFriendRequest(item.fromUserId);
+                                        }}
+                                      >
+                                        {busy ? "…" : "Annehmen"}
+                                      </button>
+                                    </div>
+                                    <div className="ml-popover__itemMeta">{formatShortTimestamp(item.timestamp)}</div>
+                                    <div className="ml-popover__itemText">{truncate(details, 180)}</div>
+                                  </div>
+                                </div>
+                              </li>
+                            );
+                          }
+
+                          return (
+                            <li key={item.id} className="ml-popover__item">
+                              {(item.type === 'schedule_proposal' || item.type === 'player_joined') && item.avatarUrl ? (
+                                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                                  <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 8, overflow: 'hidden' }}>
+                                    <Link
+                                      to={item.type === 'schedule_proposal' ? `/matches/${item.matchId}` : `/matches/${item.matchId}`}
+                                      onClick={handleNavigate}
+                                      aria-label={item.type === 'schedule_proposal' ? `Terminvorschlag ansehen` : `Match ansehen`}
+                                      style={{ display: "block", width: "100%", height: "100%", textDecoration: "none", color: "inherit" }}
+                                    >
+                                      <Avatar
+                                        userId={item.type === 'schedule_proposal' ? item.proposerUserId : item.joinedUserId}
+                                        name={item.type === 'schedule_proposal' ? item.proposerName : item.joinedUserName}
+                                        src={item.avatarUrl}
+                                        size={38}
+                                      />
+                                    </Link>
+                                  </div>
+                                  <div className="ml-popover__itemContent" style={{ flex: 1 }}>
+                                    <div className="ml-popover__itemRow">
+                                      <div className="ml-popover__itemTitle">{item.title}</div>
+                                    </div>
+                                    <div className="ml-popover__itemMeta">
+                                      {formatShortTimestamp(item.timestamp)}
+                                      {item.leagueName ? ` · ${item.leagueName}` : ""}
+                                    </div>
+                                    <div className="ml-popover__itemText">{truncate(item.details, 180)}</div>
+                                    {item.type === 'schedule_proposal' && (
+                                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                                        <button
+                                          className="ml-popover__itemActionBtn ml-popover__itemActionBtn--primary"
+                                          disabled={proposalActions[item.proposalId]}
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            acceptProposal(item.matchId, item.proposalId);
+                                          }}
+                                        >
+                                          {proposalActions[item.proposalId] === 'accepting' ? "…" : "Annehmen"}
+                                        </button>
+                                        <button
+                                          className="ml-popover__itemActionBtn ml-popover__itemActionBtn--secondary"
+                                          disabled={proposalActions[item.proposalId]}
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            navigate(`/matches/${item.matchId}`);
+                                            setNotificationsOpen(false);
+                                          }}
+                                        >
+                                          Gegenvorschlag
+                                        </button>
+                                        <button
+                                          className="ml-popover__itemActionBtn ml-popover__itemActionBtn--secondary"
+                                          disabled={proposalActions[item.proposalId]}
+                                          onClick={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            rejectProposal(item.matchId, item.proposalId);
+                                          }}
+                                        >
+                                          {proposalActions[item.proposalId] === 'rejecting' ? "…" : "Ablehnen"}
+                                        </button>
+                                      </div>
+                                    )}
+                                    {item.type === 'player_joined' && (
+                                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                                        <Link
+                                          to={`/matches/${item.matchId}`}
+                                          className="ml-popover__itemActionBtn ml-popover__itemActionBtn--primary"
+                                          onClick={handleNavigate}
+                                          style={{ textDecoration: 'none', textAlign: 'center' }}
+                                        >
+                                          Termin vereinbaren
+                                        </Link>
+                                      </div>
+                                    )}
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="ml-popover__itemRow">
+                                    <div className="ml-popover__itemTitle">{item.title}</div>
+                                  </div>
+                                  <div className="ml-popover__itemMeta">
+                                    {formatShortTimestamp(item.timestamp)}
+                                    {item.leagueName ? ` · ${item.leagueName}` : ""}
+                                    {item.sportName ? ` · ${item.sportName}` : ""}
+                                  </div>
+                                  {item.details && (
+                                    <div className="ml-popover__itemText">{truncate(item.details, 180)}</div>
+                                  )}
+                                  {item.matchId ? (
+                                    <Link
+                                      to={`/matches/${item.matchId}`}
+                                      className="ml-popover__itemLink"
+                                      onClick={handleNavigate}
+                                    >
+                                      Zum Match
+                                    </Link>
+                                  ) : null}
+                                </>
+                              )}
+                            </li>
+                          );
+                        })}
                       </ul>
                     ) : (
                       <div className="ml-popover__empty">Keine Neuigkeiten vorhanden.</div>

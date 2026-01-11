@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import matchLeagueLogo from "../images/logo.png";
+import matchLeagueLogo from "../images/logo/matchleague_logo_4x4-removebg-preview.png";
 import { API_BASE } from "../config";
 
 function useQuery() {

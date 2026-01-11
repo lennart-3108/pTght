@@ -1,0 +1,2115 @@
+[setupTables] Starting database setup...
+[setupTables] Database setup complete
+[INFO] 2026-01-10T03:15:21.792Z [DB] SQLite detected – ensured base tables via db-setup.js {}
+[DB] SQLite file: sportsplatform.db
+[DB] Migrations dir: /Users/A105227786/Documents/projects/sL/pTght/backend/migrations
+[2026-01-10 03:15:22] DEBUG Creating transport: nodemailer (7.0.10; +https://nodemailer.com/; SMTP/7.0.10[client:7.0.10])
+[Mailer] Transport konfiguriert smtp.hostinger.com:465 secure=true
+[Mailer] Verifiziere SMTP-Verbindung ...
+[releaseExpiredHolds] Job started, interval 120s
+[INFO] 2026-01-10T03:15:22.023Z [Server] Listening on http://0.0.0.0:5001 {}
+[INFO] 2026-01-10T03:15:22.024Z [Server] Logs directory: /Users/A105227786/Documents/projects/sL/pTght/backend/logs (error.log, info.log, link-tests.log) {}
+[setupTables] users table created/verified
+[setupTables] sports table created/verified
+[setupTables] user_sports table created/verified
+[setupTables] cities table created/verified
+[setupTables] districts table created/verified
+[setupTables] leagues table created/verified
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] Resolved smtp.hostinger.com as 172.65.255.143 [cache miss]
+🔒 Haupt-Admin aktualisiert: admin
+[2026-01-10 03:15:22] INFO  [GZOCm8FTVvg] Secure connection established to 172.65.255.143:465
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] S: 220 ESMTP smtp.hostinger.com
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] C: EHLO [127.0.0.1]
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] S: 250-smtp.hostinger.com
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] S: 250-PIPELINING
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] S: 250-SIZE 48811212
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] S: 250-ETRN
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] S: 250-AUTH PLAIN LOGIN
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] S: 250-ENHANCEDSTATUSCODES
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] S: 250-8BITMIME
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] S: 250-DSN
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] S: 250 CHUNKING
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] SMTP handshake finished
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] C: AUTH PLAIN AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAvKiBzZWNyZXQgKi8=
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] S: 235 2.7.0 Authentication successful
+[2026-01-10 03:15:22] INFO  [GZOCm8FTVvg] User "info@dev.matchleague.org" authenticated
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] C: QUIT
+[Mailer] Verify OK in 397ms. Sende Acceptance-Mail ...
+[2026-01-10 03:15:22] DEBUG Sending mail using SMTP/7.0.10[client:7.0.10]
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] Resolved smtp.hostinger.com as 172.65.255.143 [cache hit]
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] S: 221 2.0.0 Bye
+[2026-01-10 03:15:22] DEBUG [GZOCm8FTVvg] Closing connection to the server using "end"
+[2026-01-10 03:15:22] INFO  [GZOCm8FTVvg] Connection closed
+[2026-01-10 03:15:22] INFO  [5cbcQBhHCrw] Secure connection established to 172.65.255.143:465
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 220 ESMTP smtp.hostinger.com
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] C: EHLO [127.0.0.1]
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 250-smtp.hostinger.com
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 250-PIPELINING
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 250-SIZE 48811212
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 250-ETRN
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 250-AUTH PLAIN LOGIN
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 250-ENHANCEDSTATUSCODES
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 250-8BITMIME
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 250-DSN
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 250 CHUNKING
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] SMTP handshake finished
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] C: AUTH PLAIN AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAvKiBzZWNyZXQgKi8=
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 235 2.7.0 Authentication successful
+[2026-01-10 03:15:22] INFO  [5cbcQBhHCrw] User "info@dev.matchleague.org" authenticated
+[2026-01-10 03:15:22] INFO  Sending message 1768014922402-fb1c29cc35311@matchleague.org to <info@dev.matchleague.org>
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] C: MAIL FROM:<info@dev.matchleague.org>
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 250 2.1.0 Ok
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] C: RCPT TO:<info@dev.matchleague.org>
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 250 2.1.5 Ok
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] C: DATA
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 354 End data with <CR><LF>.<CR><LF>
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] X-Mailer: MatchLeague
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] Auto-Submitted: auto-generated
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] From: MatchLeague <info@dev.matchleague.org>
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] To: info@dev.matchleague.org
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] Reply-To: info@dev.matchleague.org
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] Subject: Mailer verified
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] Message-ID: <1768014922402-fb1c29cc35311@matchleague.org>
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] Date: Sat, 10 Jan 2026 03:15:22 +0000
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] MIME-Version: 1.0
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] Content-Type: multipart/alternative;
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw]  boundary="--_NmP-dea4f972533b7772-Part_1"
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] 
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] ----_NmP-dea4f972533b7772-Part_1
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] Content-Type: text/plain; charset=utf-8
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] Content-Transfer-Encoding: 7bit
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] 
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] SMTP connection accepted at 2026-01-10T03:15:22.401Z
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] ----_NmP-dea4f972533b7772-Part_1
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] Content-Type: text/html; charset=utf-8
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] Content-Transfer-Encoding: 7bit
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] 
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] <p>SMTP connection accepted at <b>2026-01-10T03:15:22.401Z</b></p>
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] ----_NmP-dea4f972533b7772-Part_1--
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] .
+[2026-01-10 03:15:22] INFO  [5cbcQBhHCrw] <774 bytes encoded mime message (source size 771 bytes)>
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] S: 250 2.0.0 Ok: queued as 4dp3fy56tcz3wx4
+[2026-01-10 03:15:22] DEBUG [5cbcQBhHCrw] Closing connection to the server using "end"
+📧 E-Mail gesendet: 1768014922402-fb1c29cc35311@matchleague.org 
+[2026-01-10 03:15:23] INFO  [5cbcQBhHCrw] Connection closed
+{"level":30,"time":1768014923057,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"connection","msg":"Established secure TCP connection","cid":"lqrzwz9udc2qsx8fcgay","secure":true,"host":"imap.hostinger.com","servername":"imap.hostinger.com","port":993,"address":"2606:4700:90:0:4bc4:2557:ca17:2529","localAddress":"2003:f5:ff32:5831:7827:5967:2349:1963","localPort":62648,"authorized":true,"algo":"TLS_AES_256_GCM_SHA384","version":"TLSv1.3"}
+{"level":20,"time":1768014923085,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE LITERAL+ AUTH=PLAIN AUTH=LOGIN] Server ready.","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923086,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"c","msg":"1 ID (\"name\" \"imapflow\" \"version\" \"1.1.0\" \"vendor\" \"Postal Systems\" \"support-url\" \"https://github.com/postalsys/imapflow/issues\")","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923110,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* ID (\"name\" \"Dovecot\")","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923111,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"1 OK ID completed.","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923111,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"c","msg":"2 AUTHENTICATE PLAIN","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923138,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"+","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923138,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"c","msg":"AGluZm9AZGV2Lm1hdGNobGVhZ3VlLm9yZwAoKiB2YWx1ZSBoaWRkZW4gKik=","comment":"Encoded response for AUTH=PLAIN"}
+{"level":20,"time":1768014923261,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"2 OK [CAPABILITY IMAP4rev1 SASL-IR LOGIN-REFERRALS ID ENABLE IDLE SORT SORT=DISPLAY THREAD=REFERENCES THREAD=REFS THREAD=ORDEREDSUBJECT MULTIAPPEND URL-PARTIAL CATENATE UNSELECT CHILDREN NAMESPACE UIDPLUS LIST-EXTENDED I18NLEVEL=1 CONDSTORE QRESYNC ESEARCH ESORT SEARCHRES WITHIN CONTEXT=SEARCH LIST-STATUS BINARY MOVE SNIPPET=FUZZY PREVIEW=FUZZY PREVIEW STATUS=SIZE SAVEDATE LITERAL+ NOTIFY SPECIAL-USE COMPRESS=DEFLATE QUOTA] Logged in","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":30,"time":1768014923261,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"auth","msg":"User authenticated","cid":"lqrzwz9udc2qsx8fcgay","user":"info@dev.matchleague.org"}
+{"level":20,"time":1768014923262,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"c","msg":"3 ID (\"name\" \"imapflow\" \"version\" \"1.1.0\" \"vendor\" \"Postal Systems\" \"support-url\" \"https://github.com/postalsys/imapflow/issues\")","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923296,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* ID (\"name\" \"Dovecot\")","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923296,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"3 OK ID completed (0.001 + 0.000 secs).","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923296,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"c","msg":"4 NAMESPACE","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923332,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* NAMESPACE ((\"INBOX.\" \".\")) NIL NIL","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923332,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"4 OK Namespace completed (0.001 + 0.000 secs).","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923332,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"c","msg":"5 COMPRESS DEFLATE","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923368,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"5 OK Begin compression (0.001 + 0.000 secs).","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923368,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"c","msg":"6 ENABLE CONDSTORE","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923405,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* ENABLED CONDSTORE","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923405,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"6 OK Enabled (0.001 + 0.000 secs).","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923406,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"c","msg":"7 LIST \"INBOX.\" \"INBOX.Sent\"","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923440,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"7 OK List completed (0.001 + 0.000 secs).","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923440,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"c","msg":"8 LIST \"\" \"INBOX\"","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923480,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* LIST (\\HasChildren) \".\" INBOX","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923480,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"8 OK List completed (0.001 + 0.000 secs).","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923481,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"c","msg":"9 LSUB \"INBOX.\" \"INBOX.Sent\"","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923517,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"9 OK Lsub completed (0.002 + 0.000 + 0.001 secs).","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923517,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"c","msg":"A SELECT INBOX.Sent","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923555,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* FLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft)","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923556,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* OK [PERMANENTFLAGS (\\Answered \\Flagged \\Deleted \\Seen \\Draft \"\\\\*\")] Flags permitted.","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923556,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* 669 EXISTS","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923556,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* 0 RECENT","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923556,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* OK [UNSEEN 1] First unseen.","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923556,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* OK [UIDVALIDITY 1758917061] UIDs valid","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923556,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* OK [UIDNEXT 670] Predicted next UID","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923556,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* OK [HIGHESTMODSEQ 672] Highest","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923556,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"A OK [READ-WRITE] Select completed (0.002 + 0.000 + 0.001 secs).","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923556,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"c","msg":"B APPEND INBOX.Sent \"(* 771B literal *)\"","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923605,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* 670 EXISTS","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923605,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"* 1 RECENT","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923605,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"s","msg":"B OK [APPENDUID 1758917061 670] Append completed (0.013 + 0.000 + 0.012 secs).","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":20,"time":1768014923605,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","src":"c","msg":"C LOGOUT","cid":"lqrzwz9udc2qsx8fcgay"}
+{"level":10,"time":1768014923641,"pid":26549,"hostname":"T0010cc902","component":"imap-connection","cid":"lqrzwz9udc2qsx8fcgay","msg":"Connection closed","cid":"lqrzwz9udc2qsx8fcgay"}
+✉️  Kopie im IMAP-Ordner abgelegt (Sent)
+📧 Acceptance-Mail gesendet (sendMail): 1768014922402-fb1c29cc35311@matchleague.org
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:15:39.674Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:15:39.678Z' }
+[chats] done { user: 162, tookMs: 11, items: 0 }
+[news] done { user: 162, tookMs: 10, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:15:39.722Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:15:39.724Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[news] done { user: 162, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:15:43.861Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:16:03.855Z' }
+[news] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:16:08.856Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:16:33.868Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 12, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:16:39.595Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:16:39.600Z' }
+[chats] done { user: 162, tookMs: 13, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:16:39.612Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 13, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:16:39.615Z' }
+[chats] done { user: 162, tookMs: 7, items: 0 }
+[news] done { user: 162, tookMs: 6, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:16:48.865Z' }
+[news] done { user: 61, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:16:58.860Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:17:23.851Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:17:33.859Z' }
+[news] done { user: 61, tookMs: 8, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:17:39.557Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:17:39.561Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:17:39.575Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 18, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:17:39.577Z' }
+[chats] done { user: 162, tookMs: 6, items: 0 }
+[news] done { user: 162, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:17:48.857Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:18:13.878Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 8, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:18:18.859Z' }
+[news] done { user: 61, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:18:38.866Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:18:39.558Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:18:39.559Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:18:39.565Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 8, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:18:39.568Z' }
+[chats] done { user: 162, tookMs: 6, items: 0 }
+[news] done { user: 162, tookMs: 5, items: 0 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:18:58.012Z' }
+[chats] query.begin { user: 61 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:18:58.012Z' }
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 22, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:18:58.035Z' }
+[chats] query.begin { user: 61 }
+[citiesRoutes] Returning 4063 cities
+[news] done { user: 61, tookMs: 33, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:18:58.047Z' }
+[chats] done { user: 61, tookMs: 14, items: 0 }
+[news] done { user: 61, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:19:23.019Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 8, items: 0 }
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:19:37.519Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:19:37.520Z' }
+[chats] done { user: 162, tookMs: 4, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:19:37.583Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:19:37.585Z' }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[news] done { user: 162, tookMs: 3, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:19:43.010Z' }
+[news] done { user: 61, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:19:48.018Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:20:13.018Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:20:28.019Z' }
+[news] done { user: 61, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:20:38.022Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 19, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:20:38.609Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:20:38.611Z' }
+[chats] done { user: 162, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:20:38.622Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 11, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:20:38.630Z' }
+[chats] done { user: 162, tookMs: 9, items: 0 }
+[news] done { user: 162, tookMs: 3, items: 0 }
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes] Returning 4063 cities
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:20:52.672Z' }
+[chats] query.begin { user: 61 }
+[sports/categories] Returning 7 categories with 49 total sports
+[news] GET /news start { user: 61, at: '2026-01-10T03:20:52.674Z' }
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 30, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:20:52.704Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 32, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:20:52.707Z' }
+[chats] done { user: 61, tookMs: 9, items: 0 }
+[news] done { user: 61, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:21:17.664Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:21:37.662Z' }
+[news] done { user: 61, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:21:39.615Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:21:39.616Z' }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:21:39.620Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:21:39.622Z' }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:21:42.658Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:22:07.658Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:22:22.658Z' }
+[news] done { user: 61, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:22:32.660Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:22:39.587Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:22:39.589Z' }
+[chats] done { user: 162, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:22:39.598Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 11, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:22:39.601Z' }
+[chats] done { user: 162, tookMs: 6, items: 0 }
+[news] done { user: 162, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:22:40.607Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:22:41.721Z' }
+[news] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:22:57.661Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 3, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:23:07.654Z' }
+[news] done { user: 61, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:23:22.667Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:23:39.648Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:23:39.649Z' }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:23:39.715Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:23:39.718Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 3, items: 0 }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[GET /leagues] Returning 2 of 2 leagues
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:23:47.655Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:23:52.653Z' }
+[news] done { user: 61, tookMs: 3, items: 0 }
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:24:12.660Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:24:37.665Z' }
+[chats] query.begin { user: 61 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:24:37.668Z' }
+[chats] done { user: 61, tookMs: 9, items: 0 }
+[news] done { user: 61, tookMs: 9, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:24:39.541Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:24:39.543Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 7, items: 0 }
+[news] done { user: 162, tookMs: 12, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:24:39.555Z' }
+[news] done { user: 162, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:24:39.586Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:25:02.655Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:25:22.660Z' }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:25:27.653Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:25:39.606Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 10, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:25:39.630Z' }
+[news] done { user: 162, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:25:39.672Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:25:39.673Z' }
+[chats] done { user: 162, tookMs: 5, items: 0 }
+[news] done { user: 162, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:25:52.656Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 3, items: 0 }
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[news] GET /news start { user: 61, at: '2026-01-10T03:26:07.661Z' }
+[news] done { user: 61, tookMs: 8, items: 0 }
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:26:08.521Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:26:08.524Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 2, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:26:08.531Z' }
+[news] done { user: 162, tookMs: 2, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:26:08.534Z' }
+[news] done { user: 162, tookMs: 2, items: 0 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[news] GET /news start { user: 61, at: '2026-01-10T03:26:12.945Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:26:12.945Z' }
+[chats] query.begin { user: 61 }
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 25, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:26:12.972Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 27, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:26:12.973Z' }
+[chats] done { user: 61, tookMs: 12, items: 0 }
+[news] done { user: 61, tookMs: 14, items: 0 }
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:26:37.950Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:26:39.548Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:26:39.550Z' }
+[chats] done { user: 162, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:26:39.556Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 7, items: 0 }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[news] GET /news start { user: 61, at: '2026-01-10T03:26:57.937Z' }
+[news] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:27:02.940Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:27:27.943Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:27:41.096Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:27:41.100Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:27:41.110Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 15, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:27:41.112Z' }
+[chats] done { user: 162, tookMs: 6, items: 0 }
+[news] done { user: 162, tookMs: 6, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:27:42.950Z' }
+[news] done { user: 61, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:27:52.936Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:28:17.937Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:28:27.943Z' }
+[news] done { user: 61, tookMs: 6, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:28:40.988Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:28:40.998Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 17, items: 0 }
+[news] done { user: 162, tookMs: 31, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:28:41.021Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:28:41.022Z' }
+[chats] done { user: 162, tookMs: 4, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:28:42.977Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:29:07.933Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:29:12.938Z' }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:29:32.981Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:29:39.624Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:29:39.625Z' }
+[chats] done { user: 162, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:29:39.630Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 5, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:29:39.632Z' }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[news] done { user: 162, tookMs: 3, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:29:57.943Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:29:57.944Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] done { user: 61, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:30:22.936Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:30:39.588Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:30:39.591Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 5, items: 0 }
+[news] done { user: 162, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:30:39.616Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:30:39.621Z' }
+[news] done { user: 162, tookMs: 3, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:30:42.937Z' }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:30:47.939Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:31:12.939Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:31:27.935Z' }
+[news] done { user: 61, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:31:37.936Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:31:39.597Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:31:39.599Z' }
+[chats] done { user: 162, tookMs: 4, items: 0 }
+[news] done { user: 162, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:31:39.663Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:31:39.664Z' }
+[chats] done { user: 162, tookMs: 4, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:32:02.937Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:32:12.937Z' }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:32:27.942Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:32:39.746Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:32:39.748Z' }
+[chats] done { user: 162, tookMs: 8, items: 0 }
+[news] done { user: 162, tookMs: 7, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:32:39.777Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:32:39.777Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:32:52.941Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 3, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:32:57.936Z' }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:33:05.542Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:33:07.613Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 4, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:33:07.646Z' }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:33:17.934Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 3, items: 0 }
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[news] GET /news start { user: 162, at: '2026-01-10T03:33:38.635Z' }
+[news] done { user: 162, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:33:38.669Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:33:38.704Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:33:38.705Z' }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[news] done { user: 162, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:33:42.937Z' }
+[chats] query.begin { user: 61 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:33:42.939Z' }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:33:50.531Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:34:07.942Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:34:27.941Z' }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:34:32.987Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:34:39.679Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:34:39.689Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 2, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:34:39.702Z' }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:34:39.708Z' }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:34:57.940Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:35:12.953Z' }
+[news] done { user: 61, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:35:22.942Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:35:40.241Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:35:40.244Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:35:40.256Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 15, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:35:40.259Z' }
+[chats] done { user: 162, tookMs: 6, items: 0 }
+[news] done { user: 162, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:35:47.938Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:35:57.934Z' }
+[news] done { user: 61, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:36:12.935Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:36:37.948Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:36:39.574Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:36:39.576Z' }
+[chats] done { user: 162, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:36:39.580Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 5, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:36:39.582Z' }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:36:42.942Z' }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:37:02.954Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:37:27.947Z' }
+[chats] query.begin { user: 61 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:37:27.949Z' }
+[chats] done { user: 61, tookMs: 8, items: 0 }
+[news] done { user: 61, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:37:39.587Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 7, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:37:39.606Z' }
+[news] done { user: 162, tookMs: 17, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:37:39.637Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:37:39.638Z' }
+[chats] done { user: 162, tookMs: 5, items: 0 }
+[news] done { user: 162, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:37:52.948Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:38:12.953Z' }
+[news] done { user: 61, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:38:17.945Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:38:40.043Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:38:40.052Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 13, items: 0 }
+[news] done { user: 162, tookMs: 24, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:38:40.068Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:38:40.069Z' }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:38:42.951Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:38:57.944Z' }
+[news] done { user: 61, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:39:07.948Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:39:32.960Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:39:39.778Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:39:39.782Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 6, items: 0 }
+[news] done { user: 162, tookMs: 12, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:39:39.791Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:39:39.793Z' }
+[chats] done { user: 162, tookMs: 7, items: 0 }
+[news] done { user: 162, tookMs: 12, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:39:42.949Z' }
+[news] done { user: 61, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:39:57.946Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:40:22.944Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:40:27.944Z' }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:40:39.596Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:40:39.600Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 6, items: 0 }
+[news] done { user: 162, tookMs: 12, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:40:39.657Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:40:39.658Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 7, items: 0 }
+[news] done { user: 162, tookMs: 12, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:40:47.942Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 2, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:41:12.958Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:41:12.960Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 8, items: 0 }
+[news] done { user: 61, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:41:37.956Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:41:39.600Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:41:39.601Z' }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:41:39.655Z' }
+[news] done { user: 162, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:41:39.661Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 2, items: 0 }
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:41:45.566Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 2, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:41:57.948Z' }
+[news] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:02.651Z' }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:02.654Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[news] done { user: 61, tookMs: 32, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:02.684Z' }
+[chats] done { user: 61, tookMs: 31, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:02.687Z' }
+[chats] query.begin { user: 61 }
+[citiesRoutes] Returning 4063 cities
+[news] done { user: 61, tookMs: 19, items: 0 }
+[chats] done { user: 61, tookMs: 18, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:05.082Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:05.102Z' }
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[GET /leagues] Returning 2 of 2 leagues
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[chats] done { user: 61, tookMs: 25, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:05.109Z' }
+[chats] query.begin { user: 61 }
+[citiesRoutes] Returning 4063 cities
+[news] done { user: 61, tookMs: 21, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:05.125Z' }
+[chats] done { user: 61, tookMs: 21, items: 0 }
+[news] done { user: 61, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:05.758Z' }
+[chats] query.begin { user: 61 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:05.759Z' }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[chats] done { user: 61, tookMs: 21, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[news] done { user: 61, tookMs: 34, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:05.793Z' }
+[chats] query.begin { user: 61 }
+[sports/categories] Returning 7 categories with 49 total sports
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:05.795Z' }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[news] done { user: 61, tookMs: 7, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:06.296Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:06.298Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[sports/categories] Returning 7 categories with 49 total sports
+[chats] done { user: 61, tookMs: 38, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:06.338Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 44, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:06.344Z' }
+[chats] done { user: 61, tookMs: 13, items: 0 }
+[news] done { user: 61, tookMs: 11, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:07.488Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:07.489Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[chats] done { user: 61, tookMs: 36, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:07.527Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 39, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:07.528Z' }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 9, items: 0 }
+[news] done { user: 61, tookMs: 16, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:07.987Z' }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:08.004Z' }
+[chats] query.begin { user: 61 }
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] Returning 2 of 2 leagues
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[news] done { user: 61, tookMs: 37, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:08.026Z' }
+[chats] done { user: 61, tookMs: 26, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:08.032Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 16, items: 0 }
+[chats] done { user: 61, tookMs: 14, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:08.680Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:08.681Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] Returning 2 of 2 leagues
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 41, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:08.724Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 44, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:08.726Z' }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[news] done { user: 61, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:09.302Z' }
+[chats] query.begin { user: 61 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:09.303Z' }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[chats] done { user: 61, tookMs: 42, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:09.345Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] Returning 2 of 2 leagues
+[news] done { user: 61, tookMs: 44, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:09.350Z' }
+[chats] done { user: 61, tookMs: 15, items: 0 }
+[news] done { user: 61, tookMs: 14, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:09.816Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:09.817Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 36, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:09.855Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 41, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:09.859Z' }
+[chats] done { user: 61, tookMs: 15, items: 0 }
+[news] done { user: 61, tookMs: 16, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:10.262Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:10.280Z' }
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] Returning 2 of 2 leagues
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 37, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:10.300Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 22, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:10.303Z' }
+[chats] done { user: 61, tookMs: 8, items: 0 }
+[news] done { user: 61, tookMs: 11, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:10.699Z' }
+[chats] query.begin { user: 61 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:10.701Z' }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[chats] done { user: 61, tookMs: 21, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:10.734Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 33, items: 0 }
+[sports/categories] Returning 7 categories with 49 total sports
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:10.737Z' }
+[chats] done { user: 61, tookMs: 8, items: 0 }
+[news] done { user: 61, tookMs: 8, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:11.256Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:11.260Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[chats] done { user: 61, tookMs: 37, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:11.298Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 42, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:11.299Z' }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] done { user: 61, tookMs: 8, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:11.718Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:11.719Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[chats] done { user: 61, tookMs: 23, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:11.744Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 27, items: 0 }
+[citiesRoutes] Returning 4063 cities
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:11.756Z' }
+[chats] done { user: 61, tookMs: 18, items: 0 }
+[news] done { user: 61, tookMs: 10, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:12.177Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:12.178Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[chats] done { user: 61, tookMs: 35, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:12.215Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 38, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:12.216Z' }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] done { user: 61, tookMs: 7, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:12.705Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:12.708Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] Returning 2 of 2 leagues
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 111, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:12.821Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 116, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:12.824Z' }
+[chats] done { user: 61, tookMs: 12, items: 0 }
+[news] done { user: 61, tookMs: 13, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:13.211Z' }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:13.229Z' }
+[chats] query.begin { user: 61 }
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[news] done { user: 61, tookMs: 39, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:13.251Z' }
+[chats] done { user: 61, tookMs: 23, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:13.253Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 9, items: 0 }
+[chats] done { user: 61, tookMs: 11, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:13.625Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:13.626Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[chats] done { user: 61, tookMs: 35, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:13.662Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 37, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:13.663Z' }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] done { user: 61, tookMs: 6, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:14.070Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:14.072Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[GET /leagues] Returning 2 of 2 leagues
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 23, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:14.096Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 26, items: 0 }
+[citiesRoutes] Returning 4063 cities
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:14.106Z' }
+[chats] done { user: 61, tookMs: 15, items: 0 }
+[news] done { user: 61, tookMs: 8, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:14.616Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:14.617Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[chats] done { user: 61, tookMs: 34, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:14.653Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 39, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:14.656Z' }
+[chats] done { user: 61, tookMs: 14, items: 0 }
+[news] done { user: 61, tookMs: 15, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:15.048Z' }
+[chats] query.begin { user: 61 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:15.049Z' }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[chats] done { user: 61, tookMs: 35, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:15.085Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 37, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:15.088Z' }
+[chats] done { user: 61, tookMs: 9, items: 0 }
+[news] done { user: 61, tookMs: 12, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:15.593Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:15.609Z' }
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] Returning 2 of 2 leagues
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 37, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:15.631Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 24, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:15.633Z' }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] done { user: 61, tookMs: 6, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:16.109Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:16.110Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[chats] done { user: 61, tookMs: 19, items: 0 }
+[news] done { user: 61, tookMs: 21, items: 0 }
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:16.145Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] Returning 2 of 2 leagues
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:16.147Z' }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[news] done { user: 61, tookMs: 6, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:16.623Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:16.624Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[chats] done { user: 61, tookMs: 35, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:16.660Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 38, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:16.662Z' }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:17.166Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:17.167Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[chats] done { user: 61, tookMs: 34, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:17.202Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 38, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:17.205Z' }
+[chats] done { user: 61, tookMs: 13, items: 0 }
+[news] done { user: 61, tookMs: 14, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:17.591Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:17.592Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[GET /leagues] Returning 2 of 2 leagues
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 23, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:17.616Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 25, items: 0 }
+[citiesRoutes] Returning 4063 cities
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:17.626Z' }
+[chats] done { user: 61, tookMs: 15, items: 0 }
+[news] done { user: 61, tookMs: 7, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:18.060Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:18.061Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[GET /leagues] Returning 2 of 2 leagues
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 22, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:18.084Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 25, items: 0 }
+[citiesRoutes] Returning 4063 cities
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:18.095Z' }
+[chats] done { user: 61, tookMs: 16, items: 0 }
+[news] done { user: 61, tookMs: 7, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:18.517Z' }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:18.534Z' }
+[chats] query.begin { user: 61 }
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] Returning 2 of 2 leagues
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[news] done { user: 61, tookMs: 39, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:18.559Z' }
+[chats] done { user: 61, tookMs: 26, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:18.563Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 12, items: 0 }
+[news] done { user: 61, tookMs: 20, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:19.049Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:19.050Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 34, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:19.086Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 37, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:19.088Z' }
+[chats] done { user: 61, tookMs: 10, items: 0 }
+[news] done { user: 61, tookMs: 14, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:19.515Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:19.516Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[chats] done { user: 61, tookMs: 35, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:19.552Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 38, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:19.554Z' }
+[chats] done { user: 61, tookMs: 12, items: 0 }
+[news] done { user: 61, tookMs: 14, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:19.933Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:19.934Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 36, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:19.973Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 40, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:19.975Z' }
+[chats] done { user: 61, tookMs: 11, items: 0 }
+[news] done { user: 61, tookMs: 14, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:20.531Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:20.532Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[chats] done { user: 61, tookMs: 35, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:20.569Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 38, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:20.572Z' }
+[chats] done { user: 61, tookMs: 14, items: 0 }
+[news] done { user: 61, tookMs: 17, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:21.032Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:21.048Z' }
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] Returning 2 of 2 leagues
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[GET /leagues] Returning 2 of 2 leagues
+[chats] done { user: 61, tookMs: 35, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:21.069Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 23, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:21.072Z' }
+[chats] done { user: 61, tookMs: 12, items: 0 }
+[news] done { user: 61, tookMs: 14, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:21.540Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:21.542Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[chats] done { user: 61, tookMs: 37, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:21.581Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 41, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:21.582Z' }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] done { user: 61, tookMs: 8, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:22.044Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:22.045Z' }
+[chats] query.begin { user: 61 }
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: { type: 'city' }
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[GET /leagues] Returning 2 of 2 leagues
+[citiesRoutes] Returning 4063 cities
+[GET /leagues] limit=50 offset=0 sportId=undefined cityId=undefined search=undefined
+[chats] done { user: 61, tookMs: 40, items: 0 }
+[GET /leagues] Returning 2 of 2 leagues
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:22.086Z' }
+[chats] query.begin { user: 61 }
+[news] done { user: 61, tookMs: 42, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:42:22.088Z' }
+[chats] done { user: 61, tookMs: 9, items: 0 }
+[news] done { user: 61, tookMs: 13, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:42:39.659Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 6, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:42:39.667Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:42:39.668Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 2, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:42:39.672Z' }
+[news] done { user: 162, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:42:47.051Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:43:07.051Z' }
+[news] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:43:12.056Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:43:37.068Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 16, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:43:39.639Z' }
+[news] done { user: 162, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:43:39.664Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:43:39.674Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 2, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:43:39.677Z' }
+[news] done { user: 162, tookMs: 2, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:43:52.050Z' }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:44:02.050Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:44:16.541Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 2, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:44:16.555Z' }
+[news] done { user: 162, tookMs: 3, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:44:16.558Z' }
+[news] done { user: 162, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:44:16.563Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:44:27.047Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 3, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:44:37.052Z' }
+[news] done { user: 61, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:44:39.596Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:44:39.597Z' }
+[chats] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:44:39.601Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:44:52.052Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:45:17.054Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:45:22.051Z' }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:45:39.580Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:45:39.584Z' }
+[chats] done { user: 162, tookMs: 12, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:45:39.595Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 11, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:45:39.597Z' }
+[chats] done { user: 162, tookMs: 5, items: 0 }
+[news] done { user: 162, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:45:42.046Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 1, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:46:07.051Z' }
+[chats] query.begin { user: 61 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:46:07.052Z' }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[news] done { user: 61, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:46:32.049Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:46:39.596Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:46:39.599Z' }
+[chats] done { user: 162, tookMs: 10, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:46:39.608Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 9, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:46:39.609Z' }
+[chats] done { user: 162, tookMs: 4, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:46:52.052Z' }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:46:57.049Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:47:22.056Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:47:37.066Z' }
+[news] done { user: 61, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:47:41.364Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:47:41.366Z' }
+[chats] done { user: 162, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:47:41.376Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 10, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:47:41.377Z' }
+[chats] done { user: 162, tookMs: 4, items: 0 }
+[news] done { user: 162, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:47:47.051Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:48:12.054Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:48:22.056Z' }
+[news] done { user: 61, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:48:37.059Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:48:39.601Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:48:39.603Z' }
+[chats] done { user: 162, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:48:39.611Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 8, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:48:39.612Z' }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[news] done { user: 162, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:49:02.052Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:49:07.051Z' }
+[news] done { user: 61, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:49:27.050Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:49:39.604Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:49:39.608Z' }
+[chats] done { user: 162, tookMs: 9, items: 0 }
+[news] done { user: 162, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:49:39.615Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 2, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:49:39.630Z' }
+[news] done { user: 162, tookMs: 2, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:49:52.055Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:49:52.057Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] done { user: 61, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:50:17.050Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:50:37.055Z' }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:50:39.556Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:50:39.562Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 6, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:50:39.572Z' }
+[news] done { user: 162, tookMs: 5, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:50:39.579Z' }
+[news] done { user: 162, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:50:42.050Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:51:07.055Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:51:22.052Z' }
+[news] done { user: 61, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:51:32.047Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:51:39.594Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:51:39.596Z' }
+[chats] done { user: 162, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:51:39.604Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 8, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:51:39.606Z' }
+[chats] done { user: 162, tookMs: 2, items: 0 }
+[news] done { user: 162, tookMs: 2, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:51:57.054Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:52:07.052Z' }
+[news] done { user: 61, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:52:22.053Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:52:39.569Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:52:39.576Z' }
+[chats] done { user: 162, tookMs: 17, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T03:52:39.589Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 19, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T03:52:39.598Z' }
+[chats] done { user: 162, tookMs: 12, items: 0 }
+[news] done { user: 162, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:57:28.928Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 8, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T03:57:33.820Z' }
+[news] done { user: 61, tookMs: 8, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T03:57:53.815Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T04:05:44.662Z' }
+[chats] GET /chats start { user: 61, at: '2026-01-10T04:05:44.677Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 22, items: 0 }
+[news] done { user: 61, tookMs: 41, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T04:05:47.147Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T04:05:47.149Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 4, items: 0 }
+[news] done { user: 162, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T04:05:47.155Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T04:05:47.156Z' }
+[chats] done { user: 162, tookMs: 4, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T04:06:09.476Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[citiesRoutes /cities/list] Request received, query: {}
+[citiesRoutes] SQL: SELECT id, name, state_id AS stateId, country_id AS countryId, type, parent_city_id AS parentCityId, latitude, longitude FROM cities WHERE type = 'city' ORDER BY name
+[citiesRoutes] Params: []
+[sports/categories] Returning 7 categories with 49 total sports
+[citiesRoutes] Returning 4063 cities
+[news] GET /news start { user: 61, at: '2026-01-10T04:06:29.473Z' }
+[news] done { user: 61, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T04:06:34.483Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T04:06:47.486Z' }
+[chats] GET /chats start { user: 162, at: '2026-01-10T04:06:47.487Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 5, items: 0 }
+[news] done { user: 162, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T04:06:47.571Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T04:06:47.572Z' }
+[chats] done { user: 162, tookMs: 3, items: 0 }
+[news] done { user: 162, tookMs: 3, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T04:06:59.475Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T04:07:14.500Z' }
+[news] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T04:07:24.475Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T04:07:47.222Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T04:07:47.225Z' }
+[chats] done { user: 162, tookMs: 12, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T04:07:47.237Z' }
+[chats] query.begin { user: 162 }
+[news] done { user: 162, tookMs: 15, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T04:07:47.243Z' }
+[chats] done { user: 162, tookMs: 8, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T04:07:49.481Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 2, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T04:07:59.476Z' }
+[news] done { user: 61, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T04:08:14.482Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T04:08:39.513Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 4, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T04:08:44.483Z' }
+[news] done { user: 61, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T04:08:48.892Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T04:08:48.894Z' }
+[chats] done { user: 162, tookMs: 9, items: 0 }
+[news] done { user: 162, tookMs: 9, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T04:08:48.905Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T04:08:48.906Z' }
+[chats] done { user: 162, tookMs: 6, items: 0 }
+[news] done { user: 162, tookMs: 6, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T04:09:04.481Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 7, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T04:09:29.488Z' }
+[chats] query.begin { user: 61 }
+[news] GET /news start { user: 61, at: '2026-01-10T04:09:29.490Z' }
+[chats] done { user: 61, tookMs: 5, items: 0 }
+[news] done { user: 61, tookMs: 6, items: 0 }
+[news] GET /news start { user: 162, at: '2026-01-10T04:09:47.100Z' }
+[news] done { user: 162, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T04:09:47.127Z' }
+[chats] query.begin { user: 162 }
+[chats] done { user: 162, tookMs: 5, items: 0 }
+[chats] GET /chats start { user: 162, at: '2026-01-10T04:09:47.177Z' }
+[chats] query.begin { user: 162 }
+[news] GET /news start { user: 162, at: '2026-01-10T04:09:47.178Z' }
+[chats] done { user: 162, tookMs: 4, items: 0 }
+[news] done { user: 162, tookMs: 4, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T04:09:54.472Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 2, items: 0 }
+[news] GET /news start { user: 61, at: '2026-01-10T04:10:14.521Z' }
+[news] done { user: 61, tookMs: 22, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T04:10:19.484Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 15, items: 0 }
+[chats] GET /chats start { user: 61, at: '2026-01-10T04:10:44.828Z' }
+[chats] query.begin { user: 61 }
+[chats] done { user: 61, tookMs: 44, items: 0 }

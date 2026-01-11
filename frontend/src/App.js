@@ -17,7 +17,6 @@ import GameDetailPage from "./pages/GameDetailPage"; // neu
 import MatchChatPage from "./pages/MatchChatPage"; // match chat page
 import SearchMatchDialog from "./pages/SearchMatchDialog"; // neu
 import AdminPage from "./pages/AdminPage"; // neu
-import ProfilePage from "./pages/ProfilePage"; // user profile
 import EditProfilePage from "./pages/EditProfilePage"; // edit profile
 import BookingPage from "./pages/BookingPage"; // booking page (legacy redirects to /slots)
 import SlotSearchPage from "./pages/SlotSearchPage";
@@ -30,7 +29,7 @@ import LocationManagerPage from "./pages/LocationManagerPage"; // location manag
 import LocationDetailsPage from "./pages/LocationDetailsPage"; // location details
 import BookingReportingPage from "./pages/BookingReportingPage"; // booking reporting
 import AssetConfiguratorPage from "./pages/AssetConfiguratorPage"; // asset configurator
-import matchLeagueLogo from "./images/logo.png"; // Import the logo
+import matchLeagueLogo from "./images/logo/matchleague_logo_4x4-removebg-preview.png"; // Import the logo
 import "./styles.css"; // neu
 import Header from "./components/Header";
 import WelcomePage from "./pages/WelcomePage"; // <-- add this import
@@ -426,16 +425,6 @@ function App() {
             element={
               <ProtectedRoute token={token} setToken={setToken}>
                 <EditProfilePage />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Profil - eigenes Profil für alle Benutzer */}
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute token={token} setToken={setToken}>
-                <ProfilePage />
               </ProtectedRoute>
             }
           />
