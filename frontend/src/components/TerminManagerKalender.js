@@ -510,25 +510,22 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
           <button onClick={onClose} style={styles.closeBtn}>×</button>
         </div>
 
-        <div style={styles.matchInfo}>
-          {matchInfo?.home_player || 'Spieler 1'} vs. {matchInfo?.away_player || 'Spieler 2'} · {matchInfo?.sport || 'Sport'} · {matchInfo?.league || 'Liga'}
-        </div>
-
-        <div style={styles.instructions}>
-          Host trägt Verfügbarkeiten ein. Gast wählt eine Startzeit innerhalb des Host-Slots (Dauer {slotDuration} Min) und sendet eine Einladung.
-        </div>
+        {matchInfo && (
+          <div style={styles.matchInfo}>
+            {matchInfo.home_player || 'Spieler 1'} vs. {matchInfo.away_player || 'Spieler 2'} · {matchInfo.sport || 'Tennis'} {matchInfo.league ? `· ${matchInfo.league}` : ''}
+          </div>
+        )}
 
         {error && <div style={styles.error}>{error}</div>}
         {success && <div style={styles.success}>{success}</div>}
 
         <div style={styles.sectionHeader}>
           <div>
-            <h3 style={{ margin: 0, color: '#e8efe8' }}>Verfügbarkeiten (Host)</h3>
-            <div style={{ color: '#9db', fontSize: 13 }}>Slots vom Host, aus denen du wählen kannst.</div>
+            <h3 style={{ margin: 0, color: '#e8efe8' }}>Verfügbare Zeiten</h3>
           </div>
           {meta?.canCreateFrames && (
             <button onClick={() => setShowAddSlot((v) => !v)} style={styles.btnPrimary}>
-              {showAddSlot ? 'Formular schließen' : 'Slot hinzufügen'}
+              {showAddSlot ? 'Schließen' : 'Slot hinzufügen'}
             </button>
           )}
         </div>
@@ -557,8 +554,8 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
         )}
 
         {framesByWeek.length === 0 && (
-          <div style={styles.empty}>Keine Verfügbarkeiten vom Host hinterlegt.</div>
-        )}
+          <div style={styles.empty}>Noch keine Zeiten hinterlegt.</div>
+        )}}
 
         <div style={{ display: 'grid', gap: 14 }}>
           {framesByWeek.map((week) => (
@@ -619,7 +616,6 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
           <div style={{ marginTop: 18 }}>
             <div style={styles.sectionHeaderSimple}>
               <h3 style={{ margin: 0, color: '#e8efe8' }}>Deine Verfügbarkeiten</h3>
-              <div style={{ color: '#9db', fontSize: 13 }}>Zeitslots, die du für dieses Match hinterlegt hast.</div>
             </div>
 
             <div style={{ display: 'grid', gap: 14 }}>
@@ -658,8 +654,7 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
         {otherAvailabilityByWeek.length > 0 && (
           <div style={{ marginTop: 18 }}>
             <div style={styles.sectionHeaderSimple}>
-              <h3 style={{ margin: 0, color: '#e8efe8' }}>Verfügbarkeiten des Gegners (Match-Erstellung)</h3>
-              <div style={{ color: '#9db', fontSize: 13 }}>Zeitslots, die der Gegner beim Erstellen des Matches hinterlegt hat.</div>
+              <h3 style={{ margin: 0, color: '#e8efe8' }}>Verfügbarkeiten des Gegners</h3>
             </div>
 
             <div style={{ display: 'grid', gap: 14 }}>
@@ -702,8 +697,7 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
 
         <div style={{ marginTop: 24 }}>
           <div style={styles.sectionHeaderSimple}>
-            <h3 style={{ margin: 0, color: '#e8efe8' }}>Gesendete Anfragen</h3>
-            <div style={{ color: '#9db', fontSize: 13 }}>Gast sieht eigene Anfragen, Host kann annehmen.</div>
+            <h3 style={{ margin: 0, color: '#e8efe8' }}>Terminvorschläge</h3>
           </div>
           {slots.length === 0 && proposals.length === 0 ? (
             <div style={styles.empty}>Keine Anfragen vorhanden.</div>
