@@ -662,18 +662,30 @@ export default function Header() {
 
                           return (
                             <li key={item.id} className="ml-popover__item">
-                              {(item.type === 'schedule_proposal' || item.type === 'player_joined') && item.avatarUrl ? (
+                              {(item.type === 'schedule_proposal' || item.type === 'player_joined' || item.type === 'availability_shared') && item.avatarUrl ? (
                                 <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
                                   <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 8, overflow: 'hidden' }}>
                                     <Link
-                                      to={item.type === 'schedule_proposal' ? `/matches/${item.matchId}` : `/matches/${item.matchId}`}
+                                      to={`/matches/${item.matchId}`}
                                       onClick={handleNavigate}
-                                      aria-label={item.type === 'schedule_proposal' ? `Terminvorschlag ansehen` : `Match ansehen`}
+                                      aria-label={
+                                        item.type === 'schedule_proposal' ? `Terminvorschlag ansehen` : 
+                                        item.type === 'availability_shared' ? `Verfügbarkeiten ansehen` :
+                                        `Match ansehen`
+                                      }
                                       style={{ display: "block", width: "100%", height: "100%", textDecoration: "none", color: "inherit" }}
                                     >
                                       <Avatar
-                                        userId={item.type === 'schedule_proposal' ? item.proposerUserId : item.joinedUserId}
-                                        name={item.type === 'schedule_proposal' ? item.proposerName : item.joinedUserName}
+                                        userId={
+                                          item.type === 'schedule_proposal' ? item.proposerUserId : 
+                                          item.type === 'player_joined' ? item.joinedUserId :
+                                          item.fromUserId
+                                        }
+                                        name={
+                                          item.type === 'schedule_proposal' ? item.proposerName : 
+                                          item.type === 'player_joined' ? item.joinedUserName :
+                                          item.fromUserName
+                                        }
                                         src={item.avatarUrl}
                                         size={38}
                                       />
@@ -727,6 +739,18 @@ export default function Header() {
                                       </div>
                                     )}
                                     {item.type === 'player_joined' && (
+                                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                                        <Link
+                                          to={`/matches/${item.matchId}`}
+                                          className="ml-popover__itemActionBtn ml-popover__itemActionBtn--primary"
+                                          onClick={handleNavigate}
+                                          style={{ textDecoration: 'none', textAlign: 'center' }}
+                                        >
+                                          Termin vereinbaren
+                                        </Link>
+                                      </div>
+                                    )}
+                                    {item.type === 'availability_shared' && (
                                       <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
                                         <Link
                                           to={`/matches/${item.matchId}`}

@@ -1289,6 +1289,37 @@ module.exports = function matchesRoutes(ctx) {
       });
       const dayId = Array.isArray(inserted) ? inserted[0] : inserted;
 
+      // Send notification to other player on first availability entry
+      try {
+        const otherUserId = participant.side === 'home' ? match.away_user_id : match.home_user_id;
+        if (otherUserId) {
+          // Check if this is the first availability day for this user
+          const existingDays = await k('match_availability_days')
+            .where({ match_id: matchId, user_id: Number(req.user.id) })
+            .select('id');
+          
+          if (existingDays.length === 1) { // First day created
+            const currentUser = await k('users').where({ id: Number(req.user.id) }).first();
+            const userName = currentUser?.firstname || currentUser?.name || `User ${req.user.id}`;
+            const leagueInfo = match.league_id ? await k('leagues').where({ id: match.league_id }).first() : null;
+            const leagueName = leagueInfo?.name || '';
+            
+            await k('notifications').insert({
+              user_id: otherUserId,
+              type: 'availability_shared',
+              match_id: matchId,
+              from_user_id: Number(req.user.id),
+              title: 'Verfügbarkeiten eingetragen',
+              message: `${userName} hat Verfügbarkeiten für euer Match eingetragen. Jetzt kannst du einen passenden Termin vorschlagen!`,
+              created_at: new Date().toISOString(),
+              is_read: 0
+            }).catch(() => {}); // Ignore notification errors
+          }
+        }
+      } catch (notifErr) {
+        // Ignore notification errors - don't fail the main request
+      }
+
       res.status(201).json({ id: dayId, date });
     } catch (e) {
       console.error('Add availability day failed', e && (e.stack || e.message || e));
