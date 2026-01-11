@@ -1055,6 +1055,52 @@ async function newsHandler(req, res) {
             });
           }
         }
+
+        // Show availability_shared notifications
+        const hasNotifications = await k.schema.hasTable('notifications').catch(() => false);
+        if (hasNotifications) {
+          const availabilityNotifs = await k('notifications')
+            .leftJoin('users', 'notifications.from_user_id', 'users.id')
+            .leftJoin('matches', 'notifications.match_id', 'matches.id')
+            .leftJoin('leagues', 'matches.league_id', 'leagues.id')
+            .where({
+              'notifications.user_id': userId,
+              'notifications.type': 'availability_shared'
+            })
+            .whereRaw('DATE(notifications.created_at) >= DATE(?, "-7 days")', [new Date().toISOString()])
+            .select([
+              'notifications.id as notifId',
+              'notifications.created_at as timestamp',
+              'notifications.title',
+              'notifications.message',
+              'notifications.match_id as matchId',
+              'notifications.from_user_id as fromUserId',
+              'users.firstname',
+              'users.lastname',
+              'users.name as userName',
+              'users.avatar_url as avatarUrl',
+              'leagues.name as leagueName'
+            ])
+            .orderBy('notifications.created_at', 'desc')
+            .limit(10)
+            .catch(() => []);
+
+          for (const n of (availabilityNotifs || [])) {
+            const fromName = n.firstname || n.userName || `User ${n.fromUserId}`;
+            items.push({
+              id: `availability-shared-${n.notifId}`,
+              type: 'availability_shared',
+              timestamp: n.timestamp,
+              title: n.title || 'Verfügbarkeiten eingetragen',
+              details: n.message || `${fromName} hat Verfügbarkeiten eingetragen.`,
+              matchId: n.matchId,
+              fromUserId: n.fromUserId,
+              fromUserName: fromName,
+              avatarUrl: n.avatarUrl || null,
+              leagueName: n.leagueName || null
+            });
+          }
+        }
       }
 
       const hasFriendships = await k.schema.hasTable('user_friendships').catch(() => false);
