@@ -75,6 +75,7 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
   const [slots, setSlots] = useState([]);
   const [meta, setMeta] = useState(null);
   const [otherAvailability, setOtherAvailability] = useState([]);
+  const [myAvailability, setMyAvailability] = useState([]);
   const [proposals, setProposals] = useState([]);
 
   // Host: neuen Verfügbarkeits-Slot anlegen
@@ -123,8 +124,10 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
       // availability endpoint is best-effort; do not block UI if it fails
       if (availRes.ok) {
         setOtherAvailability(availData.theirAvailability || []);
+        setMyAvailability(availData.myAvailability || []);
       } else {
         setOtherAvailability([]);
+        setMyAvailability([]);
       }
 
       const terminData = await terminRes.json().catch(() => ({}));
@@ -469,6 +472,34 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
       .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
   }, [otherAvailability]);
 
+  const myAvailabilityByWeek = useMemo(() => {
+    const grouped = {};
+    (myAvailability || []).forEach((day) => {
+      const info = getWeekInfo(day.date);
+      if (!info) return;
+      if (!grouped[info.key]) grouped[info.key] = { ...info, daysMap: {} };
+      if (!grouped[info.key].daysMap[day.date]) grouped[info.key].daysMap[day.date] = [];
+      (day.windows || []).forEach((w, idx) => {
+        grouped[info.key].daysMap[day.date].push({
+          id: w.id || `${day.date}-${idx}`,
+          date: day.date,
+          time_start: w.timeStart,
+          time_end: w.timeEnd
+        });
+      });
+    });
+
+    return Object.values(grouped)
+      .map((w) => ({
+        ...w,
+        days: Object.entries(w.daysMap)
+          .map(([date, arr]) => ({ date, frames: arr.sort((a, b) => (a.time_start || '').localeCompare(b.time_start || '')) }))
+          .sort((a, b) => a.date.localeCompare(b.date))
+      }))
+      .filter((w) => w.days.length > 0)
+      .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
+  }, [myAvailability]);
+
   if (loading) return <div style={styles.overlay}><div style={styles.modal}>Laden...</div></div>;
 
   return (
@@ -583,6 +614,46 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
             </div>
           ))}
         </div>
+
+        {myAvailabilityByWeek.length > 0 && (
+          <div style={{ marginTop: 18 }}>
+            <div style={styles.sectionHeaderSimple}>
+              <h3 style={{ margin: 0, color: '#e8efe8' }}>Deine Verfügbarkeiten</h3>
+              <div style={{ color: '#9db', fontSize: 13 }}>Zeitslots, die du für dieses Match hinterlegt hast.</div>
+            </div>
+
+            <div style={{ display: 'grid', gap: 14 }}>
+              {myAvailabilityByWeek.map((week) => (
+                <div key={week.key} style={styles.weekCard}>
+                  <div style={styles.weekHeader}>
+                    <div style={{ fontWeight: 800, color: '#debc7c' }}>KW {week.week}</div>
+                    <div style={{ color: '#9db', fontSize: 12 }}>{fmtWeekRange(week.weekStartStr, week.weekEndStr)}</div>
+                  </div>
+
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {week.days.map(({ date, frames }) => (
+                      <div key={date} style={styles.dateCard}>
+                        <div style={styles.dateHeader}>
+                          <div style={{ fontWeight: 700 }}>{fmtDate(date)}</div>
+                          <div style={{ color: '#9db', fontSize: 13 }}>{frames.length} Slot{frames.length !== 1 ? 's' : ''}</div>
+                        </div>
+
+                        <div style={{ display: 'grid', gap: 8 }}>
+                          {frames.map((frame) => (
+                            <div key={frame.id} style={styles.windowRow}>
+                              <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtTime(frame.time_start)} - {fmtTime(frame.time_end)}</div>
+                              <div style={{ color: '#9db', fontSize: 13 }}>Dein Slot</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {otherAvailabilityByWeek.length > 0 && (
           <div style={{ marginTop: 18 }}>
