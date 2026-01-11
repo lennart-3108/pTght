@@ -1087,6 +1087,33 @@ module.exports = function matchesRoutes(ctx) {
         formatActionBody('✅ Terminvorschlag angenommen', agreedStartTime, note)
       );
 
+      // Create notification for proposer
+      try {
+        const currentUser = await k('users').where({ id: viewerId }).first();
+        const userName = currentUser?.firstname || currentUser?.name || `User ${viewerId}`;
+        const dateStr = new Date(agreedStartTime).toLocaleString('de-DE', { 
+          weekday: 'short', 
+          day: '2-digit', 
+          month: '2-digit', 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        });
+        
+        await k('notifications').insert({
+          user_id: proposal.proposer_user_id,
+          type: 'schedule_accepted',
+          match_id: matchId,
+          from_user_id: viewerId,
+          proposal_id: proposalId,
+          title: 'Terminvorschlag angenommen',
+          message: `${userName} hat deinen Terminvorschlag angenommen: ${dateStr}`,
+          created_at: new Date().toISOString(),
+          is_read: 0
+        }).catch(() => {}); // Ignore notification errors
+      } catch (notifErr) {
+        // Ignore notification errors
+      }
+
       res.json({ ok: true, status: 'accepted', startsAt: agreedStartTime });
     } catch (e) {
       console.error('Accept proposal failed', e && (e.stack || e.message || e));
@@ -1130,6 +1157,26 @@ module.exports = function matchesRoutes(ctx) {
         { proposalId, optionId: proposal.option_id, startsAt: opt ? opt.starts_at : null },
         formatActionBody('❌ Terminvorschlag abgelehnt', opt ? opt.starts_at : null, note)
       );
+
+      // Create notification for proposer
+      try {
+        const currentUser = await k('users').where({ id: viewerId }).first();
+        const userName = currentUser?.firstname || currentUser?.name || `User ${viewerId}`;
+        
+        await k('notifications').insert({
+          user_id: proposal.proposer_user_id,
+          type: 'schedule_rejected',
+          match_id: matchId,
+          from_user_id: viewerId,
+          proposal_id: proposalId,
+          title: 'Terminvorschlag abgelehnt',
+          message: `${userName} hat deinen Terminvorschlag abgelehnt.`,
+          created_at: new Date().toISOString(),
+          is_read: 0
+        }).catch(() => {}); // Ignore notification errors
+      } catch (notifErr) {
+        // Ignore notification errors
+      }
 
       res.json({ ok: true, status: 'rejected' });
     } catch (e) {

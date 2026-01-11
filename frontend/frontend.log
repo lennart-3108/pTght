@@ -21530,3 +21530,486 @@ src/pages/UserDetailPage.js
   Line 540:6:   React Hook useMemo has an unnecessary dependency: 'displayName'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
 
 webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Header.js
+  Line 61:10:  'formatDebugTime' is defined but never used              no-unused-vars
+  Line 86:10:  'notifLastLoadedAt' is assigned a value but never used   no-unused-vars
+  Line 87:10:  'chatsLastLoadedAt' is assigned a value but never used   no-unused-vars
+  Line 88:10:  'notifLastStartedAt' is assigned a value but never used  no-unused-vars
+  Line 89:10:  'chatsLastStartedAt' is assigned a value but never used  no-unused-vars
+  Line 90:10:  'notifLastStatus' is assigned a value but never used     no-unused-vars
+  Line 91:10:  'chatsLastStatus' is assigned a value but never used     no-unused-vars
+  Line 92:10:  'notifDataSource' is assigned a value but never used     no-unused-vars
+  Line 93:10:  'chatsDataSource' is assigned a value but never used     no-unused-vars
+  Line 458:9:  'markChatsRead' is assigned a value but never used       no-unused-vars
+
+src/components/TerminManagerKalender.js
+  Line 106:6:   React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 421:12:  'handleCounterProposal' is defined but never used                                                        no-unused-vars
+
+src/components/TerminManagerModal.js
+  Line 4:10:  'toLocalInputValue' is defined but never used  no-unused-vars
+  Line 40:9:  'isOwner' is assigned a value but never used   no-unused-vars
+
+src/components/TerminManagerModalV2.js
+  Line 265:9:  'isProposalSender' is assigned a value but never used  no-unused-vars
+
+src/components/TerminManagerSlots.js
+  Line 24:6:  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/GameDetailPage.js
+  Line 55:10:    'joinMsg' is assigned a value but never used                                                                                                                                                                                                    no-unused-vars
+  Line 141:6:    React Hook useEffect has a missing dependency: 'token'. Either include it or remove the dependency array                                                                                                                                        react-hooks/exhaustive-deps
+  Line 321:6:    React Hook useEffect has a missing dependency: 'game.location'. Either include it or remove the dependency array. You can also replace multiple useState variables with useReducer if 'setLocation' needs the current value of 'game.location'  react-hooks/exhaustive-deps
+  Line 327:6:    React Hook useEffect has a missing dependency: 'game'. Either include it or remove the dependency array                                                                                                                                         react-hooks/exhaustive-deps
+  Line 1368:10:  'selectedCityId' is assigned a value but never used                                                                                                                                                                                             no-unused-vars
+
+src/pages/SearchMatchDialog.js
+  Line 14:10:  'searching' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 33:10:  'myLeagues' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 126:9:  The 'detectLocationCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'detectLocationCreate' in its own useCallback() Hook      react-hooks/exhaustive-deps
+  Line 151:9:  The 'applyProfileCityCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'applyProfileCityCreate' in its own useCallback() Hook  react-hooks/exhaustive-deps
+  Line 168:9:  The 'applyLeagueCityCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'applyLeagueCityCreate' in its own useCallback() Hook    react-hooks/exhaustive-deps
+  Line 230:9:  'toggleDate' is assigned a value but never used                                                                                                                                                                                                               no-unused-vars
+  Line 317:6:  React Hook useEffect has a missing dependency: 'findDefaultTennisSportId'. Either include it or remove the dependency array                                                                                                                                   react-hooks/exhaustive-deps
+  Line 322:6:  React Hook useEffect has a missing dependency: 'runSearch'. Either include it or remove the dependency array                                                                                                                                                  react-hooks/exhaustive-deps
+  Line 365:6:  React Hook useEffect has a missing dependency: 'cmAvailability.length'. Either include it or remove the dependency array                                                                                                                                      react-hooks/exhaustive-deps
+  Line 367:9:  'countries' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 370:9:  'states' is assigned a value but never used                                                                                                                                                                                                                   no-unused-vars
+  Line 373:9:  'filteredCities' is assigned a value but never used                                                                                                                                                                                                           no-unused-vars
+  Line 378:9:  'cmCountries' is assigned a value but never used                                                                                                                                                                                                              no-unused-vars
+  Line 381:9:  'cmStates' is assigned a value but never used                                                                                                                                                                                                                 no-unused-vars
+  Line 384:9:  'cmFilteredCities' is assigned a value but never used                                                                                                                                                                                                         no-unused-vars
+  Line 441:9:  'addAvailabilitySlot' is assigned a value but never used                                                                                                                                                                                                      no-unused-vars
+  Line 571:6:  React Hook useEffect has a missing dependency: 'updateDayAvailability'. Either include it or remove the dependency array                                                                                                                                      react-hooks/exhaustive-deps
+  Line 646:9:  'leaguesFiltered' is assigned a value but never used                                                                                                                                                                                                          no-unused-vars
+
+src/pages/StartPage.js
+  Line 28:10:   'leagues' is assigned a value but never used                                                                                              no-unused-vars
+  Line 38:10:   'openMatches' is assigned a value but never used                                                                                          no-unused-vars
+  Line 38:23:   'setOpenMatches' is assigned a value but never used                                                                                       no-unused-vars
+  Line 39:21:   'setSearching' is assigned a value but never used                                                                                         no-unused-vars
+  Line 42:10:   'gpsLoading' is assigned a value but never used                                                                                           no-unused-vars
+  Line 69:9:    'toId' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 343:6:   React Hook useEffect has missing dependencies: 'applyProfileCity' and 'loadNewsFeed'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 365:6:   React Hook useEffect has a missing dependency: 'loadNewsFeed'. Either include it or remove the dependency array                           react-hooks/exhaustive-deps
+  Line 485:23:  'Name' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 553:23:  'Name' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 755:27:  'initialsFor' is assigned a value but never used                                                                                          no-unused-vars
+
+src/pages/UserDetailPage.js
+  Line 204:10:  'friends' is assigned a value but never used                                                                       no-unused-vars
+  Line 205:10:  'mutualFriends' is assigned a value but never used                                                                 no-unused-vars
+  Line 207:10:  'friendActionMsg' is assigned a value but never used                                                               no-unused-vars
+  Line 208:10:  'friendActionError' is assigned a value but never used                                                             no-unused-vars
+  Line 212:10:  'feedFilters' is assigned a value but never used                                                                   no-unused-vars
+  Line 212:23:  'setFeedFilters' is assigned a value but never used                                                                no-unused-vars
+  Line 524:9:   'opponents' is assigned a value but never used                                                                     no-unused-vars
+  Line 540:6:   React Hook useMemo has an unnecessary dependency: 'displayName'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Header.js
+  Line 61:10:  'formatDebugTime' is defined but never used              no-unused-vars
+  Line 86:10:  'notifLastLoadedAt' is assigned a value but never used   no-unused-vars
+  Line 87:10:  'chatsLastLoadedAt' is assigned a value but never used   no-unused-vars
+  Line 88:10:  'notifLastStartedAt' is assigned a value but never used  no-unused-vars
+  Line 89:10:  'chatsLastStartedAt' is assigned a value but never used  no-unused-vars
+  Line 90:10:  'notifLastStatus' is assigned a value but never used     no-unused-vars
+  Line 91:10:  'chatsLastStatus' is assigned a value but never used     no-unused-vars
+  Line 92:10:  'notifDataSource' is assigned a value but never used     no-unused-vars
+  Line 93:10:  'chatsDataSource' is assigned a value but never used     no-unused-vars
+  Line 458:9:  'markChatsRead' is assigned a value but never used       no-unused-vars
+
+src/components/TerminManagerKalender.js
+  Line 106:6:   React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 421:12:  'handleCounterProposal' is defined but never used                                                        no-unused-vars
+
+src/components/TerminManagerModal.js
+  Line 4:10:  'toLocalInputValue' is defined but never used  no-unused-vars
+  Line 40:9:  'isOwner' is assigned a value but never used   no-unused-vars
+
+src/components/TerminManagerModalV2.js
+  Line 265:9:  'isProposalSender' is assigned a value but never used  no-unused-vars
+
+src/components/TerminManagerSlots.js
+  Line 24:6:  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/GameDetailPage.js
+  Line 55:10:    'joinMsg' is assigned a value but never used                                                                                                                                                                                                    no-unused-vars
+  Line 141:6:    React Hook useEffect has a missing dependency: 'token'. Either include it or remove the dependency array                                                                                                                                        react-hooks/exhaustive-deps
+  Line 321:6:    React Hook useEffect has a missing dependency: 'game.location'. Either include it or remove the dependency array. You can also replace multiple useState variables with useReducer if 'setLocation' needs the current value of 'game.location'  react-hooks/exhaustive-deps
+  Line 327:6:    React Hook useEffect has a missing dependency: 'game'. Either include it or remove the dependency array                                                                                                                                         react-hooks/exhaustive-deps
+  Line 1368:10:  'selectedCityId' is assigned a value but never used                                                                                                                                                                                             no-unused-vars
+
+src/pages/SearchMatchDialog.js
+  Line 14:10:  'searching' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 33:10:  'myLeagues' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 126:9:  The 'detectLocationCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'detectLocationCreate' in its own useCallback() Hook      react-hooks/exhaustive-deps
+  Line 151:9:  The 'applyProfileCityCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'applyProfileCityCreate' in its own useCallback() Hook  react-hooks/exhaustive-deps
+  Line 168:9:  The 'applyLeagueCityCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'applyLeagueCityCreate' in its own useCallback() Hook    react-hooks/exhaustive-deps
+  Line 230:9:  'toggleDate' is assigned a value but never used                                                                                                                                                                                                               no-unused-vars
+  Line 317:6:  React Hook useEffect has a missing dependency: 'findDefaultTennisSportId'. Either include it or remove the dependency array                                                                                                                                   react-hooks/exhaustive-deps
+  Line 322:6:  React Hook useEffect has a missing dependency: 'runSearch'. Either include it or remove the dependency array                                                                                                                                                  react-hooks/exhaustive-deps
+  Line 365:6:  React Hook useEffect has a missing dependency: 'cmAvailability.length'. Either include it or remove the dependency array                                                                                                                                      react-hooks/exhaustive-deps
+  Line 367:9:  'countries' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 370:9:  'states' is assigned a value but never used                                                                                                                                                                                                                   no-unused-vars
+  Line 373:9:  'filteredCities' is assigned a value but never used                                                                                                                                                                                                           no-unused-vars
+  Line 378:9:  'cmCountries' is assigned a value but never used                                                                                                                                                                                                              no-unused-vars
+  Line 381:9:  'cmStates' is assigned a value but never used                                                                                                                                                                                                                 no-unused-vars
+  Line 384:9:  'cmFilteredCities' is assigned a value but never used                                                                                                                                                                                                         no-unused-vars
+  Line 441:9:  'addAvailabilitySlot' is assigned a value but never used                                                                                                                                                                                                      no-unused-vars
+  Line 571:6:  React Hook useEffect has a missing dependency: 'updateDayAvailability'. Either include it or remove the dependency array                                                                                                                                      react-hooks/exhaustive-deps
+  Line 646:9:  'leaguesFiltered' is assigned a value but never used                                                                                                                                                                                                          no-unused-vars
+
+src/pages/StartPage.js
+  Line 28:10:   'leagues' is assigned a value but never used                                                                                              no-unused-vars
+  Line 38:10:   'openMatches' is assigned a value but never used                                                                                          no-unused-vars
+  Line 38:23:   'setOpenMatches' is assigned a value but never used                                                                                       no-unused-vars
+  Line 39:21:   'setSearching' is assigned a value but never used                                                                                         no-unused-vars
+  Line 42:10:   'gpsLoading' is assigned a value but never used                                                                                           no-unused-vars
+  Line 69:9:    'toId' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 343:6:   React Hook useEffect has missing dependencies: 'applyProfileCity' and 'loadNewsFeed'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 365:6:   React Hook useEffect has a missing dependency: 'loadNewsFeed'. Either include it or remove the dependency array                           react-hooks/exhaustive-deps
+  Line 485:23:  'Name' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 553:23:  'Name' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 755:27:  'initialsFor' is assigned a value but never used                                                                                          no-unused-vars
+
+src/pages/UserDetailPage.js
+  Line 204:10:  'friends' is assigned a value but never used                                                                       no-unused-vars
+  Line 205:10:  'mutualFriends' is assigned a value but never used                                                                 no-unused-vars
+  Line 207:10:  'friendActionMsg' is assigned a value but never used                                                               no-unused-vars
+  Line 208:10:  'friendActionError' is assigned a value but never used                                                             no-unused-vars
+  Line 212:10:  'feedFilters' is assigned a value but never used                                                                   no-unused-vars
+  Line 212:23:  'setFeedFilters' is assigned a value but never used                                                                no-unused-vars
+  Line 524:9:   'opponents' is assigned a value but never used                                                                     no-unused-vars
+  Line 540:6:   React Hook useMemo has an unnecessary dependency: 'displayName'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Header.js
+  Line 61:10:  'formatDebugTime' is defined but never used              no-unused-vars
+  Line 86:10:  'notifLastLoadedAt' is assigned a value but never used   no-unused-vars
+  Line 87:10:  'chatsLastLoadedAt' is assigned a value but never used   no-unused-vars
+  Line 88:10:  'notifLastStartedAt' is assigned a value but never used  no-unused-vars
+  Line 89:10:  'chatsLastStartedAt' is assigned a value but never used  no-unused-vars
+  Line 90:10:  'notifLastStatus' is assigned a value but never used     no-unused-vars
+  Line 91:10:  'chatsLastStatus' is assigned a value but never used     no-unused-vars
+  Line 92:10:  'notifDataSource' is assigned a value but never used     no-unused-vars
+  Line 93:10:  'chatsDataSource' is assigned a value but never used     no-unused-vars
+  Line 458:9:  'markChatsRead' is assigned a value but never used       no-unused-vars
+
+src/components/TerminManagerKalender.js
+  Line 106:6:   React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 421:12:  'handleCounterProposal' is defined but never used                                                        no-unused-vars
+
+src/components/TerminManagerModal.js
+  Line 4:10:  'toLocalInputValue' is defined but never used  no-unused-vars
+  Line 40:9:  'isOwner' is assigned a value but never used   no-unused-vars
+
+src/components/TerminManagerModalV2.js
+  Line 265:9:  'isProposalSender' is assigned a value but never used  no-unused-vars
+
+src/components/TerminManagerSlots.js
+  Line 24:6:  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/GameDetailPage.js
+  Line 55:10:    'joinMsg' is assigned a value but never used                                                                                                                                                                                                    no-unused-vars
+  Line 141:6:    React Hook useEffect has a missing dependency: 'token'. Either include it or remove the dependency array                                                                                                                                        react-hooks/exhaustive-deps
+  Line 321:6:    React Hook useEffect has a missing dependency: 'game.location'. Either include it or remove the dependency array. You can also replace multiple useState variables with useReducer if 'setLocation' needs the current value of 'game.location'  react-hooks/exhaustive-deps
+  Line 327:6:    React Hook useEffect has a missing dependency: 'game'. Either include it or remove the dependency array                                                                                                                                         react-hooks/exhaustive-deps
+  Line 1368:10:  'selectedCityId' is assigned a value but never used                                                                                                                                                                                             no-unused-vars
+
+src/pages/SearchMatchDialog.js
+  Line 14:10:  'searching' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 33:10:  'myLeagues' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 126:9:  The 'detectLocationCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'detectLocationCreate' in its own useCallback() Hook      react-hooks/exhaustive-deps
+  Line 151:9:  The 'applyProfileCityCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'applyProfileCityCreate' in its own useCallback() Hook  react-hooks/exhaustive-deps
+  Line 168:9:  The 'applyLeagueCityCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'applyLeagueCityCreate' in its own useCallback() Hook    react-hooks/exhaustive-deps
+  Line 230:9:  'toggleDate' is assigned a value but never used                                                                                                                                                                                                               no-unused-vars
+  Line 317:6:  React Hook useEffect has a missing dependency: 'findDefaultTennisSportId'. Either include it or remove the dependency array                                                                                                                                   react-hooks/exhaustive-deps
+  Line 322:6:  React Hook useEffect has a missing dependency: 'runSearch'. Either include it or remove the dependency array                                                                                                                                                  react-hooks/exhaustive-deps
+  Line 365:6:  React Hook useEffect has a missing dependency: 'cmAvailability.length'. Either include it or remove the dependency array                                                                                                                                      react-hooks/exhaustive-deps
+  Line 367:9:  'countries' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 370:9:  'states' is assigned a value but never used                                                                                                                                                                                                                   no-unused-vars
+  Line 373:9:  'filteredCities' is assigned a value but never used                                                                                                                                                                                                           no-unused-vars
+  Line 378:9:  'cmCountries' is assigned a value but never used                                                                                                                                                                                                              no-unused-vars
+  Line 381:9:  'cmStates' is assigned a value but never used                                                                                                                                                                                                                 no-unused-vars
+  Line 384:9:  'cmFilteredCities' is assigned a value but never used                                                                                                                                                                                                         no-unused-vars
+  Line 441:9:  'addAvailabilitySlot' is assigned a value but never used                                                                                                                                                                                                      no-unused-vars
+  Line 571:6:  React Hook useEffect has a missing dependency: 'updateDayAvailability'. Either include it or remove the dependency array                                                                                                                                      react-hooks/exhaustive-deps
+  Line 646:9:  'leaguesFiltered' is assigned a value but never used                                                                                                                                                                                                          no-unused-vars
+
+src/pages/StartPage.js
+  Line 28:10:   'leagues' is assigned a value but never used                                                                                              no-unused-vars
+  Line 38:10:   'openMatches' is assigned a value but never used                                                                                          no-unused-vars
+  Line 38:23:   'setOpenMatches' is assigned a value but never used                                                                                       no-unused-vars
+  Line 39:21:   'setSearching' is assigned a value but never used                                                                                         no-unused-vars
+  Line 42:10:   'gpsLoading' is assigned a value but never used                                                                                           no-unused-vars
+  Line 69:9:    'toId' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 343:6:   React Hook useEffect has missing dependencies: 'applyProfileCity' and 'loadNewsFeed'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 365:6:   React Hook useEffect has a missing dependency: 'loadNewsFeed'. Either include it or remove the dependency array                           react-hooks/exhaustive-deps
+  Line 485:23:  'Name' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 553:23:  'Name' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 755:27:  'initialsFor' is assigned a value but never used                                                                                          no-unused-vars
+
+src/pages/UserDetailPage.js
+  Line 204:10:  'friends' is assigned a value but never used                                                                       no-unused-vars
+  Line 205:10:  'mutualFriends' is assigned a value but never used                                                                 no-unused-vars
+  Line 207:10:  'friendActionMsg' is assigned a value but never used                                                               no-unused-vars
+  Line 208:10:  'friendActionError' is assigned a value but never used                                                             no-unused-vars
+  Line 212:10:  'feedFilters' is assigned a value but never used                                                                   no-unused-vars
+  Line 212:23:  'setFeedFilters' is assigned a value but never used                                                                no-unused-vars
+  Line 524:9:   'opponents' is assigned a value but never used                                                                     no-unused-vars
+  Line 540:6:   React Hook useMemo has an unnecessary dependency: 'displayName'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Header.js
+  Line 61:10:  'formatDebugTime' is defined but never used              no-unused-vars
+  Line 86:10:  'notifLastLoadedAt' is assigned a value but never used   no-unused-vars
+  Line 87:10:  'chatsLastLoadedAt' is assigned a value but never used   no-unused-vars
+  Line 88:10:  'notifLastStartedAt' is assigned a value but never used  no-unused-vars
+  Line 89:10:  'chatsLastStartedAt' is assigned a value but never used  no-unused-vars
+  Line 90:10:  'notifLastStatus' is assigned a value but never used     no-unused-vars
+  Line 91:10:  'chatsLastStatus' is assigned a value but never used     no-unused-vars
+  Line 92:10:  'notifDataSource' is assigned a value but never used     no-unused-vars
+  Line 93:10:  'chatsDataSource' is assigned a value but never used     no-unused-vars
+  Line 458:9:  'markChatsRead' is assigned a value but never used       no-unused-vars
+
+src/components/TerminManagerKalender.js
+  Line 106:6:   React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 421:12:  'handleCounterProposal' is defined but never used                                                        no-unused-vars
+
+src/components/TerminManagerModal.js
+  Line 4:10:  'toLocalInputValue' is defined but never used  no-unused-vars
+  Line 40:9:  'isOwner' is assigned a value but never used   no-unused-vars
+
+src/components/TerminManagerModalV2.js
+  Line 265:9:  'isProposalSender' is assigned a value but never used  no-unused-vars
+
+src/components/TerminManagerSlots.js
+  Line 24:6:  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/GameDetailPage.js
+  Line 55:10:    'joinMsg' is assigned a value but never used                                                                                                                                                                                                    no-unused-vars
+  Line 141:6:    React Hook useEffect has a missing dependency: 'token'. Either include it or remove the dependency array                                                                                                                                        react-hooks/exhaustive-deps
+  Line 321:6:    React Hook useEffect has a missing dependency: 'game.location'. Either include it or remove the dependency array. You can also replace multiple useState variables with useReducer if 'setLocation' needs the current value of 'game.location'  react-hooks/exhaustive-deps
+  Line 327:6:    React Hook useEffect has a missing dependency: 'game'. Either include it or remove the dependency array                                                                                                                                         react-hooks/exhaustive-deps
+  Line 1368:10:  'selectedCityId' is assigned a value but never used                                                                                                                                                                                             no-unused-vars
+
+src/pages/SearchMatchDialog.js
+  Line 14:10:  'searching' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 33:10:  'myLeagues' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 126:9:  The 'detectLocationCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'detectLocationCreate' in its own useCallback() Hook      react-hooks/exhaustive-deps
+  Line 151:9:  The 'applyProfileCityCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'applyProfileCityCreate' in its own useCallback() Hook  react-hooks/exhaustive-deps
+  Line 168:9:  The 'applyLeagueCityCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'applyLeagueCityCreate' in its own useCallback() Hook    react-hooks/exhaustive-deps
+  Line 230:9:  'toggleDate' is assigned a value but never used                                                                                                                                                                                                               no-unused-vars
+  Line 317:6:  React Hook useEffect has a missing dependency: 'findDefaultTennisSportId'. Either include it or remove the dependency array                                                                                                                                   react-hooks/exhaustive-deps
+  Line 322:6:  React Hook useEffect has a missing dependency: 'runSearch'. Either include it or remove the dependency array                                                                                                                                                  react-hooks/exhaustive-deps
+  Line 365:6:  React Hook useEffect has a missing dependency: 'cmAvailability.length'. Either include it or remove the dependency array                                                                                                                                      react-hooks/exhaustive-deps
+  Line 367:9:  'countries' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 370:9:  'states' is assigned a value but never used                                                                                                                                                                                                                   no-unused-vars
+  Line 373:9:  'filteredCities' is assigned a value but never used                                                                                                                                                                                                           no-unused-vars
+  Line 378:9:  'cmCountries' is assigned a value but never used                                                                                                                                                                                                              no-unused-vars
+  Line 381:9:  'cmStates' is assigned a value but never used                                                                                                                                                                                                                 no-unused-vars
+  Line 384:9:  'cmFilteredCities' is assigned a value but never used                                                                                                                                                                                                         no-unused-vars
+  Line 441:9:  'addAvailabilitySlot' is assigned a value but never used                                                                                                                                                                                                      no-unused-vars
+  Line 571:6:  React Hook useEffect has a missing dependency: 'updateDayAvailability'. Either include it or remove the dependency array                                                                                                                                      react-hooks/exhaustive-deps
+  Line 646:9:  'leaguesFiltered' is assigned a value but never used                                                                                                                                                                                                          no-unused-vars
+
+src/pages/StartPage.js
+  Line 28:10:   'leagues' is assigned a value but never used                                                                                              no-unused-vars
+  Line 38:10:   'openMatches' is assigned a value but never used                                                                                          no-unused-vars
+  Line 38:23:   'setOpenMatches' is assigned a value but never used                                                                                       no-unused-vars
+  Line 39:21:   'setSearching' is assigned a value but never used                                                                                         no-unused-vars
+  Line 42:10:   'gpsLoading' is assigned a value but never used                                                                                           no-unused-vars
+  Line 69:9:    'toId' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 343:6:   React Hook useEffect has missing dependencies: 'applyProfileCity' and 'loadNewsFeed'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 365:6:   React Hook useEffect has a missing dependency: 'loadNewsFeed'. Either include it or remove the dependency array                           react-hooks/exhaustive-deps
+  Line 485:23:  'Name' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 553:23:  'Name' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 755:27:  'initialsFor' is assigned a value but never used                                                                                          no-unused-vars
+
+src/pages/UserDetailPage.js
+  Line 204:10:  'friends' is assigned a value but never used                                                                       no-unused-vars
+  Line 205:10:  'mutualFriends' is assigned a value but never used                                                                 no-unused-vars
+  Line 207:10:  'friendActionMsg' is assigned a value but never used                                                               no-unused-vars
+  Line 208:10:  'friendActionError' is assigned a value but never used                                                             no-unused-vars
+  Line 212:10:  'feedFilters' is assigned a value but never used                                                                   no-unused-vars
+  Line 212:23:  'setFeedFilters' is assigned a value but never used                                                                no-unused-vars
+  Line 524:9:   'opponents' is assigned a value but never used                                                                     no-unused-vars
+  Line 540:6:   React Hook useMemo has an unnecessary dependency: 'displayName'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
+Compiling...
+Compiled with warnings.
+
+[eslint] 
+src/components/Header.js
+  Line 61:10:  'formatDebugTime' is defined but never used              no-unused-vars
+  Line 86:10:  'notifLastLoadedAt' is assigned a value but never used   no-unused-vars
+  Line 87:10:  'chatsLastLoadedAt' is assigned a value but never used   no-unused-vars
+  Line 88:10:  'notifLastStartedAt' is assigned a value but never used  no-unused-vars
+  Line 89:10:  'chatsLastStartedAt' is assigned a value but never used  no-unused-vars
+  Line 90:10:  'notifLastStatus' is assigned a value but never used     no-unused-vars
+  Line 91:10:  'chatsLastStatus' is assigned a value but never used     no-unused-vars
+  Line 92:10:  'notifDataSource' is assigned a value but never used     no-unused-vars
+  Line 93:10:  'chatsDataSource' is assigned a value but never used     no-unused-vars
+  Line 458:9:  'markChatsRead' is assigned a value but never used       no-unused-vars
+
+src/components/TerminManagerKalender.js
+  Line 106:6:   React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 421:12:  'handleCounterProposal' is defined but never used                                                        no-unused-vars
+
+src/components/TerminManagerModal.js
+  Line 4:10:  'toLocalInputValue' is defined but never used  no-unused-vars
+  Line 40:9:  'isOwner' is assigned a value but never used   no-unused-vars
+
+src/components/TerminManagerModalV2.js
+  Line 265:9:  'isProposalSender' is assigned a value but never used  no-unused-vars
+
+src/components/TerminManagerSlots.js
+  Line 24:6:  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/GameDetailPage.js
+  Line 55:10:    'joinMsg' is assigned a value but never used                                                                                                                                                                                                    no-unused-vars
+  Line 141:6:    React Hook useEffect has a missing dependency: 'token'. Either include it or remove the dependency array                                                                                                                                        react-hooks/exhaustive-deps
+  Line 321:6:    React Hook useEffect has a missing dependency: 'game.location'. Either include it or remove the dependency array. You can also replace multiple useState variables with useReducer if 'setLocation' needs the current value of 'game.location'  react-hooks/exhaustive-deps
+  Line 327:6:    React Hook useEffect has a missing dependency: 'game'. Either include it or remove the dependency array                                                                                                                                         react-hooks/exhaustive-deps
+  Line 1368:10:  'selectedCityId' is assigned a value but never used                                                                                                                                                                                             no-unused-vars
+
+src/pages/SearchMatchDialog.js
+  Line 14:10:  'searching' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 33:10:  'myLeagues' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 126:9:  The 'detectLocationCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'detectLocationCreate' in its own useCallback() Hook      react-hooks/exhaustive-deps
+  Line 151:9:  The 'applyProfileCityCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'applyProfileCityCreate' in its own useCallback() Hook  react-hooks/exhaustive-deps
+  Line 168:9:  The 'applyLeagueCityCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'applyLeagueCityCreate' in its own useCallback() Hook    react-hooks/exhaustive-deps
+  Line 230:9:  'toggleDate' is assigned a value but never used                                                                                                                                                                                                               no-unused-vars
+  Line 317:6:  React Hook useEffect has a missing dependency: 'findDefaultTennisSportId'. Either include it or remove the dependency array                                                                                                                                   react-hooks/exhaustive-deps
+  Line 322:6:  React Hook useEffect has a missing dependency: 'runSearch'. Either include it or remove the dependency array                                                                                                                                                  react-hooks/exhaustive-deps
+  Line 365:6:  React Hook useEffect has a missing dependency: 'cmAvailability.length'. Either include it or remove the dependency array                                                                                                                                      react-hooks/exhaustive-deps
+  Line 367:9:  'countries' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 370:9:  'states' is assigned a value but never used                                                                                                                                                                                                                   no-unused-vars
+  Line 373:9:  'filteredCities' is assigned a value but never used                                                                                                                                                                                                           no-unused-vars
+  Line 378:9:  'cmCountries' is assigned a value but never used                                                                                                                                                                                                              no-unused-vars
+  Line 381:9:  'cmStates' is assigned a value but never used                                                                                                                                                                                                                 no-unused-vars
+  Line 384:9:  'cmFilteredCities' is assigned a value but never used                                                                                                                                                                                                         no-unused-vars
+  Line 441:9:  'addAvailabilitySlot' is assigned a value but never used                                                                                                                                                                                                      no-unused-vars
+  Line 571:6:  React Hook useEffect has a missing dependency: 'updateDayAvailability'. Either include it or remove the dependency array                                                                                                                                      react-hooks/exhaustive-deps
+  Line 646:9:  'leaguesFiltered' is assigned a value but never used                                                                                                                                                                                                          no-unused-vars
+
+src/pages/StartPage.js
+  Line 28:10:   'leagues' is assigned a value but never used                                                                                              no-unused-vars
+  Line 38:10:   'openMatches' is assigned a value but never used                                                                                          no-unused-vars
+  Line 38:23:   'setOpenMatches' is assigned a value but never used                                                                                       no-unused-vars
+  Line 39:21:   'setSearching' is assigned a value but never used                                                                                         no-unused-vars
+  Line 42:10:   'gpsLoading' is assigned a value but never used                                                                                           no-unused-vars
+  Line 69:9:    'toId' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 343:6:   React Hook useEffect has missing dependencies: 'applyProfileCity' and 'loadNewsFeed'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 365:6:   React Hook useEffect has a missing dependency: 'loadNewsFeed'. Either include it or remove the dependency array                           react-hooks/exhaustive-deps
+  Line 485:23:  'Name' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 553:23:  'Name' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 755:27:  'initialsFor' is assigned a value but never used                                                                                          no-unused-vars
+
+src/pages/UserDetailPage.js
+  Line 204:10:  'friends' is assigned a value but never used                                                                       no-unused-vars
+  Line 205:10:  'mutualFriends' is assigned a value but never used                                                                 no-unused-vars
+  Line 207:10:  'friendActionMsg' is assigned a value but never used                                                               no-unused-vars
+  Line 208:10:  'friendActionError' is assigned a value but never used                                                             no-unused-vars
+  Line 212:10:  'feedFilters' is assigned a value but never used                                                                   no-unused-vars
+  Line 212:23:  'setFeedFilters' is assigned a value but never used                                                                no-unused-vars
+  Line 524:9:   'opponents' is assigned a value but never used                                                                     no-unused-vars
+  Line 540:6:   React Hook useMemo has an unnecessary dependency: 'displayName'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+WARNING in [eslint] 
+src/components/Header.js
+  Line 61:10:  'formatDebugTime' is defined but never used              no-unused-vars
+  Line 86:10:  'notifLastLoadedAt' is assigned a value but never used   no-unused-vars
+  Line 87:10:  'chatsLastLoadedAt' is assigned a value but never used   no-unused-vars
+  Line 88:10:  'notifLastStartedAt' is assigned a value but never used  no-unused-vars
+  Line 89:10:  'chatsLastStartedAt' is assigned a value but never used  no-unused-vars
+  Line 90:10:  'notifLastStatus' is assigned a value but never used     no-unused-vars
+  Line 91:10:  'chatsLastStatus' is assigned a value but never used     no-unused-vars
+  Line 92:10:  'notifDataSource' is assigned a value but never used     no-unused-vars
+  Line 93:10:  'chatsDataSource' is assigned a value but never used     no-unused-vars
+  Line 458:9:  'markChatsRead' is assigned a value but never used       no-unused-vars
+
+src/components/TerminManagerKalender.js
+  Line 106:6:   React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  Line 421:12:  'handleCounterProposal' is defined but never used                                                        no-unused-vars
+
+src/components/TerminManagerModal.js
+  Line 4:10:  'toLocalInputValue' is defined but never used  no-unused-vars
+  Line 40:9:  'isOwner' is assigned a value but never used   no-unused-vars
+
+src/components/TerminManagerModalV2.js
+  Line 265:9:  'isProposalSender' is assigned a value but never used  no-unused-vars
+
+src/components/TerminManagerSlots.js
+  Line 24:6:  React Hook useEffect has a missing dependency: 'load'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src/pages/GameDetailPage.js
+  Line 55:10:    'joinMsg' is assigned a value but never used                                                                                                                                                                                                    no-unused-vars
+  Line 141:6:    React Hook useEffect has a missing dependency: 'token'. Either include it or remove the dependency array                                                                                                                                        react-hooks/exhaustive-deps
+  Line 321:6:    React Hook useEffect has a missing dependency: 'game.location'. Either include it or remove the dependency array. You can also replace multiple useState variables with useReducer if 'setLocation' needs the current value of 'game.location'  react-hooks/exhaustive-deps
+  Line 327:6:    React Hook useEffect has a missing dependency: 'game'. Either include it or remove the dependency array                                                                                                                                         react-hooks/exhaustive-deps
+  Line 1368:10:  'selectedCityId' is assigned a value but never used                                                                                                                                                                                             no-unused-vars
+
+src/pages/SearchMatchDialog.js
+  Line 14:10:  'searching' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 33:10:  'myLeagues' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 126:9:  The 'detectLocationCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'detectLocationCreate' in its own useCallback() Hook      react-hooks/exhaustive-deps
+  Line 151:9:  The 'applyProfileCityCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'applyProfileCityCreate' in its own useCallback() Hook  react-hooks/exhaustive-deps
+  Line 168:9:  The 'applyLeagueCityCreate' function makes the dependencies of useCallback Hook (at line 195) change on every render. Move it inside the useCallback callback. Alternatively, wrap the definition of 'applyLeagueCityCreate' in its own useCallback() Hook    react-hooks/exhaustive-deps
+  Line 230:9:  'toggleDate' is assigned a value but never used                                                                                                                                                                                                               no-unused-vars
+  Line 317:6:  React Hook useEffect has a missing dependency: 'findDefaultTennisSportId'. Either include it or remove the dependency array                                                                                                                                   react-hooks/exhaustive-deps
+  Line 322:6:  React Hook useEffect has a missing dependency: 'runSearch'. Either include it or remove the dependency array                                                                                                                                                  react-hooks/exhaustive-deps
+  Line 365:6:  React Hook useEffect has a missing dependency: 'cmAvailability.length'. Either include it or remove the dependency array                                                                                                                                      react-hooks/exhaustive-deps
+  Line 367:9:  'countries' is assigned a value but never used                                                                                                                                                                                                                no-unused-vars
+  Line 370:9:  'states' is assigned a value but never used                                                                                                                                                                                                                   no-unused-vars
+  Line 373:9:  'filteredCities' is assigned a value but never used                                                                                                                                                                                                           no-unused-vars
+  Line 378:9:  'cmCountries' is assigned a value but never used                                                                                                                                                                                                              no-unused-vars
+  Line 381:9:  'cmStates' is assigned a value but never used                                                                                                                                                                                                                 no-unused-vars
+  Line 384:9:  'cmFilteredCities' is assigned a value but never used                                                                                                                                                                                                         no-unused-vars
+  Line 441:9:  'addAvailabilitySlot' is assigned a value but never used                                                                                                                                                                                                      no-unused-vars
+  Line 571:6:  React Hook useEffect has a missing dependency: 'updateDayAvailability'. Either include it or remove the dependency array                                                                                                                                      react-hooks/exhaustive-deps
+  Line 646:9:  'leaguesFiltered' is assigned a value but never used                                                                                                                                                                                                          no-unused-vars
+
+src/pages/StartPage.js
+  Line 28:10:   'leagues' is assigned a value but never used                                                                                              no-unused-vars
+  Line 38:10:   'openMatches' is assigned a value but never used                                                                                          no-unused-vars
+  Line 38:23:   'setOpenMatches' is assigned a value but never used                                                                                       no-unused-vars
+  Line 39:21:   'setSearching' is assigned a value but never used                                                                                         no-unused-vars
+  Line 42:10:   'gpsLoading' is assigned a value but never used                                                                                           no-unused-vars
+  Line 69:9:    'toId' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 343:6:   React Hook useEffect has missing dependencies: 'applyProfileCity' and 'loadNewsFeed'. Either include them or remove the dependency array  react-hooks/exhaustive-deps
+  Line 365:6:   React Hook useEffect has a missing dependency: 'loadNewsFeed'. Either include it or remove the dependency array                           react-hooks/exhaustive-deps
+  Line 485:23:  'Name' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 553:23:  'Name' is assigned a value but never used                                                                                                 no-unused-vars
+  Line 755:27:  'initialsFor' is assigned a value but never used                                                                                          no-unused-vars
+
+src/pages/UserDetailPage.js
+  Line 204:10:  'friends' is assigned a value but never used                                                                       no-unused-vars
+  Line 205:10:  'mutualFriends' is assigned a value but never used                                                                 no-unused-vars
+  Line 207:10:  'friendActionMsg' is assigned a value but never used                                                               no-unused-vars
+  Line 208:10:  'friendActionError' is assigned a value but never used                                                             no-unused-vars
+  Line 212:10:  'feedFilters' is assigned a value but never used                                                                   no-unused-vars
+  Line 212:23:  'setFeedFilters' is assigned a value but never used                                                                no-unused-vars
+  Line 524:9:   'opponents' is assigned a value but never used                                                                     no-unused-vars
+  Line 540:6:   React Hook useMemo has an unnecessary dependency: 'displayName'. Either exclude it or remove the dependency array  react-hooks/exhaustive-deps
+
+webpack compiled with 1 warning
