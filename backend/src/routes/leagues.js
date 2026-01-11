@@ -121,6 +121,25 @@ module.exports = function leaguesRoutes(ctx) {
         if (Object.keys(updateRec).length > 0) {
           await trx("matches").where({ id: openMatch.id }).update(updateRec);
           const updated = await trx("matches").where({ id: openMatch.id }).first();
+          
+          // Benachrichtigung erstellen für den anderen Spieler
+          const opponentId = openMatch.home_user_id || openMatch.away_user_id;
+          if (opponentId && opponentId !== userId) {
+            const joiningUser = await trx("users").where({ id: userId }).first();
+            const joiningUserName = joiningUser?.firstname || joiningUser?.name || `User ${userId}`;
+            
+            await trx("notifications").insert({
+              user_id: opponentId,
+              type: 'player_joined',
+              match_id: openMatch.id,
+              from_user_id: userId,
+              title: 'Spieler beigetreten',
+              message: `${joiningUserName} ist deinem Match beigetreten.`,
+              created_at: new Date().toISOString(),
+              is_read: 0
+            }).catch(err => console.error('[leagues] player_joined notification error:', err));
+          }
+          
           return { action: "joined_open", match: updated };
         }
       }

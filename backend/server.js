@@ -1067,6 +1067,19 @@ async function newsHandler(req, res) {
               avatarUrl: n.avatarUrl || null,
               leagueName: n.leagueName || null
             });
+          } else if (n.type === 'player_joined') {
+            items.push({
+              id: `notif-joined-${n.notifId}`,
+              type: 'player_joined',
+              timestamp: n.timestamp,
+              title: n.title || 'Spieler beigetreten',
+              details: n.message || `${fromName} ist deinem Match beigetreten.`,
+              matchId: n.matchId,
+              joinedUserId: n.fromUserId,
+              joinedUserName: fromName,
+              avatarUrl: n.avatarUrl || null,
+              leagueName: n.leagueName || null
+            });
           }
         }
       }
