@@ -281,7 +281,7 @@ export default function Header() {
       const res = await fetchWithTimeout(`${API_BASE}/matches/${matchId}/termin-manager/proposals/${proposalId}/accept`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
-        timeout: 3000,
+        timeout: 10000,
       });
       if (!res.ok) {
         const msg = await res.text().catch(() => "");
@@ -308,7 +308,7 @@ export default function Header() {
       const res = await fetchWithTimeout(`${API_BASE}/matches/${matchId}/termin-manager/proposals/${proposalId}/reject`, {
         method: "POST",
         headers: { Authorization: `Bearer ${token}` },
-        timeout: 3000,
+        timeout: 10000,
       });
       if (!res.ok) {
         const msg = await res.text().catch(() => "");
@@ -663,7 +663,15 @@ export default function Header() {
                           return (
                             <li key={item.id} className="ml-popover__item">
                               {(item.type === 'schedule_proposal' || item.type === 'player_joined' || item.type === 'availability_shared' || item.type === 'schedule_accepted' || item.type === 'schedule_rejected') && item.avatarUrl ? (
-                                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                                <div style={{
+                                  display: 'flex',
+                                  gap: 12,
+                                  alignItems: 'flex-start',
+                                  background: item.type === 'schedule_proposal' ? '#1a2e26' : 'transparent',
+                                  border: item.type === 'schedule_proposal' ? '2px solid #2f6b57' : 'none',
+                                  borderRadius: item.type === 'schedule_proposal' ? 12 : 0,
+                                  padding: item.type === 'schedule_proposal' ? 12 : 0
+                                }}>
                                   <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 8, overflow: 'hidden' }}>
                                     <Link
                                       to={`/matches/${item.matchId}`}
@@ -695,7 +703,10 @@ export default function Header() {
                                   </div>
                                   <div className="ml-popover__itemContent" style={{ flex: 1 }}>
                                     <div className="ml-popover__itemRow">
-                                      <div className="ml-popover__itemTitle">{item.title}</div>
+                                      <div className="ml-popover__itemTitle" style={item.type === 'schedule_proposal' ? { color: '#debc7c', fontWeight: 700 } : {}}>
+                                        {item.type === 'schedule_proposal' && '📩 '}
+                                        {item.title}
+                                      </div>
                                     </div>
                                     <div className="ml-popover__itemMeta">
                                       {formatShortTimestamp(item.timestamp)}
@@ -703,40 +714,47 @@ export default function Header() {
                                     </div>
                                     <div className="ml-popover__itemText">{truncate(item.details, 180)}</div>
                                     {item.type === 'schedule_proposal' && (
-                                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                                      <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
                                         <button
-                                          className="ml-popover__itemActionBtn ml-popover__itemActionBtn--primary"
                                           disabled={proposalActions[item.proposalId]}
                                           onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
                                             acceptProposal(item.matchId, item.proposalId);
                                           }}
-                                        >
-                                          {proposalActions[item.proposalId] === 'accepting' ? "…" : "Annehmen"}
-                                        </button>
-                                        <button
-                                          className="ml-popover__itemActionBtn ml-popover__itemActionBtn--secondary"
-                                          disabled={proposalActions[item.proposalId]}
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                            navigate(`/matches/${item.matchId}`);
-                                            setNotificationsOpen(false);
+                                          style={{
+                                            padding: '10px 16px',
+                                            borderRadius: 10,
+                                            border: '1px solid #2f6b57',
+                                            background: '#1c5b47',
+                                            color: '#f2fff8',
+                                            cursor: proposalActions[item.proposalId] ? 'not-allowed' : 'pointer',
+                                            fontWeight: 600,
+                                            fontSize: 14,
+                                            opacity: proposalActions[item.proposalId] ? 0.6 : 1
                                           }}
                                         >
-                                          Gegenvorschlag
+                                          {proposalActions[item.proposalId] === 'accepting' ? "…" : "✓ Annehmen"}
                                         </button>
                                         <button
-                                          className="ml-popover__itemActionBtn ml-popover__itemActionBtn--secondary"
                                           disabled={proposalActions[item.proposalId]}
                                           onClick={(e) => {
                                             e.preventDefault();
                                             e.stopPropagation();
                                             rejectProposal(item.matchId, item.proposalId);
                                           }}
+                                          style={{
+                                            padding: '10px 16px',
+                                            borderRadius: 10,
+                                            border: '1px solid #553f3f',
+                                            background: '#2a1b1b',
+                                            color: '#e9d8d8',
+                                            cursor: proposalActions[item.proposalId] ? 'not-allowed' : 'pointer',
+                                            fontSize: 14,
+                                            opacity: proposalActions[item.proposalId] ? 0.6 : 1
+                                          }}
                                         >
-                                          {proposalActions[item.proposalId] === 'rejecting' ? "…" : "Ablehnen"}
+                                          {proposalActions[item.proposalId] === 'rejecting' ? "…" : "✗ Ablehnen"}
                                         </button>
                                       </div>
                                     )}

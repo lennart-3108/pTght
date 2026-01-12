@@ -1088,30 +1088,33 @@ module.exports = function matchesRoutes(ctx) {
       );
 
       // Create notification for proposer
-      try {
-        const currentUser = await k('users').where({ id: viewerId }).first();
-        const userName = currentUser?.firstname || currentUser?.name || `User ${viewerId}`;
-        const dateStr = new Date(agreedStartTime).toLocaleString('de-DE', { 
-          weekday: 'short', 
-          day: '2-digit', 
-          month: '2-digit', 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        });
-        
-        await k('notifications').insert({
-          user_id: proposal.proposer_user_id,
-          type: 'schedule_accepted',
-          match_id: matchId,
-          from_user_id: viewerId,
-          proposal_id: proposalId,
-          title: 'Terminvorschlag angenommen',
-          message: `${userName} hat deinen Terminvorschlag angenommen: ${dateStr}`,
-          created_at: new Date().toISOString(),
-          is_read: 0
-        }).catch(() => {}); // Ignore notification errors
-      } catch (notifErr) {
-        // Ignore notification errors
+      if (proposal.proposer_user_id) {
+        try {
+          const currentUser = await k('users').where({ id: viewerId }).first();
+          const userName = currentUser?.firstname || currentUser?.name || `User ${viewerId}`;
+          const dateStr = new Date(agreedStartTime).toLocaleString('de-DE', { 
+            weekday: 'short', 
+            day: '2-digit', 
+            month: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          });
+          
+          await k('notifications').insert({
+            user_id: proposal.proposer_user_id,
+            type: 'schedule_accepted',
+            match_id: matchId,
+            from_user_id: viewerId,
+            proposal_id: proposalId,
+            title: 'Terminvorschlag angenommen',
+            message: `${userName} hat deinen Terminvorschlag angenommen: ${dateStr}`,
+            created_at: new Date().toISOString(),
+            is_read: 0
+          });
+          console.log(`[accept] Notification created for user ${proposal.proposer_user_id}`);
+        } catch (notifErr) {
+          console.error('[accept] Failed to create notification:', notifErr);
+        }
       }
 
       res.json({ ok: true, status: 'accepted', startsAt: agreedStartTime });
@@ -1159,23 +1162,26 @@ module.exports = function matchesRoutes(ctx) {
       );
 
       // Create notification for proposer
-      try {
-        const currentUser = await k('users').where({ id: viewerId }).first();
-        const userName = currentUser?.firstname || currentUser?.name || `User ${viewerId}`;
-        
-        await k('notifications').insert({
-          user_id: proposal.proposer_user_id,
-          type: 'schedule_rejected',
-          match_id: matchId,
-          from_user_id: viewerId,
-          proposal_id: proposalId,
-          title: 'Terminvorschlag abgelehnt',
-          message: `${userName} hat deinen Terminvorschlag abgelehnt.`,
-          created_at: new Date().toISOString(),
-          is_read: 0
-        }).catch(() => {}); // Ignore notification errors
-      } catch (notifErr) {
-        // Ignore notification errors
+      if (proposal.proposer_user_id) {
+        try {
+          const currentUser = await k('users').where({ id: viewerId }).first();
+          const userName = currentUser?.firstname || currentUser?.name || `User ${viewerId}`;
+          
+          await k('notifications').insert({
+            user_id: proposal.proposer_user_id,
+            type: 'schedule_rejected',
+            match_id: matchId,
+            from_user_id: viewerId,
+            proposal_id: proposalId,
+            title: 'Terminvorschlag abgelehnt',
+            message: `${userName} hat deinen Terminvorschlag abgelehnt.`,
+            created_at: new Date().toISOString(),
+            is_read: 0
+          });
+          console.log(`[reject] Notification created for user ${proposal.proposer_user_id}`);
+        } catch (notifErr) {
+          console.error('[reject] Failed to create notification:', notifErr);
+        }
       }
 
       res.json({ ok: true, status: 'rejected' });
@@ -1237,6 +1243,36 @@ module.exports = function matchesRoutes(ctx) {
         { proposalId: newId, counterTo: proposalId, optionId: newOptionId, startsAt: opt.starts_at },
         formatActionBody('📅 Gegenvorschlag gesendet', opt.starts_at, note)
       );
+
+      // Create notification for original proposer about counter-proposal
+      if (otherUserId) {
+        try {
+          const currentUser = await k('users').where({ id: viewerId }).first();
+          const userName = currentUser?.firstname || currentUser?.name || `User ${viewerId}`;
+          const dateStr = new Date(opt.starts_at).toLocaleString('de-DE', { 
+            weekday: 'short', 
+            day: '2-digit', 
+            month: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          });
+          
+          await k('notifications').insert({
+            user_id: otherUserId,
+            type: 'schedule_proposal',
+            match_id: matchId,
+            from_user_id: viewerId,
+            proposal_id: newId,
+            title: 'Gegenvorschlag erhalten',
+            message: `${userName} hat einen Gegenvorschlag gesendet: ${dateStr}`,
+            created_at: new Date().toISOString(),
+            is_read: 0
+          });
+          console.log(`[counter] Notification created for user ${otherUserId}`);
+        } catch (notifErr) {
+          console.error('[counter] Failed to create notification:', notifErr);
+        }
+      }
 
       res.status(201).json({ id: newId, status: 'sent', optionId: newOptionId, startsAt: opt.starts_at });
     } catch (e) {
@@ -1596,32 +1632,35 @@ module.exports = function matchesRoutes(ctx) {
       );
 
       // Create notification for recipient
-      try {
-        const currentUser = await k('users').where({ id: viewerId }).first();
-        const userName = currentUser?.firstname || currentUser?.name || `User ${viewerId}`;
-        const leagueInfo = match.league_id ? await k('leagues').where({ id: match.league_id }).first() : null;
-        const leagueName = leagueInfo?.name || '';
-        const formattedDate = new Date(proposedDatetime).toLocaleString('de-DE', { 
-          weekday: 'short', 
-          day: '2-digit', 
-          month: '2-digit', 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        });
-        
-        await k('notifications').insert({
-          user_id: otherUserId,
-          type: 'schedule_proposal',
-          match_id: matchId,
-          from_user_id: viewerId,
-          proposal_id: proposalId,
-          title: 'Terminvorschlag erhalten',
-          message: `${userName} hat dir einen Terminvorschlag gesendet: ${formattedDate}`,
-          created_at: new Date().toISOString(),
-          is_read: 0
-        }).catch(() => {}); // Ignore notification errors
-      } catch (notifErr) {
-        // Ignore notification errors - don't fail the main request
+      if (otherUserId) {
+        try {
+          const currentUser = await k('users').where({ id: viewerId }).first();
+          const userName = currentUser?.firstname || currentUser?.name || `User ${viewerId}`;
+          const leagueInfo = match.league_id ? await k('leagues').where({ id: match.league_id }).first() : null;
+          const leagueName = leagueInfo?.name || '';
+          const formattedDate = new Date(proposedDatetime).toLocaleString('de-DE', { 
+            weekday: 'short', 
+            day: '2-digit', 
+            month: '2-digit', 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          });
+          
+          await k('notifications').insert({
+            user_id: otherUserId,
+            type: 'schedule_proposal',
+            match_id: matchId,
+            from_user_id: viewerId,
+            proposal_id: proposalId,
+            title: 'Terminvorschlag erhalten',
+            message: `${userName} hat dir einen Terminvorschlag gesendet: ${formattedDate}`,
+            created_at: new Date().toISOString(),
+            is_read: 0
+          });
+          console.log(`[availability/propose] Notification created for user ${otherUserId}`);
+        } catch (notifErr) {
+          console.error('[availability/propose] Failed to create notification:', notifErr);
+        }
       }
 
       res.status(201).json({ id: proposalId, status: 'sent', datetime: proposedDatetime });

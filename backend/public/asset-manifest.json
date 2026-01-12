@@ -1,0 +1,33 @@
+{
+  "files": {
+    "main.css": "/static/css/main.4d62ebbe.css",
+    "main.js": "/static/js/main.dc71cb33.js",
+    "static/js/453.8701dc61.chunk.js": "/static/js/453.8701dc61.chunk.js",
+    "static/media/l-tennis.png": "/static/media/l-tennis.8d3957bb2d6fe5fd44c8.png",
+    "static/media/3-football.png": "/static/media/3-football.25ca3e0f99bd6cab1b02.png",
+    "static/media/bike.png": "/static/media/bike.f0ed12c3d6f44feba1ee.png",
+    "static/media/l-running.png": "/static/media/l-running.615dd61bf940a54bd60a.png",
+    "static/media/2-beach-volleyball.png": "/static/media/2-beach-volleyball.32a282af39d062e68f81.png",
+    "static/media/l-football.png": "/static/media/l-football.d40489630f020c8a5844.png",
+    "static/media/1-heros.png": "/static/media/1-heros.461ab0f882e7d83e575f.png",
+    "static/media/tennis.png": "/static/media/tennis.0f7f8a874257eca4ca64.png",
+    "static/media/basketball-image.png": "/static/media/basketball-image.63a39a7c6d64d4b6b351.png",
+    "static/media/football-image.png": "/static/media/football-image.0fb7482c3dd0220cb378.png",
+    "static/media/MatchLeague2.png": "/static/media/MatchLeague2.2a350611fca568e2537f.png",
+    "static/media/golf-image.png": "/static/media/golf-image.da172119bf0cec8e233a.png",
+    "static/media/volleyball-image.png": "/static/media/volleyball-image.5c2f618c85c1c59938b2.png",
+    "static/media/tennis-image.png": "/static/media/tennis-image.70e5b37d43e04cbf3a55.png",
+    "static/media/american-football-image.png": "/static/media/american-football-image.bc8dd6c6c50cfe1eda1d.png",
+    "static/media/padel.png": "/static/media/padel.db9efbe33a5229546532.png",
+    "static/media/matchleague_logo_4x4-removebg-preview.png": "/static/media/matchleague_logo_4x4-removebg-preview.77c3534c415cb68f6908.png",
+    "static/media/match_league_header_long.png": "/static/media/match_league_header_long.8c6ae0c7d359c306f18e.png",
+    "index.html": "/index.html",
+    "main.4d62ebbe.css.map": "/static/css/main.4d62ebbe.css.map",
+    "main.dc71cb33.js.map": "/static/js/main.dc71cb33.js.map",
+    "453.8701dc61.chunk.js.map": "/static/js/453.8701dc61.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.4d62ebbe.css",
+    "static/js/main.dc71cb33.js"
+  ]
+}
