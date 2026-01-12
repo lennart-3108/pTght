@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/static/css/main.4d62ebbe.css",
-    "main.js": "/static/js/main.53dde38e.js",
+    "main.js": "/static/js/main.0375ccf9.js",
     "static/js/453.8701dc61.chunk.js": "/static/js/453.8701dc61.chunk.js",
     "static/media/l-tennis.png": "/static/media/l-tennis.8d3957bb2d6fe5fd44c8.png",
     "static/media/3-football.png": "/static/media/3-football.25ca3e0f99bd6cab1b02.png",
@@ -23,11 +23,11 @@
     "static/media/match_league_header_long.png": "/static/media/match_league_header_long.8c6ae0c7d359c306f18e.png",
     "index.html": "/index.html",
     "main.4d62ebbe.css.map": "/static/css/main.4d62ebbe.css.map",
-    "main.53dde38e.js.map": "/static/js/main.53dde38e.js.map",
+    "main.0375ccf9.js.map": "/static/js/main.0375ccf9.js.map",
     "453.8701dc61.chunk.js.map": "/static/js/453.8701dc61.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.4d62ebbe.css",
-    "static/js/main.53dde38e.js"
+    "static/js/main.0375ccf9.js"
   ]
 }

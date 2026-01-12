@@ -960,8 +960,8 @@ export default function SearchMatchDialog() {
 
       {/* Create Match Modal */}
       {showCreate && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px', overflowY: 'auto' }} onClick={closeCreate}>
-          <div className="ml-card" style={{ width: '100%', maxWidth: 600, maxHeight: '90vh', overflowY: 'auto', margin: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }} onClick={(e) => e.stopPropagation()}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 1000, padding: '16px', overflowY: 'auto' }} onClick={closeCreate}>
+          <div className="ml-card" style={{ width: '100%', maxWidth: 600, maxHeight: 'calc(100vh - 32px)', overflowY: 'auto', marginTop: 'auto', marginBottom: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }} onClick={(e) => e.stopPropagation()}>
             {/* Header */}
             <div style={{ marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid #1a3c33' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 6 }}>

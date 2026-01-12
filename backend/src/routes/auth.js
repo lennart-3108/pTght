@@ -357,34 +357,40 @@ module.exports = function authRoutes(ctx) {
       if (!email) throw new Error("Kein E-Mail-Feld im Token");
     } catch {
       // redirect to frontend with error so the frontend can render a nice page
-      const frontendBaseErr = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
+      const host = req.get('host');
+      const frontendBaseErr = process.env.FRONTEND_PUBLIC_URL || 
+        (host.includes('dev.matchleague.org') ? 'https://dev.matchleague.org' : 
+         host.includes('matchleague.org') ? 'https://matchleague.org' :
+         `${req.protocol}://${host.replace(/:\d+$/, ':3000')}`);
       return res.redirect(`${frontendBaseErr}/registration-success?confirmed=0&error=invalid_token`);
     }
 
     // find user first (we need id/is_admin for creating jwt)
+    const host = req.get('host');
+    const getFrontendBase = () => process.env.FRONTEND_PUBLIC_URL || 
+      (host.includes('dev.matchleague.org') ? 'https://dev.matchleague.org' : 
+       host.includes('matchleague.org') ? 'https://matchleague.org' :
+       `${req.protocol}://${host.replace(/:\d+$/, ':3000')}`);
+
     db.get(`SELECT id, is_admin FROM users WHERE email = ?`, [email], (getErr, userRow) => {
       if (getErr) {
         console.error('[confirm] db.get error', getErr && (getErr.stack || getErr.message || getErr));
-        const frontendBaseErr = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
-        return res.redirect(`${frontendBaseErr}/registration-success?confirmed=0&error=db_error`);
+        return res.redirect(`${getFrontendBase()}/registration-success?confirmed=0&error=db_error`);
       }
       if (!userRow) {
-        const frontendBaseErr = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
-        return res.redirect(`${frontendBaseErr}/registration-success?confirmed=0&error=user_not_found`);
+        return res.redirect(`${getFrontendBase()}/registration-success?confirmed=0&error=user_not_found`);
       }
 
       // Check if already confirmed
       db.get(`SELECT is_confirmed FROM users WHERE email = ?`, [email], (checkErr, confirmRow) => {
         if (checkErr) {
           console.error('[confirm] db.get check error', checkErr);
-          const frontendBaseErr = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
-          return res.redirect(`${frontendBaseErr}/registration-success?confirmed=0&error=db_error`);
+          return res.redirect(`${getFrontendBase()}/registration-success?confirmed=0&error=db_error`);
         }
 
         if (confirmRow && confirmRow.is_confirmed) {
           // Already confirmed - still redirect to success page
-          const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
-          return res.redirect(`${frontendBase}/registration-success?confirmed=1&already=1`);
+          return res.redirect(`${getFrontendBase()}/registration-success?confirmed=1&already=1`);
         }
 
         // Confirm user (accept any valid token for this email, not just the one in DB)
@@ -396,10 +402,10 @@ module.exports = function authRoutes(ctx) {
               console.error('[confirm] db.run error', err && (err.stack || err.message || err));
               const frontendBaseErr = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
               return res.redirect(`${frontendBaseErr}/registration-success?confirmed=0&error=db_error`);
+            }return res.redirect(`${getFrontendBase()}/registration-success?confirmed=0&error=db_error`);
             }
             if (this.changes === 0) {
-              const frontendBaseErr = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
-              return res.redirect(`${frontendBaseErr}/registration-success?confirmed=0&error=update_failed`);
+              return res.redirect(`${getFrontendBase()}/registration-success?confirmed=0&error=update_failed`);
             }
 
             // create an opaque one-time token and store it in ctx.oneTimeAuthTokens
@@ -413,14 +419,10 @@ module.exports = function authRoutes(ctx) {
                 global._app_ctx.oneTimeAuthTokens.set(oneTime, { userId: userRow.id, is_admin: !!userRow.is_admin, expiresAt });
               }
 
-              const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
-              return res.redirect(`${frontendBase}/registration-success?confirmed=1&one_time=${encodeURIComponent(oneTime)}`);
+              return res.redirect(`${getFrontendBase()}/registration-success?confirmed=1&one_time=${encodeURIComponent(oneTime)}`);
             } catch (e) {
               console.error('[confirm] one-time token store failed', e && (e.stack || e.message));
-              const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
-              return res.redirect(`${frontendBase}/registration-success?confirmed=1`);
-            }
-          }
+              return res.redirect(`${getFrontendBase()
         );
       });
     });

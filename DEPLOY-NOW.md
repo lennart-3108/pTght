@@ -1,108 +1,251 @@
-# 🚀 DEPLOYMENT ANLEITUNG
+# 🚀 DEPLOYMENT ANLEITUNG - DEV SERVER
 
-## ✅ Änderungen committed und gepusht
-- Commit: `cf73a78`
+## ⚠️ SERVER STATUS: NICHT ERREICHBAR
+- IP: 82.165.134.166 (dev.matchleague.org)
+- Problem: Server antwortet nicht auf Ping/HTTP
+- Mögliche Ursache: Server offline, Firewall, oder Node-Prozess gestoppt
+
+## ✅ Code ist bereit
+- Commit: `26fc91b`
 - Branch: `dev`
-- Nachricht: "fix: Benachrichtigungssystem komplett - SQL Fehler behoben, Timeout erhöht, Design verbessert"
+- Nachricht: "fix: Einheitliches Design für alle Benachrichtigungen - grüner Container mit Icons"
 
 ## 📝 Was wurde gefixt:
 1. **SQL-Fehler**: `users.name` → `users.username` (Spalte existierte nicht)
 2. **Timeout-Fehler**: 3000ms → 10000ms (verhindert "signal is aborted without reason")
-3. **Design**: Terminvorschläge jetzt mit grünem Container wie in TerminManagerModalV2
-4. **NewsPage**: Avatare hinzugefügt für bessere visuelle Darstellung
+3. **Design-Vereinheitlichung**: ALLE Benachrichtigungen haben jetzt grünen Container mit Icons
+4. **NewsPage**: Avatare hinzugefügt + einheitliches Button-Design
 
 ---
 
 ## 🔧 MANUELLE DEPLOYMENT-SCHRITTE
 
-### 1. Mit Server verbinden
+### Verbindung zum Strato Server:
+
 ```bash
+# Via SSH
 ssh rsftp_matchle@ssh.strato.de
-# Passwort eingeben
 ```
 
+**Falls SSH nicht funktioniert, alternative Verbindungsmethoden:**
+- SFTP: `sftp rsftp_matchle@ssh.strato.de`
+- Strato Control Panel: https://www.strato.de/apps/CustomerService
+
+---
+
+### 1. Server-Status überprüfen
+
+```bash
+cd /matchleague.org
+
+# Check if server is running
+ps aux | grep node
+
+# Check PM2 status (falls PM2 verwendet wird)
+pm2 list
+pm2 logs backend --lines 50
+```
+
+---
+
 ### 2. Code aktualisieren
+
 ```bash
 cd /matchleague.org
 git fetch origin
 git checkout dev
 git pull origin dev
+
+# Verifiziere Commit
+git log --oneline -1
+# Sollte sein: 26fc91b fix: Einheitliches Design für alle Benachrichtigungen - grüner Container mit Icons
 ```
 
-### 3. Backend Dependencies installieren
+---
+
+### 3. Backend Dependencies + Migration
+
 ```bash
 cd backend
+
+# Dependencies installieren
 npm install
+
+# WICHTIG: Datenbank-Migrationen
+npm run migrate
+# ODER direkt:
+npx knex migrate:latest
+
+# Verifiziere Migrations-Status
+npx knex migrate:currentVersion
 ```
 
-### 4. Backend neu starten
-```bash
-# PM2 neu starten (wenn vorhanden)
-pm2 restart backend
+---
 
-# ODER: Node-Prozess neu starten
-pkill -f "node.*server.js"
-nohup npm start > logs/backend.log 2>&1 &
-```
+### 4. Frontend bauen
 
-### 5. Frontend bauen (falls noch nicht gebaut)
 ```bash
 cd ../frontend
 npm install
 npm run build
-```
 
-### 6. Frontend deployen
-```bash
+# Frontend zum Backend kopieren
 cd ..
+rm -rf backend/public
 cp -r frontend/build backend/public
 ```
 
-### 7. Überprüfen
-```bash
-# Backend-Logs checken
-tail -50 backend/logs/backend.log
+---
 
-# Server-Status
-curl -I http://localhost:5001/api/health
+### 5. Backend neu starten
+
+**Option A: Mit PM2 (empfohlen)**
+```bash
+cd backend
+pm2 restart backend
+pm2 logs backend --lines 30
+```
+
+**Option B: Direkt mit Node**
+```bash
+cd backend
+
+# Alte Prozesse stoppen
+pkill -f "node.*server.js" || true
+
+# Neu starten
+nohup npm start > logs/backend.log 2>&1 &
+
+# Logs checken
+sleep 3
+tail -50 logs/backend.log
+```
+
+---
+
+### 6. Server-Health überprüfen
+
+```bash
+# Checke ob Server läuft
+curl http://localhost:5001/api/health
+
+# Checke Logs
+tail -50 /matchleague.org/backend/logs/backend.log
+
+# Checke DB-Verbindung
+cd /matchleague.org/backend
+sqlite3 sportsplatform.db "SELECT COUNT(*) FROM notifications;"
 ```
 
 ---
 
 ## 🎯 SCHNELL-VERSION (Copy & Paste)
 
+**Falls Server läuft und du nur Code aktualisieren willst:**
+
 ```bash
-# Alles in einem Schritt:
-ssh rsftp_matchle@ssh.strato.de << 'ENDSSH'
-cd /matchleague.org
-git pull origin dev
-cd backend
-npm install
-pkill -f "node.*server.js" || true
-nohup npm start > logs/backend.log 2>&1 &
-sleep 3
-tail -30 logs/backend.log
-ENDSSH
+ssh rsftp_matchle@ssh.strato.de
+
+cd /matchleague.org && \
+git pull origin dev && \
+cd backend && \
+npm install && \
+npx knex migrate:latest && \
+cd ../frontend && \
+npm install && \
+npm run build && \
+cd .. && \
+rm -rf backend/public && \
+cp -r frontend/build backend/public && \
+cd backend && \
+pm2 restart backend && \
+pm2 logs backend --lines 30
 ```
 
 ---
 
-## ⚠️ WICHTIG: PROPOSAL_NOT_ACTIVE Fehler
+## 🆘 TROUBLESHOOTING
 
-Der Fehler `{"error":"PROPOSAL_NOT_ACTIVE"}` im Screenshot bedeutet:
-- Der Terminvorschlag ist nicht mehr im Status "sent"
-- Mögliche Ursachen:
-  1. Vorschlag wurde bereits angenommen/abgelehnt
-  2. Vorschlag wurde zurückgezogen
-  3. Status in DB ist nicht "sent"
+### Server komplett neu starten:
 
-**Debug-Abfrage auf dem Server:**
+```bash
+ssh rsftp_matchle@ssh.strato.de
+
+cd /matchleague.org/backend
+
+# Alle Node-Prozesse stoppen
+pkill -f node || true
+
+# Logs leeren
+> logs/backend.log
+
+# Neu starten
+nohup npm start > logs/backend.log 2>&1 &
+
+# PID speichern
+echo $! > backend.pid
+
+# Warten und Logs checken
+sleep 5
+tail -100 logs/backend.log
+```
+
+### Datenbank-Probleme:
+
 ```bash
 cd /matchleague.org/backend
-sqlite3 sportsplatform.db "SELECT id, status, proposer_user_id, recipient_user_id, proposed_datetime FROM termin_proposals ORDER BY created_at DESC LIMIT 5;"
+
+# Backup erstellen
+cp sportsplatform.db sportsplatform.db.backup_$(date +%Y%m%d_%H%M%S)
+
+# Migrations-Status
+npx knex migrate:list
+
+# Falls Migration fehlschlägt, manuell rollback
+npx knex migrate:rollback
+
+# Dann erneut migrieren
+npx knex migrate:latest
 ```
 
-Falls nötig, Status manuell zurücksetzen:
+### Port bereits belegt:
+
 ```bash
-sqlite3 sportsplatform.db "UPDATE termin_proposals SET status='sent' WHERE id=<PROPOSAL_ID>;"
+# Finde Prozess auf Port 5001
+lsof -i :5001
+
+# Stoppe Prozess
+kill -9 <PID>
+
+# Oder alle Node-Prozesse
+pkill -9 node
 ```
+
+---
+
+## 📊 Nach dem Deployment checken:
+
+1. **Backend läuft**: `curl http://localhost:5001/api/health`
+2. **Frontend erreichbar**: Browser öffnen auf https://dev.matchleague.org
+3. **Benachrichtigungen laden**: Login → Bell-Icon klicken
+4. **DB hat Migrationen**: `npx knex migrate:currentVersion`
+5. **Logs sind sauber**: `tail -50 logs/backend.log`
+
+---
+
+## 🔍 WICHTIGE DB-MIGRATION
+
+Falls die `users.name` Spalte fehlt, wurde die Migration bereits im Code behoben:
+- `users.name` wurde zu `users.username` geändert
+- Diese Spalte existiert bereits in der DB
+- Keine manuelle Migration nötig
+
+---
+
+## 📞 KONTAKT BEI PROBLEMEN
+
+Falls der Server nicht startet:
+1. Checke logs: `tail -200 /matchleague.org/backend/logs/backend.log`
+2. Checke Nginx logs (falls vorhanden): `tail -100 /var/log/nginx/error.log`
+3. Checke System-Ressourcen: `free -h`, `df -h`
+4. Strato Support kontaktieren falls Server komplett down ist
