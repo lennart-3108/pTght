@@ -990,7 +990,7 @@ async function newsHandler(req, res) {
           .leftJoin('matches', 'notifications.match_id', 'matches.id')
           .leftJoin('leagues', 'matches.league_id', 'leagues.id')
           .where('notifications.user_id', userId)
-          .whereIn('notifications.type', ['schedule_proposal', 'schedule_accepted', 'schedule_rejected', 'availability_shared'])
+          .whereIn('notifications.type', ['schedule_proposal', 'schedule_accepted', 'schedule_rejected', 'availability_shared', 'player_joined'])
           .whereRaw('DATE(notifications.created_at) >= DATE(?, \"-14 days\")', [new Date().toISOString()])
           .select([
             'notifications.id as notifId',
@@ -1003,7 +1003,7 @@ async function newsHandler(req, res) {
             'notifications.proposal_id as proposalId',
             'users.firstname',
             'users.lastname',
-            'users.name as userName',
+            'users.username',
             'users.avatar_url as avatarUrl',
             'leagues.name as leagueName'
           ])
@@ -1012,7 +1012,7 @@ async function newsHandler(req, res) {
           .catch(() => []);
 
         for (const n of (notifRows || [])) {
-          const fromName = n.firstname || n.userName || `User ${n.fromUserId}`;
+          const fromName = n.firstname || n.username || `User ${n.fromUserId}`;
           
           if (n.type === 'schedule_proposal' && n.proposalId) {
             items.push({
