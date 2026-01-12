@@ -667,10 +667,10 @@ export default function Header() {
                                   display: 'flex',
                                   gap: 12,
                                   alignItems: 'flex-start',
-                                  background: item.type === 'schedule_proposal' ? '#1a2e26' : 'transparent',
-                                  border: item.type === 'schedule_proposal' ? '2px solid #2f6b57' : 'none',
-                                  borderRadius: item.type === 'schedule_proposal' ? 12 : 0,
-                                  padding: item.type === 'schedule_proposal' ? 12 : 0
+                                  background: '#1a2e26',
+                                  border: '2px solid #2f6b57',
+                                  borderRadius: 12,
+                                  padding: 12
                                 }}>
                                   <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 8, overflow: 'hidden' }}>
                                     <Link
@@ -703,8 +703,12 @@ export default function Header() {
                                   </div>
                                   <div className="ml-popover__itemContent" style={{ flex: 1 }}>
                                     <div className="ml-popover__itemRow">
-                                      <div className="ml-popover__itemTitle" style={item.type === 'schedule_proposal' ? { color: '#debc7c', fontWeight: 700 } : {}}>
+                                      <div className="ml-popover__itemTitle" style={{ color: '#debc7c', fontWeight: 700 }}>
                                         {item.type === 'schedule_proposal' && '📩 '}
+                                        {item.type === 'schedule_accepted' && '✅ '}
+                                        {item.type === 'schedule_rejected' && '❌ '}
+                                        {item.type === 'player_joined' && '🎾 '}
+                                        {item.type === 'availability_shared' && '📅 '}
                                         {item.title}
                                       </div>
                                     </div>
@@ -759,36 +763,66 @@ export default function Header() {
                                       </div>
                                     )}
                                     {item.type === 'player_joined' && (
-                                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                                      <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
                                         <Link
                                           to={`/matches/${item.matchId}`}
-                                          className="ml-popover__itemActionBtn ml-popover__itemActionBtn--primary"
                                           onClick={handleNavigate}
-                                          style={{ textDecoration: 'none', textAlign: 'center' }}
+                                          style={{
+                                            textDecoration: 'none',
+                                            textAlign: 'center',
+                                            padding: '10px 16px',
+                                            borderRadius: 10,
+                                            border: '2px solid #debc7c',
+                                            background: '#1c5b47',
+                                            color: '#f2fff8',
+                                            fontWeight: 600,
+                                            fontSize: 14,
+                                            display: 'inline-block'
+                                          }}
                                         >
                                           Termin vereinbaren
                                         </Link>
                                       </div>
                                     )}
                                     {item.type === 'availability_shared' && (
-                                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                                      <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
                                         <Link
                                           to={`/matches/${item.matchId}`}
-                                          className="ml-popover__itemActionBtn ml-popover__itemActionBtn--primary"
                                           onClick={handleNavigate}
-                                          style={{ textDecoration: 'none', textAlign: 'center' }}
+                                          style={{
+                                            textDecoration: 'none',
+                                            textAlign: 'center',
+                                            padding: '10px 16px',
+                                            borderRadius: 10,
+                                            border: '2px solid #debc7c',
+                                            background: '#1c5b47',
+                                            color: '#f2fff8',
+                                            fontWeight: 600,
+                                            fontSize: 14,
+                                            display: 'inline-block'
+                                          }}
                                         >
                                           Termin vereinbaren
                                         </Link>
                                       </div>
                                     )}
                                     {(item.type === 'schedule_accepted' || item.type === 'schedule_rejected') && (
-                                      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+                                      <div style={{ display: 'flex', gap: 10, marginTop: 12 }}>
                                         <Link
                                           to={`/matches/${item.matchId}`}
-                                          className="ml-popover__itemActionBtn ml-popover__itemActionBtn--primary"
                                           onClick={handleNavigate}
-                                          style={{ textDecoration: 'none', textAlign: 'center' }}
+                                          style={{
+                                            textDecoration: 'none',
+                                            textAlign: 'center',
+                                            padding: '10px 16px',
+                                            borderRadius: 10,
+                                            border: '2px solid #debc7c',
+                                            background: '#1c5b47',
+                                            color: '#f2fff8',
+                                            fontWeight: 600,
+                                            fontSize: 14,
+                                            display: 'inline-block'
+                                          }}
                                         >
                                           Zum Match
                                         </Link>

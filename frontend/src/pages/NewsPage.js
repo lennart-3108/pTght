@@ -103,17 +103,24 @@ export default function NewsPage() {
             avatarSrc = item.avatarUrl;
           }
           
+          // Special styling for proposal notifications
+          const isProposal = item.type === 'schedule_proposal';
+          const titleColor = isProposal ? '#debc7c' : '#e8f3ec';
+          const containerBorder = isProposal ? '2px solid #2f6b57' : 'none';
+          const containerBg = isProposal ? '#1a2e26' : 'linear-gradient(135deg, #112d23, #16362c)';
+          
           return (
             <div
               key={item.id}
               style={{
-                background: "linear-gradient(135deg, #112d23, #16362c)",
+                background: containerBg,
                 padding: "16px 20px",
                 borderRadius: 14,
                 color: "#e8f3ec",
                 boxShadow: "0 12px 24px rgba(0,0,0,0.35)",
                 display: "flex",
                 gap: 12,
+                border: containerBorder,
               }}
             >
               {avatarUserId && (
@@ -128,22 +135,28 @@ export default function NewsPage() {
               )}
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                  <div style={{ fontWeight: 600, fontSize: 18 }}>{item.title}</div>
+                  <div style={{ fontWeight: isProposal ? 700 : 600, fontSize: 18, color: titleColor }}>
+                    {isProposal && '📩 '}
+                    {item.title}
+                  </div>
                   {ts && <div style={{ color: "#9fbeb0", fontSize: 13 }}>{ts}</div>}
                 </div>
                 <div style={{ color: "#aecfbf", lineHeight: 1.5 }}>{item.details}</div>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <div style={{ color: "#8fb3a0", fontSize: 14 }}>{leagueLabel}</div>
                   {matchLink && (
                     <Link
                       to={matchLink}
                       style={{
-                        background: "rgba(255,255,255,0.08)",
-                        color: "#f5fff9",
-                        padding: "6px 14px",
-                        borderRadius: 999,
+                        background: "#1c5b47",
+                        color: "#f2fff8",
+                        padding: "10px 16px",
+                        borderRadius: 10,
                         textDecoration: "none",
-                        fontSize: 13,
+                        fontSize: 14,
+                        fontWeight: 600,
+                        border: "2px solid #debc7c",
+                        display: "inline-block",
                       }}
                     >
                       Zum Match
