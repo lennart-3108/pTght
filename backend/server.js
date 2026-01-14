@@ -1271,8 +1271,9 @@ async function newsHandler(req, res) {
 }
 
 // Mount both paths for compatibility (local FE uses /news, docs use /api/news)
-app.get("/api/news", isAuthenticated, newsHandler);
-app.get("/news", isAuthenticated, newsHandler);
+// DISABLED: Using new notifications-based /api/news route from src/routes/news.js
+// app.get("/api/news", isAuthenticated, newsHandler);
+// app.get("/news", isAuthenticated, newsHandler);
 
 // Routes
 registerRoutes(app, ctx);
