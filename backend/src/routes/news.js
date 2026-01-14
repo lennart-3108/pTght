@@ -4,10 +4,23 @@
 const express = require('express');
 const { createMiddleware } = require('./middleware');
 
+function resolveKnex(db) {
+  if (db?.client && typeof db.raw === 'function') return db;
+  if (db?.knex?.client) return db.knex;
+  try { return require('../../db'); } catch { return null; }
+}
+
 module.exports = (ctx) => {
   const router = express.Router();
-  const getKnex = () => ctx.db && (ctx.db.knex || ctx.db);
+  const { db } = ctx;
   const { requireAuth } = createMiddleware(ctx);
+  let knexInstance = null;
+
+  function getKnex() {
+    knexInstance = knexInstance || resolveKnex(db);
+    if (!knexInstance) throw new Error('DB_NOT_AVAILABLE');
+    return knexInstance;
+  }
 
   /**
    * GET /api/news
