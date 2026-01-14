@@ -77,7 +77,7 @@ module.exports = (ctx) => {
         // Get user info if available
         if (notif.fromUserId) {
           const user = await knex('users')
-            .select(['id', 'firstname', 'lastname', 'email', 'avatar_url'])
+            .select(['id', 'firstname', 'lastname', 'email'])
             .where('id', notif.fromUserId)
             .first();
 
@@ -87,7 +87,7 @@ module.exports = (ctx) => {
             if (user.lastname) parts.push(user.lastname);
             notif.fromUserName = parts.length > 0 ? parts.join(' ') : (user.email || `User ${user.id}`);
             notif.fromName = notif.fromUserName;
-            notif.avatarUrl = user.avatar_url;
+            notif.avatarUrl = null; // Users table doesn't have avatar_url column
           }
         }
 
@@ -101,7 +101,7 @@ module.exports = (ctx) => {
             notif.proposerUserId = proposal.proposer_user_id;
             
             const proposer = await knex('users')
-              .select(['id', 'firstname', 'lastname', 'email', 'avatar_url'])
+              .select(['id', 'firstname', 'lastname', 'email'])
               .where('id', proposal.proposer_user_id)
               .first();
 
@@ -110,7 +110,7 @@ module.exports = (ctx) => {
               if (proposer.firstname) parts.push(proposer.firstname);
               if (proposer.lastname) parts.push(proposer.lastname);
               notif.proposerName = parts.length > 0 ? parts.join(' ') : (proposer.email || `User ${proposer.id}`);
-              notif.avatarUrl = proposer.avatar_url;
+              notif.avatarUrl = null; // Users table doesn't have avatar_url column
             }
           }
         }
