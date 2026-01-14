@@ -319,10 +319,9 @@ module.exports = function authRoutes(ctx) {
           console.error('[forgot-password] db.get error', err && (err.stack || err.message || err));
           return res.status(500).json({ success: false, error: "Datenbankfehler" });
         }
-        // Don't reveal if user exists or not for security
         if (!user) {
           console.log('[forgot-password] user not found:', email);
-          return res.json({ success: true, message: "Falls ein Konto mit dieser E-Mail existiert, wurde ein Reset-Link versendet." });
+          return res.status(404).json({ success: false, error: "Kein Konto mit dieser E-Mail-Adresse gefunden. Bitte registriere dich zuerst." });
         }
 
         // Generate password reset token (valid for 1 hour)

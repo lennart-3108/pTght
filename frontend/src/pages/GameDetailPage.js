@@ -294,6 +294,7 @@ export default function GameDetailPage() {
 
     const terminButtonLabel = useMemo(() => {
       const viewerUserId = terminMeta?.viewerUserId || viewerId || null;
+      if (terminProposal && terminProposal.status === 'accepted') return 'Termin ändern';
       if (!terminProposal || terminProposal.status !== 'sent') return 'Termin vereinbaren';
       if (viewerUserId != null && Number(terminProposal.proposerUserId) === Number(viewerUserId)) return 'Einladung gesendet';
       return 'Termin vorschlag erhalten';
