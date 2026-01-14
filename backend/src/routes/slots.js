@@ -139,25 +139,21 @@ module.exports = function slotRoutes(ctx) {
       const closeHour = 22; // Closing time
 
       for (const asset of assets) {
-        const slotDuration = asset.slot_duration || 60; // minutes
+        const baseSlotDuration = 30; // Base slot duration is always 30 minutes
         const assetBookings = bookings.filter(b => b.asset_id === asset.asset_id && !b.available_for_resale);
 
-        // Generate all possible slots for the day (8:00-22:00)
+        // Generate all possible 30-min base slots for the day (8:00-22:00)
+        const baseSlots = [];
         for (let hour = openHour; hour < closeHour; hour++) {
-          for (let minute = 0; minute < 60; minute += 60) { // Every hour
+          for (let minute = 0; minute < 60; minute += baseSlotDuration) {
             const slotStart = new Date(targetDate);
             slotStart.setHours(hour, minute, 0, 0);
             
             const slotEnd = new Date(slotStart);
-            slotEnd.setMinutes(slotEnd.getMinutes() + slotDuration);
+            slotEnd.setMinutes(slotEnd.getMinutes() + baseSlotDuration);
 
             // Don't create slots that end after closing
             if (slotEnd.getHours() > closeHour || (slotEnd.getHours() === closeHour && slotEnd.getMinutes() > 0)) {
-              continue;
-            }
-
-            // Skip if slot duration doesn't meet requirement
-            if (slotDuration < requestedDuration) {
               continue;
             }
 
@@ -169,28 +165,57 @@ module.exports = function slotRoutes(ctx) {
               return (slotStart < bookingEnd && slotEnd > bookingStart);
             });
 
-            if (!isBooked) {
-              availableSlots.push({
-                id: null,
-                booking_id: null,
-                is_resale: false,
-                location_id: asset.location_id,
-                location_name: asset.location_name,
-                asset_id: asset.asset_id,
-                asset_name: asset.asset_name,
-                asset_type: asset.asset_type,
-                surface: asset.surface,
-                sport_name: null,
-                start_time: slotStart.toISOString(),
-                end_time: slotEnd.toISOString(),
-                duration_minutes: slotDuration,
-                base_price: 25.0, // Default price
-                currency: 'EUR',
-                city: asset.city,
-                address: asset.address,
-                status: 'available'
-              });
+            baseSlots.push({
+              start: slotStart,
+              end: slotEnd,
+              available: !isBooked
+            });
+          }
+        }
+
+        // Now combine consecutive available base slots to match requested duration
+        // requestedDuration must be a multiple of 30
+        const slotsNeeded = Math.ceil(requestedDuration / baseSlotDuration);
+        
+        for (let i = 0; i <= baseSlots.length - slotsNeeded; i++) {
+          // Check if we have slotsNeeded consecutive available slots
+          let allAvailable = true;
+          for (let j = 0; j < slotsNeeded; j++) {
+            if (!baseSlots[i + j] || !baseSlots[i + j].available) {
+              allAvailable = false;
+              break;
             }
+            // Also check continuity (end of one slot = start of next)
+            if (j > 0 && baseSlots[i + j - 1].end.getTime() !== baseSlots[i + j].start.getTime()) {
+              allAvailable = false;
+              break;
+            }
+          }
+
+          if (allAvailable) {
+            const combinedSlotStart = baseSlots[i].start;
+            const combinedSlotEnd = baseSlots[i + slotsNeeded - 1].end;
+            
+            availableSlots.push({
+              id: null,
+              booking_id: null,
+              is_resale: false,
+              location_id: asset.location_id,
+              location_name: asset.location_name,
+              asset_id: asset.asset_id,
+              asset_name: asset.asset_name,
+              asset_type: asset.asset_type,
+              surface: asset.surface,
+              sport_name: null,
+              start_time: combinedSlotStart.toISOString(),
+              end_time: combinedSlotEnd.toISOString(),
+              duration_minutes: requestedDuration,
+              base_price: 25.0, // Default price per hour (will be adjusted by duration)
+              currency: 'EUR',
+              city: asset.city,
+              address: asset.address,
+              status: 'available'
+            });
           }
         }
       }

@@ -249,7 +249,6 @@ export default function SlotSearchPage() {
       cutoffTime.setSeconds(0);
       
       // Filter out slots that start before the cutoff time (only for today)
-      // AND filter by exact duration match
       const isToday = date === new Date().toISOString().split('T')[0];
       const filteredData = Array.isArray(data) ? data.filter(slot => {
         // Filter by time (only for today)
@@ -257,13 +256,7 @@ export default function SlotSearchPage() {
           const slotStart = new Date(slot.start_time);
           if (slotStart < cutoffTime) return false;
         }
-        
-        // Filter by duration (exact match)
-        const slotStart = new Date(slot.start_time);
-        const slotEnd = new Date(slot.end_time);
-        const slotDurationMinutes = (slotEnd.getTime() - slotStart.getTime()) / (1000 * 60);
-        
-        return slotDurationMinutes === duration;
+        return true;
       }) : [];
       
       // Sort slots by time proximity to desired time
