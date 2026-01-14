@@ -1,5 +1,30 @@
 // ...existing code...
 
+// Route: Search user by email
+router.get("/search", isAuthenticated, async (req, res) => {
+  const { email } = req.query;
+  
+  if (!email) {
+    return res.status(400).json({ error: "Email is required" });
+  }
+
+  try {
+    const user = await db("users")
+      .select("id", "name", "email")
+      .where("email", email)
+      .first();
+
+    if (!user) {
+      return res.status(404).json({ error: "Benutzer nicht gefunden" });
+    }
+
+    res.json({ user });
+  } catch (error) {
+    console.error("Error searching user:", error);
+    res.status(500).json({ error: "Datenbankfehler", details: error.message });
+  }
+});
+
 // Route: /users/:id/leagues
 router.get("/:id/leagues", isAuthenticated, async (req, res) => {
   const { id } = req.params;

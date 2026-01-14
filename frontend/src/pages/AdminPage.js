@@ -22,6 +22,8 @@ export default function AdminPage() {
   const [sortDirection, setSortDirection] = useState('asc');
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+  const [activeTab, setActiveTab] = useState('database'); // 'database' or 'applications'
+  const [testResults, setTestResults] = useState({});
 
   const token = localStorage.getItem("token");
   const navigate = useNavigate();
@@ -287,6 +289,48 @@ export default function AdminPage() {
         Admin Panel
       </h2>
 
+      {/* Tab Navigation */}
+      <div style={{
+        marginBottom: 24,
+        display: 'flex',
+        gap: '8px',
+        borderBottom: '2px solid rgba(255,255,255,0.1)'
+      }}>
+        <button
+          onClick={() => setActiveTab('database')}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: activeTab === 'database' ? 'var(--primary-600, #145a4b)' : 'transparent',
+            color: activeTab === 'database' ? '#ffffff' : 'var(--text, #e5e7eb)',
+            border: 'none',
+            borderBottom: activeTab === 'database' ? '2px solid var(--primary, #48baa6)' : '2px solid transparent',
+            cursor: 'pointer',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.2s'
+          }}
+        >
+          📊 Database
+        </button>
+        <button
+          onClick={() => setActiveTab('applications')}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: activeTab === 'applications' ? 'var(--primary-600, #145a4b)' : 'transparent',
+            color: activeTab === 'applications' ? '#ffffff' : 'var(--text, #e5e7eb)',
+            border: 'none',
+            borderBottom: activeTab === 'applications' ? '2px solid var(--primary, #48baa6)' : '2px solid transparent',
+            cursor: 'pointer',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.2s'
+          }}
+        >
+          🧪 Applications Tests
+        </button>
+      </div>
+
+      {activeTab === 'database' && (<>
       {/* Global Logout */}
       <div style={{ 
         marginBottom: 16, 
@@ -716,6 +760,450 @@ export default function AdminPage() {
         Send Test Email
       </button>
       {testMessage && <p>{testMessage}</p>}
+      </>)}
+
+      {/* Applications Tests Tab */}
+      {activeTab === 'applications' && (
+        <ApplicationsTests token={token} testResults={testResults} setTestResults={setTestResults} />
+      )}
+    </div>
+  );
+}
+
+// Applications Tests Component
+function ApplicationsTests({ token, testResults, setTestResults }) {
+  const [running, setRunning] = useState({});
+
+  const runTest = async (testId, testFn) => {
+    setRunning(prev => ({ ...prev, [testId]: true }));
+    setTestResults(prev => ({ ...prev, [testId]: { status: 'running', message: 'Test läuft...' } }));
+    
+    try {
+      const result = await testFn();
+      setTestResults(prev => ({ 
+        ...prev, 
+        [testId]: { 
+          status: 'success', 
+          message: result.message || 'Test erfolgreich',
+          data: result.data
+        } 
+      }));
+    } catch (error) {
+      setTestResults(prev => ({ 
+        ...prev, 
+        [testId]: { 
+          status: 'error', 
+          message: error.message || 'Test fehlgeschlagen' 
+        } 
+      }));
+    } finally {
+      setRunning(prev => ({ ...prev, [testId]: false }));
+    }
+  };
+
+  // Test: Location Manager - Asset erstellen
+  const testCreateAsset = async () => {
+    const response = await fetch(`${API_BASE}/assets`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        location_id: 1,
+        name: `Test Asset ${Date.now()}`,
+        type: 'field',
+        surface_type: 'grass',
+        length: 40,
+        width: 20,
+        is_active: true
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Asset erstellen fehlgeschlagen');
+    }
+
+    const data = await response.json();
+    return { message: `Asset erstellt (ID: ${data.asset_id || data.id})`, data };
+  };
+
+  // Test: Location Manager - Platz buchen
+  const testBookAsset = async () => {
+    // Zuerst verfügbare Assets laden
+    const assetsRes = await fetch(`${API_BASE}/assets`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    
+    if (!assetsRes.ok) throw new Error('Assets laden fehlgeschlagen');
+    
+    const assets = await assetsRes.json();
+    if (!assets || assets.length === 0) {
+      throw new Error('Keine Assets verfügbar. Bitte zuerst Asset erstellen.');
+    }
+
+    const assetId = assets[0].id;
+    
+    // Buchung erstellen
+    const bookingRes = await fetch(`${API_BASE}/bookings`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        asset_id: assetId,
+        start_time: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        end_time: new Date(Date.now() + 25 * 60 * 60 * 1000).toISOString(),
+        purpose: 'Test Buchung',
+        status: 'confirmed'
+      })
+    });
+
+    if (!bookingRes.ok) {
+      const error = await bookingRes.json();
+      throw new Error(error.error || 'Buchung fehlgeschlagen');
+    }
+
+    const data = await bookingRes.json();
+    return { message: `Buchung erstellt (ID: ${data.booking_id || data.id})`, data };
+  };
+
+  // Test: Event Manager - Event erstellen
+  const testCreateEvent = async () => {
+    const response = await fetch(`${API_BASE}/events`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        title: `Test Event ${Date.now()}`,
+        description: 'Dies ist ein Test-Event',
+        event_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        location: 'Test Location',
+        max_participants: 20,
+        status: 'published'
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Event erstellen fehlgeschlagen');
+    }
+
+    const data = await response.json();
+    return { message: `Event erstellt (ID: ${data.event_id || data.id})`, data };
+  };
+
+  // Test: League Manager - Liga erstellen
+  const testCreateLeague = async () => {
+    const response = await fetch(`${API_BASE}/leagues`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: `Test Liga ${Date.now()}`,
+        sport_id: 1,
+        city_id: 1,
+        description: 'Test Liga Beschreibung',
+        max_teams: 12,
+        status: 'active'
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Liga erstellen fehlgeschlagen');
+    }
+
+    const data = await response.json();
+    return { message: `Liga erstellt (ID: ${data.id})`, data };
+  };
+
+  // Test: Team Captain - Team erstellen
+  const testCreateTeam = async () => {
+    const response = await fetch(`${API_BASE}/teams`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: `Test Team ${Date.now()}`,
+        sport_id: 1,
+        description: 'Test Team Beschreibung',
+        is_active: true
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Team erstellen fehlgeschlagen');
+    }
+
+    const data = await response.json();
+    return { message: `Team erstellt (ID: ${data.id})`, data };
+  };
+
+  // Test: Trainer - Training erstellen
+  const testCreateTraining = async () => {
+    const response = await fetch(`${API_BASE}/trainings`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        title: `Test Training ${Date.now()}`,
+        description: 'Test Training Beschreibung',
+        training_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+        duration_minutes: 90,
+        max_participants: 15,
+        status: 'scheduled'
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.error || 'Training erstellen fehlgeschlagen');
+    }
+
+    const data = await response.json();
+    return { message: `Training erstellt (ID: ${data.id || data.training_id})`, data };
+  };
+
+  const tests = [
+    {
+      category: 'Location Manager',
+      tests: [
+        {
+          id: 'create-asset',
+          name: 'Asset erstellen',
+          description: 'Erstellt ein neues Spielfeld/Asset',
+          fn: testCreateAsset
+        },
+        {
+          id: 'book-asset',
+          name: 'Platz buchen',
+          description: 'Bucht einen verfügbaren Platz',
+          fn: testBookAsset
+        }
+      ]
+    },
+    {
+      category: 'Event Manager',
+      tests: [
+        {
+          id: 'create-event',
+          name: 'Event erstellen',
+          description: 'Erstellt ein neues Event',
+          fn: testCreateEvent
+        }
+      ]
+    },
+    {
+      category: 'League Organizer',
+      tests: [
+        {
+          id: 'create-league',
+          name: 'Liga erstellen',
+          description: 'Erstellt eine neue Liga',
+          fn: testCreateLeague
+        }
+      ]
+    },
+    {
+      category: 'Team Captain',
+      tests: [
+        {
+          id: 'create-team',
+          name: 'Team erstellen',
+          description: 'Erstellt ein neues Team',
+          fn: testCreateTeam
+        }
+      ]
+    },
+    {
+      category: 'Trainer',
+      tests: [
+        {
+          id: 'create-training',
+          name: 'Training erstellen',
+          description: 'Erstellt eine neue Trainingseinheit',
+          fn: testCreateTraining
+        }
+      ]
+    }
+  ];
+
+  const getStatusColor = (status) => {
+    switch (status) {
+      case 'success': return '#10b981';
+      case 'error': return '#ef4444';
+      case 'running': return '#f59e0b';
+      default: return '#6b7280';
+    }
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'success': return '✓';
+      case 'error': return '✗';
+      case 'running': return '⟳';
+      default: return '○';
+    }
+  };
+
+  return (
+    <div>
+      <div style={{
+        marginBottom: 24,
+        padding: 20,
+        backgroundColor: 'var(--surface, #1f2937)',
+        borderRadius: 8,
+        border: '1px solid rgba(255,255,255,0.1)'
+      }}>
+        <h3 style={{ margin: '0 0 8px 0', color: 'var(--text, #e5e7eb)' }}>
+          🧪 Application Tests
+        </h3>
+        <p style={{ margin: 0, color: 'var(--muted, #9ca3af)', fontSize: '14px' }}>
+          Teste alle Hauptfunktionen der verschiedenen Rollen. Jeder Test erstellt echte Datensätze in der Datenbank.
+        </p>
+      </div>
+
+      {tests.map(({ category, tests: categoryTests }) => (
+        <div
+          key={category}
+          style={{
+            marginBottom: 24,
+            padding: 20,
+            backgroundColor: 'var(--surface, #1f2937)',
+            borderRadius: 8,
+            border: '1px solid rgba(255,255,255,0.1)'
+          }}
+        >
+          <h4 style={{
+            margin: '0 0 16px 0',
+            color: 'var(--primary, #48baa6)',
+            fontSize: '18px',
+            fontWeight: 600
+          }}>
+            {category}
+          </h4>
+
+          <div style={{ display: 'grid', gap: '12px' }}>
+            {categoryTests.map(test => {
+              const result = testResults[test.id];
+              const isRunning = running[test.id];
+
+              return (
+                <div
+                  key={test.id}
+                  style={{
+                    padding: 16,
+                    backgroundColor: 'var(--bg, #111827)',
+                    borderRadius: 8,
+                    border: `1px solid ${result ? getStatusColor(result.status) : 'rgba(255,255,255,0.05)'}`,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 8 }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 4 }}>
+                        {result && (
+                          <span style={{ 
+                            fontSize: '18px',
+                            color: getStatusColor(result.status)
+                          }}>
+                            {getStatusIcon(result.status)}
+                          </span>
+                        )}
+                        <span style={{ 
+                          fontWeight: 600, 
+                          color: 'var(--text, #e5e7eb)',
+                          fontSize: '15px'
+                        }}>
+                          {test.name}
+                        </span>
+                      </div>
+                      <p style={{ 
+                        margin: 0, 
+                        fontSize: '13px', 
+                        color: 'var(--muted, #9ca3af)' 
+                      }}>
+                        {test.description}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => runTest(test.id, test.fn)}
+                      disabled={isRunning}
+                      style={{
+                        padding: '8px 16px',
+                        backgroundColor: isRunning ? '#6b7280' : 'var(--primary-600, #145a4b)',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: 6,
+                        cursor: isRunning ? 'not-allowed' : 'pointer',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        whiteSpace: 'nowrap',
+                        marginLeft: 12
+                      }}
+                    >
+                      {isRunning ? 'Läuft...' : 'Test starten'}
+                    </button>
+                  </div>
+
+                  {result && (
+                    <div style={{
+                      marginTop: 12,
+                      padding: 12,
+                      backgroundColor: 'rgba(0,0,0,0.2)',
+                      borderRadius: 6,
+                      border: `1px solid ${getStatusColor(result.status)}33`
+                    }}>
+                      <div style={{ 
+                        fontSize: '13px', 
+                        color: getStatusColor(result.status),
+                        fontWeight: 500
+                      }}>
+                        {result.message}
+                      </div>
+                      {result.data && (
+                        <details style={{ marginTop: 8 }}>
+                          <summary style={{ 
+                            cursor: 'pointer', 
+                            fontSize: '12px', 
+                            color: 'var(--muted, #9ca3af)' 
+                          }}>
+                            Details anzeigen
+                          </summary>
+                          <pre style={{
+                            marginTop: 8,
+                            padding: 8,
+                            backgroundColor: 'rgba(0,0,0,0.3)',
+                            borderRadius: 4,
+                            fontSize: '11px',
+                            color: '#e5e7eb',
+                            overflow: 'auto',
+                            maxHeight: '200px'
+                          }}>
+                            {JSON.stringify(result.data, null, 2)}
+                          </pre>
+                        </details>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

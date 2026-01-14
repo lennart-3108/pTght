@@ -10,6 +10,7 @@ import BookingConfirmationPopup from "../components/BookingConfirmationPopup";
 import BookingWidget from "../components/BookingWidget";
 import TerminManagerKalender from "../components/TerminManagerKalender";
 import LocationSelector from "../components/LocationSelector";
+import CommentsSection from "../components/CommentsSection";
 
 export default function GameDetailPage() {
   const { gameId } = useParams();
@@ -76,6 +77,14 @@ export default function GameDetailPage() {
   const [userProfile, setUserProfile] = useState(null); // User profile with location
   const [proposalActionMsg, setProposalActionMsg] = useState('');
   const [proposalActionLoading, setProposalActionLoading] = useState(false);
+  
+  // Comments and likes state
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState('');
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [likes, setLikes] = useState(0);
+  const [hasLiked, setHasLiked] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
 
   // Layout policy: keep three cards always side-by-side; enable horizontal scrolling on small screens
 
@@ -103,6 +112,30 @@ export default function GameDetailPage() {
       })
       .then(bookingData => mounted && setBooking(bookingData))
       .catch(() => {}); // Silently fail if no booking
+    
+    // Fetch comments
+    fetch(`${API_BASE}/matches/${gameId}/comments`)
+      .then(async (r) => {
+        if (!r.ok) return [];
+        const data = await r.json().catch(() => []);
+        return Array.isArray(data) ? data : [];
+      })
+      .then(commentsData => mounted && setComments(commentsData))
+      .catch(() => {});
+    
+    // Fetch likes
+    fetch(`${API_BASE}/matches/${gameId}/likes`)
+      .then(async (r) => {
+        if (!r.ok) return { count: 0, hasLiked: false };
+        return r.json().catch(() => ({ count: 0, hasLiked: false }));
+      })
+      .then(likesData => {
+        if (mounted) {
+          setLikes(likesData.count || 0);
+          setHasLiked(likesData.hasLiked || false);
+        }
+      })
+      .catch(() => {});
     
     // Fetch chat unread status
     if (token) {
@@ -1342,13 +1375,26 @@ export default function GameDetailPage() {
         )}
 
         {/* Join match CTA wird oben im Hero angezeigt */}
+        
+        {/* Kommentare und Likes Sektion */}
+        <CommentsSection 
+          gameId={gameId}
+          comments={comments}
+          setComments={setComments}
+          newComment={newComment}
+          setNewComment={setNewComment}
+          commentLoading={commentLoading}
+          setCommentLoading={setCommentLoading}
+          likes={likes}
+          setLikes={setLikes}
+          hasLiked={hasLiked}
+          setHasLiked={setHasLiked}
+          likeLoading={likeLoading}
+          setLikeLoading={setLikeLoading}
+          token={token}
+          viewerId={viewerId}
+        />
       </div>
-
-      {game.leagueId && (
-        <div style={{ marginTop: 18 }}>
-          <Link to={`/league/${game.leagueId}`}>← Zurück zur Liga</Link>
-        </div>
-      )}
     </div>
   );
 }

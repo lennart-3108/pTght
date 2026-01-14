@@ -990,7 +990,7 @@ async function newsHandler(req, res) {
           .leftJoin('matches', 'notifications.match_id', 'matches.id')
           .leftJoin('leagues', 'matches.league_id', 'leagues.id')
           .where('notifications.user_id', userId)
-          .whereIn('notifications.type', ['schedule_proposal', 'schedule_accepted', 'schedule_rejected', 'availability_shared', 'player_joined'])
+          .whereIn('notifications.type', ['schedule_proposal', 'schedule_accepted', 'schedule_rejected', 'availability_shared', 'player_joined', 'friend_request'])
           .whereRaw('DATE(notifications.created_at) >= DATE(?, \"-14 days\")', [new Date().toISOString()])
           .select([
             'notifications.id as notifId',
@@ -1014,7 +1014,18 @@ async function newsHandler(req, res) {
         for (const n of (notifRows || [])) {
           const fromName = n.firstname || n.username || `User ${n.fromUserId}`;
           
-          if (n.type === 'schedule_proposal' && n.proposalId) {
+          if (n.type === 'friend_request') {
+            items.push({
+              id: `notif-friend-request-${n.notifId}`,
+              type: 'friend_request',
+              timestamp: n.timestamp,
+              title: n.title || 'Neue Freundschaftsanfrage',
+              details: n.message || `${fromName} möchte mit dir befreundet sein.`,
+              fromUserId: n.fromUserId,
+              fromUserName: fromName,
+              avatarUrl: n.avatarUrl || null
+            });
+          } else if (n.type === 'schedule_proposal' && n.proposalId) {
             items.push({
               id: `notif-proposal-${n.notifId}`,
               type: 'schedule_proposal',
@@ -1288,10 +1299,10 @@ const citiesRoutes = require("./src/routes/cities");
 const matchesRoutes = require("./src/routes/matches");
 const matchesRoutesLegacy = require("./routes/matches");
 const chatsRoutes = require("./routes/chats");
+const rolesRoutes = require("./routes/roles");
+const clubsRoutes = require("./routes/clubs");
+const trainingRoutes = require("./routes/training");
 
-// Mount routes BEFORE any 404 handler
-apiRouter.use("/sports", sportsRoutes({ db }));
-apiRouter.use("/", citiesRoutes({ db }));
 // Ensure we pass a usable knex instance into routes that expect it.
 // Prefer knexDirect (legacy), then adapter's knex, then the adapter object as last resort.
 const resolvedKnexForRoutes = (knexDirect && knexDirect.client)
@@ -1305,6 +1316,13 @@ if (process.env.DEBUG_BOOT === '1' || canLog('debug')) {
     source: knexDirect && knexDirect.client ? 'knexDirect' : (db && db.knex && db.knex.client) ? 'adapter.knex' : (db ? 'adapter' : 'none')
   });
 }
+
+// Mount routes BEFORE any 404 handler
+apiRouter.use("/sports", sportsRoutes({ db }));
+apiRouter.use("/", citiesRoutes({ db }));
+apiRouter.use("/roles", rolesRoutes({ db: resolvedKnexForRoutes }));
+apiRouter.use("/clubs", clubsRoutes({ db: resolvedKnexForRoutes }));
+apiRouter.use("/training", trainingRoutes({ db: resolvedKnexForRoutes }));
 // Mount both new (for time-slots etc) and legacy (for join etc) matches routes
 apiRouter.use("/matches", matchesRoutes({ db: resolvedKnexForRoutes, SECRET: cfg.JWT_SECRET, SESSION_EPOCH: cfg.SESSION_EPOCH }));
 apiRouter.use("/matches", matchesRoutesLegacy({ db: resolvedKnexForRoutes }));
@@ -2208,6 +2226,10 @@ apiRouter.post('/open-matches', isAuthenticated, async (req, res) => {
 
 // Mount all remaining API routes under /api prefix
 app.use('/api', apiRouter);
+
+// Comments and Likes routes
+const commentsRoutes = require('./routes/comments');
+app.use('/api', commentsRoutes(ctx));
 
 // Serve static uploads under /api/uploads as well (proxy to /uploads)
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));

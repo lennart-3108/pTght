@@ -11,6 +11,16 @@
   z-index: 1000;
 }
 
+.ml-header-container {
+  max-width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  margin: 0 auto;
+}
+
 .ml-header__logo {
   flex: 0 0 auto;
   height: var(--ml-header-height);
@@ -54,6 +64,7 @@
   gap: 8px;
   align-items: center;
   padding-right: 16px; /* Padding from right edge */
+  min-width: 100px; /* Verhindere zu schmale Darstellung */
 }
 .ml-actionWrap { position: relative; }
 .ml-action {
@@ -212,7 +223,22 @@
 }
 
 /* Mobile: Ensure popover stays within viewport */
-@media (max-width: 768px) {
+@media (max-width: 320px) {
+  .ml-header {
+    --ml-header-height: 40px; /* Kleinere Höhe für Mobile */
+  }
+  .ml-header__logo {
+    margin-left: -5%; /* 5% nach links einziehen */
+  }
+  .ml-header__actions {
+    padding-right: 8px; /* Weniger Padding auf Mobile */
+    gap: 4px; /* Weniger Abstand zwischen Icons */
+  }
+  .ml-action {
+    min-width: 32px; /* Kleinere Buttons */
+    font-size: 16px;
+    padding: 4px 6px;
+  }
   .ml-actionWrap > .ml-popover {
     position: fixed !important;
     right: 8px !important;

@@ -48,7 +48,9 @@ module.exports = function slotRoutes(ctx) {
   });
 
   /**
-   * GET /slots/search - Search available slots by date, time, duration and filters
+   * GET /slots/search - Search available time slots dynamically
+   * Calculates availability based on assets and existing bookings
+   * Also includes slots available for resale
    * Query params: 
    * - datetime (ISO or 'YYYY-MM-DDTHH:MM:SS')
    * - duration (minutes, default 60)
@@ -57,6 +59,7 @@ module.exports = function slotRoutes(ctx) {
    */
   router.get('/search', async (req, res) => {
     try {
+      console.log('[GET /slots/search] Request received:', req.query);
       const { datetime, duration, city, sport_id } = req.query;
       
       if (!datetime) {
@@ -72,91 +75,163 @@ module.exports = function slotRoutes(ctx) {
 
       // Extract date for querying
       const dateStr = targetDateTime.toISOString().split('T')[0];
+      const targetDate = new Date(dateStr);
 
-      // Search for available slots
-      let query = knex('slots')
-        .join('assets', 'slots.asset_id', 'assets.id')
+      console.log('[GET /slots/search] Searching for date:', dateStr, 'city:', city);
+
+      // Find matching assets
+      let assetsQuery = knex('assets')
         .join('locations', 'assets.location_id', 'locations.id')
         .select(
-          'slots.id',
-          'slots.start_time',
-          'slots.end_time',
-          'slots.duration_minutes',
-          'slots.base_price',
-          'slots.currency',
-          'slots.status',
           'assets.id as asset_id',
           'assets.name as asset_name',
           'assets.type as asset_type',
           'assets.surface',
-          'assets.sports_json',
+          'assets.slot_duration',
+          'assets.supported_sports',
           'locations.id as location_id',
           'locations.name as location_name',
           'locations.city',
           'locations.address'
         )
-        .where('slots.status', 'available')
-        .where('slots.duration_minutes', '>=', requestedDuration)
-        .whereRaw('DATE(slots.start_time) = ?', [dateStr]);
+        .where('assets.status', 'active');
 
       // Filter by city
       if (city) {
-        query = query.where('locations.city', city);
+        assetsQuery = assetsQuery.where('locations.city', city);
       }
 
-      // Filter by sport_id (using sports_json column)
+      // Filter by sport_id
       if (sport_id) {
-        query = query.where(function() {
-          this.whereRaw(`json_extract(assets.sports_json, '$') LIKE ?`, [`%"${sport_id}"%`])
-            .orWhereNull('assets.sports_json');
+        assetsQuery = assetsQuery.where(function() {
+          this.whereRaw(`json_extract(assets.supported_sports, '$') LIKE ?`, [`%"${sport_id}"%`])
+            .orWhereNull('assets.supported_sports');
         });
       }
 
-      const slots = await query
-        .orderBy('slots.start_time', 'asc')
-        .limit(50);
+      const assets = await assetsQuery;
+      console.log('[GET /slots/search] Found assets:', assets.length);
 
-      // Return empty array if no slots found (200 OK, not 404)
-      if (slots.length === 0) {
+      if (assets.length === 0) {
         return res.json([]);
       }
 
-      // Format results
-      const formattedSlots = slots.map(slot => {
-        // Get sports from sports_json
-        let sportName = null;
-        try {
-          const sports = slot.sports_json ? JSON.parse(slot.sports_json) : [];
-          if (sports.length > 0) {
-            // Sports are stored as IDs, we'd need to look them up
-            // For now, just indicate if sports are supported
-            sportName = sports.length > 0 ? 'Sport verfügbar' : null;
+      // Get all bookings for these assets on this date
+      const assetIds = assets.map(a => a.asset_id);
+      const dayStart = new Date(targetDate);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(targetDate);
+      dayEnd.setHours(23, 59, 59, 999);
+
+      const bookings = await knex('bookings')
+        .whereIn('asset_id', assetIds)
+        .where('start_time', '>=', dayStart.toISOString())
+        .where('start_time', '<=', dayEnd.toISOString())
+        .whereNull('resold_at')
+        .select('id', 'asset_id', 'start_time', 'end_time', 'available_for_resale');
+
+      // Also fetch resale bookings separately
+      const resaleBookings = bookings.filter(b => b.available_for_resale);
+
+      // Generate available time slots for each asset
+      const availableSlots = [];
+      const openHour = 8;  // Opening time
+      const closeHour = 22; // Closing time
+
+      for (const asset of assets) {
+        const slotDuration = asset.slot_duration || 60; // minutes
+        const assetBookings = bookings.filter(b => b.asset_id === asset.asset_id && !b.available_for_resale);
+
+        // Generate all possible slots for the day (8:00-22:00)
+        for (let hour = openHour; hour < closeHour; hour++) {
+          for (let minute = 0; minute < 60; minute += 60) { // Every hour
+            const slotStart = new Date(targetDate);
+            slotStart.setHours(hour, minute, 0, 0);
+            
+            const slotEnd = new Date(slotStart);
+            slotEnd.setMinutes(slotEnd.getMinutes() + slotDuration);
+
+            // Don't create slots that end after closing
+            if (slotEnd.getHours() > closeHour || (slotEnd.getHours() === closeHour && slotEnd.getMinutes() > 0)) {
+              continue;
+            }
+
+            // Skip if slot duration doesn't meet requirement
+            if (slotDuration < requestedDuration) {
+              continue;
+            }
+
+            // Check if slot is already booked
+            const isBooked = assetBookings.some(booking => {
+              const bookingStart = new Date(booking.start_time);
+              const bookingEnd = new Date(booking.end_time);
+              // Check for overlap
+              return (slotStart < bookingEnd && slotEnd > bookingStart);
+            });
+
+            if (!isBooked) {
+              availableSlots.push({
+                id: null,
+                booking_id: null,
+                is_resale: false,
+                location_id: asset.location_id,
+                location_name: asset.location_name,
+                asset_id: asset.asset_id,
+                asset_name: asset.asset_name,
+                asset_type: asset.asset_type,
+                surface: asset.surface,
+                sport_name: null,
+                start_time: slotStart.toISOString(),
+                end_time: slotEnd.toISOString(),
+                duration_minutes: slotDuration,
+                base_price: 25.0, // Default price
+                currency: 'EUR',
+                city: asset.city,
+                address: asset.address,
+                status: 'available'
+              });
+            }
           }
-        } catch (e) {
-          // Ignore parse errors
         }
+      }
+
+      // Add resale slots
+      const resaleSlots = resaleBookings.map(booking => {
+        const asset = assets.find(a => a.asset_id === booking.asset_id);
+        if (!asset) return null;
+
+        const startTime = new Date(booking.start_time);
+        const endTime = new Date(booking.end_time);
+        const duration = Math.floor((endTime - startTime) / (1000 * 60));
 
         return {
-          id: slot.id,
-          location_id: slot.location_id,
-          location_name: slot.location_name,
-          asset_id: slot.asset_id,
-          asset_name: slot.asset_name,
-          asset_type: slot.asset_type,
-          surface: slot.surface,
-          sport_name: sportName,
-          start_time: slot.start_time,
-          end_time: slot.end_time,
-          duration_minutes: slot.duration_minutes,
-          base_price: parseFloat(slot.base_price || 0),
-          currency: slot.currency || 'EUR',
-          city: slot.city,
-          address: slot.address,
-          status: slot.status
+          id: null,
+          booking_id: booking.id,
+          is_resale: true,
+          location_id: asset.location_id,
+          location_name: asset.location_name,
+          asset_id: asset.asset_id,
+          asset_name: asset.asset_name,
+          asset_type: asset.asset_type,
+          surface: asset.surface,
+          sport_name: null,
+          start_time: booking.start_time,
+          end_time: booking.end_time,
+          duration_minutes: duration,
+          base_price: 25.0,
+          currency: 'EUR',
+          city: asset.city,
+          address: asset.address,
+          status: 'resale'
         };
-      });
+      }).filter(Boolean);
 
-      return res.json(formattedSlots);
+      // Combine and sort by start_time
+      const allSlots = [...availableSlots, ...resaleSlots].sort((a, b) => 
+        new Date(a.start_time) - new Date(b.start_time)
+      );
+
+      return res.json(allSlots.slice(0, 50)); // Limit to 50 results
     } catch (error) {
       console.error('[GET /slots/search] error:', error);
       return res.status(500).json({ error: error.message || 'Failed to search slots' });

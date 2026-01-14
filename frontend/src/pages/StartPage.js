@@ -48,8 +48,9 @@ export default function StartPage() {
   const [leagueGames, setLeagueGames] = useState({ upcoming: [], completed: [] });
   const [selectedMyLeagueId, setSelectedMyLeagueId] = useState("");
   // news feed state
-  const [newsFilter, setNewsFilter] = useState('popular'); // 'popular' | 'home' | 'all'
+  const [newsFilter, setNewsFilter] = useState('all'); // 'all' | 'matches' | 'friends'
   const [newsFeed, setNewsFeed] = useState([]);
+  const [randomLocation, setRandomLocation] = useState(null);
   const [newsLoading, setNewsLoading] = useState(false);
   // current user id extraction from token for centering table
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -64,6 +65,9 @@ export default function StartPage() {
   }, [token]);
   // simple carousel state for backgrounds
   const [index, setIndex] = useState(0);
+  // dropdown coordination state
+  const [sportDropdownOpen, setSportDropdownOpen] = useState(false);
+  const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
 
   // Helper: extract numeric user id for a game side (home/away)
   const toId = (g, side) => {
@@ -277,7 +281,10 @@ export default function StartPage() {
         // Note: states are exposed via cities/list response entries
 
         // Load news feed
-        loadNewsFeed('popular');
+        loadNewsFeed('all');
+
+        // Load random location for ad
+        loadRandomLocation();
 
         // Auto-location priority: 1) GPS, 2) Profil-Stadt, 3) erste Liga-Stadt
         const token = localStorage.getItem('token');
@@ -343,7 +350,7 @@ export default function StartPage() {
   }, []);
 
   // Load news feed
-  const loadNewsFeed = async (filter = 'popular') => {
+  const loadNewsFeed = async (filter = 'all') => {
     setNewsLoading(true);
     try {
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
@@ -359,10 +366,67 @@ export default function StartPage() {
     }
   };
 
+  const loadRandomLocation = async () => {
+    try {
+      const res = await fetch(`${API_BASE}/locations/list?limit=100`);
+      if (!res.ok) return;
+      const locations = await res.json();
+      if (Array.isArray(locations) && locations.length > 0) {
+        const randomIdx = Math.floor(Math.random() * locations.length);
+        setRandomLocation(locations[randomIdx]);
+      }
+    } catch (err) {
+      console.error('[StartPage] Random location error:', err);
+    }
+  };
+
   // Update news feed when filter changes
   useEffect(() => {
     loadNewsFeed(newsFilter);
   }, [newsFilter]);
+
+  // Create feed data from my games and leagues (like UserDetailPage)
+  const feedData = useMemo(() => {
+    const friendFeed = (myGames.completed || []).slice(0, 5).map((game) => {
+      const homeScore = game.home_score != null ? game.home_score : '?';
+      const awayScore = game.away_score != null ? game.away_score : '?';
+      return {
+        id: `match-${game.id}`,
+        title: `Match: ${game.home} vs ${game.away}`,
+        description: `Ergebnis: ${homeScore}:${awayScore} • ${game.league || 'Liga'}`,
+        timestamp: game.kickoff_at || null,
+        type: 'match',
+        feedType: 'friends',
+        matchId: game.id
+      };
+    });
+
+    const teamFeed = (myLeagues || []).map((league) => ({
+      id: `league-${league.id || league.leagueId}`,
+      title: league.name || 'Liga',
+      description: league.city || league.sport || 'Liga-Mitglied',
+      timestamp: league.joined_at || null,
+      type: 'league',
+      feedType: 'team',
+      leagueId: league.id || league.leagueId
+    }));
+
+    const publicFeed = (upcomingWithOpponent || []).slice(0, 5).map((game) => ({
+      id: `upcoming-${game.id}`,
+      title: `Anstehendes Match: ${game.home} vs ${game.away}`,
+      description: `${game.kickoff_at ? new Date(game.kickoff_at).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'Termin tbd'} • ${game.league || 'Match'}`,
+      timestamp: game.kickoff_at || null,
+      type: 'match',
+      feedType: 'public',
+      matchId: game.id
+    }));
+
+    return {
+      friends: friendFeed,
+      team: teamFeed,
+      public: publicFeed
+    };
+  }, [myGames.completed, myLeagues, upcomingWithOpponent]);
 
   if (loading) return <div style={{ padding: 24 }}>Lade Startseite ...</div>;
   if (err) return <div style={{ padding: 24, color: "crimson" }}>Fehler: {err}</div>;
@@ -403,6 +467,12 @@ export default function StartPage() {
                     setSelectedSport(String(sportId));
                   }}
                   placeholder="Sportart"
+                  isOpen={sportDropdownOpen}
+                  onOpen={() => {
+                    setSportDropdownOpen(true);
+                    setLocationDropdownOpen(false);
+                  }}
+                  onClose={() => setSportDropdownOpen(false)}
                 />
               </div>
               
@@ -419,6 +489,12 @@ export default function StartPage() {
                     console.log('[StartPage] Location selected:', { locationName, cityId, stateId, countryId, districtId });
                   }}
                   placeholder="Stadt"
+                  isOpen={locationDropdownOpen}
+                  onOpen={() => {
+                    setLocationDropdownOpen(true);
+                    setSportDropdownOpen(false);
+                  }}
+                  onClose={() => setLocationDropdownOpen(false)}
                 />
               </div>
               
@@ -454,6 +530,32 @@ export default function StartPage() {
                   width: '100%'
                 }}
               >Liga suchen</button>
+
+              <button
+                onClick={() => {
+                  const qp = new URLSearchParams();
+                  if (selectedSport) qp.set('sportId', selectedSport);
+                  if (selectedCity) qp.set('city', selectedCityName || selectedCity);
+                  // Set current date and time
+                  const now = new Date();
+                  qp.set('date', now.toISOString().split('T')[0]);
+                  qp.set('time', now.toTimeString().slice(0, 5));
+                  navigate(`/slots?${qp.toString()}`);
+                }}
+                style={{ 
+                  padding: '11px 22px', 
+                  borderRadius: 12, 
+                  border: '2px solid #7fc', 
+                  background: 'rgba(8,28,25,0.96)', 
+                  color: '#7fc', 
+                  cursor: 'pointer', 
+                  fontWeight: 700, 
+                  fontSize: 15, 
+                  boxShadow: '0 8px 20px rgba(0,0,0,0.28)',
+                  transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease',
+                  width: '100%'
+                }}
+              >Platz buchen</button>
             </div>
           </div>
         </div>
@@ -461,8 +563,8 @@ export default function StartPage() {
 
   <div className="ml-main-container" style={{ marginTop: 16, paddingBottom: 32 }}>
       {/* Dashboard Sections */}
-      {/* Row 1: Upcoming and Last games, 3 items each, fixed height */}
-      <div className="ml-dual">
+      {/* Row 1: Upcoming and Last games, 3 items each, stacked vertically */}
+      <div style={{ display: 'grid', gap: 16 }}>
         {/* Kommende Spiele (max 3) */}
   <section className="ml-card">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', marginBottom: 8 }}>
@@ -470,7 +572,25 @@ export default function StartPage() {
             <span />
           </div>
           {(upcomingWithOpponent.length === 0) ? (
-            <div style={{ color: '#9db' }}>Keine anstehenden Spiele.</div>
+            <div style={{ padding: '20px', textAlign: 'center' }}>
+              <div style={{ color: '#9db', marginBottom: 16 }}>Keine anstehenden Spiele.</div>
+              <Link 
+                to="/search-match" 
+                style={{ 
+                  display: 'inline-block',
+                  padding: '12px 24px', 
+                  borderRadius: 10, 
+                  background: '#7fc', 
+                  color: '#081c19', 
+                  fontWeight: 700, 
+                  fontSize: 14,
+                  textDecoration: 'none',
+                  transition: 'all 0.2s'
+                }}
+              >
+                🎾 Match suchen
+              </Link>
+            </div>
           ) : (
             <div style={{ display: 'grid', gap: 8 }}>
               {upcomingWithOpponent.slice(0, 3).map(g => {
@@ -598,18 +718,38 @@ export default function StartPage() {
             </div>
           )}
         </section>
-
+      </div>
 
   {/* Row 2: Tabellen mit Ligen-Auswahl */}
         {/* Standings preview */}
-        <section style={{ gridColumn: '1 / -1' }}>
-          <h2>Meine Ligen</h2>
-          {/* selection chip removed per request */}
-          {myLeagues.length > 0 && (
-            <div style={{ marginBottom: 8 }}>
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                Liga:
-                <select
+        <section className="ml-card" style={{ gridColumn: '1 / -1' }}>
+          <h2 style={{ margin: '0 0 16px 0' }}>Meine Ligen</h2>
+          {myLeagues.length === 0 ? (
+            <div style={{ padding: '20px', textAlign: 'center' }}>
+              <div style={{ color: '#9db', marginBottom: 16 }}>Du bist noch in keiner Liga angemeldet.</div>
+              <Link 
+                to="/leagues" 
+                style={{ 
+                  display: 'inline-block',
+                  padding: '12px 24px', 
+                  borderRadius: 10, 
+                  background: '#debc7c', 
+                  color: '#081c19', 
+                  fontWeight: 700, 
+                  fontSize: 14,
+                  textDecoration: 'none',
+                  transition: 'all 0.2s'
+                }}
+              >
+                🏆 Liga suchen
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  Liga:
+                  <select
                   value={selectedMyLeagueId}
                   onChange={async (e) => {
                     const lid = e.target.value;
@@ -832,50 +972,21 @@ export default function StartPage() {
               ) : null}
             </div>
           )}
+            </>
+          )}
         </section>
-      </div>
 
-      {/* Row 3: Newsfeed mit 3 Filtern */}
+      {/* Row 3: Aktivitäten statt Neuigkeiten */}
       <section className="ml-card" style={{ marginTop: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', marginBottom: 12 }}>
-          <h3 style={{ margin: 0 }}>Neuigkeiten</h3>
-          <div style={{ color: '#9db', fontSize: 12 }}><Link to="/news">Alle anzeigen</Link></div>
+          <div>
+            <h3 style={{ margin: 0 }}>Aktivitäten</h3>
+            <div style={{ color: '#9db', fontSize: 12, marginTop: 4 }}>Neueste Updates</div>
+          </div>
         </div>
 
         {/* Filter Tabs */}
         <div style={{ display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid #2f6b57', paddingBottom: 8 }}>
-          <button
-            onClick={() => setNewsFilter('popular')}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '8px 8px 0 0',
-              border: 'none',
-              background: newsFilter === 'popular' ? '#1a3c33' : 'transparent',
-              color: newsFilter === 'popular' ? '#debc7c' : '#9db',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 13,
-              transition: 'all 0.2s'
-            }}
-          >
-            🔥 Populär
-          </button>
-          <button
-            onClick={() => setNewsFilter('home')}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '8px 8px 0 0',
-              border: 'none',
-              background: newsFilter === 'home' ? '#1a3c33' : 'transparent',
-              color: newsFilter === 'home' ? '#debc7c' : '#9db',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 13,
-              transition: 'all 0.2s'
-            }}
-          >
-            🏠 Mein Ort
-          </button>
           <button
             onClick={() => setNewsFilter('all')}
             style={{
@@ -890,7 +1001,23 @@ export default function StartPage() {
               transition: 'all 0.2s'
             }}
           >
-            🌍 Alle
+            📋 Alle
+          </button>
+          <button
+            onClick={() => setNewsFilter('matches')}
+            style={{
+              padding: '8px 16px',
+              borderRadius: '8px 8px 0 0',
+              border: 'none',
+              background: newsFilter === 'matches' ? '#1a3c33' : 'transparent',
+              color: newsFilter === 'matches' ? '#debc7c' : '#9db',
+              cursor: 'pointer',
+              fontWeight: 600,
+              fontSize: 13,
+              transition: 'all 0.2s'
+            }}
+          >
+            ⚽ Match-News
           </button>
           <button
             onClick={() => setNewsFilter('friends')}
@@ -910,72 +1037,215 @@ export default function StartPage() {
           </button>
         </div>
 
-        {newsLoading ? (
-          <div style={{ padding: 20, textAlign: 'center', color: '#9db' }}>Lade Neuigkeiten...</div>
-        ) : newsFeed.length === 0 ? (
-          <div style={{ padding: 20, textAlign: 'center', color: '#9db' }}>Keine Neuigkeiten gefunden</div>
-        ) : (
-          <div style={{ display: 'grid', gap: 20 }}>
-            {newsFeed.map(dayGroup => (
-              <div key={dayGroup.date} style={{ display: 'grid', gap: 10 }}>
-                <div style={{ fontSize: 14, fontWeight: 700, color: '#debc7c', borderBottom: '1px solid #2f6b57', paddingBottom: 4 }}>
-                  {new Date(dayGroup.date).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' })}
+        {/* Aktivitäten Content */}
+        <div style={{ display: 'grid', gap: 10 }}>
+          {(() => {
+            // Kombiniere alle Feeds basierend auf dem aktiven Filter
+            const combinedFeed = [];
+            
+            // Füge Location-Werbung als ersten Eintrag bei "Alle" hinzu
+            if (newsFilter === 'all' && randomLocation) {
+              combinedFeed.push({
+                id: 'ad-location',
+                title: `Jetzt Platz buchen bei ${randomLocation.name || 'Location'}!`,
+                description: `${randomLocation.city || ''} ${randomLocation.address ? '· ' + randomLocation.address : ''}`.trim(),
+                timestamp: new Date().toISOString(),
+                type: 'ad',
+                feedType: 'ad',
+                locationId: randomLocation.id,
+                isAd: true
+              });
+            }
+            
+            if (newsFilter === 'all') {
+              combinedFeed.push(...(feedData.friends || []).map(item => ({...item, feedType: 'friends'})));
+              combinedFeed.push(...(feedData.team || []).map(item => ({...item, feedType: 'team'})));
+              combinedFeed.push(...(feedData.public || []).map(item => ({...item, feedType: 'public'})));
+            } else if (newsFilter === 'matches') {
+              combinedFeed.push(...(feedData.friends || []).filter(item => item.type === 'match').map(item => ({...item, feedType: 'friends'})));
+              combinedFeed.push(...(feedData.team || []).filter(item => item.type === 'match').map(item => ({...item, feedType: 'team'})));
+              combinedFeed.push(...(feedData.public || []).filter(item => item.type === 'match').map(item => ({...item, feedType: 'public'})));
+            } else if (newsFilter === 'friends') {
+              combinedFeed.push(...(feedData.friends || []).map(item => ({...item, feedType: 'friends'})));
+            }
+            
+            // Sortiere nach Zeitstempel (neueste zuerst), aber behalte Werbung oben
+            const adItems = combinedFeed.filter(item => item.isAd);
+            const nonAdItems = combinedFeed.filter(item => !item.isAd);
+            nonAdItems.sort((a, b) => {
+              const timeA = new Date(a.timestamp || 0).getTime();
+              const timeB = new Date(b.timestamp || 0).getTime();
+              return timeB - timeA;
+            });
+            const sortedFeed = [...adItems, ...nonAdItems];
+
+            if (sortedFeed.length === 0) {
+              const emptyMessages = {
+                all: 'Keine Aktivitäten verfügbar.',
+                matches: 'Keine Match-News verfügbar.',
+                friends: 'Keine Freundes-Aktivitäten verfügbar.'
+              };
+              
+              return (
+                <div style={{ padding: '20px', borderRadius: 12, background: 'rgba(32,74,58,0.4)', color: '#9db', textAlign: 'center' }}>
+                  {emptyMessages[newsFilter] || emptyMessages.all}
                 </div>
-                <div style={{ display: 'grid', gap: 12 }}>
-                  {dayGroup.matches.map(match => {
-                    const photos = match.photos ? (typeof match.photos === 'string' ? JSON.parse(match.photos) : match.photos) : [];
-                    const coverPhoto = match.cover_photo || (photos.length > 0 ? photos[0] : null);
-                    
-                    return (
-                      <Link 
-                        key={match.id} 
-                        to={`/matches/${match.id}`} 
-                        className="ml-card" 
-                        style={{ display: 'grid', gap: 10, textDecoration: 'none', color: 'inherit', transition: 'transform 0.2s' }}
-                        onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-                        onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                      >
-                        {coverPhoto && (
-                          <div style={{ 
-                            height: 160, 
-                            borderRadius: 10, 
-                            overflow: 'hidden', 
-                            background: `url(${coverPhoto}) center/cover no-repeat` 
-                          }} />
-                        )}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'auto auto auto', gap: 10, alignItems: 'center', justifyContent: 'center' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <Avatar userId={match.home_user_id} name={match.home} size={40} />
-                            <span style={{ fontWeight: 700 }}>{match.home}</span>
-                          </div>
-                          <div style={{ fontSize: 20, fontWeight: 900, color: '#debc7c' }}>
-                            {match.home_score != null && match.away_score != null ? `${match.home_score}:${match.away_score}` : 'VS'}
-                          </div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontWeight: 700 }}>{match.away}</span>
-                            <Avatar userId={match.away_user_id} name={match.away} size={40} />
-                          </div>
+              );
+            }
+
+            return sortedFeed.slice(0, 8).map((item, idx) => {
+              // Werbung für Location
+              if (item.isAd && item.locationId) {
+                return (
+                  <Link
+                    key={`${item.feedType}-${idx}`}
+                    to={`/location/${item.locationId}`}
+                    style={{ textDecoration: 'none', color: 'inherit' }}
+                  >
+                    <div 
+                      style={{ 
+                        padding: '14px 16px', 
+                        borderRadius: 10, 
+                        background: 'linear-gradient(135deg, rgba(222,188,124,0.15) 0%, rgba(222,188,124,0.05) 100%)',
+                        border: '2px solid #debc7c',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 12,
+                        transition: 'all 0.2s',
+                        cursor: 'pointer',
+                        position: 'relative'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(222,188,124,0.25) 0%, rgba(222,188,124,0.1) 100%)';
+                        e.currentTarget.style.borderColor = '#f4a460';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(222,188,124,0.15) 0%, rgba(222,188,124,0.05) 100%)';
+                        e.currentTarget.style.borderColor = '#debc7c';
+                      }}
+                    >
+                      <div style={{ 
+                        width: 48, 
+                        height: 48, 
+                        borderRadius: 8, 
+                        background: '#debc7c',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: 24,
+                        flexShrink: 0
+                      }}>
+                        🏟️
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ 
+                          fontSize: 15, 
+                          fontWeight: 700, 
+                          color: '#debc7c',
+                          marginBottom: 4,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6
+                        }}>
+                          {item.title}
+                          <span style={{
+                            fontSize: 10,
+                            fontWeight: 600,
+                            padding: '2px 6px',
+                            borderRadius: 4,
+                            background: '#debc7c',
+                            color: '#0f2a20'
+                          }}>
+                            WERBUNG
+                          </span>
                         </div>
-                        <div style={{ color: '#9db', fontSize: 12, textAlign: 'center' }}>
-                          {match.league} · {match.sport} · {match.city}
+                        <div style={{ fontSize: 13, color: '#9db' }}>
+                          {item.description || 'Verfügbare Plätze anzeigen'}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '8px 0', borderTop: '1px solid #2f6b57' }}>
-                          <div style={{ display: 'flex', gap: 16, color: '#9db', fontSize: 13 }}>
-                            <span>👍 {match.likes || 0}</span>
-                            <span>📸 {photos.length}</span>
-                          </div>
-                          <div style={{ fontSize: 12, color: '#9db' }}>
-                            {new Date(match.kickoff_at).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
+                      </div>
+                    </div>
+                  </Link>
+                );
+              }
+
+              // Normale Feed-Items
+              const linkTo = item.matchId ? `/matches/${item.matchId}` : item.leagueId ? `/league/${item.leagueId}` : null;
+              const Component = linkTo ? Link : 'div';
+              const extraProps = linkTo ? { to: linkTo, style: { textDecoration: 'none', color: 'inherit' } } : {};
+              
+              return (
+                <Component
+                  key={`${item.feedType}-${idx}`}
+                  {...extraProps}
+                >
+                  <div 
+                    style={{ 
+                      padding: '12px 14px', 
+                      borderRadius: 10, 
+                      background: 'rgba(15,43,39,0.7)', 
+                      border: '1px solid rgba(127,252,204,0.2)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 12,
+                      transition: 'all 0.2s',
+                      cursor: linkTo ? 'pointer' : 'default'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(32,74,58,0.6)';
+                      e.currentTarget.style.borderColor = 'rgba(127,252,204,0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'rgba(15,43,39,0.7)';
+                      e.currentTarget.style.borderColor = 'rgba(127,252,204,0.2)';
+                    }}
+                  >
+                {/* Activity Icon */}
+                <div style={{ 
+                  width: 36, 
+                  height: 36, 
+                  borderRadius: 10, 
+                  background: item.type === 'match' ? 'rgba(127,252,204,0.2)' : 
+                             item.type === 'league' ? 'rgba(222,188,124,0.2)' : 
+                             item.feedType === 'friends' ? 'rgba(161,225,203,0.2)' :
+                             'rgba(127,252,204,0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: 18,
+                  flexShrink: 0
+                }}>
+                  {item.type === 'match' ? '⚽' : 
+                   item.type === 'league' ? '🏆' : 
+                   item.feedType === 'friends' ? '👥' :
+                   '🌐'}
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+
+                {/* Activity Content */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: 14, color: '#e8efe8', fontWeight: 600, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item.title}
+                  </div>
+                  <div style={{ fontSize: 12, color: '#9db', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item.description}
+                  </div>
+                  {item.timestamp && (
+                    <div style={{ fontSize: 10, color: '#789', marginTop: 4 }}>
+                      {new Date(item.timestamp).toLocaleString('de-DE', { 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        year: '2-digit',
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </div>
+                  )}
+                </div>
+                  </div>
+                </Component>
+              );
+            });
+          })()}
+        </div>
       </section>
 
       {/* Extra Listen (Alle Ligen/Sportarten/Städte) entfernt auf Wunsch */}

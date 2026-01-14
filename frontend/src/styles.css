@@ -139,8 +139,8 @@ button:hover, .btn:hover {
 .hero-carousel {
   position: relative;
   width: 100%;
-  height: 30vh; /* viel kompakter */
-  min-height: 320px; /* reduzierte min-height */
+  height: 60vh; /* doppelt so hoch */
+  min-height: 640px; /* doppelt so hoch */
   overflow: visible; /* allow dropdown menus to extend beyond banner */
 }
 .hero-slide {
@@ -173,6 +173,10 @@ button:hover, .btn:hover {
   max-width: var(--max-container-width);
   margin: 0 auto; 
   padding: 0 16px; /* same inset as main container */
+  display: flex;
+  flex-direction: column;
+  gap: 16px; /* Einheitlicher Abstand zwischen allen 4 Elementen */
+  align-items: center; /* Alles zentriert */
 }
 .hero-controls { 
   pointer-events: auto; 
@@ -180,6 +184,8 @@ button:hover, .btn:hover {
   flex-direction: column;
   gap: 12px;
   width: 100%;
+  max-width: 600px; /* begrenzte Breite für bessere Lesbarkeit */
+  margin: 0 auto; /* zentriert */
 }
 .hero-controls > * {
   width: 100%;
@@ -192,26 +198,39 @@ button:hover, .btn:hover {
   align-items: center;
   gap: 10px;
   background: rgba(8,28,25,0.85);
-  padding: 10px 16px;
-  transform: skewX(-12deg);
+  padding: 10px 30px; /* Links und rechts mehr Abstand */
+  transform: skewX(-25deg); /* Schräger */
+  width: auto; /* Nur so breit wie der Inhalt */
 }
 .hero-stripe .hero-small-logo { 
-  width: 50px; 
-  height: 50px; 
-  transform: skewX(12deg); 
+  width: 58px; 
+  height: 58px; 
+  transform: skewX(25deg); /* Angepasst an neue Neigung */
   object-fit: contain; 
   image-rendering: -webkit-optimize-contrast;
   image-rendering: crisp-edges;
 }
-.hero-title { font-size: 36px; margin: 0; color: #e6efe6; transform: skewX(12deg); }
-.hero-sub { color: rgba(230,239,230,0.9); margin-top: 12px; pointer-events: none; }
+.hero-title { font-size: 30px; margin: 0; color: #e6efe6; transform: skewX(25deg); white-space: nowrap; } /* Text zurück geneigt */
+.hero-sub { color: rgba(230,239,230,0.9); margin-top: 12px; pointer-events: none; text-align: center; }
 
 /* Simple responsive: stack when not enough space */
-@media (max-width: 768px) {
-  .hero-carousel { height: 40vh; } /* auch auf mobil kompakter */
-  .hero-title { font-size: 28px; }
+@media (max-width: 320px) {
+  .hero-carousel { height: 80vh; } /* doppelt so hoch auf mobil */
+  .hero-title { font-size: 24px; }
+  .hero-stripe {
+    margin-left: 0; /* kein Einzug auf mobil */
+    padding: 10px 20px; /* Rechts und links weniger Padding */
+    margin-right: 6%; /* 5% rechts kürzen um Abschneiden zu vermeiden */
+  }
+  .hero-sub {
+    margin-left: 0; /* kein Einzug auf mobil */
+  }
+  .hero-inner {
+    padding: 0 16px; /* auf mobil kein einzug */
+  }
   .hero-controls { 
     gap: 8px;
+    max-width: calc(100% - 32px); /* Abstand zu beiden Seiten */
   }
 }
 
@@ -246,6 +265,22 @@ button:hover, .btn:hover {
   border: 1px solid #1a3c33; 
   width: 100%;
   box-sizing: border-box;
+  min-width: 280px; /* Verhindere zu schmale Cards */
+}
+
+/* Grid system - responsive auf schmalen Views */
+.ml-grid,
+.ml-dual,
+.ml-triple {
+  overflow-x: auto; /* Horizontales Scrolling erlauben */
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 768px) {
+  .ml-card {
+    min-width: auto; /* Auf mobil kann Card schmaler sein */
+    width: 100%;
+  }
 }
 
 /* Hide scrollbar in cards but keep scroll functionality */

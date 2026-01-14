@@ -24,6 +24,15 @@ module.exports = function usersRoutes(ctx) {
   });
 
   let friendshipsEnsured = false;
+  
+  function getDb() {
+    return (db && db.knex && db.knex.client) ? db.knex : (db && db.db ? db.db : null);
+  }
+  
+  function getFrontendBase() {
+    return process.env.FRONTEND_URL || process.env.PUBLIC_URL || 'http://localhost:3000';
+  }
+  
   async function ensureFriendshipsTable() {
     if (friendshipsEnsured) return true;
     await dbRunAsync(
@@ -281,6 +290,63 @@ module.exports = function usersRoutes(ctx) {
            VALUES (?, ?, 'pending', ?, ?)`,
           [low, high, viewerId, now]
         );
+        
+        // Send notification to target user
+        try {
+          const hasNotifications = await getDb().schema.hasTable('notifications').catch(() => false);
+          if (hasNotifications) {
+            const viewer = await dbGetAsync('SELECT firstname, lastname, username FROM users WHERE id = ?', [viewerId]);
+            const viewerName = [viewer?.firstname, viewer?.lastname].filter(Boolean).join(' ') || viewer?.username || `User ${viewerId}`;
+            
+            await getDb()('notifications').insert({
+              user_id: targetId,
+              from_user_id: viewerId,
+              type: 'friend_request',
+              title: 'Neue Freundschaftsanfrage',
+              message: `${viewerName} möchte mit dir befreundet sein.`,
+              created_at: now
+            });
+          }
+          
+          // Send email notification
+          const targetUser = await dbGetAsync('SELECT email, firstname FROM users WHERE id = ?', [targetId]);
+          if (targetUser?.email) {
+            const { renderEmailTemplate } = require('../emailTemplate');
+            const viewer = await dbGetAsync('SELECT firstname, lastname, username FROM users WHERE id = ?', [viewerId]);
+            const viewerName = [viewer?.firstname, viewer?.lastname].filter(Boolean).join(' ') || viewer?.username || `User ${viewerId}`;
+            
+            const emailHtml = renderEmailTemplate({
+              title: 'Neue Freundschaftsanfrage',
+              preheader: `${viewerName} möchte mit dir befreundet sein`,
+              greeting: targetUser.firstname || 'Hallo',
+              body: `
+                <p>${viewerName} möchte mit dir befreundet sein.</p>
+                <p>Melde dich an, um die Anfrage anzunehmen oder abzulehnen.</p>
+              `,
+              ctaText: 'Anfrage ansehen',
+              ctaUrl: `${getFrontendBase()}/user/${viewerId}`,
+              footerText: 'Diese Email wurde gesendet, weil jemand eine Freundschaftsanfrage an dich gesendet hat.'
+            });
+            
+            const nodemailer = require('nodemailer');
+            const transporter = nodemailer.createTransport({
+              host: process.env.MAILER_HOST || 'localhost',
+              port: process.env.MAILER_PORT || 1025,
+              secure: false,
+              tls: { rejectUnauthorized: false }
+            });
+            
+            await transporter.sendMail({
+              from: process.env.MAILER_FROM || 'noreply@matchleague.com',
+              to: targetUser.email,
+              subject: 'Neue Freundschaftsanfrage bei MatchLeague',
+              html: emailHtml
+            }).catch(err => console.error('[Friendship] Email send failed:', err));
+          }
+        } catch (notifErr) {
+          console.error('[Friendship] Notification failed:', notifErr);
+        }
+        
         return res.status(201).json({ status: 'pending', pendingDirection: 'outgoing', message: 'Freundschaftsanfrage gesendet.' });
       }
 

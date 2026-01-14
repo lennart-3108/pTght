@@ -8,12 +8,22 @@ import React, { useState, useEffect } from 'react';
  *   - value: currently selected sport name
  *   - onChange: callback(sportName, sportId)
  *   - placeholder: optional placeholder text (default: "Sportart wählen")
+ *   - onOpen: callback when dropdown opens
+ *   - isOpen: external control of dropdown state
+ *   - onClose: callback when dropdown closes
  */
-export default function SportSelector({ sports = [], value = '', onChange, placeholder = 'Sportart wählen' }) {
+export default function SportSelector({ sports = [], value = '', onChange, placeholder = 'Sportart wählen', onOpen, isOpen, onClose }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [expandedSports, setExpandedSports] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
+
+  // External control of dropdown state
+  useEffect(() => {
+    if (isOpen !== undefined) {
+      setShowDropdown(isOpen);
+    }
+  }, [isOpen]);
 
   // Reset expanded states when dropdown closes
   useEffect(() => {
@@ -21,8 +31,9 @@ export default function SportSelector({ sports = [], value = '', onChange, place
       setExpandedCategories({});
       setExpandedSports({});
       setSearchQuery('');
+      if (onClose) onClose();
     }
-  }, [showDropdown]);
+  }, [showDropdown, onClose]);
 
   // Auto-expand category/sport when value is set
   useEffect(() => {
@@ -83,7 +94,13 @@ export default function SportSelector({ sports = [], value = '', onChange, place
     <div style={{ position: 'relative', zIndex: showDropdown ? 99999 : 1 }}>
       {/* Display field */}
       <div
-        onClick={() => setShowDropdown(!showDropdown)}
+        onClick={() => {
+          const newState = !showDropdown;
+          setShowDropdown(newState);
+          if (newState && onOpen) {
+            onOpen();
+          }
+        }}
         style={{
           ...inputStyle,
           cursor: 'pointer',
