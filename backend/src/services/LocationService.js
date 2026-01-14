@@ -175,9 +175,17 @@ class LocationService {
     let query = this.db('locations')
       .where({ status: 'active' });
 
-    // City filter
+    // City filter by name
     if (filters.city) {
       query = query.where('city', 'like', `%${filters.city}%`);
+    }
+
+    // City filter by ID
+    if (filters.city_id) {
+      const city = await this.db('cities').where({ id: parseInt(filters.city_id) }).first();
+      if (city) {
+        query = query.where('city', city.name);
+      }
     }
 
     // Country filter
@@ -203,7 +211,38 @@ class LocationService {
         .having('distance_km', '<=', radius);
     }
 
-    const locations = await query.orderBy('name', 'asc');
+    let locations = await query.orderBy('name', 'asc');
+
+    // Sport filter - filter locations that have assets supporting this sport
+    if (filters.sport_id) {
+      const sportId = parseInt(filters.sport_id);
+      const locationIds = locations.map(loc => loc.id);
+      
+      if (locationIds.length > 0) {
+        const assets = await this.db('assets')
+          .whereIn('location_id', locationIds)
+          .where({ status: 'active' })
+          .select('location_id', 'supported_sports');
+
+        const locationIdsWithSport = new Set();
+        
+        for (const asset of assets) {
+          if (!asset.supported_sports) continue;
+          try {
+            const sports = typeof asset.supported_sports === 'string' 
+              ? JSON.parse(asset.supported_sports) 
+              : asset.supported_sports;
+            if (Array.isArray(sports) && sports.includes(sportId)) {
+              locationIdsWithSport.add(asset.location_id);
+            }
+          } catch (e) {
+            // Skip invalid JSON
+          }
+        }
+
+        locations = locations.filter(loc => locationIdsWithSport.has(loc.id));
+      }
+    }
 
     return locations.map(loc => {
       if (loc.opening_hours) loc.opening_hours = JSON.parse(loc.opening_hours);

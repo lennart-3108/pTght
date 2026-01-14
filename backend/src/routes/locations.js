@@ -144,6 +144,29 @@ module.exports = function locationRoutes(ctx) {
   });
 
   /**
+   * GET /locations/list - Alias for / (for backwards compatibility)
+   */
+  router.get('/list', async (req, res) => {
+    try {
+      const filters = {
+        city: req.query.city,
+        city_id: req.query.city_id,
+        sport_id: req.query.sport_id,
+        country: req.query.country,
+        latitude: req.query.lat,
+        longitude: req.query.lng,
+        radius_km: req.query.radius,
+      };
+
+      const locations = await locationService.searchLocations(filters);
+      return res.json(locations);
+    } catch (error) {
+      console.error('[GET /locations/list] error:', error);
+      return res.status(500).json({ error: error.message || 'Failed to fetch locations' });
+    }
+  });
+
+  /**
    * GET /locations/cities - Get list of unique cities
    */
   router.get('/cities', async (req, res) => {
