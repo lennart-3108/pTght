@@ -89,7 +89,11 @@ export default function NewsPage() {
           let avatarName = "";
           let avatarSrc = null;
           
-          if (item.type === 'schedule_proposal') {
+          if (item.type === 'friend_request') {
+            avatarUserId = item.fromUserId;
+            avatarName = item.fromUserName || `User ${item.fromUserId}`;
+            avatarSrc = item.avatarUrl;
+          } else if (item.type === 'schedule_proposal') {
             avatarUserId = item.proposerUserId;
             avatarName = item.proposerName || `User ${item.proposerUserId}`;
             avatarSrc = item.avatarUrl;
@@ -105,9 +109,10 @@ export default function NewsPage() {
           
           // Special styling for proposal notifications
           const isProposal = item.type === 'schedule_proposal';
-          const titleColor = isProposal ? '#debc7c' : '#e8f3ec';
-          const containerBorder = isProposal ? '2px solid #2f6b57' : 'none';
-          const containerBg = isProposal ? '#1a2e26' : 'linear-gradient(135deg, #112d23, #16362c)';
+          const isFriendRequest = item.type === 'friend_request';
+          const titleColor = (isProposal || isFriendRequest) ? '#debc7c' : '#e8f3ec';
+          const containerBorder = (isProposal || isFriendRequest) ? '2px solid #2f6b57' : 'none';
+          const containerBg = (isProposal || isFriendRequest) ? '#1a2e26' : 'linear-gradient(135deg, #112d23, #16362c)';
           
           return (
             <div
@@ -135,16 +140,35 @@ export default function NewsPage() {
               )}
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
-                  <div style={{ fontWeight: isProposal ? 700 : 600, fontSize: 18, color: titleColor }}>
+                  <div style={{ fontWeight: (isProposal || isFriendRequest) ? 700 : 600, fontSize: 18, color: titleColor }}>
                     {isProposal && '📩 '}
+                    {isFriendRequest && '👥 '}
                     {item.title}
                   </div>
                   {ts && <div style={{ color: "#9fbeb0", fontSize: 13 }}>{ts}</div>}
                 </div>
                 <div style={{ color: "#aecfbf", lineHeight: 1.5 }}>{item.details}</div>
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-                  <div style={{ color: "#8fb3a0", fontSize: 14 }}>{leagueLabel}</div>
-                  {matchLink && (
+                  {!isFriendRequest && <div style={{ color: "#8fb3a0", fontSize: 14 }}>{leagueLabel}</div>}
+                  {isFriendRequest && avatarUserId && (
+                    <Link
+                      to={`/user/${avatarUserId}`}
+                      style={{
+                        background: "#1c5b47",
+                        color: "#f2fff8",
+                        padding: "10px 16px",
+                        borderRadius: 10,
+                        textDecoration: "none",
+                        fontSize: 14,
+                        fontWeight: 600,
+                        border: "2px solid #debc7c",
+                        display: "inline-block",
+                      }}
+                    >
+                      Profil ansehen
+                    </Link>
+                  )}
+                  {matchLink && !isFriendRequest && (
                     <Link
                       to={matchLink}
                       style={{

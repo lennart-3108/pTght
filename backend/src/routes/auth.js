@@ -8,17 +8,47 @@ module.exports = function authRoutes(ctx) {
   const { db, SECRET, transporter, mailerState, SESSION_EPOCH } = ctx;
 
   router.post("/register", (req, res) => {
-    const { firstname, lastname, birthday, email, password, sports, city_id, district_id, gender } = req.body || {};
+    const { 
+      firstname, lastname, birthday, email, password, sports, 
+      city_id, district_id, gender, country_code,
+      accept_terms, accept_gdpr 
+    } = req.body || {};
+    
     if (!firstname || !lastname || !birthday || !email || !password) {
       return res.status(400).json({ error: "Alle Felder sind erforderlich" });
     }
+    
+    // Validate minimum age (16 years)
+    const birthDate = new Date(birthday);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    if (age < 16) {
+      return res.status(400).json({ error: "Du musst mindestens 16 Jahre alt sein" });
+    }
+    
+    // Validate Terms acceptance
+    if (!accept_terms) {
+      return res.status(400).json({ error: "Du musst die AGB akzeptieren" });
+    }
+    
+    // Validate GDPR for EU countries
+    const euCountries = ['DE', 'AT', 'CH', 'FR', 'IT', 'NL', 'BE', 'ES', 'PT', 'PL', 'CZ', 'SK', 'HU', 'RO', 'BG', 'GR', 'HR', 'SI', 'LT', 'LV', 'EE', 'IE', 'DK', 'SE', 'FI', 'LU', 'MT', 'CY'];
+    if (country_code && euCountries.includes(String(country_code).toUpperCase()) && !accept_gdpr) {
+      return res.status(400).json({ error: "Du musst die Datenschutzerklärung (DSGVO) akzeptieren" });
+    }
+    
     const confirmationToken = jwt.sign({ email, epoch: SESSION_EPOCH || 1 }, SECRET, { expiresIn: "1d" });
     const hashedPassword = bcrypt.hashSync(password, 10);
 
     db.run(
-      `INSERT INTO users (firstname, lastname, birthday, email, password, confirmation_token, is_confirmed, city_id, district_id, gender)
-       VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?)`,
-      [firstname, lastname, birthday, email, hashedPassword, confirmationToken, city_id || null, district_id || null, gender || null],
+      `INSERT INTO users (firstname, lastname, birthday, email, password, confirmation_token, is_confirmed, city_id, district_id, gender, accept_terms, accept_gdpr, country_code)
+       VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)`,
+      [firstname, lastname, birthday, email, hashedPassword, confirmationToken, city_id || null, district_id || null, gender || null, accept_terms ? 1 : 0, accept_gdpr ? 1 : 0, country_code || null],
       function (err) {
         if (err) {
           if (err.code === "SQLITE_CONSTRAINT") {
@@ -402,7 +432,6 @@ module.exports = function authRoutes(ctx) {
               console.error('[confirm] db.run error', err && (err.stack || err.message || err));
               const frontendBaseErr = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
               return res.redirect(`${frontendBaseErr}/registration-success?confirmed=0&error=db_error`);
-            }return res.redirect(`${getFrontendBase()}/registration-success?confirmed=0&error=db_error`);
             }
             if (this.changes === 0) {
               return res.redirect(`${getFrontendBase()}/registration-success?confirmed=0&error=update_failed`);
@@ -422,7 +451,9 @@ module.exports = function authRoutes(ctx) {
               return res.redirect(`${getFrontendBase()}/registration-success?confirmed=1&one_time=${encodeURIComponent(oneTime)}`);
             } catch (e) {
               console.error('[confirm] one-time token store failed', e && (e.stack || e.message));
-              return res.redirect(`${getFrontendBase()
+              return res.redirect(`${getFrontendBase()}/registration-success?confirmed=1`);
+            }
+          }
         );
       });
     });

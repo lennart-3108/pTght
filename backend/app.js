@@ -5,6 +5,7 @@ const matchesRouter = require("./routes/matches");
 const resultsRouter = require("./routes/results");
 const countriesRouter = require("./routes/countries");
 const citiesRouter = require("./routes/cities");
+const commentsRouter = require("./routes/comments");
 // ...existing code...
 
 const app = express();
@@ -17,6 +18,7 @@ app.use("/matches", matchesRouter);
 app.use("/results", resultsRouter);
 app.use("/countries", countriesRouter);
 app.use("/cities", citiesRouter);
+app.use("/api", commentsRouter);
 
 // ...existing code...
 

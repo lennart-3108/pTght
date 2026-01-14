@@ -26,7 +26,10 @@ export default function RegisterPage() {
     district_id: null,
     gender: "",
     sports: [],
+    country_code: "",
   });
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [acceptGdpr, setAcceptGdpr] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -70,11 +73,14 @@ export default function RegisterPage() {
   }, []);
 
   function handleLocationChange(name, cityId, stateId, countryId, districtId) {
+    // Find country code from countryId
+    const country = countries.find(c => c.id === countryId);
     setForm(prev => ({
       ...prev,
       city_id: cityId || null,
       city_name: name || "",
-      district_id: districtId || null
+      district_id: districtId || null,
+      country_code: country?.code || ""
     }));
   }
 
@@ -93,12 +99,47 @@ export default function RegisterPage() {
     e.preventDefault();
     setLoading(true);
     setMessage("");
+    
+    // Validate minimum age (16 years)
+    const birthDate = new Date(form.birthday);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    if (age < 16) {
+      setMessage("Du musst mindestens 16 Jahre alt sein, um dich zu registrieren.");
+      setLoading(false);
+      return;
+    }
+    
+    // Validate Terms acceptance
+    if (!acceptTerms) {
+      setMessage("Bitte akzeptiere die Allgemeinen Geschäftsbedingungen.");
+      setLoading(false);
+      return;
+    }
+    
+    // Validate GDPR for EU countries
+    const euCountries = ['DE', 'AT', 'CH', 'FR', 'IT', 'NL', 'BE', 'ES', 'PT', 'PL', 'CZ', 'SK', 'HU', 'RO', 'BG', 'GR', 'HR', 'SI', 'LT', 'LV', 'EE', 'IE', 'DK', 'SE', 'FI', 'LU', 'MT', 'CY'];
+    if (form.country_code && euCountries.includes(form.country_code.toUpperCase()) && !acceptGdpr) {
+      setMessage("Bitte akzeptiere die Datenschutzerklärung (DSGVO).");
+      setLoading(false);
+      return;
+    }
+    
     console.log("Formulardaten:", form);
     try {
       const res = await fetch(`${API_BASE}/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          ...form,
+          accept_terms: acceptTerms,
+          accept_gdpr: acceptGdpr
+        }),
       });
       const responseData = await (async () => {
         const t = await res.text();
@@ -424,6 +465,86 @@ export default function RegisterPage() {
               onChange={(value) => setForm(prev => ({ ...prev, gender: value }))}
             />
           </div>
+
+          {/* AGB Checkbox */}
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ 
+              display: 'flex',
+              alignItems: 'flex-start',
+              cursor: 'pointer',
+              color: '#e5e7eb',
+              fontSize: 14,
+              lineHeight: 1.6
+            }}>
+              <input 
+                type="checkbox"
+                checked={acceptTerms}
+                onChange={(e) => setAcceptTerms(e.target.checked)}
+                required
+                style={{
+                  marginRight: 10,
+                  marginTop: 4,
+                  width: 18,
+                  height: 18,
+                  cursor: 'pointer',
+                  accentColor: '#48baa6'
+                }}
+              />
+              <span>
+                Ich akzeptiere die{' '}
+                <a 
+                  href="/agb" 
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: '#48baa6', textDecoration: 'underline' }}
+                >
+                  Allgemeinen Geschäftsbedingungen
+                </a>
+                {' '}*
+              </span>
+            </label>
+          </div>
+
+          {/* GDPR Checkbox - nur für EU Länder */}
+          {form.country_code && ['DE', 'AT', 'CH', 'FR', 'IT', 'NL', 'BE', 'ES', 'PT', 'PL', 'CZ', 'SK', 'HU', 'RO', 'BG', 'GR', 'HR', 'SI', 'LT', 'LV', 'EE', 'IE', 'DK', 'SE', 'FI', 'LU', 'MT', 'CY'].includes(form.country_code.toUpperCase()) && (
+            <div style={{ marginBottom: 16 }}>
+              <label style={{ 
+                display: 'flex',
+                alignItems: 'flex-start',
+                cursor: 'pointer',
+                color: '#e5e7eb',
+                fontSize: 14,
+                lineHeight: 1.6
+              }}>
+                <input 
+                  type="checkbox"
+                  checked={acceptGdpr}
+                  onChange={(e) => setAcceptGdpr(e.target.checked)}
+                  required
+                  style={{
+                    marginRight: 10,
+                    marginTop: 4,
+                    width: 18,
+                    height: 18,
+                    cursor: 'pointer',
+                    accentColor: '#48baa6'
+                  }}
+                />
+                <span>
+                  Ich stimme der{' '}
+                  <a 
+                    href="/datenschutz" 
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: '#48baa6', textDecoration: 'underline' }}
+                  >
+                    Datenschutzerklärung (DSGVO)
+                  </a>
+                  {' '}zu *
+                </span>
+              </label>
+            </div>
+          )}
 
           <button 
             type="submit" 

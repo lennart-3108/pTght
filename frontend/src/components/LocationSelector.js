@@ -12,12 +12,22 @@ export default function LocationSelector({
   value = '', 
   onChange, 
   onLoadDistricts, 
-  placeholder = 'Standort wählen' 
+  placeholder = 'Standort wählen',
+  onOpen,
+  isOpen,
+  onClose
 }) {
   const [showDropdown, setShowDropdown] = useState(false);
   const [expandedCountries, setExpandedCountries] = useState(new Set());
   const [expandedStates, setExpandedStates] = useState(new Set());
   const [expandedCities, setExpandedCities] = useState(new Set());
+
+  // External control of dropdown state
+  useEffect(() => {
+    if (isOpen !== undefined) {
+      setShowDropdown(isOpen);
+    }
+  }, [isOpen]);
 
   // Debug: Log props when they change
   useEffect(() => {
@@ -36,8 +46,9 @@ export default function LocationSelector({
       setExpandedCountries(new Set());
       setExpandedStates(new Set());
       setExpandedCities(new Set());
+      if (onClose) onClose();
     }
-  }, [showDropdown]);
+  }, [showDropdown, onClose]);
 
   const toggleCountry = (countryId) => {
     const newSet = new Set(expandedCountries);
@@ -101,7 +112,13 @@ export default function LocationSelector({
     <div style={{ position: 'relative', zIndex: showDropdown ? 99999 : 1 }}>
       {/* Display field */}
       <div
-        onClick={() => setShowDropdown(!showDropdown)}
+        onClick={() => {
+          const newState = !showDropdown;
+          setShowDropdown(newState);
+          if (newState && onOpen) {
+            onOpen();
+          }
+        }}
         style={{
           ...inputStyle,
           cursor: 'pointer',

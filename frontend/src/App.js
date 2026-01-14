@@ -34,6 +34,7 @@ import "./styles.css"; // neu
 import Header from "./components/Header";
 import WelcomePage from "./pages/WelcomePage"; // <-- add this import
 import DevSportsImages from "./pages/DevSportsImages"; // dev gallery
+import SubscriptionsPage from "./pages/SubscriptionsPage"; // subscriptions/roles
 
 // Simpler Adminerkennung (z.B. im Token, sonst im localStorage)
 function isAdmin() {
@@ -179,6 +180,9 @@ function App() {
           {/* Leagues-Übersicht (public) */}
           <Route path="/leagues" element={<LeaguesPage />} />
           <Route path="/ligen" element={<LeaguesPage />} />
+
+          {/* Subscriptions/Abos (public) */}
+          <Route path="/abos" element={<SubscriptionsPage />} />
 
           {/* Teams */}
 

@@ -1,0 +1,474 @@
+.subscriptions-page {
+  min-height: 100vh;
+  padding: 40px 20px;
+  background: linear-gradient(135deg, #0a1f1c 0%, #0d2825 100%);
+}
+
+.subscriptions-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.subscriptions-header {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.subscriptions-header h1 {
+  font-size: 42px;
+  font-weight: 700;
+  color: #e5e7eb;
+  margin: 0 0 16px 0;
+}
+
+.subscriptions-subtitle {
+  font-size: 18px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.roles-section {
+  margin-bottom: 80px;
+}
+
+.roles-section h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #e5e7eb;
+  margin: 0 0 32px 0;
+}
+
+.roles-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.role-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  padding: 24px;
+  transition: all 0.3s;
+}
+
+.role-card:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: #48baa6;
+  transform: translateY(-4px);
+  box-shadow: 0 8px 24px rgba(72, 186, 166, 0.2);
+}
+
+.role-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.role-icon {
+  font-size: 32px;
+}
+
+.role-card h3 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin: 0;
+}
+
+.role-description {
+  color: #9ca3af;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
+}
+
+.role-license-status {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.license-required {
+  background: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.license-free {
+  background: rgba(72, 186, 166, 0.2);
+  color: #48baa6;
+  border: 1px solid rgba(72, 186, 166, 0.3);
+}
+
+.plans-section {
+  margin-bottom: 60px;
+}
+
+.plans-section h2 {
+  font-size: 32px;
+  font-weight: 700;
+  color: #e5e7eb;
+  margin: 0 0 48px 0;
+}
+
+.role-plans-group {
+  margin-bottom: 48px;
+}
+
+.role-plans-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #48baa6;
+  margin: 0 0 24px 0;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.plans-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 24px;
+}
+
+.plan-card {
+  background: linear-gradient(135deg, rgba(16, 40, 37, 0.8), rgba(11, 30, 25, 0.9));
+  border: 1px solid rgba(72, 186, 166, 0.3);
+  border-radius: 16px;
+  padding: 28px;
+  transition: all 0.3s;
+  display: flex;
+  flex-direction: column;
+}
+
+.plan-card:hover {
+  border-color: #48baa6;
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(72, 186, 166, 0.3);
+}
+
+.plan-header {
+  margin-bottom: 20px;
+}
+
+.plan-header h4 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin: 0 0 12px 0;
+}
+
+.plan-price {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.price-amount {
+  font-size: 36px;
+  font-weight: 700;
+  color: #48baa6;
+}
+
+.price-period {
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.plan-description {
+  color: #9ca3af;
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0 0 20px 0;
+}
+
+.plan-features,
+.plan-limits {
+  margin-bottom: 16px;
+}
+
+.plan-features h5,
+.plan-limits h5 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e5e7eb;
+  margin: 0 0 8px 0;
+}
+
+.plan-features ul,
+.plan-limits ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.plan-features li,
+.plan-limits li {
+  color: #9ca3af;
+  font-size: 13px;
+  line-height: 1.8;
+  padding-left: 4px;
+}
+
+.plan-features li {
+  color: #48baa6;
+}
+
+.plan-duration {
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.plan-buy-button {
+  margin-top: 20px;
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #48baa6, #3a9985);
+  border: 2px solid #48baa6;
+  border-radius: 12px;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.plan-buy-button:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3a9985, #2d7a68);
+  border-color: #3a9985;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(72, 186, 166, 0.4);
+}
+
+.plan-buy-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #555;
+  border-color: #777;
+}
+
+.subscriptions-footer {
+  text-align: center;
+  padding: 40px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  margin-top: 60px;
+}
+
+.subscriptions-footer p {
+  color: #9ca3af;
+  font-size: 14px;
+  margin: 0;
+}
+
+/* PayPal Modal */
+.paypal-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.paypal-modal {
+  background: #ffffff;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 90%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.paypal-header {
+  background: linear-gradient(135deg, #0070ba, #003087);
+  padding: 24px;
+  text-align: center;
+  border-radius: 12px 12px 0 0;
+}
+
+.paypal-logo {
+  max-width: 150px;
+  height: auto;
+}
+
+.paypal-content {
+  padding: 32px 28px;
+}
+
+.paypal-content h3 {
+  margin: 0 0 24px;
+  font-size: 24px;
+  color: #1a1a1a;
+  text-align: center;
+}
+
+.payment-details {
+  background: #f7f9fa;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.detail-row:last-child {
+  border-bottom: none;
+}
+
+.detail-row.total {
+  margin-top: 12px;
+  padding-top: 16px;
+  border-top: 2px solid #1a1a1a;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.detail-label {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.detail-value {
+  color: #1a1a1a;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.detail-row.total .detail-label,
+.detail-row.total .detail-value {
+  font-size: 18px;
+  color: #1a1a1a;
+}
+
+.paypal-notice {
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin-bottom: 24px;
+  font-size: 13px;
+  color: #856404;
+  text-align: center;
+}
+
+.paypal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.paypal-cancel-btn,
+.paypal-confirm-btn {
+  flex: 1;
+  padding: 14px 24px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: none;
+}
+
+.paypal-cancel-btn {
+  background: #e5e7eb;
+  color: #374151;
+}
+
+.paypal-cancel-btn:hover:not(:disabled) {
+  background: #d1d5db;
+}
+
+.paypal-confirm-btn {
+  background: #0070ba;
+  color: #ffffff;
+}
+
+.paypal-confirm-btn:hover:not(:disabled) {
+  background: #005a99;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 112, 186, 0.3);
+}
+
+.paypal-cancel-btn:disabled,
+.paypal-confirm-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 768px) {
+  .subscriptions-header h1 {
+    font-size: 32px;
+  }
+
+  .roles-grid,
+  .plans-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .plan-price {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+  }
+
+  .price-amount {
+    font-size: 28px;
+  }
+
+  .paypal-modal {
+    width: 95%;
+  }
+
+  .paypal-content {
+    padding: 24px 20px;
+  }
+
+  .paypal-actions {
+    flex-direction: column;
+  }
+
+  .paypal-cancel-btn,
+  .paypal-confirm-btn {
+    width: 100%;
+  }
+}

@@ -91,6 +91,7 @@ export default function Header() {
   const [chatsLastStatus, setChatsLastStatus] = useState("idle");
   const [notifDataSource, setNotifDataSource] = useState("live");
   const [chatsDataSource, setChatsDataSource] = useState("live");
+  const [userRoles, setUserRoles] = useState([]);
   const headerRef = useRef(null);
   const isMountedRef = useRef(true);
 
@@ -446,6 +447,30 @@ export default function Header() {
     if (chatsOpen) fetchChats();
   }, [chatsOpen, fetchChats]);
 
+  // Fetch user roles on mount if logged in
+  useEffect(() => {
+    if (!token || !myUserId) {
+      setUserRoles([]);
+      return;
+    }
+    
+    async function loadUserRoles() {
+      try {
+        const res = await fetch(`${API_BASE}/roles/users/${myUserId}/roles`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const roles = await res.json();
+          setUserRoles(roles.map(r => r.name));
+        }
+      } catch (err) {
+        console.error('Failed to load user roles:', err);
+      }
+    }
+    
+    loadUserRoles();
+  }, [token, myUserId]);
+
   const markNotificationsRead = useCallback(() => {
     if (!notifications.length) return;
     const now = Date.now();
@@ -545,6 +570,7 @@ export default function Header() {
             <>
               <Link to="/login" className="ml-nav__item" onClick={handleNavigate}>Login</Link>
               <Link to="/leagues" className="ml-nav__item" onClick={handleNavigate}>Ligen</Link>
+              <Link to="/abos" className="ml-nav__item" onClick={handleNavigate}>Abos</Link>
               <Link to="/register" className="ml-nav__item" onClick={handleNavigate}>Registrieren</Link>
             </>
           )}
@@ -554,8 +580,17 @@ export default function Header() {
               <Link to={`/user/${myUserId}`} className="ml-nav__item" onClick={handleNavigate}>Profil</Link>
               <Link to="/teams" className="ml-nav__item" onClick={handleNavigate}>Teams</Link>
               <Link to="/leagues" className="ml-nav__item" onClick={handleNavigate}>Ligen</Link>
+              <Link to="/abos" className="ml-nav__item" onClick={handleNavigate}>Abos</Link>
               <Link to="/booking" className="ml-nav__item" onClick={handleNavigate}>Platz buchen</Link>
-              <Link to="/location-manager" className="ml-nav__item" onClick={handleNavigate}>Location Manager</Link>
+              {userRoles.includes('location_provider') && (
+                <Link to="/location-manager" className="ml-nav__item" onClick={handleNavigate}>Location Manager</Link>
+              )}
+              {userRoles.includes('trainer') && (
+                <Link to="/training" className="ml-nav__item" onClick={handleNavigate}>Training</Link>
+              )}
+              {userRoles.includes('club_admin') && (
+                <Link to="/clubs" className="ml-nav__item" onClick={handleNavigate}>Vereine</Link>
+              )}
               <Link to="/chats" className="ml-nav__item" onClick={handleNavigate}>Chats</Link>
               <Link to="/news" className="ml-nav__item" onClick={handleNavigate}>Neuigkeiten</Link>
             </>
@@ -944,22 +979,24 @@ export default function Header() {
           </>
         )}
 
-        <button
-          className={"ml-burger" + (open ? " is-open" : "")}
-          onClick={() => setOpen((v) => {
-            const next = !v;
-            if (next) {
-              setNotificationsOpen(false);
-              setChatsOpen(false);
-            }
-            return next;
-          })}
-          aria-label="Menü"
-        >
-          <span />
-          <span />
-          <span />
-        </button>
+        {token && (
+          <button
+            className={"ml-burger" + (open ? " is-open" : "")}
+            onClick={() => setOpen((v) => {
+              const next = !v;
+              if (next) {
+                setNotificationsOpen(false);
+                setChatsOpen(false);
+              }
+              return next;
+            })}
+            aria-label="Menü"
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        )}
       </div>
       </div>
     </header>

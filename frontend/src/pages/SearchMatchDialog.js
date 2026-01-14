@@ -16,6 +16,13 @@ export default function SearchMatchDialog() {
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
   const authed = !!token;
 
+  // Dropdown coordination state
+  const [sportDropdownOpen, setSportDropdownOpen] = useState(false);
+  const [locationDropdownOpen, setLocationDropdownOpen] = useState(false);
+  
+  // View mode state
+  const [viewMode, setViewMode] = useState('table'); // 'table' | 'cards' | 'map'
+
   // local state reflects query params
   const [sportId, setSportId] = useState(sp.get('sportId') || '');
   const [countryId, setCountryId] = useState(sp.get('countryId') || '');
@@ -753,6 +760,12 @@ export default function SearchMatchDialog() {
             value={sportId ? (sports.find(s => String(s.id) === String(sportId))?.name || '') : ''}
             onChange={(sportName, sportIdVal) => setSportId(sportIdVal)}
             placeholder="Sportart wählen"
+            isOpen={sportDropdownOpen}
+            onOpen={() => {
+              setSportDropdownOpen(true);
+              setLocationDropdownOpen(false);
+            }}
+            onClose={() => setSportDropdownOpen(false)}
           />
         </div>
         
@@ -771,6 +784,12 @@ export default function SearchMatchDialog() {
               }
             }}
             placeholder="Stadt"
+            isOpen={locationDropdownOpen}
+            onOpen={() => {
+              setLocationDropdownOpen(true);
+              setSportDropdownOpen(false);
+            }}
+            onClose={() => setLocationDropdownOpen(false)}
           />
         </div>
         
@@ -843,9 +862,184 @@ export default function SearchMatchDialog() {
             {dateFilterMode === 'range' ? '📅' : '🔢'}
           </button>
         </div>
+        
+        {/* View mode toggle */}
+        <div style={{ display: 'flex', gap: 4, marginLeft: 'auto' }}>
+          <button 
+            onClick={() => setViewMode('table')}
+            style={{ 
+              background: viewMode === 'table' ? '#debc7c' : '#1a3c33', 
+              color: viewMode === 'table' ? '#10261f' : '#debc7c', 
+              border: '1px solid #2f6b57', 
+              borderRadius: 8, 
+              padding: '10px 14px',
+              fontSize: 13,
+              cursor: 'pointer',
+              fontWeight: 600
+            }}
+            title="Tabellenansicht"
+          >
+            📋
+          </button>
+          <button 
+            onClick={() => setViewMode('cards')}
+            style={{ 
+              background: viewMode === 'cards' ? '#debc7c' : '#1a3c33', 
+              color: viewMode === 'cards' ? '#10261f' : '#debc7c', 
+              border: '1px solid #2f6b57', 
+              borderRadius: 8, 
+              padding: '10px 14px',
+              fontSize: 13,
+              cursor: 'pointer',
+              fontWeight: 600
+            }}
+            title="Kartenansicht"
+          >
+            🃏
+          </button>
+          <button 
+            onClick={() => setViewMode('map')}
+            style={{ 
+              background: viewMode === 'map' ? '#debc7c' : '#1a3c33', 
+              color: viewMode === 'map' ? '#10261f' : '#debc7c', 
+              border: '1px solid #2f6b57', 
+              borderRadius: 8, 
+              padding: '10px 14px',
+              fontSize: 13,
+              cursor: 'pointer',
+              fontWeight: 600
+            }}
+            title="Kartenansicht"
+          >
+            🗺️
+          </button>
+        </div>
       </div>
 
-      <div style={{ display: 'grid', gap: 10 }}>
+      {/* Results */}
+      {viewMode === 'table' && (
+        <div style={{ marginTop: 20, overflowX: 'auto' }}>
+          {rows.length === 0 ? (
+            <div style={{ color: '#9db', padding: 20, textAlign: 'center' }}>Keine offenen Matches gefunden.</div>
+          ) : (
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
+              <thead>
+                <tr style={{ borderBottom: '2px solid #2f6b57' }}>
+                  <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>Sport</th>
+                  <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>Level</th>
+                  <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>Spieler</th>
+                  <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>Ort</th>
+                  <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>Zeit</th>
+                  <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>Status</th>
+                  <th style={{ textAlign: 'right', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>Aktion</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map(m => {
+                  const aName = m.home || m.home_name || 'A';
+                  const bName = m.away || m.away_name || 'Gegner gesucht';
+                  const status = (m.status || 'Ausstehend');
+                  
+                  let dateText = 'Datum: offen';
+                  if (m.when_type === 'range' && m.range_days) {
+                    dateText = `In ${m.range_days} Tag${m.range_days !== 1 ? 'en' : ''}`;
+                  } else if (m.when_type === 'fixed' && m.kickoff_at && m.kickoff_end_at) {
+                    try {
+                      const start = new Date(m.kickoff_at);
+                      const end = new Date(m.kickoff_end_at);
+                      const dateStr = start.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
+                      const startTime = start.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                      const endTime = end.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                      dateText = `${dateStr}, ${startTime}-${endTime}`;
+                    } catch (e) {
+                      dateText = 'Zeitraum: offen';
+                    }
+                  } else if (m.when_type === 'exact' && m.kickoff_at) {
+                    try {
+                      const date = new Date(m.kickoff_at);
+                      const dateStr = date.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
+                      const time = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                      dateText = `${dateStr}, ${time}`;
+                    } catch (e) {
+                      dateText = 'Datum: offen';
+                    }
+                  } else if (m.kickoff_at) {
+                    try {
+                      const date = new Date(m.kickoff_at);
+                      const dateStr = date.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
+                      const time = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                      dateText = `${dateStr}, ${time}`;
+                    } catch (e) {
+                      dateText = 'Datum: offen';
+                    }
+                  }
+                  
+                  return (
+                    <tr key={m.id} style={{ borderBottom: '1px solid rgba(47,107,87,0.3)', transition: 'background 0.2s' }} 
+                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(47,107,87,0.15)'}
+                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
+                      <td style={{ padding: '12px 8px' }}>
+                        <div style={{ fontWeight: 600 }}>{m.league || 'Open Match'}</div>
+                        <div style={{ fontSize: 12, color: '#8bbfad' }}>{m.sport_name || 'Sport'}</div>
+                      </td>
+                      <td style={{ padding: '12px 8px' }}>
+                        <span style={{ 
+                          background: m.type === 'Pro' ? '#debc7c' : m.type === 'Experienced' ? '#7fc' : '#9db', 
+                          color: '#081c19', 
+                          padding: '4px 8px', 
+                          borderRadius: 6, 
+                          fontSize: 11, 
+                          fontWeight: 700 
+                        }}>
+                          {m.type || 'Offen'}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 8px' }}>
+                        <div style={{ fontWeight: 600 }}>{aName}</div>
+                        {bName !== 'Gegner gesucht' && <div style={{ fontSize: 12, color: '#8bbfad' }}>vs {bName}</div>}
+                      </td>
+                      <td style={{ padding: '12px 8px' }}>
+                        <div>{m.location_name || m.city_name || '-'}</div>
+                        <div style={{ fontSize: 11, color: '#8bbfad' }}>{m.city_name || ''}</div>
+                      </td>
+                      <td style={{ padding: '12px 8px', fontSize: 13 }}>{dateText}</td>
+                      <td style={{ padding: '12px 8px' }}>
+                        <span style={{ 
+                          color: status === 'open' ? '#7fc' : status === 'scheduled' ? '#debc7c' : '#9db',
+                          fontSize: 12,
+                          fontWeight: 600
+                        }}>
+                          {status === 'open' ? '🟢 Offen' : status === 'scheduled' ? '📅 Geplant' : status}
+                        </span>
+                      </td>
+                      <td style={{ padding: '12px 8px', textAlign: 'right' }}>
+                        <Link 
+                          to={`/games/${m.id}`} 
+                          style={{ 
+                            background: '#debc7c', 
+                            color: '#10261f', 
+                            padding: '6px 12px', 
+                            borderRadius: 8, 
+                            fontSize: 12, 
+                            fontWeight: 700,
+                            textDecoration: 'none',
+                            display: 'inline-block'
+                          }}
+                        >
+                          Details
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+
+      {viewMode === 'cards' && (
+      <div style={{ display: 'grid', gap: 10, marginTop: 20 }}>
         {rows.length === 0 ? (
           <div style={{ color: '#9db' }}>Keine offenen Matches gefunden.</div>
         ) : rows.map(m => {
@@ -943,6 +1137,29 @@ export default function SearchMatchDialog() {
           );
         })}
       </div>
+
+      )}
+
+      {viewMode === 'map' && (
+        <div style={{ marginTop: 20 }}>
+          <div style={{ 
+            background: 'linear-gradient(135deg, #0f2b27 0%, #1a3c33 100%)', 
+            borderRadius: 12, 
+            padding: '60px 20px', 
+            textAlign: 'center',
+            border: '1px solid #2f6b57'
+          }}>
+            <div style={{ fontSize: 48, marginBottom: 16 }}>🗺️</div>
+            <h3 style={{ margin: '0 0 12px 0', color: '#debc7c' }}>Kartenansicht</h3>
+            <p style={{ color: '#8bbfad', margin: 0, maxWidth: 400, marginLeft: 'auto', marginRight: 'auto' }}>
+              Die Kartenansicht zeigt alle verfügbaren Matches auf einer interaktiven Karte mit ihren Standorten.
+            </p>
+            <p style={{ color: '#9db', fontSize: 13, marginTop: 16 }}>
+              🚧 In Entwicklung - Verfügbar in einer kommenden Version
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Centered secondary create button as in mock */}
       <div style={{ marginTop: 18, display: 'flex', justifyContent: 'center' }}>
