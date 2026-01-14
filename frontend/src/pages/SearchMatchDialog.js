@@ -1014,7 +1014,7 @@ export default function SearchMatchDialog() {
                       </td>
                       <td style={{ padding: '12px 8px', textAlign: 'right' }}>
                         <Link 
-                          to={`/games/${m.id}`} 
+                          to={`/matches/${m.id}`} 
                           style={{ 
                             background: '#debc7c', 
                             color: '#10261f', 
