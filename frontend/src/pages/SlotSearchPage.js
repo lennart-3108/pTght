@@ -9,13 +9,22 @@ export default function SlotSearchPage() {
   const [searchParams] = useSearchParams();
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
+  // Helper function to get next full hour
+  const getNextFullHour = () => {
+    const now = new Date();
+    now.setHours(now.getHours() + 1);
+    now.setMinutes(0);
+    now.setSeconds(0);
+    return now.toTimeString().slice(0, 5);
+  };
+
   // Tab state
   const [activeTab, setActiveTab] = useState('single'); // 'single' | 'series' | 'mybookings'
 
   // Single booking state - initialize from URL params
   const [sportId, setSportId] = useState(searchParams.get('sportId') || '');
   const [date, setDate] = useState(searchParams.get('date') || new Date().toISOString().split('T')[0]);
-  const [time, setTime] = useState(searchParams.get('time') || new Date().toTimeString().slice(0, 5)); // Preferred time
+  const [time, setTime] = useState(searchParams.get('time') || getNextFullHour()); // Next full hour
   const [city, setCity] = useState(searchParams.get('city') || '');
   const [duration, setDuration] = useState(60);
 
