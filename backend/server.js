@@ -2234,6 +2234,25 @@ app.use('/api', commentsRoutes(ctx));
 // Serve static uploads under /api/uploads as well (proxy to /uploads)
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));
 
+// Serve React Frontend (SPA) - must be AFTER all API routes
+const publicPath = path.join(__dirname, 'public');
+if (fs.existsSync(publicPath)) {
+  // Serve static files (JS, CSS, images, etc.)
+  app.use(express.static(publicPath));
+  
+  // SPA fallback: all non-API routes serve index.html (React Router handles client-side routing)
+  app.get('*', (req, res) => {
+    // Don't intercept API routes or static files
+    if (req.path.startsWith('/api/') || req.path.match(/\.\w+$/)) {
+      return res.status(404).send('Not Found');
+    }
+    res.sendFile(path.join(publicPath, 'index.html'));
+  });
+  console.log('[Frontend] SPA served from', publicPath);
+} else {
+  console.warn('[Frontend] No public/ directory found – frontend not served');
+}
+
 // Ensure persistent developer test dataset (runs once at startup or reload)
 // DISABLED: Creating too many leagues automatically
 // try {
