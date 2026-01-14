@@ -1,14 +1,118 @@
 /**
- * News/Feed routes - matches with photos, likes, sorted by popularity
+ * News/Notifications routes
  */
 const express = require('express');
-const router = express.Router();
 
 // Middleware
 const { isAuthenticated } = require('../middleware/auth');
 
-/**
- * GET /api/news/feed
+module.exports = (ctx) => {
+  const router = express.Router();
+  const getKnex = () => ctx.db && (ctx.db.knex || ctx.db);
+
+  /**
+   * GET /api/news
+   * Returns user notifications (friend requests, schedule proposals, etc.)
+   */
+  router.get('/', isAuthenticated, async (req, res) => {
+    try {
+      const knex = getKnex();
+      if (!knex) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
+
+      const userId = req.user.id;
+      const limit = parseInt(req.query.limit) || 50;
+
+      // Get notifications with additional data
+      const notifications = await knex('notifications as n')
+        .select([
+          'n.id',
+          'n.type',
+          'n.match_id as matchId',
+          'n.from_user_id as fromUserId',
+          'n.proposal_id as proposalId',
+          'n.title',
+          'n.message as details',
+          'n.created_at as timestamp',
+          'n.is_read as isRead'
+        ])
+        .where('n.user_id', userId)
+        .orderBy('n.created_at', 'desc')
+        .limit(limit);
+
+      // Enrich with additional data
+      for (const notif of notifications) {
+        // Get match info if available
+        if (notif.matchId) {
+          const match = await knex('matches as m')
+            .select([
+              'm.id',
+              'l.id as leagueId',
+              'l.name as leagueName',
+              's.name as sportName'
+            ])
+            .leftJoin('leagues as l', 'l.id', 'm.league_id')
+            .leftJoin('sports as s', 's.id', 'l.sport_id')
+            .where('m.id', notif.matchId)
+            .first();
+
+          if (match) {
+            notif.leagueId = match.leagueId;
+            notif.leagueName = match.leagueName;
+            notif.sportName = match.sportName;
+          }
+        }
+
+        // Get user info if available
+        if (notif.fromUserId) {
+          const user = await knex('users')
+            .select(['id', 'firstname', 'lastname', 'name', 'email', 'avatar_url'])
+            .where('id', notif.fromUserId)
+            .first();
+
+          if (user) {
+            const parts = [];
+            if (user.firstname) parts.push(user.firstname);
+            if (user.lastname) parts.push(user.lastname);
+            notif.fromUserName = parts.length > 0 ? parts.join(' ') : (user.name || user.email || `User ${user.id}`);
+            notif.fromName = notif.fromUserName;
+            notif.avatarUrl = user.avatar_url;
+          }
+        }
+
+        // For schedule proposals, get proposer info
+        if (notif.type === 'schedule_proposal' && notif.proposalId) {
+          const proposal = await knex('match_schedule_proposals')
+            .where('id', notif.proposalId)
+            .first();
+
+          if (proposal) {
+            notif.proposerUserId = proposal.proposer_user_id;
+            
+            const proposer = await knex('users')
+              .select(['id', 'firstname', 'lastname', 'name', 'email', 'avatar_url'])
+              .where('id', proposal.proposer_user_id)
+              .first();
+
+            if (proposer) {
+              const parts = [];
+              if (proposer.firstname) parts.push(proposer.firstname);
+              if (proposer.lastname) parts.push(proposer.lastname);
+              notif.proposerName = parts.length > 0 ? parts.join(' ') : (proposer.name || proposer.email || `User ${proposer.id}`);
+              notif.avatarUrl = proposer.avatar_url;
+            }
+          }
+        }
+      }
+
+      res.json({ items: notifications });
+    } catch (err) {
+      console.error('[GET /news] error:', err);
+      res.status(500).json({ error: 'NOTIFICATIONS_LOAD_FAILED' });
+    }
+  });
+
+  /**
+   * GET /api/news/feed
  * Query params:
  * - filter: 'popular' | 'home' | 'all'
  * - days: number of days to include (default: 7)
@@ -17,18 +121,7 @@ const { isAuthenticated } = require('../middleware/auth');
  */
 router.get('/feed', async (req, res) => {
   try {
-    const db = req.app.locals.db;
-    const knex = db && (db.knex || db);
-    if (!knex) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
-
-    const filter = req.query.filter || 'popular';
-    const days = parseInt(req.query.days) || 7;
-    const limitPerDay = parseInt(req.query.limit) || 3;
-    const page = parseInt(req.query.page) || 1;
-    const userId = req.user?.id || null;
-
-    // Base query: completed or upcoming matches with photos
-    let query = knex('matches as m')
+      const knex = getKnex();
       .select([
         'm.id',
         'm.kickoff_at',
@@ -149,14 +242,7 @@ router.get('/feed', async (req, res) => {
  */
 router.post('/matches/:id/photos', isAuthenticated, async (req, res) => {
   try {
-    const db = req.app.locals.db;
-    const knex = db && (db.knex || db);
-    if (!knex) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
-
-    const matchId = parseInt(req.params.id);
-    const { photos, coverPhoto } = req.body;
-
-    // Check if user is participant
+      const knex = getKnex();
     const match = await knex('matches')
       .where('id', matchId)
       .first();
@@ -203,14 +289,7 @@ router.post('/matches/:id/like', isAuthenticated, async (req, res) => {
     const matchId = parseInt(req.params.id);
     const userId = req.user.id;
 
-    // Check if like exists
-    const existingLike = await knex('match_likes')
-      .where({ match_id: matchId, user_id: userId })
-      .first();
-
-    if (existingLike) {
-      // Unlike
-      await knex('match_likes')
+      const knex = getKnex();es')
         .where({ match_id: matchId, user_id: userId })
         .delete();
       
@@ -240,3 +319,5 @@ router.post('/matches/:id/like', isAuthenticated, async (req, res) => {
 });
 
 module.exports = router;
+  return router;
+};

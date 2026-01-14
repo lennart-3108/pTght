@@ -28,6 +28,7 @@ const slotGeneratorRoutes = require("./slotGenerator");
 const suggestRoutes = require("./suggest");
 const paymentsRoutes = require("./payments");
 const districtsRoutes = require("./districts");
+const newsRoutes = require("./news");
 
 function registerRoutes(app, ctx) {
   const { ensureTables } = createMiddleware(ctx);
@@ -67,6 +68,7 @@ function registerRoutes(app, ctx) {
   apiRouter.use('/suggest', suggestRoutes(ctx));
   apiRouter.use('/payments', paymentsRoutes(ctx));
   apiRouter.use('/districts', districtsRoutes(ctx));
+  apiRouter.use('/news', newsRoutes(ctx));
 
   // --- Email status + test routes ---
   apiRouter.get("/admin/email-status", async (req, res) => {
