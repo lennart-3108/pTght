@@ -37,6 +37,21 @@ module.exports = function countiesRoutes(ctx) {
     );
   });
 
+  // Alias: support /states for frontend without /list
+  router.get("/states", (req, res) => {
+    const { country_id } = req.query;
+    let sql = "SELECT id, name, code, country_id AS countryId, latitude, longitude FROM counties WHERE 1=1";
+    const params = [];
+    if (country_id) {
+      sql += " AND country_id = ?";
+      params.push(Number(country_id));
+    }
+    sql += " ORDER BY name";
+    db.all(sql, params, (err, rows) =>
+      err ? res.status(500).json({ error: "Datenbankfehler" }) : res.json(rows)
+    );
+  });
+
   // GET /counties/:id - Get single county by ID
   router.get("/counties/:id", (req, res) => {
     const countyId = Number(req.params.id);

@@ -253,6 +253,33 @@ module.exports = function bookingsRoutes(ctx) {
   });
 
   /**
+   * GET /bookings/match/:matchId - Get booking for a specific match
+   */
+  router.get('/match/:matchId', isAuthenticated, async (req, res) => {
+    try {
+      const matchId = parseInt(req.params.matchId);
+      const booking = await knex('bookings')
+        .where({ match_id: matchId })
+        .whereNull('resold_at')
+        .first();
+      
+      if (!booking) {
+        return res.status(404).json({ error: 'No booking found for this match' });
+      }
+
+      // Check authorization
+      if (booking.user_id !== req.user.id && !req.user.is_admin) {
+        return res.status(403).json({ error: 'Not authorized to view this booking' });
+      }
+
+      return res.json(booking);
+    } catch (error) {
+      console.error(`[GET /bookings/match/${req.params.matchId}] error:`, error);
+      return res.status(500).json({ error: 'Failed to fetch booking' });
+    }
+  });
+
+  /**
    * POST /bookings/series/calculate
    * Body: { asset_id, weekday, time, duration_months }
    * Returns: { total_price, bookings_count }
