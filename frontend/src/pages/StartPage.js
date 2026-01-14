@@ -575,7 +575,7 @@ export default function StartPage() {
             <div style={{ padding: '20px', textAlign: 'center' }}>
               <div style={{ color: '#9db', marginBottom: 16 }}>Keine anstehenden Spiele.</div>
               <Link 
-                to="/search-match" 
+                to="/match-search" 
                 style={{ 
                   display: 'inline-block',
                   padding: '12px 24px', 

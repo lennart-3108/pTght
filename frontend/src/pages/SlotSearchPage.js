@@ -25,13 +25,26 @@ export default function SlotSearchPage() {
     return now.toTimeString().slice(0, 5);
   };
 
+  // Round any time to nearest 15-minute mark
+  const roundTo15Minutes = (timeString) => {
+    if (!timeString || !timeString.includes(':')) return getNext15MinuteMark();
+    const [h, m] = timeString.split(':').map(Number);
+    const roundedMinutes = Math.round(m / 15) * 15;
+    
+    if (roundedMinutes >= 60) {
+      const newH = (h + 1) % 24;
+      return `${String(newH).padStart(2, '0')}:00`;
+    }
+    return `${String(h).padStart(2, '0')}:${String(roundedMinutes).padStart(2, '0')}`;
+  };
+
   // Tab state
   const [activeTab, setActiveTab] = useState('single'); // 'single' | 'series' | 'mybookings'
 
   // Single booking state - initialize from URL params
   const [sportId, setSportId] = useState(searchParams.get('sportId') || '');
   const [date, setDate] = useState(searchParams.get('date') || new Date().toISOString().split('T')[0]);
-  const [time, setTime] = useState(searchParams.get('time') || getNext15MinuteMark()); // Next 15-minute mark
+  const [time, setTime] = useState(roundTo15Minutes(searchParams.get('time')) || getNext15MinuteMark());
   const [city, setCity] = useState(searchParams.get('city') || '');
   const [duration, setDuration] = useState(60);
 
@@ -235,49 +248,17 @@ export default function SlotSearchPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json().catch(() => []);
       
-      // Get current time and next 15-min mark
-      const now = new Date();
-      const currentMinutes = now.getMinutes();
-      const next15Mark = Math.ceil(currentMinutes / 15) * 15;
-      const cutoffTime = new Date(now);
-      if (next15Mark >= 60) {
-        cutoffTime.setHours(cutoffTime.getHours() + 1);
-        cutoffTime.setMinutes(0);
-      } else {
-        cutoffTime.setMinutes(next15Mark);
-      }
-      cutoffTime.setSeconds(0);
+      // Don't filter by current time - user can search for any time
+      // Backend and booking logic will handle validation
+      const filteredData = Array.isArray(data) ? data : [];
       
-      // Filter out slots that start before the cutoff time (only for today)
-      const isToday = date === new Date().toISOString().split('T')[0];
-      const filteredData = Array.isArray(data) ? data.filter(slot => {
-        // Filter by time (only for today)
-        if (isToday) {
-          const slotStart = new Date(slot.start_time);
-          if (slotStart < cutoffTime) return false;
-        }
-        return true;
-      }) : [];
-      
-      // Sort slots by time proximity to desired time
+      // Sort slots chronologically by start time
       const sortedData = filteredData.sort((a, b) => {
-        const targetTime = new Date(`${date}T${time}:00`);
         const aStart = new Date(a.start_time);
         const bStart = new Date(b.start_time);
         
-        // Calculate time difference in minutes
-        const aDiff = Math.abs((aStart.getTime() - targetTime.getTime()) / (1000 * 60));
-        const bDiff = Math.abs((bStart.getTime() - targetTime.getTime()) / (1000 * 60));
-        
-        // Slots within 5 minutes are "exact matches" - sort them first
-        const aIsExact = aDiff < 5;
-        const bIsExact = bDiff < 5;
-        
-        if (aIsExact && !bIsExact) return -1;
-        if (!aIsExact && bIsExact) return 1;
-        
-        // Both exact or both not exact: sort by time difference
-        return aDiff - bDiff;
+        // Sort by start time (chronological order)
+        return aStart.getTime() - bStart.getTime();
       });
       
       setSlots(sortedData);
@@ -536,7 +517,8 @@ export default function SlotSearchPage() {
             <input 
               type="time" 
               value={time} 
-              onChange={e => setTime(e.target.value)} 
+              onChange={e => setTime(roundTo15Minutes(e.target.value))}
+              step="900"
               style={{ 
                 flex: 1,
                 padding: '10px', 
@@ -796,7 +778,7 @@ export default function SlotSearchPage() {
 
           <div>
             <label style={{ display: 'block', marginBottom: 6, fontWeight: 600 }}>Uhrzeit</label>
-            <input type="time" value={seriesTime} onChange={e => setSeriesTime(e.target.value)} style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid #2f6b57', background: '#0b1e19', color: '#e8efe8' }} />
+            <input type="time" value={seriesTime} onChange={e => setSeriesTime(e.target.value)} step="900" style={{ width: '100%', padding: '10px', borderRadius: 8, border: '1px solid #2f6b57', background: '#0b1e19', color: '#e8efe8' }} />
           </div>
 
           <div>
