@@ -784,12 +784,12 @@ module.exports = function matchesRoutes(ctx) {
       if (!matchId) return res.status(400).json({ error: 'INVALID_MATCH_ID' });
       const k = getKnex();
       await ensureTerminManagerTables(k);
-      const match = await loadMatch(k, matchId);
+      const viewerId = Number(req.user.id) || null;
+      const { match } = await loadMatch(k, matchId, viewerId);
       if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
-      const participant = await resolveParticipant(k, match, req.user.id);
+      const participant = await resolveParticipant(k, match, viewerId);
       if (!participant.allowed) return res.status(403).json({ error: 'NOT_PARTICIPANT' });
 
-      const viewerId = Number(req.user.id) || null;
       const otherUserId = participant.side === 'home' ? match.away_user_id : match.home_user_id;
       
       // Get opponent user info
@@ -1290,12 +1290,12 @@ module.exports = function matchesRoutes(ctx) {
       if (!matchId) return res.status(400).json({ error: 'INVALID_MATCH_ID' });
       
       const k = getKnex();
-      const match = await loadMatch(k, matchId);
+      const viewerId = Number(req.user.id);
+      const { match } = await loadMatch(k, matchId, viewerId);
       if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
-      const participant = await resolveParticipant(k, match, req.user.id);
+      const participant = await resolveParticipant(k, match, viewerId);
       if (!participant.allowed) return res.status(403).json({ error: 'NOT_PARTICIPANT' });
 
-      const viewerId = Number(req.user.id);
       const otherUserId = participant.side === 'home' ? match.away_user_id : match.home_user_id;
 
       // Get availability days for both users
@@ -1684,7 +1684,16 @@ module.exports = function matchesRoutes(ctx) {
       const k = getKnex();
       const { isHost, isJoined, match, participant } = await loadMatch(k, matchId, viewerId);
       if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
-      if (!isHost && !isJoined) return res.status(403).json({ error: 'FORBIDDEN' });
+      
+      // For team matches, check team membership
+      const parti = await resolveParticipant(k, match, viewerId);
+      const allowed = isHost || isJoined || parti.allowed;
+      if (!allowed) return res.status(403).json({ error: 'FORBIDDEN' });
+
+      // For team matches, check team membership
+      const parti = await resolveParticipant(k, match, viewerId);
+      const allowed = isHost || isJoined || parti.allowed;
+      if (!allowed) return res.status(403).json({ error: 'FORBIDDEN' });
 
       const matchInfo = await k('matches').columnInfo().catch(() => ({}));
       let matchDuration = 60;
@@ -1709,7 +1718,9 @@ module.exports = function matchesRoutes(ctx) {
         if (hostUser) hostName = hostUser.username || hostUser.email || `User #${hostUserId}`;
       }
 
-      const opponentId = isHost ? participant.opponentId : match.owner_id;
+      const opponentId = isHost ? (match.away_user_id || participant.opponentId) : (match.owner_id || match.home_user_id);
+
+      const opponentId = isHost ? (match.away_user_id || participant.opponentId) : (match.owner_id || match.home_user_id);
 
       // Zeitrahmen laden
       const frames = await k('match_time_frames')
@@ -1726,21 +1737,21 @@ module.exports = function matchesRoutes(ctx) {
         frames: frames || [],
         slots: slots || [],
         meta: {
-          isHost,
-          isJoined,
+          isHost: isHost || (parti.side === 'home'),
+          isJoined: isJoined || (parti.side === 'away'),
           viewerId,
           opponentId,
           hostUserId,
           hostName,
           slotDurationMinutes: matchDuration,
-          canCreateFrames: isHost,
-          canCreateSlots: isJoined, // backwards compat for UI
-          canProposeSlots: isJoined
+          canCreateFrames: isHost || (parti.side === 'home'),
+          canCreateSlots: isJoined || (parti.side === 'away'), // backwards compat for UI
+          canProposeSlots: isJoined || (parti.side === 'away')
         }
       });
     } catch (e) {
       console.error('[time-slots] Load failed', e);
-      res.status(500).json({ error: 'DB_ERROR' });
+      res.status(500).json({ error: 'DB_ERROR', details: e.message });
     }
   });
 
