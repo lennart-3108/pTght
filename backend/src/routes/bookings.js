@@ -258,6 +258,37 @@ module.exports = function bookingsRoutes(ctx) {
   router.get('/match/:matchId', isAuthenticated, async (req, res) => {
     try {
       const matchId = parseInt(req.params.matchId);
+      
+      // Check if user is participant in the match
+      const match = await knex('matches').where({ id: matchId }).first();
+      if (!match) {
+        return res.status(404).json({ error: 'Match not found' });
+      }
+
+      // Check if user is home or away participant
+      const isHomeUser = match.home_user_id === req.user.id;
+      const isAwayUser = match.away_user_id === req.user.id;
+      
+      // Check if user is team member
+      let isTeamMember = false;
+      if (match.home_team_id) {
+        const homeMember = await knex('team_members')
+          .where({ team_id: match.home_team_id, user_id: req.user.id })
+          .first();
+        if (homeMember) isTeamMember = true;
+      }
+      if (!isTeamMember && match.away_team_id) {
+        const awayMember = await knex('team_members')
+          .where({ team_id: match.away_team_id, user_id: req.user.id })
+          .first();
+        if (awayMember) isTeamMember = true;
+      }
+
+      // User must be participant or admin
+      if (!isHomeUser && !isAwayUser && !isTeamMember && !req.user.is_admin) {
+        return res.status(403).json({ error: 'Not authorized to view this booking' });
+      }
+
       const booking = await knex('bookings')
         .where({ match_id: matchId })
         .whereNull('resold_at')
@@ -265,11 +296,6 @@ module.exports = function bookingsRoutes(ctx) {
       
       if (!booking) {
         return res.status(404).json({ error: 'No booking found for this match' });
-      }
-
-      // Check authorization
-      if (booking.user_id !== req.user.id && !req.user.is_admin) {
-        return res.status(403).json({ error: 'Not authorized to view this booking' });
       }
 
       return res.json(booking);
