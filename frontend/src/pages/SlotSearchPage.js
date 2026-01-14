@@ -218,7 +218,29 @@ export default function SlotSearchPage() {
       const res = await fetch(`${API_BASE}/slots/search?${params.toString()}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json().catch(() => []);
-      setSlots(Array.isArray(data) ? data : []);
+      
+      // Sort slots by time proximity to desired time
+      const sortedData = Array.isArray(data) ? data.sort((a, b) => {
+        const targetTime = new Date(`${date}T${time}:00`);
+        const aStart = new Date(a.start_time);
+        const bStart = new Date(b.start_time);
+        
+        // Calculate time difference in minutes
+        const aDiff = Math.abs((aStart.getTime() - targetTime.getTime()) / (1000 * 60));
+        const bDiff = Math.abs((bStart.getTime() - targetTime.getTime()) / (1000 * 60));
+        
+        // Slots within 5 minutes are "exact matches" - sort them first
+        const aIsExact = aDiff < 5;
+        const bIsExact = bDiff < 5;
+        
+        if (aIsExact && !bIsExact) return -1;
+        if (!aIsExact && bIsExact) return 1;
+        
+        // Both exact or both not exact: sort by time difference
+        return aDiff - bDiff;
+      }) : [];
+      
+      setSlots(sortedData);
     } catch (e) {
       setError(e.message || 'Fehler bei der Suche');
       setSlots([]);
@@ -604,6 +626,11 @@ export default function SlotSearchPage() {
               const isExactMatch = Math.abs(slotStart.getTime() - targetTime.getTime()) < 5 * 60 * 1000; // Within 5 min
               const isResale = slot.is_resale;
               
+              // Calculate dynamic price based on duration
+              const slotDurationMinutes = (slotEnd.getTime() - slotStart.getTime()) / (1000 * 60);
+              const basePricePerHour = parseFloat(slot.base_price || 20);
+              const calculatedPrice = (basePricePerHour / 60) * slotDurationMinutes;
+              
               return (
                 <div key={slot.id || slot.booking_id || index} style={{ 
                   border: isResale ? '2px solid #debc7c' : (isExactMatch ? '2px solid #7fc' : '1px solid #2f6b57'), 
@@ -635,7 +662,8 @@ export default function SlotSearchPage() {
                     {slot.surface && <div style={{ color: '#9db', fontSize: 13 }}>🎾 {slot.surface}</div>}
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: 24, fontWeight: 700, color: '#7fc', marginBottom: 8 }}>€{parseFloat(slot.base_price || 20).toFixed(2)}</div>
+                    <div style={{ fontSize: 24, fontWeight: 700, color: '#7fc', marginBottom: 8 }}>€{calculatedPrice.toFixed(2)}</div>
+                    <div style={{ fontSize: 11, color: '#8bbfad', marginBottom: 6 }}>{slotDurationMinutes} min · €{basePricePerHour.toFixed(2)}/60min</div>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
