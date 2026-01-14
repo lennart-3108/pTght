@@ -9,11 +9,18 @@ export default function SlotSearchPage() {
   const [searchParams] = useSearchParams();
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
-  // Helper function to get next full hour
-  const getNextFullHour = () => {
+  // Helper function to get next 15-minute mark (00, 15, 30, 45)
+  const getNext15MinuteMark = () => {
     const now = new Date();
-    now.setHours(now.getHours() + 1);
-    now.setMinutes(0);
+    const minutes = now.getMinutes();
+    const nextMark = Math.ceil(minutes / 15) * 15;
+    
+    if (nextMark >= 60) {
+      now.setHours(now.getHours() + 1);
+      now.setMinutes(0);
+    } else {
+      now.setMinutes(nextMark);
+    }
     now.setSeconds(0);
     return now.toTimeString().slice(0, 5);
   };
@@ -24,7 +31,7 @@ export default function SlotSearchPage() {
   // Single booking state - initialize from URL params
   const [sportId, setSportId] = useState(searchParams.get('sportId') || '');
   const [date, setDate] = useState(searchParams.get('date') || new Date().toISOString().split('T')[0]);
-  const [time, setTime] = useState(searchParams.get('time') || getNextFullHour()); // Next full hour
+  const [time, setTime] = useState(searchParams.get('time') || getNext15MinuteMark()); // Next 15-minute mark
   const [city, setCity] = useState(searchParams.get('city') || '');
   const [duration, setDuration] = useState(60);
 
@@ -228,8 +235,29 @@ export default function SlotSearchPage() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json().catch(() => []);
       
+      // Get current time and next 15-min mark
+      const now = new Date();
+      const currentMinutes = now.getMinutes();
+      const next15Mark = Math.ceil(currentMinutes / 15) * 15;
+      const cutoffTime = new Date(now);
+      if (next15Mark >= 60) {
+        cutoffTime.setHours(cutoffTime.getHours() + 1);
+        cutoffTime.setMinutes(0);
+      } else {
+        cutoffTime.setMinutes(next15Mark);
+      }
+      cutoffTime.setSeconds(0);
+      
+      // Filter out slots that start before the cutoff time (only for today)
+      const isToday = date === new Date().toISOString().split('T')[0];
+      const filteredData = Array.isArray(data) ? data.filter(slot => {
+        if (!isToday) return true; // Don't filter future dates
+        const slotStart = new Date(slot.start_time);
+        return slotStart >= cutoffTime;
+      }) : [];
+      
       // Sort slots by time proximity to desired time
-      const sortedData = Array.isArray(data) ? data.sort((a, b) => {
+      const sortedData = filteredData.sort((a, b) => {
         const targetTime = new Date(`${date}T${time}:00`);
         const aStart = new Date(a.start_time);
         const bStart = new Date(b.start_time);
@@ -247,7 +275,7 @@ export default function SlotSearchPage() {
         
         // Both exact or both not exact: sort by time difference
         return aDiff - bDiff;
-      }) : [];
+      });
       
       setSlots(sortedData);
     } catch (e) {
