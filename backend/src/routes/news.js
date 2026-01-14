@@ -2,19 +2,18 @@
  * News/Notifications routes
  */
 const express = require('express');
-
-// Middleware
-const { isAuthenticated } = require('../middleware/auth');
+const { createMiddleware } = require('./middleware');
 
 module.exports = (ctx) => {
   const router = express.Router();
   const getKnex = () => ctx.db && (ctx.db.knex || ctx.db);
+  const { requireAuth } = createMiddleware(ctx);
 
   /**
    * GET /api/news
    * Returns user notifications (friend requests, schedule proposals, etc.)
    */
-  router.get('/', isAuthenticated, async (req, res) => {
+  router.get('/', requireAuth, async (req, res) => {
     try {
       const knex = getKnex();
       if (!knex) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
