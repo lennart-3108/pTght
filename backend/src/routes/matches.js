@@ -1690,11 +1690,6 @@ module.exports = function matchesRoutes(ctx) {
       const allowed = isHost || isJoined || parti.allowed;
       if (!allowed) return res.status(403).json({ error: 'FORBIDDEN' });
 
-      // For team matches, check team membership
-      const parti = await resolveParticipant(k, match, viewerId);
-      const allowed = isHost || isJoined || parti.allowed;
-      if (!allowed) return res.status(403).json({ error: 'FORBIDDEN' });
-
       const matchInfo = await k('matches').columnInfo().catch(() => ({}));
       let matchDuration = 60;
       if (match && hasColumn(matchInfo, 'duration_minutes')) {
@@ -1717,8 +1712,6 @@ module.exports = function matchesRoutes(ctx) {
         const hostUser = await k('users').where({ id: hostUserId }).first();
         if (hostUser) hostName = hostUser.username || hostUser.email || `User #${hostUserId}`;
       }
-
-      const opponentId = isHost ? (match.away_user_id || participant.opponentId) : (match.owner_id || match.home_user_id);
 
       const opponentId = isHost ? (match.away_user_id || participant.opponentId) : (match.owner_id || match.home_user_id);
 
