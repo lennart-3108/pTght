@@ -134,28 +134,31 @@ function App() {
     <Router>
       {/* NavigationGuard attaches global 401 Invalid token handling */}
       <NavigationGuard setToken={setToken} />
-      {/* --- Header --- */}
-      <Header />
+      
+      <Routes>
+        {/* public routes without header */}
+        <Route path="/welcome" element={<WelcomePage setToken={setToken} setIsAdminFlag={setIsAdminFlag} />} />
+        <Route path="/registration-success" element={<WelcomePage setToken={setToken} setIsAdminFlag={setIsAdminFlag} />} />
 
-      {/* --- Routen --- */}
-      <div className="app-content" >
-        <Routes>
-          {/* public routes */}
-          <Route path="/welcome" element={<WelcomePage setToken={setToken} setIsAdminFlag={setIsAdminFlag} />} />
-          <Route path="/registration-success" element={<WelcomePage setToken={setToken} setIsAdminFlag={setIsAdminFlag} />} />
+        {/* Login & Register without header */}
+        {routes
+          .filter(r => r.path === "/login" || r.path === "/register")
+          .map(r => (
+            <Route
+              key={r.path}
+              path={r.path}
+              element={React.cloneElement(r.element, {
+                ...(r.path === "/login" ? { setToken, setIsAdminFlag } : {})
+              })}
+            />
+          ))}
 
-          {/* Login & Register immer erreichbar */}
-          {routes
-            .filter(r => r.path === "/login" || r.path === "/register")
-            .map(r => (
-              <Route
-                key={r.path}
-                path={r.path}
-                element={React.cloneElement(r.element, {
-                  ...(r.path === "/login" ? { setToken, setIsAdminFlag } : {})
-                })}
-              />
-            ))}
+        {/* All other routes with header */}
+        <Route path="*" element={
+          <>
+            <Header />
+            <div className="app-content">
+              <Routes>
 
           {/* Geschützte Seiten (ohne /leagues und ohne /create, eigene Routen unten) */}
           {routes
@@ -442,8 +445,11 @@ function App() {
               </ProtectedRoute>
             }
           />
-        </Routes>
-      </div>
+              </Routes>
+            </div>
+          </>
+        } />
+      </Routes>
     </Router>
   );
 }

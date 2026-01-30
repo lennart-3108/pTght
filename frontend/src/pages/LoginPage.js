@@ -96,6 +96,9 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
   const [statsLoading, setStatsLoading] = useState(false);
   const [statsError, setStatsError] = useState(null);
 
+  // Header visibility state
+  const [showHeader, setShowHeader] = useState(true);
+
   // Reset-Form-States
   const [showReset, setShowReset] = useState(false);
   const [resetUsername, setResetUsername] = useState("");
@@ -291,22 +294,162 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
     return () => { cancelled = true; };
   }, [API]);
 
+  // Scroll listener to hide header when user scrolls
+  useEffect(() => {
+    const handleScroll = () => {
+      // Hide header as soon as user starts scrolling, but with smooth transition
+      setShowHeader(window.scrollY === 0);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check initial position
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div>
       <AuthNoticeBanner />
-      <section className="hero-carousel">
+      {/* Header with Login Button */}
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        height: 60,
+        background: 'rgba(7, 23, 22, 0.95)',
+        backdropFilter: 'blur(12px)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'flex-end',
+        padding: '0 24px',
+        zIndex: 1000,
+        opacity: showHeader ? 1 : 0,
+        pointerEvents: showHeader ? 'auto' : 'none',
+        transition: 'opacity 0.6s ease-out'
+      }}>
+        <button
+          onClick={() => {
+            document.getElementById('design-divider')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }}
+          style={{
+            padding: '10px 24px',
+            background: 'transparent',
+            border: '2px solid #debc7c',
+            borderRadius: 8,
+            color: '#debc7c',
+            fontSize: 15,
+            fontWeight: 700,
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+          onMouseOver={(e) => {
+            e.target.style.background = '#debc7c';
+            e.target.style.color = '#071716';
+          }}
+          onMouseOut={(e) => {
+            e.target.style.background = 'transparent';
+            e.target.style.color = '#debc7c';
+          }}
+        >
+          Login
+        </button>
+      </div>
+
+      <section className="hero-carousel" style={{ position: 'relative' }}>
         {slides.map((s, i) => (
           <div key={i} className={`hero-slide ${i === index ? 'active' : ''}`} style={{ backgroundImage: `url(${s})` }} />
         ))}
 
+        {/* Übergangs-Element oben (Header zu Bild) */}
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: 80,
+          background: 'linear-gradient(180deg, rgba(7, 23, 22, 1) 0%, rgba(7, 23, 22, 0.8) 30%, rgba(7, 23, 22, 0.3) 60%, transparent 100%)',
+          zIndex: 4,
+          pointerEvents: 'none'
+        }} />
+
         <div className="hero-overlay">
-          <div className="hero-stripe">
-            <img src={smallLogo} alt="ML" className="hero-small-logo" />
-            <h1 className="hero-title" style={{ fontWeight: 700 }}>Match League</h1>
+          <div className="hero-inner" style={{ alignItems: 'flex-start' }}>
+            <div className="hero-stripe" style={{ marginLeft: '28%', transform: 'translateX(-50%) skewX(-25deg)' }}>
+              <img src={smallLogo} alt="ML" className="hero-small-logo" />
+              <h1 className="hero-title" style={{ fontWeight: 700 }}>Match League</h1>
+            </div>
+            <p className="hero-sub" style={{ color: '#ffffffff', fontWeight: 700, marginLeft: '28%', transform: 'translateX(-50%)', textAlign: 'left' }}>Connect. Match. Win.</p>
           </div>
-          <p className="hero-sub" style={{ color: '#ffffffff', fontWeight: 700 }}>Connect. Match. Win.</p>
         </div>
+
+        {/* Übergangs-Overlay unten (15% des Bildes) */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '15%',
+          background: 'linear-gradient(180deg, transparent 0%, rgba(5, 15, 13, 0.7) 40%, #050f0d 100%)',
+          zIndex: 10
+        }} />
       </section>
+
+      {/* Design-Element zwischen Hero und Login */}
+      <div id="design-divider" style={{
+        height: 180,
+        background: 'linear-gradient(180deg, #050f0d 0%, #071716 100%)',
+        position: 'relative',
+        overflow: 'hidden',
+        marginTop: -2,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 32,
+        scrollMarginTop: '-5vh'
+      }}>
+        {/* Linker Strich */}
+        <div style={{
+          flex: 1,
+          maxWidth: 300,
+          height: 3,
+          background: 'linear-gradient(90deg, transparent, #debc7c)',
+          opacity: 0.8
+        }} />
+        
+        {/* Logo in der Mitte */}
+        <img 
+          src={smallLogo} 
+          alt="Match League" 
+          style={{
+            width: 80,
+            height: 80,
+            objectFit: 'contain',
+            opacity: 0.9,
+            filter: 'drop-shadow(0 4px 12px rgba(222, 188, 124, 0.3))'
+          }} 
+        />
+
+        {/* Rechter Strich */}
+        <div style={{
+          flex: 1,
+          maxWidth: 300,
+          height: 3,
+          background: 'linear-gradient(90deg, #debc7c, transparent)',
+          opacity: 0.8
+        }} />
+        
+        {/* Schattierung unten zum Login-Bereich */}
+        <div style={{
+          position: 'absolute',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '30%',
+          background: 'linear-gradient(180deg, transparent 0%, rgba(7, 23, 22, 0.4) 60%, rgba(7, 23, 22, 0.8) 100%)',
+          pointerEvents: 'none'
+        }} />
+      </div>
 
       <div style={{ textAlign: 'center', margin: '20px 0' }}>
         <h2 style={{ color: '#e6efe6', fontWeight: 700 }}>Willkommen bei Match League</h2>
@@ -316,16 +459,18 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
       <p>     </p>
       </div>
 
-      <div style={{
+      <div id="login-section" style={{
         maxWidth: 600,
-        margin: '20px auto 60px',
-        padding: '32px 36px',
-        borderRadius: 20,
-        background: 'linear-gradient(135deg,#071716,#0d2422)',
-        border: '1px solid rgba(255,255,255,0.08)',
-        boxShadow: '0 8px 32px -8px rgba(0,0,0,0.4), 0 2px 6px rgba(0,0,0,0.3)',
+        margin: '40px auto 60px',
+        padding: '40px 42px',
+        borderRadius: 24,
+        background: 'linear-gradient(135deg, rgba(11, 30, 25, 0.95) 0%, rgba(7, 23, 22, 0.98) 100%)',
+        border: '2px solid rgba(72, 186, 170, 0.15)',
+        boxShadow: '0 20px 60px -12px rgba(0,0,0,0.5), 0 8px 24px rgba(72, 186, 170, 0.08)',
         position: 'relative',
-        overflow: 'hidden'
+        overflow: 'hidden',
+        scrollMarginTop: 80,
+        backdropFilter: 'blur(20px)'
       }}>
         <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'radial-gradient(circle at 85% 20%, rgba(72,186,170,0.15), transparent 60%)' }} />
         <div style={{ position: 'relative' }}>
@@ -359,28 +504,30 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
                 right: '8px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                background: 'transparent',
-                border: 'none',
+                background: 'rgba(72, 186, 170, 0.15)',
+                border: '1.5px solid rgba(72, 186, 170, 0.4)',
                 color: '#48baaa',
-                fontSize: '16px',
+                fontSize: '14px',
                 fontWeight: 700,
                 cursor: 'pointer',
-                width: '24px',
-                height: '24px',
+                width: '26px',
+                height: '26px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: '50%',
-                opacity: 0.7,
+                opacity: 1,
                 transition: 'all 0.2s'
               }}
               onMouseOver={(e) => {
-                e.target.style.opacity = '1';
-                e.target.style.background = 'rgba(72, 186, 170, 0.1)';
+                e.target.style.background = 'rgba(72, 186, 170, 0.25)';
+                e.target.style.borderColor = '#48baaa';
+                e.target.style.transform = 'translateY(-50%) scale(1.05)';
               }}
               onMouseOut={(e) => {
-                e.target.style.opacity = '0.7';
-                e.target.style.background = 'transparent';
+                e.target.style.background = 'rgba(72, 186, 170, 0.15)';
+                e.target.style.borderColor = 'rgba(72, 186, 170, 0.4)';
+                e.target.style.transform = 'translateY(-50%) scale(1)';
               }}
               title="Passwort vergessen?"
             >
