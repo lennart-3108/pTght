@@ -40,7 +40,7 @@ git pull origin dev
 echo ""
 echo "📚 Installing backend dependencies..."
 cd backend
-npm ci
+npm ci --silent --no-audit 2>&1 | grep -v "deprecated" || true
 
 # WICHTIG: Datenbank-Migrationen ausführen
 echo ""
@@ -58,7 +58,7 @@ pm2 save
 echo ""
 echo "🏗️  Building frontend..."
 cd ../frontend
-npm ci
+npm ci --silent --no-audit 2>&1 | grep -v "deprecated" || true
 npm run build
 
 # Frontend in Webroot kopieren
