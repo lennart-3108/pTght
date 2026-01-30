@@ -120,10 +120,16 @@ module.exports = function authRoutes(ctx) {
       if (piErr) return res.status(500).json({ error: "Datenbankfehler" });
       const hasUsername = Array.isArray(cols) && cols.some(c => String(c.name).toLowerCase() === 'username');
       const key = String(email).trim();
-      const querySql = hasUsername
-        ? `SELECT id, email, password, is_admin, is_confirmed FROM users WHERE username = ? OR email = ?`
-        : `SELECT id, email, password, is_admin, is_confirmed FROM users WHERE email = ?`;
-      const params = hasUsername ? [key, key] : [key];
+      
+      // Special case: allow "admin" as username only
+      const isAdminLogin = key === 'admin';
+      
+      const querySql = hasUsername && isAdminLogin
+        ? `SELECT id, email, password, is_admin, is_confirmed FROM users WHERE username = ?`
+        : hasUsername
+          ? `SELECT id, email, password, is_admin, is_confirmed FROM users WHERE username = ? OR email = ?`
+          : `SELECT id, email, password, is_admin, is_confirmed FROM users WHERE email = ?`;
+      const params = hasUsername && isAdminLogin ? [key] : hasUsername ? [key, key] : [key];
 
       db.get(querySql, params, (err, user) => {
         if (err) return res.status(500).json({ error: "Datenbankfehler" });
