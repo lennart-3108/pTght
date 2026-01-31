@@ -40,7 +40,7 @@ module.exports = function locationRoutes(ctx) {
 
       // Find all locations in this city
       const locations = await knex('locations')
-        .where({ city: city.name, status: 'active' })
+        .where({ city: city.name, status: 'active', published: true })
         .select('*');
 
       console.log(`[availability] Found ${locations.length} locations in ${city.name}`);
@@ -176,6 +176,7 @@ module.exports = function locationRoutes(ctx) {
         .whereNotNull('city')
         .where('city', '!=', '')
         .where('status', 'active')
+        .where('published', true)
         .orderBy('city', 'asc')
         .pluck('city');
       

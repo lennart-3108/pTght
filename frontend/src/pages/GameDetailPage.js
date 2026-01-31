@@ -732,39 +732,39 @@ export default function GameDetailPage() {
   return (
     <div style={containerStyle}>
       {/* Hero match card */}
-      <div style={{ ...cardStyle, padding: 20, background: 'linear-gradient(145deg, #102a22, #0c1f1a)' }}>
+      <div style={{ ...cardStyle, padding: isMobile ? 12 : 20, background: 'linear-gradient(145deg, #102a22, #0c1f1a)' }}>
         {/* Join CTA for open matches (viewer is not host and opponent missing) */}
         {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && !(viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId))) && (() => {
           const isOpenMatch = game.league === 'Open Matches' || (game.league && game.league.includes('Open Matches'));
           const canJoin = isOpenMatch || !hasWeeklyMatch;
           return (
             <div style={{
-              padding: '20px',
+              padding: isMobile ? '12px' : '20px',
               background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.25), rgba(47, 107, 87, 0.15))',
               border: '2px solid rgba(222, 188, 124, 0.5)',
               borderRadius: 14,
-              marginBottom: 16,
+              marginBottom: isMobile ? 12 : 16,
               boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
             }}>
-              <div style={{ fontSize: 18, fontWeight: 700, color: '#debc7c', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 24 }}>🏆</span>
+              <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 700, color: '#debc7c', marginBottom: isMobile ? 8 : 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: isMobile ? 18 : 24 }}>🏆</span>
                 Mitspieler gesucht!
               </div>
-              <div style={{ color: '#e8efe8', fontSize: 14, marginBottom: 16, lineHeight: 1.5 }}>
+              <div style={{ color: '#e8efe8', fontSize: isMobile ? 12 : 14, marginBottom: isMobile ? 12 : 16, lineHeight: 1.5 }}>
                 {playerA.name} sucht einen Gegner für dieses Match. Tritt bei und fordere ihn heraus!
               </div>
               <button
                 onClick={joinMatch}
                 disabled={!canJoin}
                 style={{
-                  padding: '14px 24px',
+                  padding: isMobile ? '10px 16px' : '14px 24px',
                   borderRadius: 12,
                   border: 'none',
                   background: canJoin ? 'linear-gradient(135deg, #debc7c, #c9a75f)' : 'rgba(58, 74, 69, 0.5)',
                   color: canJoin ? '#10261f' : '#666',
                   cursor: canJoin ? 'pointer' : 'not-allowed',
                   fontWeight: 700,
-                  fontSize: 15,
+                  fontSize: isMobile ? 13 : 15,
                   width: '100%',
                   boxShadow: canJoin ? '0 6px 16px rgba(222, 188, 124, 0.4)' : 'none',
                   transition: 'all 0.3s ease',
@@ -802,10 +802,10 @@ export default function GameDetailPage() {
           const dt = terminProposal.proposed_datetime ? new Date(terminProposal.proposed_datetime) : null;
           
           return (
-            <div style={{ marginTop: 16 }}>
+            <div style={{ marginTop: isMobile ? 12 : 16 }}>
               <div style={{ 
-                marginBottom: 8,
-                fontSize: 14,
+                marginBottom: isMobile ? 6 : 8,
+                fontSize: isMobile ? 12 : 14,
                 fontWeight: 600,
                 color: '#debc7c'
               }}>
@@ -814,13 +814,13 @@ export default function GameDetailPage() {
               
               {proposalActionMsg && (
                 <div style={{
-                  padding: 10,
-                  marginBottom: 10,
+                  padding: isMobile ? 8 : 10,
+                  marginBottom: isMobile ? 8 : 10,
                   borderRadius: 8,
                   background: proposalActionMsg.includes('✅') || proposalActionMsg.includes('angenommen') ? 'rgba(74, 157, 95, 0.15)' : 'rgba(255, 107, 107, 0.15)',
                   border: `1px solid ${proposalActionMsg.includes('✅') || proposalActionMsg.includes('angenommen') ? '#4a9d5f' : '#ff6b6b'}`,
                   color: proposalActionMsg.includes('✅') || proposalActionMsg.includes('angenommen') ? '#6bff9d' : '#ff6b6b',
-                  fontSize: 13
+                  fontSize: isMobile ? 11 : 13
                 }}>
                   {proposalActionMsg}
                 </div>
@@ -828,23 +828,24 @@ export default function GameDetailPage() {
               
               <div style={{
                 display: 'flex',
+                flexDirection: isMobile ? 'column' : 'row',
                 justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: 12,
-                padding: '12px 14px',
+                alignItems: isMobile ? 'flex-start' : 'center',
+                gap: isMobile ? 8 : 12,
+                padding: isMobile ? '10px 12px' : '12px 14px',
                 backgroundColor: '#0f2a20',
                 border: '1px solid #26493c',
                 borderRadius: 10
               }}>
                 <div>
-                  <div style={{ fontWeight: 700, color: '#e8efe8' }}>
+                  <div style={{ fontWeight: 700, color: '#e8efe8', fontSize: isMobile ? 13 : 14 }}>
                     {dt ? dt.toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'Terminvorschlag'}
                   </div>
-                  <div style={{ color: '#9db', fontSize: 13 }}>
+                  <div style={{ color: '#9db', fontSize: isMobile ? 11 : 13 }}>
                     {byYou ? 'von dir' : 'vom Gegner'} · Status: <span style={{ color: '#c9a75f' }}>ausstehend</span>
                   </div>
                 </div>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: isMobile ? 6 : 8, flexWrap: 'wrap' }}>
                   {canAccept ? (
                     <>
                       <button 
@@ -854,8 +855,8 @@ export default function GameDetailPage() {
                           background: 'linear-gradient(135deg, #debc7c, #c9a75f)',
                           color: '#10261f',
                           border: 'none',
-                          padding: '10px 16px',
-                          fontSize: 14,
+                          padding: isMobile ? '8px 12px' : '10px 16px',
+                          fontSize: isMobile ? 12 : 14,
                           fontWeight: 700,
                           cursor: proposalActionLoading ? 'not-allowed' : 'pointer',
                           borderRadius: 10,
@@ -871,8 +872,8 @@ export default function GameDetailPage() {
                           background: 'rgba(222, 188, 124, 0.15)',
                           color: '#debc7c',
                           border: '1px solid #c9a75f',
-                          padding: '10px 14px',
-                          fontSize: 14,
+                          padding: isMobile ? '8px 10px' : '10px 14px',
+                          fontSize: isMobile ? 12 : 14,
                           fontWeight: 600,
                           cursor: proposalActionLoading ? 'not-allowed' : 'pointer',
                           borderRadius: 10
@@ -887,8 +888,8 @@ export default function GameDetailPage() {
                           background: 'rgba(38, 73, 60, 0.6)',
                           color: '#cfe',
                           border: '1px solid #26493c',
-                          padding: '10px 14px',
-                          fontSize: 14,
+                          padding: isMobile ? '8px 10px' : '10px 14px',
+                          fontSize: isMobile ? 12 : 14,
                           fontWeight: 600,
                           cursor: proposalActionLoading ? 'not-allowed' : 'pointer',
                           borderRadius: 10
@@ -904,8 +905,8 @@ export default function GameDetailPage() {
                         background: 'rgba(38, 73, 60, 0.6)',
                         color: '#cfe',
                         border: '1px solid #26493c',
-                        padding: '10px 14px',
-                        fontSize: 14,
+                        padding: isMobile ? '8px 10px' : '10px 14px',
+                        fontSize: isMobile ? 12 : 14,
                         fontWeight: 600,
                         cursor: 'pointer',
                         borderRadius: 10
@@ -923,19 +924,19 @@ export default function GameDetailPage() {
         {/* Mitspieler gesucht Info - für Match Creator (oben im Hero) */}
         {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
           <div style={{ 
-            marginTop: 16,
-            padding: '20px', 
+            marginTop: isMobile ? 12 : 16,
+            padding: isMobile ? '12px' : '20px', 
             background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.2), rgba(47, 107, 87, 0.1))',
             border: '2px solid rgba(222, 188, 124, 0.4)',
             borderRadius: 14,
             textAlign: 'center',
             boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
           }}>
-            <div style={{ fontSize: 18, fontWeight: 700, color: '#debc7c', marginBottom: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <span style={{ fontSize: 24 }}>👥</span>
+            <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 700, color: '#debc7c', marginBottom: isMobile ? 8 : 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+              <span style={{ fontSize: isMobile ? 18 : 24 }}>👥</span>
               Mitspieler gesucht
             </div>
-            <div style={{ color: '#c5d9ce', fontSize: 14, lineHeight: 1.6, marginBottom: 10 }}>
+            <div style={{ color: '#c5d9ce', fontSize: isMobile ? 12 : 14, lineHeight: 1.6, marginBottom: isMobile ? 8 : 10 }}>
               Dein Match ist veröffentlicht und für alle Spieler sichtbar.
             </div>
             <div style={{ 
@@ -955,7 +956,7 @@ export default function GameDetailPage() {
 
         {/* Header row with action buttons */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 24, fontWeight: 700 }}>{game.league || 'Liga'}</div>
+          <div style={{ fontSize: isMobile ? 18 : 24, fontWeight: 700 }}>{game.league || 'Liga'}</div>
           
           {/* Action buttons moved to top right */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -963,12 +964,12 @@ export default function GameDetailPage() {
               <Link
                 to={`/matches/${gameId}/chat`}
                 style={{
-                  padding: '8px 12px',
+                  padding: isMobile ? '6px 10px' : '8px 12px',
                   borderRadius: 8,
                   border: '1px solid #2f6b57',
                   background: '#0e2a22',
                   color: '#dfe',
-                  fontSize: 14,
+                  fontSize: isMobile ? 12 : 14,
                   textDecoration: 'none',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -995,19 +996,19 @@ export default function GameDetailPage() {
               </Link>
             )}
             {(token && game && game.home_score == null && game.away_score == null && !booking && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
-              <button onClick={() => setShowTerminManager(true)} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', fontSize: 14 }}>
+              <button onClick={() => setShowTerminManager(true)} style={{ padding: isMobile ? '6px 10px' : '8px 12px', borderRadius: 8, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', fontSize: isMobile ? 12 : 14 }}>
                 {terminButtonLabel}
               </button>
             )}
             {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
-              <button onClick={cancelMatch} style={{ padding: '8px 12px', borderRadius: 8, border: '1px solid #553f3f', background: '#2a1b1b', color: '#e9d8d8', fontSize: 14 }}>ABSAGEN</button>
+              <button onClick={cancelMatch} style={{ padding: isMobile ? '6px 10px' : '8px 12px', borderRadius: 8, border: '1px solid #553f3f', background: '#2a1b1b', color: '#e9d8d8', fontSize: isMobile ? 12 : 14 }}>ABSAGEN</button>
             )}
           </div>
         </div>
 
         {/* Date + status in one line */}
-        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ fontSize: 20 }}>
+        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flexWrap: 'wrap' }}>
+          <div style={{ fontSize: isMobile ? 14 : 20 }}>
             {(game.status === 'scheduled' || (terminProposal && terminProposal.status === 'accepted')) && game.kickoff_at ? (
               <>
                 {formatDate(game.kickoff_at)}
@@ -1122,7 +1123,7 @@ export default function GameDetailPage() {
                 />
                 <div style={{ 
                   marginTop: isMobile ? 6 : 10, 
-                  fontSize: isMobile ? 16 : 22, 
+                  fontSize: isMobile ? 14 : 22, 
                   fontWeight: 700 
                 }}>{playerA.name}</div>
               </Link>
@@ -1131,16 +1132,16 @@ export default function GameDetailPage() {
                 <Avatar 
                   userId={null} 
                   name={playerA.name} 
-                  size={110} 
+                  size={isMobile ? 80 : 110} 
                 />
-                <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerA.name}</div>
+                <div style={{ marginTop: isMobile ? 6 : 10, fontSize: isMobile ? 14 : 22, fontWeight: 700 }}>{playerA.name}</div>
               </>
             )}
             <div style={{ color: '#9db' }}>{tablePositions[playerA.name] ? `${tablePositions[playerA.name].rank}. Rang` : '—'}</div>
             
             {/* Letzte 5 Spiele Statistik */}
             {playerA.id && histA.length > 0 && (
-              <div style={{ marginTop: 8, fontSize: 13, color: '#9db' }}>
+              <div style={{ marginTop: isMobile ? 6 : 8, fontSize: isMobile ? 11 : 13, color: '#9db' }}>
                 <div style={{ marginBottom: 4, fontWeight: 600 }}>Letzte 5 Spiele:</div>
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                   {histA.slice(0, 5).map(h => {
@@ -1149,14 +1150,14 @@ export default function GameDetailPage() {
                     const draw = h.home_score === h.away_score;
                     return (
                       <span key={h.id} style={{
-                        width: 20,
-                        height: 20,
+                        width: isMobile ? 18 : 20,
+                        height: isMobile ? 18 : 20,
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         background: won ? '#2d5f3f' : draw ? '#5f5f2d' : '#5f2d2d',
                         borderRadius: 4,
-                        fontSize: 11,
+                        fontSize: isMobile ? 10 : 11,
                         fontWeight: 700
                       }}>
                         {won ? 'S' : draw ? 'U' : 'N'}
@@ -1169,10 +1170,10 @@ export default function GameDetailPage() {
           </div>
           
           {/* Center section with VS or Counters */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
             {(token && isParticipant && (game.home_score == null && game.away_score == null) && !!game.kickoff_at) ? (
               <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16 }}>
                   <Counter
                     value={hScore}
                     onChange={setHScore}
@@ -1180,7 +1181,7 @@ export default function GameDetailPage() {
                     max={99}
                     disabled={!canSubmit}
                   />
-                  <span style={{ fontSize: 28, color: '#9db', fontWeight: 700 }}>VS</span>
+                  <span style={{ fontSize: isMobile ? 20 : 28, color: '#9db', fontWeight: 700 }}>VS</span>
                   <Counter
                     value={aScore}
                     onChange={setAScore}
@@ -1190,12 +1191,12 @@ export default function GameDetailPage() {
                   />
                 </div>
                 <button disabled={!canSubmit || submitLoading} type="submit" onClick={submitResult} style={{ 
-                  padding: '10px 20px', 
+                  padding: isMobile ? '8px 14px' : '10px 20px', 
                   borderRadius: 20, 
                   border: 'none',
                   background: (canSubmit && !submitLoading) ? 'linear-gradient(135deg, #d4af37, #b8941f)' : 'rgba(100, 100, 100, 0.3)',
                   color: (canSubmit && !submitLoading) ? '#000' : '#666',
-                  fontSize: 14,
+                  fontSize: isMobile ? 12 : 14,
                   fontWeight: 700,
                   cursor: (canSubmit && !submitLoading) ? 'pointer' : 'not-allowed',
                   boxShadow: (canSubmit && !submitLoading) ? '0 4px 12px rgba(212, 175, 55, 0.3)' : 'none',
@@ -1228,7 +1229,7 @@ export default function GameDetailPage() {
               </>
             ) : (
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: 40, color: '#cde' }}>VS</div>
+                <div style={{ fontSize: isMobile ? 28 : 40, color: '#cde' }}>VS</div>
                 {(token && isParticipant && (game.home_score == null && game.away_score == null) && !game.kickoff_at) && (
                   <div style={{ marginTop: 10, fontSize: 13, color: '#ffc864', background: 'rgba(255, 200, 100, 0.08)', border: '1px solid rgba(255, 200, 100, 0.25)', borderRadius: 10, padding: '8px 10px', maxWidth: 360 }}>
                     📅 Ergebnis erst möglich, wenn ein Termin festgelegt ist.
@@ -1247,7 +1248,7 @@ export default function GameDetailPage() {
                   size={isTablet ? 90 : isMobile ? 70 : 110} 
                   style={{ marginLeft: 'auto' }}
                 />
-                <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerB.name}</div>
+                <div style={{ marginTop: isMobile ? 6 : 10, fontSize: isMobile ? 14 : 22, fontWeight: 700 }}>{playerB.name}</div>
               </Link>
             ) : (
               <>
@@ -1257,14 +1258,14 @@ export default function GameDetailPage() {
                   size={isTablet ? 90 : isMobile ? 70 : 110} 
                   style={{ marginLeft: 'auto' }}
                 />
-                <div style={{ marginTop: 10, fontSize: 22, fontWeight: 700 }}>{playerB.name}</div>
+                <div style={{ marginTop: isMobile ? 6 : 10, fontSize: isMobile ? 14 : 22, fontWeight: 700 }}>{playerB.name}</div>
               </>
             )}
             <div style={{ color: '#9db' }}>{tablePositions[playerB.name] ? `${tablePositions[playerB.name].rank}. Rang` : '—'}</div>
             
             {/* Letzte 5 Spiele Statistik */}
             {playerB.id && histB.length > 0 && (
-              <div style={{ marginTop: 8, fontSize: 13, color: '#9db' }}>
+              <div style={{ marginTop: isMobile ? 6 : 8, fontSize: isMobile ? 11 : 13, color: '#9db' }}>
                 <div style={{ marginBottom: 4, fontWeight: 600 }}>Letzte 5 Spiele:</div>
                 <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
                   {histB.slice(0, 5).map(h => {
@@ -1273,14 +1274,14 @@ export default function GameDetailPage() {
                     const draw = h.home_score === h.away_score;
                     return (
                       <span key={h.id} style={{
-                        width: 20,
-                        height: 20,
+                        width: isMobile ? 18 : 20,
+                        height: isMobile ? 18 : 20,
                         display: 'inline-flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         background: won ? '#2d5f3f' : draw ? '#5f5f2d' : '#5f2d2d',
                         borderRadius: 4,
-                        fontSize: 11,
+                        fontSize: isMobile ? 10 : 11,
                         fontWeight: 700
                       }}>
                         {won ? 'S' : draw ? 'U' : 'N'}
@@ -1296,7 +1297,7 @@ export default function GameDetailPage() {
         {/* Final result banner (when completed) */}
         {isCompleted && (
           <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
-            <div style={{ fontSize: 36, fontWeight: 800, color: '#e8efe8', letterSpacing: 1, background: '#0a1c17', border: '1px solid #26493c', padding: '8px 16px', borderRadius: 12 }}>
+            <div style={{ fontSize: isMobile ? 24 : 36, fontWeight: 800, color: '#e8efe8', letterSpacing: 1, background: '#0a1c17', border: '1px solid #26493c', padding: isMobile ? '6px 12px' : '8px 16px', borderRadius: 12 }}>
               {Number(game.home_score)} : {Number(game.away_score)}
             </div>
           </div>

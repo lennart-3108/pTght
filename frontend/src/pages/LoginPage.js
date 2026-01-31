@@ -478,13 +478,13 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
         {/* Login-Formular */}
         <form onSubmit={handleLogin}>
           <input
-            type="email"
-            placeholder="E-Mail"
+            type={email.includes('@') ? "email" : "text"}
+            placeholder="E-Mail oder Username"
             value={email}
             onChange={e => setEmail(e.target.value)}
             required
             autoComplete="email"
-            style={{ display: "block", marginBottom: 8, width: "100%", background: '#fafcf9', border: '1px solid rgba(0,0,0,0.12)', padding: '8px' }}
+            style={{ display: "block", marginBottom: 8, width: "100%", background: '#fafcf9', border: '1px solid rgba(0,0,0,0.12)', padding: '8px', color: '#071716' }}
           />
           <div style={{ position: 'relative', marginBottom: 8 }}>
             <input
@@ -504,30 +504,33 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
                 right: '8px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                background: 'rgba(72, 186, 170, 0.15)',
-                border: '1.5px solid rgba(72, 186, 170, 0.4)',
+                background: 'rgba(72, 186, 170, 0.35)',
+                border: '2px solid rgba(72, 186, 170, 0.7)',
                 color: '#48baaa',
                 fontSize: '14px',
-                fontWeight: 700,
+                fontWeight: 800,
                 cursor: 'pointer',
-                width: '26px',
-                height: '26px',
+                width: '28px',
+                height: '28px',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 borderRadius: '50%',
                 opacity: 1,
-                transition: 'all 0.2s'
+                transition: 'all 0.2s',
+                boxShadow: '0 2px 8px rgba(72, 186, 170, 0.2)'
               }}
               onMouseOver={(e) => {
-                e.target.style.background = 'rgba(72, 186, 170, 0.25)';
+                e.target.style.background = 'rgba(72, 186, 170, 0.5)';
                 e.target.style.borderColor = '#48baaa';
-                e.target.style.transform = 'translateY(-50%) scale(1.05)';
+                e.target.style.transform = 'translateY(-50%) scale(1.1)';
+                e.target.style.boxShadow = '0 4px 12px rgba(72, 186, 170, 0.4)';
               }}
               onMouseOut={(e) => {
-                e.target.style.background = 'rgba(72, 186, 170, 0.15)';
-                e.target.style.borderColor = 'rgba(72, 186, 170, 0.4)';
+                e.target.style.background = 'rgba(72, 186, 170, 0.35)';
+                e.target.style.borderColor = 'rgba(72, 186, 170, 0.7)';
                 e.target.style.transform = 'translateY(-50%) scale(1)';
+                e.target.style.boxShadow = '0 2px 8px rgba(72, 186, 170, 0.2)';
               }}
               title="Passwort vergessen?"
             >
@@ -560,7 +563,28 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
           >
             Login
           </button>
-          {loginMsg && <div style={{ marginTop: 8 }}>{loginMsg}</div>}
+          {loginMsg && (
+            <div style={{
+              marginTop: 12,
+              padding: '12px 16px',
+              borderRadius: 10,
+              background: loginMsg.includes('✅') 
+                ? 'linear-gradient(135deg, rgba(34, 197, 94, 0.15), rgba(34, 197, 94, 0.08))'
+                : 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.08))',
+              border: loginMsg.includes('✅')
+                ? '1.5px solid rgba(34, 197, 94, 0.4)'
+                : '1.5px solid rgba(239, 68, 68, 0.4)',
+              color: loginMsg.includes('✅') ? '#22c55e' : '#ef4444',
+              fontSize: 14,
+              fontWeight: 600,
+              textAlign: 'center',
+              boxShadow: loginMsg.includes('✅')
+                ? '0 4px 12px rgba(34, 197, 94, 0.15)'
+                : '0 4px 12px rgba(239, 68, 68, 0.15)'
+            }}>
+              {loginMsg}
+            </div>
+          )}
 
           {/* Email confirmation notice - small popup below login */}
           {showEmailConfirmPopup && (

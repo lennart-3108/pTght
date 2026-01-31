@@ -223,21 +223,32 @@
 }
 
 /* Mobile: Ensure popover stays within viewport */
-@media (max-width: 320px) {
+@media (max-width: 768px) {
   .ml-header {
-    --ml-header-height: 40px; /* Kleinere Höhe für Mobile */
+    --ml-header-height: 44px; /* Kleinere Höhe für Mobile */
   }
-  .ml-header__logo {
-    margin-left: -5%; /* 5% nach links einziehen */
+  .ml-logo-full {
+    max-width: 150px; /* Limit logo width on mobile */
   }
   .ml-header__actions {
-    padding-right: 8px; /* Weniger Padding auf Mobile */
-    gap: 4px; /* Weniger Abstand zwischen Icons */
+    padding-right: 12px; /* Weniger Padding auf Mobile */
+    gap: 6px; /* Weniger Abstand zwischen Icons */
   }
   .ml-action {
-    min-width: 32px; /* Kleinere Buttons */
+    min-width: 34px; /* Kleinere Buttons */
     font-size: 16px;
-    padding: 4px 6px;
+    padding: 5px 7px;
+  }
+  .ml-icon {
+    width: 18px;
+    height: 18px;
+  }
+  .ml-action__badge {
+    min-width: 16px;
+    height: 16px;
+    font-size: 10px;
+    top: -5px;
+    right: -3px;
   }
   .ml-actionWrap > .ml-popover {
     position: fixed !important;

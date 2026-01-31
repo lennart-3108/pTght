@@ -271,7 +271,8 @@ module.exports = function leaguesRoutes(ctx) {
       // Build base query with LEFT JOIN
       let query = k("leagues as l")
         .leftJoin("cities as c", "l.city_id", "c.id")
-        .leftJoin("sports as s", "l.sport_id", "s.id");
+        .leftJoin("sports as s", "l.sport_id", "s.id")
+        .where("l.published", true); // Only published leagues visible to users
 
       // Apply filters
       if (cityId) {

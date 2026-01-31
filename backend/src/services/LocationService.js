@@ -173,7 +173,7 @@ class LocationService {
    */
   async searchLocations(filters = {}) {
     let query = this.db('locations')
-      .where({ status: 'active' });
+      .where({ status: 'active', published: true });
 
     // City filter by name
     if (filters.city) {

@@ -17,6 +17,7 @@ import GameDetailPage from "./pages/GameDetailPage"; // neu
 import MatchChatPage from "./pages/MatchChatPage"; // match chat page
 import SearchMatchDialog from "./pages/SearchMatchDialog"; // neu
 import AdminPage from "./pages/AdminPage"; // neu
+import AdminPublishing from "./pages/AdminPublishing"; // publishing admin page
 import EditProfilePage from "./pages/EditProfilePage"; // edit profile
 import BookingPage from "./pages/BookingPage"; // booking page (legacy redirects to /slots)
 import SlotSearchPage from "./pages/SlotSearchPage";
@@ -419,6 +420,20 @@ function App() {
               <ProtectedRoute token={token} setToken={setToken}>
                 {isAdminFlag ? (
                   <AdminPage />
+                ) : (
+                  <div style={{ padding: 16 }}>403 – Nur für Admins</div>
+                )}
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Admin Publishing (nur Admin) */}
+          <Route
+            path="/admin/publishing"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                {isAdminFlag ? (
+                  <AdminPublishing />
                 ) : (
                   <div style={{ padding: 16 }}>403 – Nur für Admins</div>
                 )}

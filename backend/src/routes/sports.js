@@ -17,6 +17,7 @@ module.exports = function sportsRoutes(ctx) {
         sc.name as category_name
       FROM sports s
       LEFT JOIN sport_categories sc ON s.category_id = sc.id
+      WHERE s.published = 1
       ORDER BY s.sort_order, s.name
     `, [], (err, rows) => {
       if (err) return res.status(500).json({ error: "Datenbankfehler" });
@@ -44,6 +45,7 @@ module.exports = function sportsRoutes(ctx) {
         sc.sort_order as cat_sort
       FROM sports s
       LEFT JOIN sport_categories sc ON s.category_id = sc.id
+      WHERE s.published = 1
       ORDER BY sc.sort_order, s.name
     `, [], (err, sports) => {
       if (err) {
@@ -112,7 +114,7 @@ module.exports = function sportsRoutes(ctx) {
   // Einzelne Sportart
   router.get("/:id", (req, res) => {
     const id = Number(req.params.id);
-    db.get(`SELECT id, name FROM sports WHERE id = ?`, [id], (err, row) => {
+    db.get(`SELECT id, name FROM sports WHERE id = ? AND published = 1`, [id], (err, row) => {
       if (err) return res.status(500).json({ error: "Datenbankfehler" });
       if (!row) return res.status(404).json({ error: "Nicht gefunden" });
       res.json(row);
@@ -121,7 +123,7 @@ module.exports = function sportsRoutes(ctx) {
 
   // Namen aller Sportarten (ohne IDs)
   router.get("/names", (_req, res) => {
-    db.all("SELECT name FROM sports ORDER BY name", (err, rows) =>
+    db.all("SELECT name FROM sports WHERE published = 1 ORDER BY name", (err, rows) =>
       err ? res.status(500).json({ error: "Datenbankfehler" }) : res.json((rows || []).map(r => r.name))
     );
   });

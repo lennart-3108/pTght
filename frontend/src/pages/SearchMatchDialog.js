@@ -64,7 +64,7 @@ export default function SearchMatchDialog() {
   const [cmAvailability, setCmAvailability] = useState([]); // Array of {date, timeStart, timeEnd, endDate?}
   const [tempTimesByDate, setTempTimesByDate] = useState({}); // { [isoDate]: [{ id, start, end }] }
   const [selectedDates, setSelectedDates] = useState([]); // ISO date strings
-  const [availabilityMode, setAvailabilityMode] = useState('per-day'); // 'per-day' | 'preset'
+  const [availabilityMode, setAvailabilityMode] = useState('preset'); // 'per-day' | 'preset'
   const [presetSelections, setPresetSelections] = useState({ morning: false, midday: false, evening: false });
   const [defaultsLoaded, setDefaultsLoaded] = useState(false);
   const [locationPrefillDone, setLocationPrefillDone] = useState(false);
@@ -662,9 +662,31 @@ export default function SearchMatchDialog() {
       setCreateErr('Bitte wähle ein Level aus');
       return;
     }
-    if (cmAvailability.length === 0) {
-      setCreateErr('Bitte mindestens einen verfügbaren Zeitraum eintragen');
-      return;
+    
+    // Bei preset-Modus: Verfügbarkeit aus presetSelections generieren
+    let availability = cmAvailability;
+    if (availabilityMode === 'preset') {
+      const activePresets = presetOptions.filter(p => presetSelections[p.key]);
+      if (activePresets.length === 0) {
+        setCreateErr('Bitte mindestens einen Zeitraum auswählen.');
+        return;
+      }
+      if (selectedDates.length === 0) {
+        setCreateErr('Bitte mindestens ein Datum wählen.');
+        return;
+      }
+      
+      availability = [];
+      selectedDates.forEach(ds => {
+        activePresets.forEach(p => {
+          availability.push({ date: ds, timeStart: p.start, timeEnd: p.end });
+        });
+      });
+    } else {
+      if (cmAvailability.length === 0) {
+        setCreateErr('Bitte mindestens einen verfügbaren Zeitraum eintragen');
+        return;
+      }
     }
     try {
       setCreating(true);
@@ -684,7 +706,7 @@ export default function SearchMatchDialog() {
         when_type: cmWhenType || null,
         player_level: cmType,
         slot_duration: cmSlotDuration, // Slot-Dauer in Minuten
-        availability: cmAvailability, // Verfügbare Zeiträume
+        availability: availability, // Verfügbare Zeiträume
       };
       
       // Add location if selected
@@ -1177,32 +1199,58 @@ export default function SearchMatchDialog() {
 
       {/* Create Match Modal */}
       {showCreate && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', zIndex: 1000, padding: '16px', overflowY: 'auto' }} onClick={closeCreate}>
-          <div className="ml-card" style={{ width: '100%', maxWidth: 600, maxHeight: 'calc(100vh - 32px)', overflowY: 'auto', marginTop: 'auto', marginBottom: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }} onClick={(e) => e.stopPropagation()}>
+        <div 
+          style={{ 
+            position: 'fixed', 
+            inset: 0, 
+            background: 'rgba(0,0,0,0.6)', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center', 
+            zIndex: 1000,
+            padding: '8px'
+          }} 
+          onClick={closeCreate}
+        >
+          <div 
+            className="ml-card" 
+            style={{ 
+              width: '100%', 
+              maxWidth: 600, 
+              maxHeight: '100%',
+              overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              scrollbarWidth: 'none', 
+              msOverflowStyle: 'none'
+            }} 
+            onClick={(e) => e.stopPropagation()}
+          >
             {/* Header */}
-            <div style={{ marginBottom: 20, paddingBottom: 16, borderBottom: '1px solid #1a3c33' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 6 }}>
-                <h2 style={{ margin: 0, fontSize: 22, fontWeight: 700 }}>Öffentliches Match erstellen</h2>
+            <div style={{ marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid #1a3c33' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 4, gap: 8 }}>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, lineHeight: 1.3 }}>Öffentliches Match erstellen</h2>
                 <button 
                   onClick={closeCreate}
                   style={{
                     background: 'transparent',
                     border: 'none',
                     color: '#e8efe8',
-                    fontSize: 28,
+                    fontSize: 32,
                     cursor: 'pointer',
                     padding: 0,
                     lineHeight: 1,
-                    marginTop: -4
+                    marginTop: -6,
+                    minWidth: 32,
+                    flexShrink: 0
                   }}
                 >×</button>
               </div>
-              <p style={{ margin: 0, color: '#9db', fontSize: 14, lineHeight: 1.4 }}>
+              <p style={{ margin: 0, color: '#9db', fontSize: 13, lineHeight: 1.4 }}>
                 Erstelle ein öffentliches Match, das andere Spieler finden und beitreten können.
               </p>
             </div>
 
-            <div style={{ display: 'grid', gap: 20 }}>
+            <div style={{ display: 'grid', gap: 16 }}>
               {/* 1. Sport und Ort */}
               <div style={{ display: 'grid', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -1301,7 +1349,7 @@ export default function SearchMatchDialog() {
                   <span style={{ fontWeight: 700, fontSize: 16, color: '#debc7c' }}>Level</span>
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginLeft: 36, opacity: step1Complete ? 1 : 0.5 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginLeft: 36, opacity: step1Complete ? 1 : 0.5 }}>
                   {['Starter','Experienced','Pro'].map(t => (
                     <button
                       key={t}
@@ -1309,14 +1357,14 @@ export default function SearchMatchDialog() {
                       onClick={()=> step1Complete && setCmType(t)}
                       disabled={!step1Complete}
                       style={{ 
-                        padding: '12px 10px', 
+                        padding: '10px 8px', 
                         borderRadius: 8, 
                         border: cmType===t ? '2px solid #debc7c' : '2px solid #2f6b57', 
                         background: cmType===t ? '#1a3c33' : '#0e2a22',
                         color: cmType===t ? '#debc7c' : '#e8efe8',
                         cursor: step1Complete ? 'pointer' : 'not-allowed',
                         fontWeight: 600,
-                        fontSize: 13,
+                        fontSize: 12,
                         transition: 'all 0.2s'
                       }}
                     >
@@ -1326,7 +1374,7 @@ export default function SearchMatchDialog() {
                 </div>
               </div>
 
-              {/* 3. Gewünschter Zeitpunkt */}
+              {/* 4. Gewünschter Zeitpunkt */}
               <div style={{ display: 'grid', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ 
@@ -1341,33 +1389,33 @@ export default function SearchMatchDialog() {
                     fontWeight: 700,
                     fontSize: 14,
                     transition: 'all 0.3s'
-                  }}>3</div>
+                  }}>4</div>
                   <span style={{ fontWeight: 700, fontSize: 16, color: '#debc7c' }}>Gewünschter Zeitpunkt</span>
                 </div>
                 
                 {/* Wann-Typ Auswahl */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginLeft: 36, opacity: step2Complete ? 1 : 0.5 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginLeft: 36, opacity: step2Complete ? 1 : 0.5 }}>
                   <button 
                     type="button"
                     onClick={() => step2Complete && setCmWhenType('exact')}
                     disabled={!step2Complete}
                     style={{
-                      padding: '14px 8px',
+                      padding: '10px 6px',
                       borderRadius: 10,
                       border: cmWhenType === 'exact' ? '2px solid #debc7c' : '2px solid #2f6b57',
                       background: cmWhenType === 'exact' ? '#1a3c33' : '#0e2a22',
                       color: cmWhenType === 'exact' ? '#debc7c' : '#e8efe8',
                       cursor: step2Complete ? 'pointer' : 'not-allowed',
                       fontWeight: 600,
-                      fontSize: 13,
+                      fontSize: 11,
                       textAlign: 'center',
                       transition: 'all 0.2s',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: 4
+                      gap: 3
                     }}
                   >
-                    <div style={{ fontSize: 20 }}>📅</div>
+                    <div style={{ fontSize: 18 }}>📅</div>
                     <div>Fester Tag</div>
                   </button>
                   <button 
@@ -1375,22 +1423,22 @@ export default function SearchMatchDialog() {
                     onClick={() => step2Complete && setCmWhenType('range')}
                     disabled={!step2Complete}
                     style={{
-                      padding: '14px 8px',
+                      padding: '10px 6px',
                       borderRadius: 10,
                       border: cmWhenType === 'range' ? '2px solid #debc7c' : '2px solid #2f6b57',
                       background: cmWhenType === 'range' ? '#1a3c33' : '#0e2a22',
                       color: cmWhenType === 'range' ? '#debc7c' : '#e8efe8',
                       cursor: step2Complete ? 'pointer' : 'not-allowed',
                       fontWeight: 600,
-                      fontSize: 13,
+                      fontSize: 11,
                       textAlign: 'center',
                       transition: 'all 0.2s',
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: 4
+                      gap: 3
                     }}
                   >
-                    <div style={{ fontSize: 20 }}>📆</div>
+                    <div style={{ fontSize: 18 }}>📆</div>
                     <div>Zeitraum</div>
                   </button>
                   <button 
@@ -1398,14 +1446,14 @@ export default function SearchMatchDialog() {
                     onClick={() => step2Complete && setCmWhenType('timewindow')}
                     disabled={!step2Complete}
                     style={{
-                      padding: '14px 8px',
+                      padding: '10px 6px',
                       borderRadius: 10,
                       border: cmWhenType === 'timewindow' ? '2px solid #debc7c' : '2px solid #2f6b57',
                       background: cmWhenType === 'timewindow' ? '#1a3c33' : '#0e2a22',
                       color: cmWhenType === 'timewindow' ? '#debc7c' : '#e8efe8',
                       cursor: step2Complete ? 'pointer' : 'not-allowed',
                       fontWeight: 600,
-                      fontSize: 13,
+                      fontSize: 11,
                       textAlign: 'center',
                       transition: 'all 0.2s',
                       display: 'flex',
@@ -1604,7 +1652,7 @@ export default function SearchMatchDialog() {
                 )}
               </div>
 
-              {/* 4. Spiellänge festlegen */}
+              {/* 3. Spiellänge festlegen */}
               <div style={{ display: 'grid', gap: 10 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ 
@@ -1619,7 +1667,7 @@ export default function SearchMatchDialog() {
                     fontWeight: 700,
                     fontSize: 14,
                     transition: 'all 0.3s'
-                  }}>4</div>
+                  }}>3</div>
                   <span style={{ fontWeight: 700, fontSize: 16, color: '#debc7c' }}>Spiellänge</span>
                 </div>
                 
@@ -1753,7 +1801,7 @@ export default function SearchMatchDialog() {
 
                     {availabilityMode === 'preset' && (
                       <div style={{ display: 'grid', gap: 10, padding: 12, borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22' }}>
-                        <div style={{ fontSize: 12, color: '#9db' }}>Wähle einen oder mehrere Zeiträume. Sie werden auf alle markierten Tage angewendet (ohne Überschneidungen).</div>
+                        <div style={{ fontSize: 12, color: '#9db' }}>Wähle einen oder mehrere Zeiträume. Sie werden beim Absenden des Formulars auf alle markierten Tage angewendet.</div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8 }}>
                           {presetOptions.map(p => (
                             <button
@@ -1777,24 +1825,6 @@ export default function SearchMatchDialog() {
                               <span style={{ fontSize: 11, color: '#9db' }}>{p.start} – {p.end}</span>
                             </button>
                           ))}
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                          <button
-                            type="button"
-                            onClick={applyPresetsToAllDays}
-                            style={{
-                              background: '#debc7c',
-                              color: '#10261f',
-                              border: 'none',
-                              padding: '10px 14px',
-                              borderRadius: 10,
-                              fontWeight: 800,
-                              cursor: 'pointer',
-                              fontSize: 13
-                            }}
-                          >
-                            Auf alle markierten Tage anwenden
-                          </button>
                         </div>
                       </div>
                     )}
@@ -2050,16 +2080,16 @@ export default function SearchMatchDialog() {
                 </button>
                 <button 
                   onClick={handleCreate} 
-                  disabled={creating || !cmSportId || !cmCityId || !cmWhenType || !cmType || cmAvailability.length === 0} 
+                  disabled={creating || !cmSportId || !cmCityId || !cmWhenType || !cmType || (availabilityMode === 'preset' ? (selectedDates.length === 0 || Object.values(presetSelections).every(v => !v)) : cmAvailability.length === 0)} 
                   style={{ 
-                    background: (!cmSportId || !cmCityId || !cmWhenType || !cmType || cmAvailability.length === 0) ? '#5a5a5a' : '#debc7c', 
-                    color: (!cmSportId || !cmCityId || !cmWhenType || !cmType || cmAvailability.length === 0) ? '#9a9a9a' : '#10261f', 
+                    background: (!cmSportId || !cmCityId || !cmWhenType || !cmType || (availabilityMode === 'preset' ? (selectedDates.length === 0 || Object.values(presetSelections).every(v => !v)) : cmAvailability.length === 0)) ? '#5a5a5a' : '#debc7c', 
+                    color: (!cmSportId || !cmCityId || !cmWhenType || !cmType || (availabilityMode === 'preset' ? (selectedDates.length === 0 || Object.values(presetSelections).every(v => !v)) : cmAvailability.length === 0)) ? '#9a9a9a' : '#10261f', 
                     padding: '12px 24px', 
                     borderRadius: 10, 
                     border: 'none', 
                     fontWeight: 700,
                     fontSize: 14,
-                    cursor: creating || !cmSportId || !cmCityId || !cmWhenType || !cmType || cmAvailability.length === 0 ? 'not-allowed' : 'pointer',
+                    cursor: creating || !cmSportId || !cmCityId || !cmWhenType || !cmType || (availabilityMode === 'preset' ? (selectedDates.length === 0 || Object.values(presetSelections).every(v => !v)) : cmAvailability.length === 0) ? 'not-allowed' : 'pointer',
                     transition: 'all 0.2s',
                     display: 'flex',
                     alignItems: 'center',
