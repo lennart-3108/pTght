@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 // use native fetch instead of axios to avoid axios vulnerability
 import { API_BASE } from "../config";
 import { useNavigate } from "react-router-dom";
+import AdminPublishing from "./AdminPublishing";
 
 export default function AdminPage() {
   const [stats, setStats] = useState(null);
@@ -22,7 +23,7 @@ export default function AdminPage() {
   const [sortDirection, setSortDirection] = useState('asc');
   const [selectedRows, setSelectedRows] = useState(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
-  const [activeTab, setActiveTab] = useState('database'); // 'database' or 'applications'
+  const [activeTab, setActiveTab] = useState('database'); // 'database', 'applications', or 'publishing'
   const [testResults, setTestResults] = useState({});
 
   const token = localStorage.getItem("token");
@@ -327,6 +328,22 @@ export default function AdminPage() {
           }}
         >
           🧪 Applications Tests
+        </button>
+        <button
+          onClick={() => setActiveTab('publishing')}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: activeTab === 'publishing' ? 'var(--primary-600, #145a4b)' : 'transparent',
+            color: activeTab === 'publishing' ? '#ffffff' : 'var(--text, #e5e7eb)',
+            border: 'none',
+            borderBottom: activeTab === 'publishing' ? '2px solid var(--primary, #48baa6)' : '2px solid transparent',
+            cursor: 'pointer',
+            fontSize: '15px',
+            fontWeight: 600,
+            transition: 'all 0.2s'
+          }}
+        >
+          📢 Publishing
         </button>
       </div>
 
@@ -765,6 +782,13 @@ export default function AdminPage() {
       {/* Applications Tests Tab */}
       {activeTab === 'applications' && (
         <ApplicationsTests token={token} testResults={testResults} setTestResults={setTestResults} />
+      )}
+
+      {/* Publishing Tab */}
+      {activeTab === 'publishing' && (
+        <div style={{ marginTop: 0 }}>
+          <AdminPublishing />
+        </div>
       )}
     </div>
   );
