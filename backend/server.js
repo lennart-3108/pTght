@@ -2234,7 +2234,7 @@ app.use('/api', commentsRoutes(ctx));
 
 // Publishing routes (admin only)
 const publishingRoutes = require('./src/routes/publishing');
-app.use('/api/publishing', publishingRoutes);
+app.use('/api/publishing', publishingRoutes(ctx));
 
 // Serve static uploads under /api/uploads as well (proxy to /uploads)
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));

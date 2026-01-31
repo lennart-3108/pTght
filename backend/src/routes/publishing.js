@@ -1,33 +1,52 @@
 const express = require('express');
-const router = express.Router();
-const db = require('../db');
 const { isAdmin } = require('../../middleware/auth');
 
-// ==================== COMMUNITY LIGA LOCATION ACTIVATION ====================
+module.exports = function publishingRoutes(ctx) {
+  const router = express.Router();
+  const { db } = ctx;
 
-// Get all cities/locations with community league status
-router.get('/community-leagues', isAdmin, async (req, res) => {
-  try {
-    // Get all cities with their community league activation status
-    const cities = await db('cities')
-      .select('*')
-      .orderBy('name', 'asc');
+  // Helper to get knex instance
+  function resolveKnex(d) {
+    try {
+      if (!d) {
+      } else {
+        if (typeof d === "function" && d.client) return d;
+        if (d.client && typeof d.raw === "function") return d;
+        if (d.knex && d.knex.client) return d.knex;
+      }
+    } catch (e) {}
+    const tryRequire = (p) => { try { return require(p); } catch { return null; } };
+    return tryRequire("../../db") || tryRequire("../../../db") || tryRequire("../../../../db") || null;
+  }
 
-    // Get all locations grouped by city
-    const locations = await db('locations')
-      .select('*')
-      .orderBy('city', 'asc')
-      .orderBy('name', 'asc');
+  const knex = resolveKnex(db);
 
-    // Get all sports for reference
-    const sports = await db('sports')
-      .where({ published: true, parent_id: null })
-      .select('id', 'name')
-      .orderBy('name', 'asc');
+  // ==================== COMMUNITY LIGA LOCATION ACTIVATION ====================
 
-    // Get existing community leagues
-    const communityLeagues = await db('leagues')
-      .where({ is_community: true })
+  // Get all cities/locations with community league status
+  router.get('/community-leagues', isAdmin, async (req, res) => {
+    try {
+      // Get all cities with their community league activation status
+      const cities = await knex('cities')
+        .select('*')
+        .orderBy('name', 'asc');
+
+      // Get all locations grouped by city
+      const locations = await knex('locations')
+        .select('*')
+        .orderBy('city', 'asc')
+        .orderBy('name', 'asc');
+
+      // Get all sports for reference
+      const sports = await knex('sports')
+        .where({ published: true, parent_id: null })
+        .select('id', 'name')
+        .orderBy('name', 'asc');
+
+      // Get existing community leagues
+      const communityLeagues = await knex('leagues')
+        .where({ is_community: true })
+        .select('*');
       .select('*');
 
     // Build city data with locations
@@ -68,14 +87,14 @@ router.post('/cities/:id/enable-community', isAdmin, async (req, res) => {
     const { id } = req.params;
     
     // Check if column exists
-    const hasColumn = await db.schema.hasColumn('cities', 'community_leagues_enabled');
+    const hasColumn = await knex.schema.hasColumn('cities', 'community_leagues_enabled');
     if (!hasColumn) {
-      await db.schema.table('cities', (table) => {
+      await knex.schema.table('cities', (table) => {
         table.boolean('community_leagues_enabled').defaultTo(false);
       });
     }
     
-    await db('cities').where({ id }).update({ community_leagues_enabled: true });
+    await knex('cities').where({ id }).update({ community_leagues_enabled: true });
     res.json({ success: true, message: 'Community Ligen für Stadt aktiviert' });
   } catch (error) {
     console.error('Error enabling community leagues for city:', error);
@@ -87,7 +106,7 @@ router.post('/cities/:id/enable-community', isAdmin, async (req, res) => {
 router.post('/cities/:id/disable-community', isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    await db('cities').where({ id }).update({ community_leagues_enabled: false });
+    await knex('cities').where({ id }).update({ community_leagues_enabled: false });
     res.json({ success: true, message: 'Community Ligen für Stadt deaktiviert' });
   } catch (error) {
     console.error('Error disabling community leagues for city:', error);
@@ -102,27 +121,27 @@ router.post('/locations/:id/enable-community', isAdmin, async (req, res) => {
     const { sports } = req.body; // Array of sport IDs to create leagues for
     
     // Check if column exists
-    const hasColumn = await db.schema.hasColumn('locations', 'community_leagues_enabled');
+    const hasColumn = await knex.schema.hasColumn('locations', 'community_leagues_enabled');
     if (!hasColumn) {
-      await db.schema.table('locations', (table) => {
+      await knex.schema.table('locations', (table) => {
         table.boolean('community_leagues_enabled').defaultTo(false);
       });
     }
     
     // Enable community leagues for location
-    await db('locations').where({ id }).update({ community_leagues_enabled: true });
+    await knex('locations').where({ id }).update({ community_leagues_enabled: true });
     
     // Get location details
-    const location = await db('locations').where({ id }).first();
+    const location = await knex('locations').where({ id }).first();
     
     // Create community leagues for all published sports if not exists
     if (sports && sports.length > 0) {
       for (const sportId of sports) {
-        const sport = await db('sports').where({ id: sportId }).first();
+        const sport = await knex('sports').where({ id: sportId }).first();
         if (!sport) continue;
         
         // Check if league already exists
-        const existingLeague = await db('leagues')
+        const existingLeague = await knex('leagues')
           .where({
             location_id: id,
             sport_id: sportId,
@@ -132,7 +151,7 @@ router.post('/locations/:id/enable-community', isAdmin, async (req, res) => {
         
         if (!existingLeague) {
           // Create community league
-          await db('leagues').insert({
+          await knex('leagues').insert({
             name: `${sport.name} Community Liga - ${location.name}`,
             location_id: id,
             sport_id: sportId,
@@ -145,12 +164,12 @@ router.post('/locations/:id/enable-community', isAdmin, async (req, res) => {
       }
     } else {
       // Create for all published sports
-      const allSports = await db('sports')
+      const allSports = await knex('sports')
         .where({ published: true, parent_id: null })
         .select('id', 'name');
       
       for (const sport of allSports) {
-        const existingLeague = await db('leagues')
+        const existingLeague = await knex('leagues')
           .where({
             location_id: id,
             sport_id: sport.id,
@@ -159,7 +178,7 @@ router.post('/locations/:id/enable-community', isAdmin, async (req, res) => {
           .first();
         
         if (!existingLeague) {
-          await db('leagues').insert({
+          await knex('leagues').insert({
             name: `${sport.name} Community Liga - ${location.name}`,
             location_id: id,
             sport_id: sport.id,
@@ -183,10 +202,10 @@ router.post('/locations/:id/enable-community', isAdmin, async (req, res) => {
 router.post('/locations/:id/disable-community', isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    await db('locations').where({ id }).update({ community_leagues_enabled: false });
+    await knex('locations').where({ id }).update({ community_leagues_enabled: false });
     
     // Optionally unpublish the leagues (don't delete them)
-    await db('leagues')
+    await knex('leagues')
       .where({ location_id: id, is_community: true })
       .update({ published: false });
     
@@ -201,7 +220,7 @@ router.post('/locations/:id/disable-community', isAdmin, async (req, res) => {
 router.delete('/leagues/:id', isAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    await db('leagues').where({ id }).del();
+    await knex('leagues').where({ id }).del();
     res.json({ success: true, message: 'Liga gelöscht' });
   } catch (error) {
     console.error('Error deleting league:', error);
@@ -209,4 +228,5 @@ router.delete('/leagues/:id', isAdmin, async (req, res) => {
   }
 });
 
-module.exports = router;
+  return router;
+};
