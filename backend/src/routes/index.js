@@ -29,6 +29,7 @@ const suggestRoutes = require("./suggest");
 const paymentsRoutes = require("./payments");
 const districtsRoutes = require("./districts");
 const newsRoutes = require("./news");
+const deployRoutes = require("./deploy");
 
 function registerRoutes(app, ctx) {
   const { ensureTables } = createMiddleware(ctx);
@@ -69,6 +70,7 @@ function registerRoutes(app, ctx) {
   apiRouter.use('/payments', paymentsRoutes(ctx));
   apiRouter.use('/districts', districtsRoutes(ctx));
   apiRouter.use('/news', newsRoutes(ctx));
+  apiRouter.use('/deploy', deployRoutes);
 
   // --- Email status + test routes ---
   apiRouter.get("/admin/email-status", async (req, res) => {
