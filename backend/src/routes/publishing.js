@@ -1,5 +1,12 @@
 const express = require('express');
 const { isAdmin } = require('../../middleware/auth');
+const {
+  getOrCreateCommunityLeague,
+  getCommunityLeaguesByLocation,
+  isCommunityLeague,
+  setCommunityLeaguePublished,
+  getCommunityLeagueStats
+} = require('../services/communityLeagueService');
 
 module.exports = function publishingRoutes(ctx) {
   const router = express.Router();
@@ -26,7 +33,7 @@ module.exports = function publishingRoutes(ctx) {
   // Get all cities/locations with community league status
   router.get('/community-leagues', isAdmin, async (req, res) => {
     try {
-      // Get all cities with their community league activation status
+      // Get all cities
       const cities = await knex('cities')
         .select('*')
         .orderBy('name', 'asc');
@@ -43,11 +50,9 @@ module.exports = function publishingRoutes(ctx) {
         .select('id', 'name')
         .orderBy('name', 'asc');
 
-      // Get existing community leagues
-      const communityLeagues = await knex('leagues')
-        .where({ is_community: true })
+      // Get all leagues (we'll filter by location later)
+      const allLeagues = await knex('leagues')
         .select('*');
-      .select('*');
 
     // Build city data with locations
     const cityData = cities.map(city => {
@@ -57,13 +62,11 @@ module.exports = function publishingRoutes(ctx) {
         id: city.id,
         name: city.name,
         country: city.country,
-        community_leagues_enabled: city.community_leagues_enabled || false,
         locations: cityLocations.map(loc => ({
           id: loc.id,
           name: loc.name,
           address: loc.address,
-          community_leagues_enabled: loc.community_leagues_enabled || false,
-          leagues: communityLeagues.filter(l => l.location_id === loc.id)
+          leagues: allLeagues.filter(l => l.location_id === loc.id)
         }))
       };
     });
@@ -213,6 +216,86 @@ router.post('/locations/:id/disable-community', isAdmin, async (req, res) => {
   } catch (error) {
     console.error('Error disabling community leagues for location:', error);
     res.status(500).json({ error: 'Fehler beim Deaktivieren' });
+  }
+});
+
+// ==================== COMMUNITY LEAGUE MANAGEMENT ====================
+
+// Get statistics about community leagues
+router.get('/community-leagues/stats', isAdmin, async (req, res) => {
+  try {
+    const stats = await getCommunityLeagueStats(knex);
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    console.error('Error fetching community league stats:', error);
+    res.status(500).json({ error: 'Fehler beim Laden der Statistiken' });
+  }
+});
+
+// Create community league for location + sport (on-demand)
+router.post('/community-leagues/create', isAdmin, async (req, res) => {
+  try {
+    const { locationId, sportId, autoPublish } = req.body;
+    
+    if (!locationId || !sportId) {
+      return res.status(400).json({ error: 'Location und Sport erforderlich' });
+    }
+
+    const league = await getOrCreateCommunityLeague(knex, locationId, sportId, { autoPublish });
+    res.json({ success: true, data: league });
+  } catch (error) {
+    console.error('Error creating community league:', error);
+    res.status(500).json({ error: error.message || 'Fehler beim Erstellen' });
+  }
+});
+
+// Publish/unpublish a community league
+router.patch('/community-leagues/:id/publish', isAdmin, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { published } = req.body;
+    
+    const league = await setCommunityLeaguePublished(knex, id, published);
+    res.json({ success: true, data: league });
+  } catch (error) {
+    console.error('Error updating league published state:', error);
+    res.status(500).json({ error: 'Fehler beim Aktualisieren' });
+  }
+});
+
+// Bulk create community leagues for a location (all sports)
+router.post('/community-leagues/bulk-create', isAdmin, async (req, res) => {
+  try {
+    const { locationId, autoPublish } = req.body;
+    
+    if (!locationId) {
+      return res.status(400).json({ error: 'Location erforderlich' });
+    }
+
+    const sports = await knex('sports')
+      .where({ published: true, parent_id: null })
+      .select('id', 'name');
+
+    const created = [];
+    for (const sport of sports) {
+      try {
+        const league = await getOrCreateCommunityLeague(knex, locationId, sport.id, { autoPublish });
+        created.push(league);
+      } catch (e) {
+        console.warn(`Failed to create league for sport ${sport.name}:`, e.message);
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      data: { 
+        created: created.length,
+        leagues: created
+      }
+    });
+  } catch (error) {
+    console.error('Error bulk creating community leagues:', error);
+    res.status(500).json({ error: 'Fehler beim Erstellen' });
   }
 });
 

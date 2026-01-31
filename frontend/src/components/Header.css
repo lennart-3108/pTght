@@ -1,6 +1,6 @@
 /* Simple header - full width with edge positioning */
 .ml-header {
-  --ml-header-height: 48px;
+  --ml-header-height: 64px; /* Increased from 48px to 64px for larger logo */
   background: linear-gradient(90deg, #0f2b27 0%, #0b2420 100%);
   color: #e6efe9;
   height: var(--ml-header-height);
@@ -33,12 +33,12 @@
 
 .ml-logo-link { 
   display: block; 
-  height: var(--ml-header-height); 
+  height: 100%; /* Full height of parent */
   margin: 0; 
   padding: 0; 
 }
 .ml-logo-full { 
-  height: var(--ml-header-height); /* Same as header height */
+  height: 100%; /* 100% of parent (the link) which is 100% of header */
   width: auto; 
   display: block; 
   margin: 0; 

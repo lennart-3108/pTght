@@ -137,8 +137,8 @@ module.exports = function leagueMatchesRoutes({ db }) {
           (hasLeagueCityCol ? k.raw("COALESCE(c.name, l.city) as city") : k.raw("COALESCE(c.name, '') as city")),
           { sportId: "s.id" },
             (hasLeagueSportCol ? k.raw("COALESCE(s.name, l.sport) as sport") : k.raw("COALESCE(s.name, '') as sport")),
-            // expose publicState if present (public/community/etc.) with safe fallback
-          k.raw("COALESCE(l.public_state, l.publicState, '') as publicState"),
+            // expose level as publicState (community/city/etc.) with safe fallback
+          k.raw("COALESCE(l.level, '') as publicState"),
           // optionally include is_community if column exists; else 0
           (hasIsCommunityCol ? { is_community: 'l.is_community' } : k.raw('0 as is_community'))
         )
@@ -211,7 +211,7 @@ module.exports = function leagueMatchesRoutes({ db }) {
       // Prüfe, ob bereits ein offenes Match zwischen diesen beiden existiert
         // League row to determine community flag
         const leagueRow = await k('leagues').where('id', Number(leagueId)).first();
-        const isCommunity = !!(leagueRow && (leagueRow.public_state === 'community' || leagueRow.publicState === 'community' || leagueRow.is_community || leagueRow.isCommunity));
+        const isCommunity = !!(leagueRow && (leagueRow.level === 'community' || leagueRow.is_community || leagueRow.isCommunity));
       let existing = null;
       if (hasHomeUserId) {
         existing = await k("matches")

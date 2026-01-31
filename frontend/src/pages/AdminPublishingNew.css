@@ -1,0 +1,356 @@
+/* AdminPublishingNew.css - Hierarchical Community Leagues Management */
+
+.aph-container {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  color: var(--text, #e5e7eb);
+}
+
+.aph-header {
+  margin-bottom: 32px;
+}
+
+.aph-header h1 {
+  font-size: 28px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--primary, #48baa6);
+}
+
+.aph-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary, #9ca3af);
+  margin: 0;
+}
+
+.aph-loading,
+.aph-error {
+  text-align: center;
+  padding: 40px;
+  font-size: 16px;
+}
+
+.aph-error {
+  color: #ef4444;
+}
+
+/* Filters */
+.aph-filters {
+  display: flex;
+  gap: 16px;
+  align-items: flex-end;
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--surface, #1f2937);
+  border-radius: 8px;
+  flex-wrap: wrap;
+}
+
+.aph-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 200px;
+}
+
+.aph-filter-group label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary, #9ca3af);
+}
+
+.aph-filter-group select {
+  padding: 8px 12px;
+  background: var(--bg-dark, #111827);
+  border: 1px solid var(--border, #374151);
+  border-radius: 6px;
+  color: var(--text, #e5e7eb);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.aph-filter-group select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.aph-btn-refresh {
+  padding: 8px 16px;
+  background: var(--primary, #48baa6);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.aph-btn-refresh:hover {
+  background: var(--primary-600, #3a9988);
+}
+
+/* Hierarchy Tree */
+.aph-hierarchy {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Country Level */
+.aph-country {
+  background: var(--surface, #1f2937);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.aph-country-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  cursor: pointer;
+  background: var(--surface, #1f2937);
+  transition: background 0.2s;
+}
+
+.aph-country-header:hover {
+  background: var(--bg-darker, #252e3d);
+}
+
+.aph-expand-icon {
+  font-size: 12px;
+  color: var(--text-secondary, #9ca3af);
+  width: 16px;
+  text-align: center;
+}
+
+.aph-country-name {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text, #e5e7eb);
+  flex: 1;
+}
+
+.aph-count {
+  font-size: 13px;
+  color: var(--text-secondary, #9ca3af);
+  padding: 4px 12px;
+  background: var(--bg-dark, #111827);
+  border-radius: 12px;
+}
+
+.aph-country-content {
+  padding: 0 16px 16px 32px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* State Level */
+.aph-state {
+  background: var(--bg-dark, #111827);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.aph-state-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.aph-state-header:hover {
+  background: var(--bg-darker, #0d131f);
+}
+
+.aph-state-name {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text, #e5e7eb);
+  flex: 1;
+}
+
+.aph-state-content {
+  padding: 0 12px 12px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+/* City Level */
+.aph-city {
+  background: var(--surface, #1f2937);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border, #374151);
+}
+
+.aph-city-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.aph-city-header:hover {
+  background: var(--bg-darker, #252e3d);
+}
+
+.aph-city-name {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text, #e5e7eb);
+  flex: 1;
+}
+
+.aph-city-content {
+  padding: 12px;
+  background: var(--bg-dark, #111827);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Toggle Buttons */
+.aph-btn-toggle,
+.aph-btn-toggle-small {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.aph-btn-toggle {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.aph-btn-toggle.enabled,
+.aph-btn-toggle-small.enabled {
+  background: var(--success, #10b981);
+  color: white;
+}
+
+.aph-btn-toggle.disabled,
+.aph-btn-toggle-small.disabled {
+  background: var(--bg-darker, #0d131f);
+  color: var(--text-secondary, #9ca3af);
+  border: 1px solid var(--border, #374151);
+}
+
+.aph-btn-toggle.disabled:hover,
+.aph-btn-toggle-small.disabled:hover {
+  background: var(--primary, #48baa6);
+  color: white;
+  border-color: var(--primary, #48baa6);
+}
+
+.aph-btn-toggle.enabled:hover,
+.aph-btn-toggle-small.enabled:hover {
+  background: #dc2626;
+}
+
+/* Districts */
+.aph-districts h4,
+.aph-locations h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-secondary, #9ca3af);
+  margin: 0 0 8px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.aph-district {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: var(--surface, #1f2937);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+/* Locations */
+.aph-location {
+  display: grid;
+  grid-template-columns: 2fr 3fr auto;
+  gap: 12px;
+  align-items: center;
+  padding: 10px 12px;
+  background: var(--surface, #1f2937);
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.aph-location-name {
+  font-weight: 500;
+  color: var(--text, #e5e7eb);
+}
+
+.aph-location-address {
+  color: var(--text-secondary, #9ca3af);
+  font-size: 13px;
+}
+
+.aph-location-status {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.aph-location-status.published {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+}
+
+.aph-location-status.unpublished {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* Info Box */
+.aph-info {
+  margin-top: 32px;
+  padding: 20px;
+  background: var(--surface, #1f2937);
+  border-radius: 8px;
+  border-left: 4px solid var(--primary, #48baa6);
+}
+
+.aph-info h3 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 12px 0;
+  color: var(--primary, #48baa6);
+}
+
+.aph-info ul {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.aph-info li {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary, #9ca3af);
+}
+
+.aph-info strong {
+  color: var(--text, #e5e7eb);
+}

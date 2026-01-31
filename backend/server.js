@@ -457,6 +457,15 @@ app.get("/leagues", async (req, res) => {
 
         // Build count query first (separate from rows query)
         let countQuery = knexInstance("leagues as l");
+        
+        // Filter: Only show published community leagues OR non-community leagues
+        countQuery = countQuery.where(function() {
+          this.where('l.level', '!=', 'community')
+            .orWhere(function() {
+              this.where('l.level', 'community').andWhere('l.published', true);
+            });
+        });
+        
         if (cityId) {
           countQuery = countQuery.where("l.city_id", cityId);
         }
@@ -475,6 +484,14 @@ app.get("/leagues", async (req, res) => {
         let query = knexInstance("leagues as l")
           .leftJoin("cities as c", "l.city_id", "c.id")
           .leftJoin("sports as s", "l.sport_id", "s.id");
+
+        // Apply same filter: Only published community leagues OR non-community leagues
+        query = query.where(function() {
+          this.where('l.level', '!=', 'community')
+            .orWhere(function() {
+              this.where('l.level', 'community').andWhere('l.published', true);
+            });
+        });
 
         // Apply same filters
         if (cityId) {
@@ -2235,6 +2252,10 @@ app.use('/api', commentsRoutes(ctx));
 // Publishing routes (admin only)
 const publishingRoutes = require('./src/routes/publishing');
 app.use('/api/publishing', publishingRoutes(ctx));
+
+// Locations hierarchy routes (admin only) - for hierarchical community league management
+const locationsHierarchyRoutes = require('./src/routes/locations-hierarchy');
+app.use('/api/locations-hierarchy', locationsHierarchyRoutes(ctx));
 
 // Serve static uploads under /api/uploads as well (proxy to /uploads)
 app.use('/api/uploads', express.static(path.join(__dirname, 'uploads')));

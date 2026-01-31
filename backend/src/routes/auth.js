@@ -151,7 +151,7 @@ module.exports = function authRoutes(ctx) {
         if (!ok) return res.status(401).json({ error: "Ungültige Zugangsdaten" });
 
         const token = jwt.sign(
-          { id: user.id, email: user.email, is_admin: !!user.is_admin, epoch: SESSION_EPOCH || 1 },
+          { id: user.id, email: user.email, isAdmin: !!user.is_admin, epoch: SESSION_EPOCH || 1 },
           SECRET,
           { expiresIn: "7d" }
         );
@@ -487,7 +487,7 @@ module.exports = function authRoutes(ctx) {
         if (data) store.delete(one_time);
         return res.status(500).json({ error: 'user not available' });
       }
-      const jwtToken = jwt.sign({ id: userRow.id, email: userRow.email, is_admin: !!userRow.is_admin, epoch: SESSION_EPOCH || 1 }, SECRET, { expiresIn: '7d' });
+      const jwtToken = jwt.sign({ id: userRow.id, email: userRow.email, isAdmin: !!userRow.is_admin, epoch: SESSION_EPOCH || 1 }, SECRET, { expiresIn: '7d' });
       // delete the one-time token (single-use)
       store.delete(one_time);
       return res.json({ token: jwtToken, is_admin: !!userRow.is_admin });

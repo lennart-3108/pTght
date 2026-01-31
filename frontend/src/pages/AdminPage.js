@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 // use native fetch instead of axios to avoid axios vulnerability
 import { API_BASE } from "../config";
 import { useNavigate } from "react-router-dom";
-import AdminPublishing from "./AdminPublishing";
+import AdminPublishingNew from "./AdminPublishingNew"; // Neue hierarchische Publishing UI
 
 export default function AdminPage() {
   const [stats, setStats] = useState(null);
@@ -787,7 +787,7 @@ export default function AdminPage() {
       {/* Publishing Tab */}
       {activeTab === 'publishing' && (
         <div style={{ marginTop: 0 }}>
-          <AdminPublishing />
+          <AdminPublishingNew />
         </div>
       )}
     </div>
