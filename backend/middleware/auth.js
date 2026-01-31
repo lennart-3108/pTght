@@ -47,4 +47,27 @@ function optionalAuth(req, res, next) {
   return next();
 }
 
-module.exports = { isAuthenticated, authenticateToken, optionalAuth };
+// Admin check middleware
+function isAdmin(req, res, next) {
+  const auth = req.headers.authorization || "";
+  const m = auth.match(/^Bearer\s+(.+)$/i);
+  if (!m) return res.status(401).json({ error: "Unauthorized" });
+
+  try {
+    const token = m[1];
+    const ctxSecret = req && req.app && req.app.locals && req.app.locals.ctx && req.app.locals.ctx.SECRET;
+    const secret = ctxSecret || process.env.JWT_SECRET || process.env.SECRET || "dev-secret";
+    const payload = jwt.verify(token, secret);
+    
+    if (!payload.isAdmin && payload.role !== 'admin') {
+      return res.status(403).json({ error: "Admin access required" });
+    }
+    
+    req.user = { id: payload.id, email: payload.email, ...payload };
+    return next();
+  } catch (e) {
+    return res.status(401).json({ error: "Invalid token" });
+  }
+}
+
+module.exports = { isAuthenticated, authenticateToken, optionalAuth, isAdmin };

@@ -2,8 +2,298 @@
   max-width: 1400px;
   margin: 0 auto;
   padding: 2rem;
-  background: linear-gradient(135deg, #071716 0%, #0d2422 100%);
   min-height: 100vh;
+}
+
+.admin-publishing-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.admin-publishing-header h1 {
+  color: #debc7c;
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  text-shadow: 0 2px 10px rgba(222, 188, 124, 0.3);
+}
+
+.subtitle {
+  color: #48baaa;
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+/* ========== LOADING & ERROR ========== */
+.loading,
+.error {
+  text-align: center;
+  padding: 3rem;
+  font-size: 1.2rem;
+  color: #48baaa;
+}
+
+.error {
+  color: #ff6b6b;
+}
+
+/* ========== CITIES GRID ========== */
+.cities-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.city-card {
+  background: rgba(13, 36, 34, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(72, 186, 170, 0.2);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.city-card:hover {
+  border-color: rgba(72, 186, 170, 0.4);
+  box-shadow: 0 4px 12px rgba(72, 186, 170, 0.15);
+}
+
+.city-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.city-header:hover {
+  background: rgba(72, 186, 170, 0.05);
+}
+
+.city-info {
+  flex: 1;
+}
+
+.city-name {
+  color: #debc7c;
+  font-size: 1.5rem;
+  margin: 0 0 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.city-meta {
+  color: #48baaa;
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+.city-status {
+  margin-left: 1rem;
+}
+
+.status-badge {
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.status-badge.enabled {
+  background: rgba(72, 186, 170, 0.2);
+  color: #48baaa;
+  border: 1px solid #48baaa;
+}
+
+.status-badge.disabled {
+  background: rgba(255, 107, 107, 0.2);
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+}
+
+/* ========== LOCATIONS LIST ========== */
+.locations-list {
+  border-top: 1px solid rgba(72, 186, 170, 0.2);
+  padding: 1rem;
+  background: rgba(7, 23, 22, 0.4);
+}
+
+.location-item {
+  background: rgba(13, 36, 34, 0.6);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  border-left: 4px solid #ff6b6b;
+  transition: all 0.3s ease;
+}
+
+.location-item.enabled {
+  border-left-color: #48baaa;
+  background: rgba(72, 186, 170, 0.05);
+}
+
+.location-item:hover {
+  transform: translateX(4px);
+}
+
+.location-name {
+  color: #debc7c;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0 0 0.25rem 0;
+}
+
+.location-address {
+  color: #48baaa;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin: 0 0 0.5rem 0;
+}
+
+.leagues-info {
+  color: #debc7c;
+  font-size: 0.85rem;
+  opacity: 0.7;
+  margin-top: 0.5rem;
+}
+
+.location-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* ========== LEAGUES LIST ========== */
+.leagues-list {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(72, 186, 170, 0.1);
+}
+
+.leagues-list h5 {
+  color: #48baaa;
+  font-size: 0.9rem;
+  margin: 0 0 0.5rem 0;
+  opacity: 0.8;
+}
+
+.league-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(7, 23, 22, 0.5);
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.league-name {
+  color: #48baaa;
+  font-size: 0.9rem;
+}
+
+/* ========== BUTTONS ========== */
+.btn-enable,
+.btn-disable,
+.btn-delete-small {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.btn-enable {
+  background: linear-gradient(135deg, #48baaa 0%, #3a9688 100%);
+  color: #071716;
+}
+
+.btn-enable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(72, 186, 170, 0.4);
+}
+
+.btn-disable {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+  color: #fff;
+}
+
+.btn-disable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 107, 107, 0.4);
+}
+
+.btn-delete-small {
+  background: #8b0000;
+  color: #fff;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  min-width: 36px;
+}
+
+.btn-delete-small:hover {
+  opacity: 0.8;
+}
+
+/* ========== INFO BOX ========== */
+.info-box {
+  background: rgba(72, 186, 170, 0.1);
+  border: 1px solid rgba(72, 186, 170, 0.3);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+}
+
+.info-box h3 {
+  color: #debc7c;
+  font-size: 1.2rem;
+  margin: 0 0 1rem 0;
+}
+
+.info-box ul {
+  color: #48baaa;
+  margin: 0;
+  padding-left: 1.5rem;
+}
+
+.info-box li {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+.info-box strong {
+  color: #debc7c;
+}
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 768px) {
+  .admin-publishing-container {
+    padding: 1rem;
+  }
+
+  .admin-publishing-header h1 {
+    font-size: 2rem;
+  }
+
+  .city-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .city-status {
+    margin-left: 0;
+  }
+
+  .location-actions {
+    flex-direction: column;
+  }
+
+  .btn-enable,
+  .btn-disable {
+    width: 100%;
+  }
 }
 
 .admin-publishing-header {
