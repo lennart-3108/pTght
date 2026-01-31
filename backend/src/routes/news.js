@@ -140,33 +140,49 @@ module.exports = (ctx) => {
       const limitPerDay = parseInt(req.query.limit) || 3;
       const userId = req.user?.id || null;
 
+      // Check which columns exist
+      const matchesInfo = await knex('matches').columnInfo().catch(() => ({}));
+      const hasPhotos = 'photos' in matchesInfo;
+      const hasCoverPhoto = 'cover_photo' in matchesInfo;
+      const hasLikes = 'likes' in matchesInfo;
+
+      const selectFields = [
+        'm.id',
+        'm.kickoff_at',
+        'm.kickoff_end_at',
+        'm.home_user_id',
+        'm.away_user_id',
+        'm.home_score',
+        'm.away_score',
+        'm.status',
+        'l.name as league',
+        's.name as sport',
+        'c.name as city',
+        'st.name as state',
+        'co.name as country'
+      ];
+      
+      if (hasPhotos) selectFields.push('m.photos');
+      if (hasCoverPhoto) selectFields.push('m.cover_photo');
+      if (hasLikes) {
+        selectFields.push(knex.raw('COALESCE(m.likes, 0) as likes'));
+      } else {
+        selectFields.push(knex.raw('0 as likes'));
+      }
+
       // Base query: completed or upcoming matches with photos
       let query = knex('matches as m')
-        .select([
-          'm.id',
-          'm.kickoff_at',
-          'm.kickoff_end_at',
-          'm.home_user_id',
-          'm.away_user_id',
-          'm.home_score',
-          'm.away_score',
-          'm.status',
-          'm.photos',
-          'm.cover_photo',
-          knex.raw('COALESCE(m.likes, 0) as likes'),
-          'l.name as league',
-          's.name as sport',
-          'c.name as city',
-          'st.name as state',
-          'co.name as country'
-        ])
+        .select(selectFields)
         .leftJoin('leagues as l', 'l.id', 'm.league_id')
         .leftJoin('sports as s', 's.id', 'l.sport_id')
         .leftJoin('cities as c', 'c.id', 'l.city_id')
-        .leftJoin('states as st', 'st.id', 'c.state_id')
+        .leftJoin('counties as st', 'st.id', 'c.state_id')
         .leftJoin('countries as co', 'co.id', 'c.country_id')
-        .whereIn('m.status', ['completed', 'scheduled', 'confirmed'])
-        .whereNotNull('m.photos');
+        .whereIn('m.status', ['completed', 'scheduled', 'confirmed']);
+      
+      if (hasPhotos) {
+        query.whereNotNull('m.photos');
+      }
 
       // Date filter: last N days
       const startDate = new Date();

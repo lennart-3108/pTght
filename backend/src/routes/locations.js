@@ -257,13 +257,13 @@ module.exports = function locationRoutes(ctx) {
       let state = null;
 
       const hasCountries = await knex.schema.hasTable('countries').catch(() => false);
-      const hasStates = await knex.schema.hasTable('states').catch(() => false);
+      const hasStates = await knex.schema.hasTable('counties').catch(() => false);
 
       if (hasCountries && nearest.country_id) {
         country = await knex('countries').where({ id: nearest.country_id }).first().catch(() => null);
       }
       if (hasStates && nearest.state_id) {
-        state = await knex('states').where({ id: nearest.state_id }).first().catch(() => null);
+        state = await knex('counties').where({ id: nearest.state_id }).first().catch(() => null);
       }
 
       res.json({

@@ -124,7 +124,7 @@ module.exports = function profileRoutes(ctx) {
       const hasLeagues = await k.schema.hasTable('leagues').catch(() => false);
       const hasSports = await k.schema.hasTable('sports').catch(() => false);
       const hasCities = await k.schema.hasTable('cities').catch(() => false);
-      const hasStates = await k.schema.hasTable('states').catch(() => false);
+      const hasStates = await k.schema.hasTable('counties').catch(() => false);
       const hasCountries = await k.schema.hasTable('countries').catch(() => false);
       let sportId = req.query.sportId ? Number(req.query.sportId) : null;
       const sportName = (req.query.sport || '').trim();
@@ -141,7 +141,7 @@ module.exports = function profileRoutes(ctx) {
   if (hasLeagues) base.leftJoin({ l: 'leagues' }, 'l.id', 'm.league_id');
   if (hasSports && hasLeagues) base.leftJoin({ s: 'sports' }, 's.id', 'l.sport_id');
   if (hasCities && hasLeagues) base.leftJoin({ c: 'cities' }, 'c.id', 'l.city_id');
-  if (hasStates && hasCities) base.leftJoin({ st: 'states' }, 'st.id', 'c.state_id');
+  if (hasStates && hasCities) base.leftJoin({ st: 'counties' }, 'st.id', 'c.state_id');
   if (hasCountries && hasCities) base.leftJoin({ co: 'countries' }, 'co.id', 'c.country_id');
 
       base.where(function () {
