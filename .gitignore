@@ -76,3 +76,6 @@ frontend/frontend.pid
 
 # Local npm cache at repo root (avoid tracking thousands of cache files)
 /.npm-cache/
+*.db.before_cleanup_*
+*.pid
+*-start.log

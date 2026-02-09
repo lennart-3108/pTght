@@ -10,8 +10,7 @@ function resolveKnex(db) {
 
 async function detectGameTable(k) {
   if (await k.schema.hasTable("matches")) return "matches";
-  if (await k.schema.hasTable("games")) return "games";
-  throw new Error("Neither 'matches' nor 'games' table exists");
+  throw new Error("'matches' table does not exist");
 }
 
 async function gameCols(k, table) {
@@ -249,13 +248,12 @@ module.exports = function meRoutes({ db }) {
   router.get("/games", isAuthenticated, async (req, res) => {
     try {
       k = k || resolveKnex(db);
-      // Check if matches or games table exists before proceeding
+      // Check if matches table exists before proceeding
       const hasMatches = await tableExists(k, "matches");
-      const hasGames = await tableExists(k, "games");
-      if (!hasMatches && !hasGames) {
+      if (!hasMatches) {
         return res.json({ upcoming: [], completed: [] });
       }
-      table = table || (hasMatches ? "matches" : "games");
+      table = "matches";
       const cols = await gameCols(k, table);
       // Resolve display names safely depending on schema
       const usersInfo = await k("users").columnInfo().catch(() => ({}));

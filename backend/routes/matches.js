@@ -1137,7 +1137,7 @@ module.exports = function matchesRoutes({ db }) {
   router.post('/:id/result', isAuthenticated, async (req, res) => {
     const gameId = req.params.id;
     const userId = req.user.id;
-    const { home_score, away_score } = req.body || {};
+    const { home_score, away_score, sets, aborted, abort_reason, abort_by } = req.body || {};
     const toInt = (v) => {
       const n = Number(v);
       if (!Number.isFinite(n)) return null;
@@ -1215,9 +1215,25 @@ module.exports = function matchesRoutes({ db }) {
       // update scores (and status if such column exists)
       const info = await k('matches').columnInfo().catch(() => ({}));
       const hasStatus = Object.prototype.hasOwnProperty.call(info, 'status');
+      const hasResultDetails = Object.prototype.hasOwnProperty.call(info, 'result_details');
+      
       const patch = { home_score: hs, away_score: as };
-      if (hasStatus) patch.status = 'completed';
-  await k('matches').where({ id: gameId }).update(patch);
+      if (hasStatus) patch.status = aborted ? 'aborted' : 'completed';
+      
+      // Store additional result data (sets, abort info) in result_details if available
+      if (hasResultDetails && (sets || aborted)) {
+        const resultDetails = {
+          ...(sets ? { sets } : {}),
+          ...(aborted ? { 
+            aborted: true, 
+            abort_reason, 
+            abort_by 
+          } : {})
+        };
+        patch.result_details = JSON.stringify(resultDetails);
+      }
+      
+      await k('matches').where({ id: gameId }).update(patch);
 
       // return enriched projection like GET /:id
       const usersInfo = await k('users').columnInfo().catch(() => ({}));

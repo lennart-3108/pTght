@@ -22,7 +22,6 @@ function resolveKnex(db) {
 
 async function detectGameTable(k) {
   if (await k.schema.hasTable("matches")) return "matches";
-  if (await k.schema.hasTable("games")) return "games";
   return null;
 }
 

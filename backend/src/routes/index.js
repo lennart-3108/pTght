@@ -30,6 +30,8 @@ const paymentsRoutes = require("./payments");
 const districtsRoutes = require("./districts");
 const newsRoutes = require("./news");
 const deployRoutes = require("./deploy");
+const tournamentsRoutes = require("../../routes/tournaments");
+const rulesetsRoutes = require("../../routes/rulesets");
 
 function registerRoutes(app, ctx) {
   const { ensureTables } = createMiddleware(ctx);
@@ -71,6 +73,8 @@ function registerRoutes(app, ctx) {
   apiRouter.use('/districts', districtsRoutes(ctx));
   apiRouter.use('/news', newsRoutes(ctx));
   apiRouter.use('/deploy', deployRoutes);
+  apiRouter.use('/tournaments', tournamentsRoutes);
+  apiRouter.use('/rulesets', rulesetsRoutes);
 
   // --- Email status + test routes ---
   apiRouter.get("/admin/email-status", async (req, res) => {

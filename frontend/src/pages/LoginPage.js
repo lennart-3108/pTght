@@ -117,6 +117,9 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
   const [resetError, setResetError] = useState("");
   const [sendingReset, setSendingReset] = useState(false);
 
+  // Password visibility toggle
+  const [showPassword, setShowPassword] = useState(false);
+
   const API = (typeof API_BASE === 'string' && API_BASE.trim()) ? API_BASE : '/api';
 
   // Login-Handler (hier an dein Backend anpassen!)
@@ -488,14 +491,48 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
           />
           <div style={{ position: 'relative', marginBottom: 8 }}>
             <input
-              type="password"
+              type={showPassword ? "text" : "password"}
               placeholder="Passwort"
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              style={{ display: "block", width: "100%", background: '#fafcf9', border: '1px solid rgba(0,0,0,0.12)', padding: '8px', paddingRight: '36px' }}
+              style={{ display: "block", width: "100%", background: '#fafcf9', border: '1px solid rgba(0,0,0,0.12)', padding: '8px', paddingRight: '72px', color: '#071716' }}
             />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              title={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
+              style={{
+                position: 'absolute',
+                right: '44px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'transparent',
+                border: 'none',
+                color: showPassword ? '#48baaa' : '#888',
+                fontSize: '18px',
+                cursor: 'pointer',
+                width: '28px',
+                height: '28px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                borderRadius: '50%',
+                opacity: 1,
+                transition: 'all 0.2s'
+              }}
+              onMouseOver={(e) => {
+                e.target.style.background = 'rgba(72, 186, 170, 0.1)';
+                e.target.style.color = '#48baaa';
+              }}
+              onMouseOut={(e) => {
+                e.target.style.background = 'transparent';
+                e.target.style.color = showPassword ? '#48baaa' : '#888';
+              }}
+            >
+              {showPassword ? '👁️' : '👁️‍🗨️'}
+            </button>
             <button
               type="button"
               onClick={() => setShowPasswordResetPopup(true)}

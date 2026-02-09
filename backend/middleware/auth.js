@@ -59,7 +59,9 @@ function isAdmin(req, res, next) {
     const secret = ctxSecret || process.env.JWT_SECRET || process.env.SECRET || "dev-secret";
     const payload = jwt.verify(token, secret);
     
-    if (!payload.isAdmin && payload.role !== 'admin') {
+    // Check all possible admin flag variations for compatibility
+    const hasAdminAccess = payload.isAdmin || payload.is_admin || payload.role === 'admin';
+    if (!hasAdminAccess) {
       return res.status(403).json({ error: "Admin access required" });
     }
     

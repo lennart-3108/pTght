@@ -152,7 +152,15 @@ class RulesetValidator {
    */
   validateSetsScore(config, data) {
     const errors = [];
-    const { sets_to_win, max_sets, min_points_per_set, must_win_by_2 } = config.match_decision;
+    const {
+      sets_to_win,
+      max_sets,
+      min_points_per_set,
+      must_win_by_2,
+      allow_tiebreak,
+      tiebreak_at,
+      tiebreak_to
+    } = config.match_decision;
 
     if (!data.sets || !Array.isArray(data.sets)) {
       errors.push({
@@ -184,9 +192,18 @@ class RulesetValidator {
     let awayWins = 0;
 
     sets.forEach((set, idx) => {
+      const maxPoints = Math.max(set.home, set.away);
+      const minPoints = Math.min(set.home, set.away);
+      const diff = Math.abs(set.home - set.away);
+      const isTiebreakSet =
+        !!allow_tiebreak &&
+        Number.isInteger(tiebreak_at) &&
+        Number.isInteger(tiebreak_to) &&
+        maxPoints === tiebreak_to &&
+        minPoints === tiebreak_at;
+
       // Check minimum points if configured
       if (min_points_per_set) {
-        const maxPoints = Math.max(set.home, set.away);
         if (maxPoints < min_points_per_set) {
           errors.push({
             type: 'sets_score',
@@ -198,8 +215,7 @@ class RulesetValidator {
 
       // Check win-by-2 rule
       if (must_win_by_2) {
-        const diff = Math.abs(set.home - set.away);
-        if (diff < 2) {
+        if (diff < 2 && !isTiebreakSet) {
           errors.push({
             type: 'sets_score',
             message: `Set ${idx + 1}: Must win by at least 2 points`,

@@ -22,6 +22,7 @@ import EditProfilePage from "./pages/EditProfilePage"; // edit profile
 import BookingPage from "./pages/BookingPage"; // booking page (legacy redirects to /slots)
 import SlotSearchPage from "./pages/SlotSearchPage";
 import SlotReviewPage from "./pages/SlotReviewPage";
+import TournamentsPage from "./pages/TournamentsPage"; // tournaments page
 import BookingPaymentPage from "./pages/BookingPaymentPage";
 import BookingConfirmationPage from "./pages/BookingConfirmationPage";
 import BookingDetailPage from "./pages/BookingDetailPage";
@@ -278,6 +279,16 @@ function App() {
             element={
               <ProtectedRoute token={token} setToken={setToken}>
                 <SearchMatchDialog />
+              </ProtectedRoute>
+            }
+          />
+
+          {/* Turniere */}
+          <Route
+            path="/tournaments"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <TournamentsPage />
               </ProtectedRoute>
             }
           />

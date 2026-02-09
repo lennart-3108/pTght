@@ -330,8 +330,8 @@ module.exports = function usersRoutes(ctx) {
             
             const nodemailer = require('nodemailer');
             const transporter = nodemailer.createTransport({
-              host: process.env.MAILER_HOST || 'localhost',
-              port: process.env.MAILER_PORT || 1025,
+              host: process.env.MAILER_HOST || process.env.MAIL_HOST || '127.0.0.1',
+              port: process.env.MAILER_PORT || process.env.MAIL_PORT || 1025,
               secure: false,
               tls: { rejectUnauthorized: false }
             });

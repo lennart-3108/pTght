@@ -10,13 +10,22 @@ exports.seed = async function(knex) {
   // Get sport IDs
   const football = await knex('sports').where('name', 'like', '%ußball%').orWhere('name', 'Football').first();
   const tennis = await knex('sports').where('name', 'like', '%ennis%').andWhere('name', 'not like', '%Tisch%').first();
+  const tennisSingles = await knex('sports').where({ name: 'Tennis Einzel' }).first();
+  const tennisDoubles = await knex('sports').where({ name: 'Tennis Doppel' }).first();
   const tableTennis = await knex('sports').where('name', 'like', '%Tischtennis%').orWhere('name', 'Table Tennis').first();
 
   const rulesets = [];
 
+  const enqueueIfMissing = async (ruleset) => {
+    const exists = await knex('rulesets')
+      .where({ sport_id: ruleset.sport_id, name: ruleset.name, version: ruleset.version })
+      .first();
+    if (!exists) rulesets.push(ruleset);
+  };
+
   // 1. FOOTBALL / FUßBALL - Simple Score
   if (football) {
-    rulesets.push({
+    await enqueueIfMissing({
       sport_id: football.id,
       name: 'Fußball Standard',
       version: 1,
@@ -76,10 +85,11 @@ exports.seed = async function(knex) {
     });
   }
 
-  // 2. TENNIS - Sets Score (Best of 3)
-  if (tennis) {
-    rulesets.push({
-      sport_id: tennis.id,
+  const addTennisRulesets = async (sport) => {
+    if (!sport) return;
+
+    await enqueueIfMissing({
+      sport_id: sport.id,
       name: 'Tennis Best-of-3',
       version: 1,
       description: 'Tennis Standard (2 Gewinnsätze aus maximal 3 Sätzen)',
@@ -109,23 +119,25 @@ exports.seed = async function(knex) {
           }
         },
         validation_rules: {
-          // Each set must have valid scores
           and: [
             { '>=': [{ var: 'sets.length' }, 2] },
             { '<=': [{ var: 'sets.length' }, 3] }
-            // Additional rules: validate set scores (6-4, 7-5, 7-6, etc.)
           ]
         },
         match_decision: {
           type: 'sets_score',
           sets_to_win: 2,
           max_sets: 3,
-          tie_allowed: false
+          tie_allowed: false,
+          min_points_per_set: 6,
+          must_win_by_2: true,
+          allow_tiebreak: true,
+          tiebreak_at: 6,
+          tiebreak_to: 7
         },
         points_policy: {
           win: 2,
           loss: 0
-          // No draws in tennis
         },
         tie_breakers: ['head2head', 'sets_diff', 'games_diff'],
         ui_hints: {
@@ -137,14 +149,13 @@ exports.seed = async function(knex) {
             home_label: 'Spieler 1',
             away_label: 'Spieler 2'
           },
-          help_text: 'Geben Sie die Spielstände für jeden Satz ein (z.B. 6-4, 3-6, 6-2)'
+          help_text: 'Pro Satz 6 Spiele, 2 Vorsprung. Tiebreak bei 6:6 (7:6 möglich).'
         }
       })
     });
 
-    // Tennis Best-of-5 variant
-    rulesets.push({
-      sport_id: tennis.id,
+    await enqueueIfMissing({
+      sport_id: sport.id,
       name: 'Tennis Best-of-5',
       version: 1,
       description: 'Tennis Profi-Format (3 Gewinnsätze aus maximal 5 Sätzen)',
@@ -180,7 +191,12 @@ exports.seed = async function(knex) {
           type: 'sets_score',
           sets_to_win: 3,
           max_sets: 5,
-          tie_allowed: false
+          tie_allowed: false,
+          min_points_per_set: 6,
+          must_win_by_2: true,
+          allow_tiebreak: true,
+          tiebreak_at: 6,
+          tiebreak_to: 7
         },
         points_policy: {
           win: 2,
@@ -199,11 +215,76 @@ exports.seed = async function(knex) {
         }
       })
     });
-  }
+
+    await enqueueIfMissing({
+      sport_id: sport.id,
+      name: 'Tennis Best-of-1',
+      version: 1,
+      description: 'Fun Format (1 Gewinnsatz)',
+      is_active: true,
+      config: JSON.stringify({
+        result_schema: {
+          type: 'object',
+          required: ['sets'],
+          properties: {
+            sets: {
+              type: 'array',
+              minItems: 1,
+              maxItems: 1,
+              items: {
+                type: 'object',
+                required: ['home', 'away'],
+                properties: {
+                  home: { type: 'integer', minimum: 0, maximum: 7 },
+                  away: { type: 'integer', minimum: 0, maximum: 7 }
+                }
+              }
+            },
+            notes: { type: 'string', maxLength: 500 }
+          }
+        },
+        validation_rules: {
+          and: [
+            { '==': [{ var: 'sets.length' }, 1] }
+          ]
+        },
+        match_decision: {
+          type: 'sets_score',
+          sets_to_win: 1,
+          max_sets: 1,
+          tie_allowed: false,
+          min_points_per_set: 6,
+          must_win_by_2: true,
+          allow_tiebreak: true,
+          tiebreak_at: 6,
+          tiebreak_to: 7
+        },
+        points_policy: {
+          win: 2,
+          loss: 0
+        },
+        tie_breakers: ['head2head', 'sets_diff', 'games_diff'],
+        ui_hints: {
+          input_mode: 'per_set',
+          max_sets: 1,
+          sets_to_win: 1,
+          labels: {
+            set_label: 'Satz',
+            home_label: 'Spieler 1',
+            away_label: 'Spieler 2'
+          }
+        }
+      })
+    });
+  };
+
+  if (tennis) await addTennisRulesets(tennis);
+  if (tennisSingles) await addTennisRulesets(tennisSingles);
+  if (tennisDoubles) await addTennisRulesets(tennisDoubles);
 
   // 3. TABLE TENNIS / TISCHTENNIS - Best of 5
   if (tableTennis) {
-    rulesets.push({
+    await enqueueIfMissing({
       sport_id: tableTennis.id,
       name: 'Tischtennis Best-of-5',
       version: 1,

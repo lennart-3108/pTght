@@ -32,7 +32,9 @@ module.exports = function adminRoutes(ctx) {
     if (!token) return res.status(401).json({ error: "Unauthorized" });
     try {
       const payload = jwt.verify(token, SECRET);
-      if (!payload?.is_admin) return res.status(403).json({ error: "Forbidden" });
+      // Check both is_admin (snake_case) and isAdmin (camelCase) for compatibility
+      const isAdmin = payload?.is_admin || payload?.isAdmin;
+      if (!isAdmin) return res.status(403).json({ error: "Forbidden" });
       req.user = payload;
       next();
     } catch {

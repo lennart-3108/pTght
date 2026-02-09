@@ -35,6 +35,7 @@ export default function StartPage() {
   const [selectedSportName, setSelectedSportName] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedCityName, setSelectedCityName] = useState("");
+  const [searchMode, setSearchMode] = useState("");
   const [openMatches, setOpenMatches] = useState([]);
   const [searching, setSearching] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -498,64 +499,94 @@ export default function StartPage() {
                 />
               </div>
               
-              <button
-                onClick={() => {
-                  const qp = new URLSearchParams();
-                  if (selectedSport) qp.set('sportId', selectedSport);
-                  if (selectedCity) qp.set('cityId', selectedCity);
-                  navigate(`/match-search?${qp.toString()}`);
-                }}
-                style={{ background: '#debc7c', color: '#10261f', padding: '11px 22px', borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 800, fontSize: 15, boxShadow: '0 8px 20px rgba(0,0,0,0.28)', width: '100%' }}
-                disabled={searching}
-              >{searching ? 'Suche…' : 'Match suchen'}</button>
+              <div style={{ display: 'grid', gap: 10, width: '100%' }}>
+                <div
+                  role="group"
+                  aria-label="Suchmodus"
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                    gap: 6,
+                    padding: 6,
+                    borderRadius: 14,
+                    border: '2px solid #debc7c',
+                    background: 'rgba(8,28,25,0.96)',
+                    boxShadow: '0 8px 20px rgba(0,0,0,0.28)'
+                  }}
+                >
+                  {[
+                    { value: 'match', label: 'Match' },
+                    { value: 'competition', label: 'Competition' },
+                    { value: 'slot', label: 'Slot buchen' }
+                  ].map((opt) => {
+                    const active = searchMode === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setSearchMode(active ? '' : opt.value)}
+                        aria-pressed={active}
+                        style={{
+                          padding: '10px 12px',
+                          borderRadius: 10,
+                          border: active ? '2px solid #debc7c' : '2px solid transparent',
+                          background: active ? '#debc7c' : 'transparent',
+                          color: active ? '#10261f' : '#debc7c',
+                          cursor: 'pointer',
+                          fontWeight: 800,
+                          fontSize: 14,
+                          letterSpacing: 0.2,
+                          transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease'
+                        }}
+                      >
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
 
-              <button
-                onClick={() => {
-                  const qp = new URLSearchParams();
-                  if (selectedSport) qp.set('sportId', selectedSport);
-                  if (selectedCity) qp.set('cityId', selectedCity);
-                  navigate(`/ligen?${qp.toString()}`);
-                }}
-                style={{ 
-                  padding: '11px 22px', 
-                  borderRadius: 12, 
-                  border: '2px solid #debc7c', 
-                  background: 'rgba(8,28,25,0.96)', 
-                  color: '#debc7c', 
-                  cursor: 'pointer', 
-                  fontWeight: 700, 
-                  fontSize: 15, 
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.28)',
-                  transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease',
-                  width: '100%'
-                }}
-              >Liga suchen</button>
+                <button
+                  onClick={() => {
+                    if (!searchMode) return;
+                    const qp = new URLSearchParams();
+                    if (selectedSport) qp.set('sportId', selectedSport);
+                    if (selectedCity) qp.set('cityId', selectedCity);
 
-              <button
-                onClick={() => {
-                  const qp = new URLSearchParams();
-                  if (selectedSport) qp.set('sportId', selectedSport);
-                  if (selectedCity) qp.set('city', selectedCityName || selectedCity);
-                  // Set current date and time
-                  const now = new Date();
-                  qp.set('date', now.toISOString().split('T')[0]);
-                  qp.set('time', now.toTimeString().slice(0, 5));
-                  navigate(`/slots?${qp.toString()}`);
-                }}
-                style={{ 
-                  padding: '11px 22px', 
-                  borderRadius: 12, 
-                  border: '2px solid #7fc', 
-                  background: 'rgba(8,28,25,0.96)', 
-                  color: '#7fc', 
-                  cursor: 'pointer', 
-                  fontWeight: 700, 
-                  fontSize: 15, 
-                  boxShadow: '0 8px 20px rgba(0,0,0,0.28)',
-                  transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease',
-                  width: '100%'
-                }}
-              >Platz buchen</button>
+                    if (searchMode === 'match') {
+                      navigate(`/match-search?${qp.toString()}`);
+                      return;
+                    }
+
+                    if (searchMode === 'competition') {
+                      navigate(`/ligen?${qp.toString()}`);
+                      return;
+                    }
+
+                    const slotParams = new URLSearchParams(qp);
+                    if (selectedCity) slotParams.set('city', selectedCityName || selectedCity);
+                    const now = new Date();
+                    slotParams.set('date', now.toISOString().split('T')[0]);
+                    slotParams.set('time', now.toTimeString().slice(0, 5));
+                    navigate(`/slots?${slotParams.toString()}`);
+                  }}
+                  style={{
+                    padding: '12px 22px',
+                    borderRadius: 12,
+                    border: 'none',
+                    background: searchMode ? '#debc7c' : 'rgba(222,188,124,0.4)',
+                    color: '#10261f',
+                    cursor: searchMode ? 'pointer' : 'not-allowed',
+                    fontWeight: 800,
+                    fontSize: 15,
+                    boxShadow: '0 8px 20px rgba(0,0,0,0.28)',
+                    transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease',
+                    width: '100%'
+                  }}
+                  disabled={searching || !searchMode}
+                >
+                  {searching ? 'Suche…' : 'Suchen'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -580,7 +611,7 @@ export default function StartPage() {
                   display: 'inline-block',
                   padding: '12px 24px', 
                   borderRadius: 10, 
-                  background: '#7fc', 
+                  background: '#debc7c', 
                   color: '#081c19', 
                   fontWeight: 700, 
                   fontSize: 14,

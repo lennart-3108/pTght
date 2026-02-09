@@ -11,6 +11,7 @@ import BookingWidget from "../components/BookingWidget";
 import TerminManagerKalender from "../components/TerminManagerKalender";
 import LocationSelector from "../components/LocationSelector";
 import CommentsSection from "../components/CommentsSection";
+import TennisResultEntry from "../components/TennisResultEntry";
 
 export default function GameDetailPage() {
   const { gameId } = useParams();
@@ -48,6 +49,8 @@ export default function GameDetailPage() {
   const [hScore, setHScore] = useState(0);
   const [aScore, setAScore] = useState(0);
   const [submitMsg, setSubmitMsg] = useState('');
+  // Tennis result state
+  const [tennisResult, setTennisResult] = useState({ numSets: 1 });
   // permission to submit result (must be declared before any early return)
   const [canSubmit, setCanSubmit] = useState(false);
   const [cannotReason, setCannotReason] = useState('');
@@ -214,6 +217,23 @@ export default function GameDetailPage() {
     if (hours >= 1) return diff >= 0 ? `in ${hours} Stunden` : `vor ${hours} Stunden`;
     const mins = Math.max(1, Math.floor(abs / (60*1000)));
     return diff >= 0 ? `in ${mins} Minuten` : `vor ${mins} Minuten`;
+  }, []);
+  
+  // Time remaining until deadline (for kickoff_end_at)
+  const timeRemaining = useMemo(() => (when) => {
+    if (!when) return "";
+    const d = new Date(when);
+    if (Number.isNaN(d.getTime())) return "";
+    const now = new Date();
+    const diff = d.getTime() - now.getTime();
+    if (diff < 0) return "abgelaufen";
+    const days = Math.floor(diff / (24*60*60*1000));
+    if (days >= 2) return `noch ${days} Tage`;
+    if (days === 1) return `noch 1 Tag`;
+    const hours = Math.floor(diff / (60*60*1000));
+    if (hours >= 1) return `noch ${hours} Stunden`;
+    const mins = Math.max(1, Math.floor(diff / (60*1000)));
+    return `noch ${mins} Minuten`;
   }, []);
   // fetch league games to build player histories
   const [leagueGames, setLeagueGames] = useState([]);
@@ -503,10 +523,26 @@ export default function GameDetailPage() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
       
+      // Determine if this is tennis and use appropriate data
+      const isTennis = game?.sport?.toLowerCase().includes('tennis') || 
+                       game?.sportType?.toLowerCase().includes('tennis');
+      
+      const requestBody = isTennis && tennisResult ? {
+        home_score: tennisResult.home_score,
+        away_score: tennisResult.away_score,
+        sets: tennisResult.sets,
+        aborted: tennisResult.aborted,
+        abort_reason: tennisResult.abort_reason,
+        abort_by: tennisResult.abort_by
+      } : {
+        home_score: hScore,
+        away_score: aScore
+      };
+      
       const r = await fetch(`${API_BASE}/matches/${gameId}/result`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ home_score: hScore, away_score: aScore }),
+        body: JSON.stringify(requestBody),
         signal: controller.signal
       });
       
@@ -739,54 +775,80 @@ export default function GameDetailPage() {
           const canJoin = isOpenMatch || !hasWeeklyMatch;
           return (
             <div style={{
-              padding: isMobile ? '12px' : '20px',
-              background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.25), rgba(47, 107, 87, 0.15))',
-              border: '2px solid rgba(222, 188, 124, 0.5)',
-              borderRadius: 14,
-              marginBottom: isMobile ? 12 : 16,
-              boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
+              padding: isMobile ? '16px' : '24px',
+              background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.3), rgba(47, 107, 87, 0.18))',
+              border: '2px solid rgba(222, 188, 124, 0.6)',
+              borderRadius: 16,
+              marginBottom: isMobile ? 16 : 20,
+              boxShadow: '0 6px 24px rgba(0,0,0,0.35)'
             }}>
-              <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 700, color: '#debc7c', marginBottom: isMobile ? 8 : 10, display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontSize: isMobile ? 18 : 24 }}>🏆</span>
+              <div style={{ 
+                fontSize: isMobile ? 17 : 20, 
+                fontWeight: 800, 
+                color: '#debc7c', 
+                marginBottom: isMobile ? 10 : 12, 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: 8,
+                letterSpacing: '0.3px'
+              }}>
+                <span style={{ fontSize: isMobile ? 22 : 28 }}>🏆</span>
                 Mitspieler gesucht!
               </div>
-              <div style={{ color: '#e8efe8', fontSize: isMobile ? 12 : 14, marginBottom: isMobile ? 12 : 16, lineHeight: 1.5 }}>
+              <div style={{ 
+                color: '#e8efe8', 
+                fontSize: isMobile ? 13 : 15, 
+                marginBottom: isMobile ? 14 : 18, 
+                lineHeight: 1.6,
+                fontWeight: 500
+              }}>
                 {playerA.name} sucht einen Gegner für dieses Match. Tritt bei und fordere ihn heraus!
               </div>
               <button
                 onClick={joinMatch}
                 disabled={!canJoin}
                 style={{
-                  padding: isMobile ? '10px 16px' : '14px 24px',
-                  borderRadius: 12,
+                  padding: isMobile ? '12px 18px' : '16px 28px',
+                  borderRadius: 14,
                   border: 'none',
                   background: canJoin ? 'linear-gradient(135deg, #debc7c, #c9a75f)' : 'rgba(58, 74, 69, 0.5)',
                   color: canJoin ? '#10261f' : '#666',
                   cursor: canJoin ? 'pointer' : 'not-allowed',
-                  fontWeight: 700,
-                  fontSize: isMobile ? 13 : 15,
+                  fontWeight: 800,
+                  fontSize: isMobile ? 14 : 16,
                   width: '100%',
-                  boxShadow: canJoin ? '0 6px 16px rgba(222, 188, 124, 0.4)' : 'none',
+                  boxShadow: canJoin ? '0 8px 20px rgba(222, 188, 124, 0.45)' : 'none',
                   transition: 'all 0.3s ease',
-                  transform: canJoin ? 'scale(1)' : 'scale(0.98)'
+                  transform: canJoin ? 'scale(1)' : 'scale(0.98)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
                 }}
                 onMouseEnter={(e) => {
                   if (canJoin) {
                     e.target.style.transform = 'scale(1.02)';
-                    e.target.style.boxShadow = '0 8px 20px rgba(222, 188, 124, 0.5)';
+                    e.target.style.boxShadow = '0 10px 24px rgba(222, 188, 124, 0.55)';
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (canJoin) {
                     e.target.style.transform = 'scale(1)';
-                    e.target.style.boxShadow = '0 6px 16px rgba(222, 188, 124, 0.4)';
+                    e.target.style.boxShadow = '0 8px 20px rgba(222, 188, 124, 0.45)';
                   }
                 }}
               >
                 {isOpenMatch ? '✨ Jetzt beitreten' : '⚔️ Challenge annehmen'}
               </button>
               {!canJoin && !isOpenMatch && (
-                <div style={{ marginTop: 10, color: '#ccc', fontSize: 13, textAlign: 'center' }}>
+                <div style={{ 
+                  marginTop: 12, 
+                  color: '#c5d9ce', 
+                  fontSize: isMobile ? 12 : 13, 
+                  textAlign: 'center',
+                  fontWeight: 500,
+                  padding: '8px',
+                  background: 'rgba(100, 100, 100, 0.2)',
+                  borderRadius: 8
+                }}>
                   Du hast diese Woche bereits ein Match in dieser Liga.
                 </div>
               )}
@@ -924,30 +986,48 @@ export default function GameDetailPage() {
         {/* Mitspieler gesucht Info - für Match Creator (oben im Hero) */}
         {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
           <div style={{ 
-            marginTop: isMobile ? 12 : 16,
-            padding: isMobile ? '12px' : '20px', 
-            background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.2), rgba(47, 107, 87, 0.1))',
-            border: '2px solid rgba(222, 188, 124, 0.4)',
-            borderRadius: 14,
+            marginTop: isMobile ? 16 : 20,
+            padding: isMobile ? '16px' : '24px', 
+            background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.25), rgba(47, 107, 87, 0.12))',
+            border: '2px solid rgba(222, 188, 124, 0.5)',
+            borderRadius: 16,
             textAlign: 'center',
-            boxShadow: '0 4px 16px rgba(0,0,0,0.3)'
+            boxShadow: '0 6px 24px rgba(0,0,0,0.3)'
           }}>
-            <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 700, color: '#debc7c', marginBottom: isMobile ? 8 : 12, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-              <span style={{ fontSize: isMobile ? 18 : 24 }}>👥</span>
+            <div style={{ 
+              fontSize: isMobile ? 17 : 20, 
+              fontWeight: 800, 
+              color: '#debc7c', 
+              marginBottom: isMobile ? 10 : 14, 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: 8,
+              letterSpacing: '0.3px'
+            }}>
+              <span style={{ fontSize: isMobile ? 22 : 28 }}>👥</span>
               Mitspieler gesucht
             </div>
-            <div style={{ color: '#c5d9ce', fontSize: isMobile ? 12 : 14, lineHeight: 1.6, marginBottom: isMobile ? 8 : 10 }}>
+            <div style={{ 
+              color: '#c5d9ce', 
+              fontSize: isMobile ? 13 : 15, 
+              lineHeight: 1.6, 
+              marginBottom: isMobile ? 10 : 14,
+              fontWeight: 500
+            }}>
               Dein Match ist veröffentlicht und für alle Spieler sichtbar.
             </div>
             <div style={{ 
-              display: 'inline-block',
-              padding: '6px 14px',
-              background: 'rgba(222, 188, 124, 0.15)',
-              border: '1px solid rgba(222, 188, 124, 0.3)',
-              borderRadius: 20,
-              fontSize: 12,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 6,
+              padding: '8px 16px',
+              background: 'rgba(222, 188, 124, 0.2)',
+              border: '1px solid rgba(222, 188, 124, 0.4)',
+              borderRadius: 24,
+              fontSize: isMobile ? 12 : 13,
               color: '#debc7c',
-              fontWeight: 600
+              fontWeight: 700
             }}>
               🎯 Spiel aktiv
             </div>
@@ -955,8 +1035,73 @@ export default function GameDetailPage() {
         )}
 
         {/* Header row with action buttons */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap' }}>
-          <div style={{ fontSize: isMobile ? 18 : 24, fontWeight: 700 }}>{game.league || 'Liga'}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap', marginTop: isMobile ? 16 : 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ fontSize: isMobile ? 20 : 28, fontWeight: 800, letterSpacing: '-0.5px', color: '#f4fff8' }}>{game.league || 'Liga'}</div>
+              {game.sport && (
+                <div style={{
+                  padding: '4px 12px',
+                  background: 'rgba(47, 107, 87, 0.3)',
+                  border: '1px solid rgba(47, 107, 87, 0.5)',
+                  borderRadius: 20,
+                  fontSize: isMobile ? 12 : 14,
+                  fontWeight: 600,
+                  color: '#9db',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px'
+                }}>
+                  {game.sport}
+                </div>
+              )}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{ 
+                display: 'inline-flex',
+                alignSelf: 'flex-start',
+                padding: '4px 10px',
+                background: 'rgba(47, 107, 87, 0.25)',
+                border: '1px solid rgba(47, 107, 87, 0.5)',
+                borderRadius: 6,
+                fontSize: isMobile ? 11 : 13,
+                color: '#9db',
+                fontWeight: 600,
+                fontFamily: 'monospace'
+              }}>
+                Match #{game.id}
+              </div>
+              <div style={{
+                fontSize: isMobile ? 13 : 14,
+                color: (booking || (terminProposal && terminProposal.status === 'accepted') || game.kickoff_at) ? '#9db' : '#ff9',
+                fontWeight: 500
+              }}>
+                {booking ? (
+                  <>
+                    📅 {formatDate(booking.start_time)}
+                    {formatTime(booking.start_time) && <span style={{ marginLeft: 6 }}>{formatTime(booking.start_time)}</span>}
+                  </>
+                ) : (terminProposal && terminProposal.status === 'accepted' && terminProposal.proposed_datetime) ? (
+                  <>
+                    📅 {formatDate(terminProposal.proposed_datetime)}
+                    {formatTime(terminProposal.proposed_datetime) && <span style={{ marginLeft: 6 }}>{formatTime(terminProposal.proposed_datetime)}</span>}
+                  </>
+                ) : game.kickoff_at ? (
+                  <>
+                    📅 {formatDate(game.kickoff_at)}
+                    {formatTime(game.kickoff_at) && <span style={{ marginLeft: 6 }}>{formatTime(game.kickoff_at)}</span>}
+                  </>
+                ) : game.when_type === 'range' && game.range_days ? (
+                  `📅 In den nächsten ${game.range_days} Tag${game.range_days !== 1 ? 'en' : ''}`
+                ) : game.when_type === 'fixed' && game.kickoff_end_at ? (
+                  `📅 Zeitraum: ${formatDate(game.kickoff_at || '')} - ${formatDate(game.kickoff_end_at)}`
+                ) : game.kickoff_end_at ? (
+                  `📅 Bis ${formatDate(game.kickoff_end_at)}`
+                ) : (
+                  '⏰ Noch kein Termin vereinbart'
+                )}
+              </div>
+            </div>
+          </div>
           
           {/* Action buttons moved to top right */}
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -964,58 +1109,101 @@ export default function GameDetailPage() {
               <Link
                 to={`/matches/${gameId}/chat`}
                 style={{
-                  padding: isMobile ? '6px 10px' : '8px 12px',
-                  borderRadius: 8,
-                  border: '1px solid #2f6b57',
-                  background: '#0e2a22',
+                  padding: isMobile ? '8px 12px' : '10px 16px',
+                  borderRadius: 10,
+                  border: '1px solid rgba(47, 107, 87, 0.6)',
+                  background: 'linear-gradient(135deg, rgba(14, 42, 34, 0.9), rgba(14, 42, 34, 0.7))',
                   color: '#dfe',
-                  fontSize: isMobile ? 12 : 14,
+                  fontSize: isMobile ? 13 : 14,
+                  fontWeight: 600,
                   textDecoration: 'none',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: 6,
-                  position: 'relative'
+                  gap: 8,
+                  position: 'relative',
+                  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                  transition: 'all 0.2s ease'
                 }}
               >
-                <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-                  <path d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V14C20 15.1046 19.1046 16 18 16H11.5L7 19.5V16H6C4.89543 16 4 15.1046 4 14V6Z" fill="none" stroke="currentColor" />
+                <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+                  <path d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V14C20 15.1046 19.1046 16 18 16H11.5L7 19.5V16H6C4.89543 16 4 15.1046 4 14V6Z" fill="none" stroke="currentColor" strokeWidth="2" />
                 </svg>
                 Match-Chat
                 {chatUnread && (
                   <span style={{
                     position: 'absolute',
-                    top: -4,
-                    right: -4,
-                    width: 12,
-                    height: 12,
+                    top: -6,
+                    right: -6,
+                    width: 14,
+                    height: 14,
                     background: '#ff4444',
                     borderRadius: '50%',
-                    border: '2px solid #0c1f1a'
+                    border: '2px solid #0c1f1a',
+                    boxShadow: '0 0 8px rgba(255, 68, 68, 0.6)'
                   }} />
                 )}
               </Link>
             )}
             {(token && game && game.home_score == null && game.away_score == null && !booking && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
-              <button onClick={() => setShowTerminManager(true)} style={{ padding: isMobile ? '6px 10px' : '8px 12px', borderRadius: 8, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe', fontSize: isMobile ? 12 : 14 }}>
-                {terminButtonLabel}
-              </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
+                {game.kickoff_end_at && (
+                  <div style={{ fontSize: 13, color: '#ffd35d', fontWeight: 500 }}>
+                    {timeRemaining(game.kickoff_end_at).replace('noch', 'Noch')} um den Termin zu vereinbaren
+                  </div>
+                )}
+                <button onClick={() => setShowTerminManager(true)} style={{ 
+                  padding: isMobile ? '8px 12px' : '10px 16px', 
+                  borderRadius: 10, 
+                  border: '1px solid rgba(212, 175, 55, 0.6)', 
+                  background: 'linear-gradient(135deg, #d4af37, #b8941f)', 
+                  color: '#000', 
+                  fontSize: isMobile ? 13 : 14,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  boxShadow: '0 6px 20px rgba(212, 175, 55, 0.4)',
+                  transition: 'all 0.2s ease'
+                }}>
+                  {terminButtonLabel}
+                </button>
+              </div>
             )}
             {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
-              <button onClick={cancelMatch} style={{ padding: isMobile ? '6px 10px' : '8px 12px', borderRadius: 8, border: '1px solid #553f3f', background: '#2a1b1b', color: '#e9d8d8', fontSize: isMobile ? 12 : 14 }}>ABSAGEN</button>
+              <button onClick={cancelMatch} style={{ 
+                padding: isMobile ? '8px 12px' : '10px 16px', 
+                borderRadius: 10, 
+                border: '1px solid rgba(85, 63, 63, 0.6)', 
+                background: 'linear-gradient(135deg, rgba(42, 27, 27, 0.9), rgba(42, 27, 27, 0.7))', 
+                color: '#e9d8d8', 
+                fontSize: isMobile ? 13 : 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                transition: 'all 0.2s ease'
+              }}>ABSAGEN</button>
             )}
           </div>
         </div>
 
         {/* Date + status in one line */}
-        <div style={{ marginTop: 12, display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12, flexWrap: 'wrap' }}>
-          <div style={{ fontSize: isMobile ? 14 : 20 }}>
+        <div style={{ 
+          marginTop: isMobile ? 16 : 20, 
+          padding: isMobile ? '12px' : '16px 20px',
+          background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.15), rgba(47, 107, 87, 0.08))',
+          border: '1px solid rgba(47, 107, 87, 0.3)',
+          borderRadius: 12,
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: isMobile ? 10 : 16, 
+          flexWrap: 'wrap'
+        }}>
+          <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 600, color: '#c5d9ce' }}>
             {(game.status === 'scheduled' || (terminProposal && terminProposal.status === 'accepted')) && game.kickoff_at ? (
               <>
                 {formatDate(game.kickoff_at)}
                 {formatTime(game.kickoff_at) && <span style={{ marginLeft: 8, color: '#9db' }}>{formatTime(game.kickoff_at)}</span>}
               </>
-            ) : game.when_type === 'range' && game.range_days ? (
-              <span>In den nächsten {game.range_days} Tag{game.range_days !== 1 ? 'en' : ''}</span>
+            ) : game.when_type === 'range' && game.kickoff_end_at ? (
+              <span>{timeRemaining(game.kickoff_end_at)}</span>
             ) : game.when_type === 'fixed' && game.kickoff_at && game.kickoff_end_at ? (
               <span>Zeitraum: {formatDate(game.kickoff_at)} - {formatDate(game.kickoff_end_at)}</span>
             ) : game.when_type === 'exact' && game.kickoff_at ? (
@@ -1036,15 +1224,23 @@ export default function GameDetailPage() {
               'Termin ausstehend'
             )}
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 8, height: 8, background: '#ffd35d', borderRadius: 999 }} />
-            <span style={{ color: '#ffd35d' }}>{statusLabel || (isCompleted ? 'Absolviert' : 'Match ausstehend')}</span>
+          <div style={{ 
+            display: 'inline-flex', 
+            alignItems: 'center', 
+            gap: 8,
+            padding: '6px 12px',
+            background: 'rgba(255, 211, 93, 0.12)',
+            border: '1px solid rgba(255, 211, 93, 0.3)',
+            borderRadius: 20
+          }}>
+            <span style={{ width: 10, height: 10, background: '#ffd35d', borderRadius: '50%', boxShadow: '0 0 8px rgba(255, 211, 93, 0.5)' }} />
+            <span style={{ color: '#ffd35d', fontSize: isMobile ? 13 : 14, fontWeight: 600 }}>{statusLabel || (isCompleted ? 'Absolviert' : 'Match ausstehend')}</span>
           </div>
           {game.when_type === 'exact' && game.kickoff_at && (
             <div style={{ color: '#9db', fontSize: 14 }}>{relativeFromNow(game.kickoff_at)}</div>
           )}
           {(game.when_type === 'fixed' || game.when_type === 'range') && game.kickoff_end_at && (
-            <div style={{ color: '#9db', fontSize: 14 }}>{relativeFromNow(game.kickoff_end_at)}</div>
+            <div style={{ color: '#9db', fontSize: 14 }}>{timeRemaining(game.kickoff_end_at)}</div>
           )}
           {game.kickoff_end_at && !game.kickoff_at && (
             <div style={{ color: '#9db', fontSize: 14 }}>Bis {formatDate(game.kickoff_end_at)}</div>
@@ -1054,7 +1250,7 @@ export default function GameDetailPage() {
         {/* Date mode indicator when not yet assigned opponent */}
         {(game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away)) && (
           <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {game.when_type === 'range' && game.range_days && (
+            {game.when_type === 'range' && game.kickoff_end_at && (
               <div style={{ 
                 padding: '6px 12px', 
                 background: 'rgba(47, 107, 87, 0.2)', 
@@ -1063,7 +1259,7 @@ export default function GameDetailPage() {
                 fontSize: 13,
                 color: '#9db'
               }}>
-                📅 In den nächsten {game.range_days} Tag{game.range_days !== 1 ? 'en' : ''}
+                📅 {timeRemaining(game.kickoff_end_at)}
               </div>
             )}
             {game.when_type === 'fixed' && game.kickoff_at && game.kickoff_end_at && (
@@ -1105,208 +1301,486 @@ export default function GameDetailPage() {
           </div>
         )}
 
-        {/* VS Row with integrated counters */}
+        {/* Spieler/Teams Übersicht - Eine Zeile */}
         <div style={{ 
-          display: 'grid', 
-          gridTemplateColumns: isMobile ? '1fr' : '1fr auto 1fr', 
-          alignItems: 'center', 
-          gap: isMobile ? 12 : 16, 
-          marginTop: isMobile ? 12 : 16 
+          marginTop: isMobile ? 20 : 32,
+          padding: isMobile ? '20px' : '28px',
+          background: 'linear-gradient(135deg, rgba(14, 42, 34, 0.4), rgba(14, 42, 34, 0.2))',
+          border: '1px solid rgba(47, 107, 87, 0.3)',
+          borderRadius: 16,
+          boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
         }}>
-          <div style={{ textAlign: 'left' }}>
-            {playerA.id ? (
-              <Link to={`/user/${playerA.id}`} style={{ textDecoration: 'none', color: '#f4fff8', display: 'inline-block' }}>
-                <Avatar 
-                  userId={playerA.id} 
-                  name={playerA.name} 
-                  size={isMobile ? 80 : 110} 
-                />
+          {/* Zeile 1: Spieler */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'space-between',
+            gap: isMobile ? 12 : 20,
+            marginBottom: isMobile ? 12 : 16
+          }}>
+            {/* Spieler/Team 1 */}
+            <div style={{ 
+              flex: 1, 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: isMobile ? 10 : 14,
+              minWidth: 0 // Allow text truncation
+            }}>
+              {playerA.id ? (
+                <Link to={`/user/${playerA.id}`} style={{ textDecoration: 'none', color: '#f4fff8', display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 14, minWidth: 0 }}>
+                  <Avatar 
+                    userId={playerA.id} 
+                    name={playerA.name} 
+                    size={isMobile ? 50 : 70} 
+                  />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ 
+                      fontSize: isMobile ? 16 : 20, 
+                      fontWeight: 800,
+                      letterSpacing: '-0.3px',
+                      color: '#f4fff8',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>{playerA.name}</div>
+                    {tablePositions[playerA.name] && (
+                      <div style={{ 
+                        color: '#9db', 
+                        fontSize: isMobile ? 12 : 13,
+                        fontWeight: 500,
+                        marginTop: 2
+                      }}>{tablePositions[playerA.name].rank}. Rang</div>
+                    )}
+                  </div>
+                </Link>
+              ) : (
+                <>
+                  <Avatar 
+                    userId={null} 
+                    name={playerA.name} 
+                    size={isMobile ? 50 : 70} 
+                  />
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ 
+                      fontSize: isMobile ? 16 : 20, 
+                      fontWeight: 800,
+                      letterSpacing: '-0.3px',
+                      color: '#f4fff8',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>{playerA.name}</div>
+                    {tablePositions[playerA.name] && (
+                      <div style={{ 
+                        color: '#9db', 
+                        fontSize: isMobile ? 12 : 13,
+                        fontWeight: 500,
+                        marginTop: 2
+                      }}>{tablePositions[playerA.name].rank}. Rang</div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Spieler/Team 2 */}
+            <div style={{ 
+              flex: 1, 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: isMobile ? 10 : 14,
+              justifyContent: 'flex-end',
+              minWidth: 0
+            }}>
+              {playerB.id ? (
+                <Link to={`/user/${playerB.id}`} style={{ textDecoration: 'none', color: '#f4fff8', display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 14, minWidth: 0, flexDirection: 'row-reverse' }}>
+                  <Avatar 
+                    userId={playerB.id} 
+                    name={playerB.name} 
+                    size={isMobile ? 50 : 70} 
+                  />
+                  <div style={{ minWidth: 0, textAlign: 'right' }}>
+                    <div style={{ 
+                      fontSize: isMobile ? 16 : 20, 
+                      fontWeight: 800,
+                      letterSpacing: '-0.3px',
+                      color: '#f4fff8',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>{playerB.name}</div>
+                    {tablePositions[playerB.name] && (
+                      <div style={{ 
+                        color: '#9db', 
+                        fontSize: isMobile ? 12 : 13,
+                        fontWeight: 500,
+                        marginTop: 2
+                      }}>{tablePositions[playerB.name].rank}. Rang</div>
+                    )}
+                  </div>
+                </Link>
+              ) : (
+                <>
+                  <div style={{ minWidth: 0, textAlign: 'right', order: 1 }}>
+                    <div style={{ 
+                      fontSize: isMobile ? 16 : 20, 
+                      fontWeight: 800,
+                      letterSpacing: '-0.3px',
+                      color: '#f4fff8',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap'
+                    }}>{playerB.name}</div>
+                    {tablePositions[playerB.name] && (
+                      <div style={{ 
+                        color: '#9db', 
+                        fontSize: isMobile ? 12 : 13,
+                        fontWeight: 500,
+                        marginTop: 2
+                      }}>{tablePositions[playerB.name].rank}. Rang</div>
+                    )}
+                  </div>
+                  <Avatar 
+                    userId={null} 
+                    name={playerB.name} 
+                    size={isMobile ? 50 : 70}
+                    style={{ order: 2 }}
+                  />
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Zeile 2: Ergebnis / Ergebnis Eintragen */}
+          <div>
+            {isCompleted ? (
+              /* Match abgeschlossen: nur Endergebnis anzeigen */
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: isMobile ? 16 : 20
+              }}>
                 <div style={{ 
-                  marginTop: isMobile ? 6 : 10, 
-                  fontSize: isMobile ? 14 : 22, 
-                  fontWeight: 700 
-                }}>{playerA.name}</div>
-              </Link>
-            ) : (
-              <>
-                <Avatar 
-                  userId={null} 
-                  name={playerA.name} 
-                  size={isMobile ? 80 : 110} 
-                />
-                <div style={{ marginTop: isMobile ? 6 : 10, fontSize: isMobile ? 14 : 22, fontWeight: 700 }}>{playerA.name}</div>
-              </>
-            )}
-            <div style={{ color: '#9db' }}>{tablePositions[playerA.name] ? `${tablePositions[playerA.name].rank}. Rang` : '—'}</div>
-            
-            {/* Letzte 5 Spiele Statistik */}
-            {playerA.id && histA.length > 0 && (
-              <div style={{ marginTop: isMobile ? 6 : 8, fontSize: isMobile ? 11 : 13, color: '#9db' }}>
-                <div style={{ marginBottom: 4, fontWeight: 600 }}>Letzte 5 Spiele:</div>
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                  {histA.slice(0, 5).map(h => {
-                    const won = (h.home === playerA.name && h.home_score > h.away_score) || 
-                                (h.away === playerA.name && h.away_score > h.home_score);
-                    const draw = h.home_score === h.away_score;
-                    return (
-                      <span key={h.id} style={{
-                        width: isMobile ? 18 : 20,
-                        height: isMobile ? 18 : 20,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        background: won ? '#2d5f3f' : draw ? '#5f5f2d' : '#5f2d2d',
-                        borderRadius: 4,
-                        fontSize: isMobile ? 10 : 11,
-                        fontWeight: 700
-                      }}>
-                        {won ? 'S' : draw ? 'U' : 'N'}
-                      </span>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-          </div>
-          
-          {/* Center section with VS or Counters */}
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
-            {(token && isParticipant && (game.home_score == null && game.away_score == null) && !!game.kickoff_at) ? (
-              <>
-                <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? 10 : 16 }}>
-                  <Counter
-                    value={hScore}
-                    onChange={setHScore}
-                    min={0}
-                    max={99}
-                    disabled={!canSubmit}
-                  />
-                  <span style={{ fontSize: isMobile ? 20 : 28, color: '#9db', fontWeight: 700 }}>VS</span>
-                  <Counter
-                    value={aScore}
-                    onChange={setAScore}
-                    min={0}
-                    max={99}
-                    disabled={!canSubmit}
-                  />
-                </div>
-                <button disabled={!canSubmit || submitLoading} type="submit" onClick={submitResult} style={{ 
-                  padding: isMobile ? '8px 14px' : '10px 20px', 
-                  borderRadius: 20, 
-                  border: 'none',
-                  background: (canSubmit && !submitLoading) ? 'linear-gradient(135deg, #d4af37, #b8941f)' : 'rgba(100, 100, 100, 0.3)',
-                  color: (canSubmit && !submitLoading) ? '#000' : '#666',
-                  fontSize: isMobile ? 12 : 14,
-                  fontWeight: 700,
-                  cursor: (canSubmit && !submitLoading) ? 'pointer' : 'not-allowed',
-                  boxShadow: (canSubmit && !submitLoading) ? '0 4px 12px rgba(212, 175, 55, 0.3)' : 'none',
-                  opacity: submitLoading ? 0.7 : 1
+                  fontSize: isMobile ? 28 : 40, 
+                  fontWeight: 900, 
+                  color: '#e8efe8', 
+                  letterSpacing: '1px',
+                  padding: '8px 16px',
+                  background: 'rgba(10, 28, 23, 0.6)',
+                  borderRadius: 10,
+                  border: '1px solid rgba(38, 73, 60, 0.5)'
                 }}>
-                  {submitLoading ? '⏳ Speichere...' : 'Ergebnis speichern'}
-                </button>
-                {(!canSubmit && cannotReason && cannotReason !== 'OPPONENT_NOT_ASSIGNED') && (
-                  <div style={{ 
-                    marginTop: 12,
-                    padding: '10px 16px',
-                    background: 'rgba(255, 200, 100, 0.1)',
-                    border: '1px solid rgba(255, 200, 100, 0.3)',
-                    borderRadius: 8,
-                    fontSize: 13,
-                    color: '#ffc864',
-                    textAlign: 'center',
-                    fontWeight: 500
-                  }}>
-                    {cannotReason === 'KICKOFF_NOT_SET' ? '📅 Termin noch nicht festgelegt' : 
-                     cannotReason === 'KICKOFF_NOT_REACHED' ? '⏰ Ergebnis kann erst ab Startdatum eingetragen werden' :
-                     cannotReason === 'LEAGUE_MEMBERS_ONLY' ? '🔒 Nur Liga-Mitglieder' : cannotReason}
-                  </div>
-                )}
-                {submitMsg && (
-                  <div style={{ color: submitMsg.includes('gespeichert') ? '#99ff99' : '#ff9999', fontSize: 12, textAlign: 'center' }}>
-                    {submitMsg}
-                  </div>
-                )}
-              </>
-            ) : (
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontSize: isMobile ? 28 : 40, color: '#cde' }}>VS</div>
-                {(token && isParticipant && (game.home_score == null && game.away_score == null) && !game.kickoff_at) && (
-                  <div style={{ marginTop: 10, fontSize: 13, color: '#ffc864', background: 'rgba(255, 200, 100, 0.08)', border: '1px solid rgba(255, 200, 100, 0.25)', borderRadius: 10, padding: '8px 10px', maxWidth: 360 }}>
-                    📅 Ergebnis erst möglich, wenn ein Termin festgelegt ist.
-                  </div>
-                )}
+                  {Number(game.home_score)} : {Number(game.away_score)}
+                </div>
               </div>
-            )}
-          </div>
-          
-          <div style={{ textAlign: 'right' }}>
-            {playerB.id ? (
-              <Link to={`/user/${playerB.id}`} style={{ textDecoration: 'none', color: '#f4fff8', display: 'inline-block' }}>
-                <Avatar 
-                  userId={playerB.id} 
-                  name={playerB.name} 
-                  size={isTablet ? 90 : isMobile ? 70 : 110} 
-                  style={{ marginLeft: 'auto' }}
-                />
-                <div style={{ marginTop: isMobile ? 6 : 10, fontSize: isMobile ? 14 : 22, fontWeight: 700 }}>{playerB.name}</div>
-              </Link>
-            ) : (
-              <>
-                <Avatar 
-                  userId={null} 
-                  name={playerB.name} 
-                  size={isTablet ? 90 : isMobile ? 70 : 110} 
-                  style={{ marginLeft: 'auto' }}
-                />
-                <div style={{ marginTop: isMobile ? 6 : 10, fontSize: isMobile ? 14 : 22, fontWeight: 700 }}>{playerB.name}</div>
-              </>
-            )}
-            <div style={{ color: '#9db' }}>{tablePositions[playerB.name] ? `${tablePositions[playerB.name].rank}. Rang` : '—'}</div>
-            
-            {/* Letzte 5 Spiele Statistik */}
-            {playerB.id && histB.length > 0 && (
-              <div style={{ marginTop: isMobile ? 6 : 8, fontSize: isMobile ? 11 : 13, color: '#9db' }}>
-                <div style={{ marginBottom: 4, fontWeight: 600 }}>Letzte 5 Spiele:</div>
-                <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                  {histB.slice(0, 5).map(h => {
-                    const won = (h.home === playerB.name && h.home_score > h.away_score) || 
-                                (h.away === playerB.name && h.away_score > h.home_score);
-                    const draw = h.home_score === h.away_score;
-                    return (
-                      <span key={h.id} style={{
-                        width: isMobile ? 18 : 20,
-                        height: isMobile ? 18 : 20,
-                        display: 'inline-flex',
-                        alignItems: 'center',
+            ) : (token && isParticipant && !!game.kickoff_at) ? (
+              /* Teilnehmer kann Ergebnis eintragen */
+              (() => {
+                const isTennis = game?.sport?.toLowerCase().includes('tennis');
+                const isOpenMatch = game.league === 'Open Matches' || (game.league && game.league.includes('Open Matches'));
+                const tennisNumSets = tennisResult?.numSets || 1;
+                
+                return (
+                  <div style={{
+                    marginTop: isMobile ? 12 : 16,
+                    paddingTop: isMobile ? 12 : 16,
+                    borderTop: '1px solid rgba(47, 107, 87, 0.3)'
+                  }}>
+                    <div style={{ 
+                      fontSize: isMobile ? 14 : 16, 
+                      fontWeight: 700, 
+                      color: '#debc7c', 
+                      marginBottom: isMobile ? 14 : 18,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      textAlign: 'center'
+                    }}>
+                      Ergebnis eintragen
+                    </div>
+                    
+                    {/* Anzahl Sätze - nur für Tennis Open Matches */}
+                    {isTennis && isOpenMatch && (
+                      <div style={{ 
+                        display: 'flex',
                         justifyContent: 'center',
-                        background: won ? '#2d5f3f' : draw ? '#5f5f2d' : '#5f2d2d',
-                        borderRadius: 4,
-                        fontSize: isMobile ? 10 : 11,
-                        fontWeight: 700
+                        alignItems: 'center',
+                        gap: 12,
+                        marginBottom: 16
                       }}>
-                        {won ? 'S' : draw ? 'U' : 'N'}
-                      </span>
-                    );
-                  })}
+                        <span style={{ color: '#9db', fontSize: isMobile ? 13 : 14, fontWeight: 600 }}>
+                          Anzahl Sätze:
+                        </span>
+                        <Counter
+                          value={tennisNumSets}
+                          onChange={(newValue) => {
+                            setTennisResult(prev => ({ ...prev, numSets: newValue }));
+                          }}
+                          min={1}
+                          max={5}
+                          disabled={!canSubmit}
+                        />
+                      </div>
+                    )}
+                    
+                    {isTennis ? (
+                      tennisNumSets === 1 ? (
+                        /* Tennis Bo1: Simple Counter */
+                        <>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 10 : 16, marginBottom: 16 }}>
+                            <Counter
+                              value={hScore}
+                              onChange={setHScore}
+                              min={0}
+                              max={99}
+                              disabled={!canSubmit}
+                            />
+                            <span style={{ fontSize: isMobile ? 20 : 28, color: '#9db', fontWeight: 700 }}>:</span>
+                            <Counter
+                              value={aScore}
+                              onChange={setAScore}
+                              min={0}
+                              max={99}
+                              disabled={!canSubmit}
+                            />
+                          </div>
+                        </>
+                      ) : (
+                        /* Tennis Bo3/Bo5: Set Entry */
+                        <TennisResultEntry
+                          ruleset={game.ruleset}
+                          isOpenMatch={isOpenMatch}
+                          numSets={tennisNumSets}
+                          onResultChange={(result) => {
+                            setTennisResult(result);
+                            setHScore(result.home_score || 0);
+                            setAScore(result.away_score || 0);
+                          }}
+                          disabled={!canSubmit}
+                          isMobile={isMobile}
+                        />
+                      )
+                    ) : (
+                      /* Andere Sports: Standard Counter */
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 10 : 16, marginBottom: 16 }}>
+                        <Counter
+                          value={hScore}
+                          onChange={setHScore}
+                          min={0}
+                          max={99}
+                          disabled={!canSubmit}
+                        />
+                        <span style={{ fontSize: isMobile ? 20 : 28, color: '#9db', fontWeight: 700 }}>:</span>
+                        <Counter
+                          value={aScore}
+                          onChange={setAScore}
+                          min={0}
+                          max={99}
+                          disabled={!canSubmit}
+                        />
+                      </div>
+                    )}
+                    
+                    <button disabled={!canSubmit || submitLoading} type="submit" onClick={submitResult} style={{ 
+                      marginTop: 16,
+                      padding: isMobile ? '10px 18px' : '12px 28px', 
+                      borderRadius: 24, 
+                      border: 'none',
+                      background: (canSubmit && !submitLoading) ? 'linear-gradient(135deg, #d4af37, #b8941f)' : 'rgba(100, 100, 100, 0.3)',
+                      color: (canSubmit && !submitLoading) ? '#000' : '#666',
+                      fontSize: isMobile ? 13 : 15,
+                      fontWeight: 700,
+                      cursor: (canSubmit && !submitLoading) ? 'pointer' : 'not-allowed',
+                      boxShadow: (canSubmit && !submitLoading) ? '0 6px 20px rgba(212, 175, 55, 0.4)' : 'none',
+                      opacity: submitLoading ? 0.7 : 1,
+                      transition: 'all 0.2s ease',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      width: '100%'
+                    }}>
+                      {submitLoading ? '⏳ Speichere...' : 'Ergebnis speichern'}
+                    </button>
+                    
+                    {(!canSubmit && cannotReason && cannotReason !== 'OPPONENT_NOT_ASSIGNED') && (
+                      <div style={{ 
+                        marginTop: 14,
+                        padding: '12px 18px',
+                        background: 'rgba(255, 200, 100, 0.15)',
+                        border: '1px solid rgba(255, 200, 100, 0.4)',
+                        borderRadius: 10,
+                        fontSize: isMobile ? 12 : 14,
+                        color: '#ffc864',
+                        textAlign: 'center',
+                        fontWeight: 600,
+                        boxShadow: '0 2px 8px rgba(255, 200, 100, 0.1)'
+                      }}>
+                        {cannotReason === 'KICKOFF_NOT_SET' ? '📅 Termin noch nicht festgelegt' : 
+                         cannotReason === 'KICKOFF_NOT_REACHED' ? '⏰ Ergebnis kann erst ab Startdatum eingetragen werden' :
+                         cannotReason === 'LEAGUE_MEMBERS_ONLY' ? '🔒 Nur Liga-Mitglieder' : cannotReason}
+                      </div>
+                    )}
+                    {submitMsg && (
+                      <div style={{ 
+                        color: submitMsg.includes('gespeichert') ? '#99ff99' : '#ff9999', 
+                        fontSize: isMobile ? 12 : 13, 
+                        textAlign: 'center',
+                        marginTop: 10,
+                        fontWeight: 600,
+                        padding: '8px 12px',
+                        background: submitMsg.includes('gespeichert') ? 'rgba(153, 255, 153, 0.1)' : 'rgba(255, 153, 153, 0.1)',
+                        borderRadius: 8,
+                        border: submitMsg.includes('gespeichert') ? '1px solid rgba(153, 255, 153, 0.3)' : '1px solid rgba(255, 153, 153, 0.3)'
+                      }}>
+                        {submitMsg}
+                      </div>
+                    )}
+                  </div>
+                );
+              })()
+            ) : (
+              /* Nur Score anzeigen (kein Participant oder kein Termin) */
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center',
+                alignItems: 'center',
+                marginBottom: isMobile ? 16 : 20
+              }}>
+                <div style={{ 
+                  fontSize: isMobile ? 24 : 36, 
+                  fontWeight: 800,
+                  color: '#9db',
+                  padding: '4px 12px'
+                }}>
+                  {hScore} : {aScore}
                 </div>
               </div>
             )}
           </div>
+
+          {/* Statistik-Zeile unter der Hauptzeile */}
+          {(playerA.id && histA.length > 0) || (playerB.id && histB.length > 0) ? (
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between',
+              gap: isMobile ? 12 : 20,
+              paddingTop: isMobile ? 12 : 16,
+              borderTop: '1px solid rgba(47, 107, 87, 0.3)'
+            }}>
+              {/* Spieler A Statistik */}
+              <div style={{ flex: 1 }}>
+                {playerA.id && histA.length > 0 && (
+                  <div style={{ 
+                    fontSize: isMobile ? 11 : 13, 
+                    color: '#9db'
+                  }}>
+                    <div style={{ marginBottom: 6, fontWeight: 700, fontSize: isMobile ? 10 : 11, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>Letzte 5</div>
+                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+                      {histA.slice(0, 5).map(h => {
+                        const won = (h.home === playerA.name && h.home_score > h.away_score) || 
+                                    (h.away === playerA.name && h.away_score > h.home_score);
+                        const draw = h.home_score === h.away_score;
+                        return (
+                          <span key={h.id} style={{
+                            width: isMobile ? 20 : 22,
+                            height: isMobile ? 20 : 22,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: won ? 'linear-gradient(135deg, #2d5f3f, #1f4a2e)' : draw ? 'linear-gradient(135deg, #5f5f2d, #4a4a22)' : 'linear-gradient(135deg, #5f2d2d, #4a2222)',
+                            borderRadius: 6,
+                            fontSize: isMobile ? 10 : 11,
+                            fontWeight: 800,
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                            border: won ? '1px solid rgba(45, 95, 63, 0.5)' : draw ? '1px solid rgba(95, 95, 45, 0.5)' : '1px solid rgba(95, 45, 45, 0.5)'
+                          }}>
+                            {won ? 'S' : draw ? 'U' : 'N'}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Spacer */}
+              <div style={{ flexShrink: 0, width: isMobile ? 60 : 100 }}></div>
+
+              {/* Spieler B Statistik */}
+              <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end' }}>
+                {playerB.id && histB.length > 0 && (
+                  <div style={{ 
+                    fontSize: isMobile ? 11 : 13, 
+                    color: '#9db',
+                    textAlign: 'right'
+                  }}>
+                    <div style={{ marginBottom: 6, fontWeight: 700, fontSize: isMobile ? 10 : 11, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>Letzte 5</div>
+                    <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                      {histB.slice(0, 5).map(h => {
+                        const won = (h.home === playerB.name && h.home_score > h.away_score) || 
+                                    (h.away === playerB.name && h.away_score > h.home_score);
+                        const draw = h.home_score === h.away_score;
+                        return (
+                          <span key={h.id} style={{
+                            width: isMobile ? 20 : 22,
+                            height: isMobile ? 20 : 22,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            background: won ? 'linear-gradient(135deg, #2d5f3f, #1f4a2e)' : draw ? 'linear-gradient(135deg, #5f5f2d, #4a4a22)' : 'linear-gradient(135deg, #5f2d2d, #4a2222)',
+                            borderRadius: 6,
+                            fontSize: isMobile ? 10 : 11,
+                            fontWeight: 800,
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
+                            border: won ? '1px solid rgba(45, 95, 63, 0.5)' : draw ? '1px solid rgba(95, 95, 45, 0.5)' : '1px solid rgba(95, 45, 45, 0.5)'
+                          }}>
+                            {won ? 'S' : draw ? 'U' : 'N'}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          ) : null}
         </div>
 
-        {/* Final result banner (when completed) */}
-        {isCompleted && (
-          <div style={{ marginTop: 12, display: 'flex', justifyContent: 'center' }}>
-            <div style={{ fontSize: isMobile ? 24 : 36, fontWeight: 800, color: '#e8efe8', letterSpacing: 1, background: '#0a1c17', border: '1px solid #26493c', padding: isMobile ? '6px 12px' : '8px 16px', borderRadius: 12 }}>
-              {Number(game.home_score)} : {Number(game.away_score)}
+        {/* Info wenn kein Termin festgelegt */}
+        {(token && isParticipant && (game.home_score == null && game.away_score == null) && !game.kickoff_at) && (
+          <div style={{ 
+            marginTop: isMobile ? 16 : 20,
+            padding: isMobile ? '16px' : '20px',
+            background: 'rgba(255, 200, 100, 0.12)', 
+            border: '1px solid rgba(255, 200, 100, 0.35)', 
+            borderRadius: 12,
+            textAlign: 'center'
+          }}>
+            <div style={{ 
+              fontSize: isMobile ? 13 : 14, 
+              color: '#ffc864',
+              fontWeight: 500
+            }}>
+              📅 Ergebnis erst möglich, wenn ein Termin festgelegt ist.
             </div>
           </div>
         )}
 
         {/* Location */}
         {game.location && (
-          <div style={{ marginTop: 12, color: '#bcd', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 18 }}>📍</span>
+          <div style={{ 
+            marginTop: 16, 
+            color: '#bcd', 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: 10,
+            padding: '12px 16px',
+            background: 'rgba(47, 107, 87, 0.12)',
+            border: '1px solid rgba(47, 107, 87, 0.3)',
+            borderRadius: 12,
+            fontSize: isMobile ? 14 : 15,
+            fontWeight: 500
+          }}>
+            <span style={{ fontSize: 20 }}>📍</span>
             <span>{game.location}</span>
           </div>
         )}

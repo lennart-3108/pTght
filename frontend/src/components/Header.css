@@ -15,7 +15,7 @@
   max-width: 100%;
   height: 100%;
   display: flex;
-  align-items: center;
+  align-items: stretch; /* Changed from center to stretch for full height */
   justify-content: space-between;
   padding: 0;
   margin: 0 auto;
@@ -23,27 +23,28 @@
 
 .ml-header__logo {
   flex: 0 0 auto;
-  height: var(--ml-header-height);
+  height: 100%; /* Full header height */
   display: flex;
-  align-items: center;
+  align-items: stretch; /* Changed from center to fill full height */
   margin: 0;
   padding: 0; /* No padding - logo at absolute left edge */
-  overflow: hidden;
+  overflow: visible;
 }
 
 .ml-logo-link { 
-  display: block; 
+  display: block;
   height: 100%; /* Full height of parent */
   margin: 0; 
-  padding: 0; 
+  padding: 0;
+  line-height: 0; /* Remove line-height spacing */
 }
 .ml-logo-full { 
-  height: 100%; /* 100% of parent (the link) which is 100% of header */
+  height: 100%; /* 100% of link which is 100% of header */
   width: auto; 
   display: block; 
   margin: 0; 
   padding: 0; 
-  object-fit: contain; 
+  object-fit: contain;
   object-position: left center; 
   border: 0; 
   outline: none; 
