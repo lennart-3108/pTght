@@ -39,7 +39,7 @@ import DevSportsImages from "./pages/DevSportsImages"; // dev gallery
 import SubscriptionsPage from "./pages/SubscriptionsPage"; // subscriptions/roles
 
 // Production Landing Page & Feature Flags
-import ProductionLandingPage from "./pages/ProductionLandingPage";
+import ProductionWorkInProgress from "./pages/ProductionWorkInProgress";
 import { FEATURES, INSTANCE_TYPE } from "./config";
 
 // Simpler Adminerkennung (z.B. im Token, sonst im localStorage)
@@ -155,7 +155,7 @@ function App() {
     return (
       <Router>
         <Routes>
-          <Route path="*" element={<ProductionLandingPage />} />
+          <Route path="*" element={<ProductionWorkInProgress />} />
         </Routes>
       </Router>
     );

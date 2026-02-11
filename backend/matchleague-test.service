@@ -1,0 +1,17 @@
+[Unit]
+Description=Match League Test Backend
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/matchleague.org/test/backend
+Environment="NODE_ENV=production"
+Environment="PORT=5002"
+Environment="INSTANCE_TYPE=test"
+ExecStart=/usr/bin/npm start
+Restart=always
+RestartSec=10s
+
+[Install]
+WantedBy=multi-user.target
