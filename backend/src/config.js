@@ -60,7 +60,9 @@ function loadConfig() {
       return callback(null, true);
     }
     if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error(`CORS: Origin ${origin} not allowed`));
+    // Don't throw an error - just reject the origin (callback(null, false))
+    console.warn(`[CORS] Origin not allowed: ${origin}. Allowed origins:`, allowedOrigins);
+    return callback(null, false);
   };
 
   return {
