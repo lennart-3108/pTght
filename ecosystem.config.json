@@ -1,0 +1,67 @@
+{
+  "apps": [
+    {
+      "name": "matchleague-test",
+      "script": "server.js",
+      "cwd": "/matchleague.org/backend",
+      "instances": 1,
+      "exec_mode": "fork",
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": "5002",
+        "INSTANCE_TYPE": "test"
+      },
+      "error_file": "/matchleague.org/backend/logs/test-error.log",
+      "out_file": "/matchleague.org/backend/logs/test-out.log",
+      "log_date_format": "YYYY-MM-DD HH:mm:ss Z",
+      "merge_logs": true,
+      "autorestart": true,
+      "max_restarts": 10,
+      "min_uptime": "10s",
+      "max_memory_restart": "500M",
+      "watch": false
+    },
+    {
+      "name": "matchleague-prod",
+      "script": "server.js",
+      "cwd": "/matchleague.org/backend",
+      "instances": 1,
+      "exec_mode": "fork",
+      "env": {
+        "NODE_ENV": "production",
+        "PORT": "5003",
+        "INSTANCE_TYPE": "production"
+      },
+      "error_file": "/matchleague.org/backend/logs/prod-error.log",
+      "out_file": "/matchleague.org/backend/logs/prod-out.log",
+      "log_date_format": "YYYY-MM-DD HH:mm:ss Z",
+      "merge_logs": true,
+      "autorestart": true,
+      "max_restarts": 10,
+      "min_uptime": "10s",
+      "max_memory_restart": "500M",
+      "watch": false
+    },
+    {
+      "name": "matchleague-dev",
+      "script": "server.js",
+      "cwd": "/matchleague.org/backend",
+      "instances": 1,
+      "exec_mode": "fork",
+      "env": {
+        "NODE_ENV": "development",
+        "PORT": "5001",
+        "INSTANCE_TYPE": "development"
+      },
+      "error_file": "/matchleague.org/backend/logs/dev-error.log",
+      "out_file": "/matchleague.org/backend/logs/dev-out.log",
+      "log_date_format": "YYYY-MM-DD HH:mm:ss Z",
+      "merge_logs": true,
+      "autorestart": true,
+      "max_restarts": 10,
+      "min_uptime": "10s",
+      "max_memory_restart": "1G",
+      "watch": false
+    }
+  ]
+}

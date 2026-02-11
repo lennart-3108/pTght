@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { API_BASE } from '../config';
 import SportSelector from '../components/SportSelector';
 import SlotBookingConfirmationPopup from '../components/SlotBookingConfirmationPopup';
+import { BookingsFeature } from '../components/FeatureWrapper';
 
 export default function SlotSearchPage() {
   const navigate = useNavigate();
@@ -312,8 +313,9 @@ export default function SlotSearchPage() {
   }
 
   return (
-    <div style={{ padding: 16, maxWidth: 1200, margin: '0 auto' }}>
-      <h1>Platz buchen</h1>
+    <BookingsFeature>
+      <div style={{ padding: 16, maxWidth: 1200, margin: '0 auto' }}>
+        <h1>Platz buchen</h1>
       
       {/* Quick Test Login for Development */}
       {!token && (
@@ -1023,5 +1025,6 @@ export default function SlotSearchPage() {
         />
       )}
     </div>
+    </BookingsFeature>
   );
 }

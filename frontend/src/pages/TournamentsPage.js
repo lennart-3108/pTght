@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { API_BASE } from '../config';
 import TournamentConfigurator from '../components/TournamentConfigurator';
+import { CompetitionsFeature } from '../components/FeatureWrapper';
 
 export default function TournamentsPage() {
   const navigate = useNavigate();
@@ -79,6 +80,7 @@ export default function TournamentsPage() {
   };
 
   return (
+    <CompetitionsFeature>
     <div style={{ 
       minHeight: '100vh',
       background: 'linear-gradient(135deg, #081c19 0%, #102820 100%)',
@@ -294,5 +296,6 @@ export default function TournamentsPage() {
         )}
       </div>
     </div>
+    </CompetitionsFeature>
   );
 }

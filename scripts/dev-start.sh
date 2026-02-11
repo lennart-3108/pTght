@@ -45,4 +45,25 @@ start_frontend() {
 start_backend
 start_frontend
 
+echo "[dev] Waiting for services to start..."
+sleep 5
+
+# Run syntax check first
+echo "[dev] Running syntax check..."
+cd "$ROOT_DIR/backend"
+if node scripts/frontend-syntax-check.js; then
+  echo "[dev] ✓ Syntax check passed!"
+else
+  echo "[dev] ✗ Syntax errors found - please fix before continuing"
+  exit 1
+fi
+
+# Run frontend runtime check
+echo "[dev] Running frontend runtime check..."
+if node scripts/frontend-runtime-check.js; then
+  echo "[dev] ✓ Frontend is working!"
+else
+  echo "[dev] ⚠ Frontend check failed - see errors above"
+fi
+
 echo "[dev] All set. Open http://localhost:3000"

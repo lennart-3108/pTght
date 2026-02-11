@@ -17,7 +17,8 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.0"
+    "nodemon": "^3.1.0",
+    "puppeteer": "^24.37.2"
   },
   "scripts": {
     "predev": "knex --knexfile knexfile.js migrate:latest",
@@ -27,6 +28,9 @@
     "poststart": "sleep 3 && node scripts/health-check.js || true",
     "test": "node scripts/health-check.js",
     "health": "node scripts/health-check.js",
+    "check:frontend": "node scripts/frontend-runtime-check.js",
+    "check:syntax": "node scripts/frontend-syntax-check.js",
+    "check:all": "npm run check:syntax && npm run check:frontend",
     "mail:who": "node scripts/print-mail-config.js",
     "migrate": "knex --knexfile knexfile.js migrate:latest",
     "migrate:rollback": "knex --knexfile knexfile.js migrate:rollback",

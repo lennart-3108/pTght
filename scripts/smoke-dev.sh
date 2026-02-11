@@ -150,11 +150,50 @@ if [ -n "$FRONTEND_URL" ]; then
   START_URL="$(join_url "$FRONTEND_URL" "/start")"
   code=$(http_code "$START_URL")
   if [ "$code" = "200" ]; then
-    body=$(get_body "$START_URL" | head -c 256 || true)
+    body=$(get_body "$START_URL" || true)
+    
+    # Check for basic HTML structure
     if echo "$body" | grep -qi '<!doctype html\|<div[^>]*id="root"\|<html'; then
       color green "[OK] SPA fallback returns HTML at /start"
+      
+      # Check for root div
+      if echo "$body" | grep -qi '<div[^>]*id="root"'; then
+        color green "  ✓ Found <div id=\"root\"> element"
+      else
+        color red "  ✗ Missing <div id=\"root\"> element - React won't mount!"
+        FAILURES=$((FAILURES+1))
+      fi
+      
+      # Check for JavaScript bundles
+      if echo "$body" | grep -qi '<script.*src=.*\.js'; then
+        color green "  ✓ Found JavaScript bundle references"
+        # Extract and verify main bundle is accessible
+        js_files=$(echo "$body" | grep -o 'src="[^"]*\.js"' | sed 's/src="//;s/"$//' | head -3)
+        for js_file in $js_files; do
+          js_url="$(join_url "$FRONTEND_URL" "$js_file")"
+          js_code=$(http_code "$js_url")
+          if [ "$js_code" = "200" ]; then
+            color green "    ✓ Bundle accessible: $js_file"
+          else
+            color red "    ✗ Bundle NOT accessible ($js_code): $js_file"
+            FAILURES=$((FAILURES+1))
+          fi
+        done
+      else
+        color red "  ✗ No JavaScript bundles found - app won't load!"
+        FAILURES=$((FAILURES+1))
+      fi
+      
+      # Check for CSS
+      if echo "$body" | grep -qi '<link.*\.css\|<style'; then
+        color green "  ✓ Found CSS references"
+      else
+        color yellow "  ⚠ No CSS found - page might be blank/white"
+      fi
+      
     else
       color yellow "[WARN] /start 200 but body doesn't look like HTML"
+      FAILURES=$((FAILURES+1))
     fi
   else
     color yellow "[WARN] /start returned $code"

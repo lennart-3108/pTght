@@ -38,6 +38,10 @@ import WelcomePage from "./pages/WelcomePage"; // <-- add this import
 import DevSportsImages from "./pages/DevSportsImages"; // dev gallery
 import SubscriptionsPage from "./pages/SubscriptionsPage"; // subscriptions/roles
 
+// Production Landing Page & Feature Flags
+import ProductionLandingPage from "./pages/ProductionLandingPage";
+import { FEATURES, INSTANCE_TYPE } from "./config";
+
 // Simpler Adminerkennung (z.B. im Token, sonst im localStorage)
 function isAdmin() {
   return localStorage.getItem("is_admin") === "1";
@@ -96,9 +100,9 @@ function App() {
   useEffect(() => {
     console.log("Token:", token);
     console.log("Is Admin:", isAdminFlag);
+    console.log("Instance Type:", INSTANCE_TYPE);
+    console.log("Features:", FEATURES);
   }, [token, isAdminFlag]);
-
-  // Globale 401-Handling inside Router via NavigationGuard
 
   // Hintergrundrotation mit Bildern "l-*" aus src/images
   useEffect(() => {
@@ -131,6 +135,18 @@ function App() {
       // "Create" nur für Admin zeigen
       !(r.path === "/create" && !isAdminFlag)
     );
+
+  // Production Instance: Show only landing page
+  // This conditional return is AFTER all hooks have been called
+  if (FEATURES.SHOW_ONLY_LANDING) {
+    return (
+      <Router>
+        <Routes>
+          <Route path="*" element={<ProductionLandingPage />} />
+        </Routes>
+      </Router>
+    );
+  }
 
   return (
     <Router>

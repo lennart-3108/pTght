@@ -79,3 +79,4 @@ frontend/frontend.pid
 *.db.before_cleanup_*
 *.pid
 *-start.log
+backend/sportsplatform.db.before_cleanup_379k

@@ -4,6 +4,7 @@ import { API_BASE } from "../config";
 import { handleInvalidToken } from "../utils/auth";
 import LocationSelector from "../components/LocationSelector";
 import SportSelector from "../components/SportSelector";
+import { LeaguesFeature } from "../components/FeatureWrapper";
 
 export default function LeaguesPage() {
   const navigate = useNavigate();
@@ -365,8 +366,9 @@ export default function LeaguesPage() {
   }
 
   return (
-    <div className="ml-container" style={{ padding: "32px 24px" }}>
-      <div style={{ marginBottom: 32 }}>
+    <LeaguesFeature>
+      <div className="ml-container" style={{ padding: "32px 24px" }}>
+        <div style={{ marginBottom: 32 }}>
         <h1 style={{ 
           margin: "0 0 8px 0", 
           fontSize: 32, 
@@ -841,6 +843,7 @@ export default function LeaguesPage() {
           Zeige {Math.min(currentOffset, totalCount)} von {totalCount} Ligen
         </div>
       )}
-    </div>
+      </div>
+    </LeaguesFeature>
   );
 }

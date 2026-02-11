@@ -68,6 +68,55 @@ function resolveApiBase() {
 
 export const API_BASE = resolveApiBase();
 
+// ============================================================================
+// INSTANCE TYPE & FEATURE FLAGS
+// ============================================================================
+// Determines the deployment instance: 'production', 'test', or 'development'
+// Priority: 1) REACT_APP_INSTANCE_TYPE env var, 2) hostname detection, 3) default 'development'
+function resolveInstanceType() {
+	// Check env var first
+	if (typeof process !== 'undefined' && process.env && process.env.REACT_APP_INSTANCE_TYPE) {
+		return process.env.REACT_APP_INSTANCE_TYPE;
+	}
+	
+	// Detect from hostname
+	if (typeof window !== 'undefined' && window.location) {
+		const hostname = window.location.hostname;
+		if (hostname === 'matchleague.org' || hostname === 'www.matchleague.org') {
+			return 'production';
+		}
+		if (hostname === 'test.matchleague.org') {
+			return 'test';
+		}
+		if (hostname === 'dev.matchleague.org') {
+			return 'development';
+		}
+	}
+	
+	return 'development';
+}
+
+export const INSTANCE_TYPE = resolveInstanceType();
+
+// Feature flags based on instance type
+export const FEATURES = {
+	// Production: only show "coming soon" landing page
+	SHOW_ONLY_LANDING: INSTANCE_TYPE === 'production',
+	
+	// Test instance: limited features
+	SHOW_MATCHES: INSTANCE_TYPE === 'test' || INSTANCE_TYPE === 'development',
+	SHOW_LEAGUES: INSTANCE_TYPE === 'development', // Hidden in test with "coming soon"
+	SHOW_COMPETITIONS: INSTANCE_TYPE === 'development', // Hidden in test with "coming soon"
+	SHOW_BOOKINGS: INSTANCE_TYPE === 'development', // Hidden in test with "coming soon"
+	SHOW_VENUES: INSTANCE_TYPE === 'development', // Hidden in test with "coming soon"
+	
+	// Test disclaimer
+	SHOW_TEST_DISCLAIMER: INSTANCE_TYPE === 'test',
+	
+	// Sport restrictions for test
+	RESTRICT_TO_TENNIS_SINGLES: INSTANCE_TYPE === 'test',
+};
+
 // Small helper: fetch with timeout (default 8s)
 export async function fetchWithTimeout(resource, options = {}) {
 	const { timeout = 8000, signal } = options;

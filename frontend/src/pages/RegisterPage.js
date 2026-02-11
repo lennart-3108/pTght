@@ -1,19 +1,27 @@
 import React, { useState, useEffect } from "react";
 // using native fetch instead of axios for smaller dependency surface
-import { API_BASE } from "../config";
+import { API_BASE, FEATURES } from "../config";
 import LocationSelector from "../components/LocationSelector";
+import TestInstanceDisclaimer from "../components/TestInstanceDisclaimer";
 
-const SPORT_OPTIONS = [
-  "Fußball",
-  "Basketball",
-  "Tennis",
-  "Volleyball",
-  "Schwimmen",
-  "Laufen",
-  "Handball",
-];
+// Test instance: restrict to Tennis Singles only
+const SPORT_OPTIONS = FEATURES.RESTRICT_TO_TENNIS_SINGLES
+  ? ["Tennis (Einzel)"]
+  : [
+      "Fußball",
+      "Basketball",
+      "Tennis",
+      "Volleyball",
+      "Schwimmen",
+      "Laufen",
+      "Handball",
+    ];
 
 export default function RegisterPage() {
+  // Test instance disclaimer state - MUST be at top before any conditional returns
+  const [showDisclaimer, setShowDisclaimer] = useState(FEATURES.SHOW_TEST_DISCLAIMER);
+  const [disclaimerAccepted, setDisclaimerAccepted] = useState(!FEATURES.SHOW_TEST_DISCLAIMER);
+
   const [form, setForm] = useState({
     firstname: "",
     lastname: "",
@@ -33,22 +41,14 @@ export default function RegisterPage() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
-  function handleChange(e) {
-    const { name, value } = e.target;
-    setForm(prev => ({
-      ...prev,
-      [name]: value,
-    }));
+  // Handle disclaimer acceptance
+  function handleDisclaimerAccept() {
+    setDisclaimerAccepted(true);
+    setShowDisclaimer(false);
   }
 
-  function handleSportsChange(e) {
-    const value = e.target.value;
-    setForm(prev => ({
-      ...prev,
-      sports: prev.sports.includes(value)
-        ? prev.sports.filter(s => s !== value)
-        : [...prev.sports, value]
-    }));
+  function handleDisclaimerDecline() {
+    window.location.href = '/';
   }
 
   // Location data for selector
@@ -72,7 +72,15 @@ export default function RegisterPage() {
     return () => { mounted = false; };
   }, []);
 
-  function handleLocationChange(name, cityId, stateId, countryId, districtId) {
+  function handleChange(e) {
+    const { name, value } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name]: value,
+    }));
+  }
+
+  function handleSportsChange(e) {
     // Find country code from countryId
     const country = countries.find(c => c.id === countryId);
     setForm(prev => ({
@@ -169,6 +177,17 @@ export default function RegisterPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  // Show disclaimer modal if test instance and not yet accepted
+  // This is at the END, after all hooks have been called
+  if (showDisclaimer && !disclaimerAccepted) {
+    return (
+      <TestInstanceDisclaimer 
+        onAccept={handleDisclaimerAccept}
+        onDecline={handleDisclaimerDecline}
+      />
+    );
   }
 
   return (
