@@ -8,15 +8,19 @@ module.exports = function authRoutes(ctx) {
   const { db, SECRET, transporter, mailerState, SESSION_EPOCH } = ctx;
 
   router.post("/register", (req, res) => {
-    const { 
-      firstname, lastname, birthday, email, password, sports, 
-      city_id, district_id, gender, country_code,
-      accept_terms, accept_gdpr 
-    } = req.body || {};
-    
-    if (!firstname || !lastname || !birthday || !email || !password) {
-      return res.status(400).json({ error: "Alle Felder sind erforderlich" });
-    }
+    try {
+      console.log('[register] Request body:', JSON.stringify(req.body, null, 2));
+      
+      const { 
+        firstname, lastname, birthday, email, password, sports, 
+        city_id, district_id, gender, country_code,
+        accept_terms, accept_gdpr 
+      } = req.body || {};
+      
+      if (!firstname || !lastname || !birthday || !email || !password) {
+        console.log('[register] Missing required fields:', { firstname: !!firstname, lastname: !!lastname, birthday: !!birthday, email: !!email, password: !!password });
+        return res.status(400).json({ error: "Alle Felder sind erforderlich" });
+      }
     
     // Validate minimum age (16 years)
     const birthDate = new Date(birthday);
@@ -51,10 +55,11 @@ module.exports = function authRoutes(ctx) {
       [firstname, lastname, birthday, email, hashedPassword, confirmationToken, city_id || null, district_id || null, gender || null, accept_terms ? 1 : 0, accept_gdpr ? 1 : 0, country_code || null],
       function (err) {
         if (err) {
+          console.error('[register] Database error:', err);
           if (err.code === "SQLITE_CONSTRAINT") {
             return res.status(400).json({ error: "E-Mail bereits registriert" });
           }
-          return res.status(400).json({ error: "Datenbankfehler beim Anlegen des Nutzers" });
+          return res.status(500).json({ error: "Datenbankfehler beim Anlegen des Nutzers" });
         }
 
         const newUserId = this.lastID;
@@ -106,6 +111,10 @@ module.exports = function authRoutes(ctx) {
           sendSuccess();
         }
       }
+    } catch (error) {
+      console.error('[register] Unexpected error:', error);
+      return res.status(500).json({ error: "Interner Serverfehler" });
+    }
     );
   });
 
