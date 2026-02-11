@@ -128,6 +128,12 @@ export async function fetchWithTimeout(resource, options = {}) {
 		const resp = await fetch(resource, merged);
 		try { console.log('[fetchWithTimeout] response', { url: resource, status: resp.status, ok: resp.ok }); } catch {}
 		return resp;
+	} catch (err) {
+		// Suppress "aborted" errors from timeouts - they're expected
+		if (err.name !== 'AbortError') {
+			console.warn('[fetchWithTimeout] error', { url: resource, error: err.message });
+		}
+		throw err;
 	} finally {
 		clearTimeout(id);
 	}

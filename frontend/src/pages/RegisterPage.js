@@ -81,12 +81,21 @@ export default function RegisterPage() {
   }
 
   function handleSportsChange(e) {
-    // Find country code from countryId
+    const value = e.target.value;
+    setForm(prev => ({
+      ...prev,
+      sports: prev.sports.includes(value)
+        ? prev.sports.filter(s => s !== value)
+        : [...prev.sports, value]
+    }));
+  }
+
+  function handleLocationChange(cityId, cityName, countryId, districtId) {
     const country = countries.find(c => c.id === countryId);
     setForm(prev => ({
       ...prev,
       city_id: cityId || null,
-      city_name: name || "",
+      city_name: cityName || "",
       district_id: districtId || null,
       country_code: country?.code || ""
     }));

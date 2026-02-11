@@ -98,6 +98,19 @@ function App() {
   const [isAdminFlag, setIsAdminFlag] = useState(localStorage.getItem("is_admin") === "1");
 
   useEffect(() => {
+    // Suppress harmless network errors from non-critical API calls (e.g., public stats)
+    const handleRejection = (event) => {
+      if (event.reason && event.reason.message === 'Failed to fetch') {
+        // Silently ignore fetch errors - they're likely from non-critical endpoints
+        // and are being handled gracefully in the components that call them
+        event.preventDefault();
+      }
+    };
+    window.addEventListener('unhandledrejection', handleRejection);
+    return () => window.removeEventListener('unhandledrejection', handleRejection);
+  }, []);
+
+  useEffect(() => {
     console.log("Token:", token);
     console.log("Is Admin:", isAdminFlag);
     console.log("Instance Type:", INSTANCE_TYPE);

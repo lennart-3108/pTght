@@ -278,17 +278,23 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
   // Hinweis: In React 18 StrictMode wird useEffect in Dev doppelt aufgerufen.
   // Wir erlauben den zweiten Aufruf (unschädlich), statt ihn mit einer Ref zu blocken,
   // damit der Ladezustand nicht hängen bleibt.
+  // Suppress console errors for non-critical stats endpoint
   useEffect(() => {
     let cancelled = false;
     async function loadStats() {
       setStatsLoading(true); setStatsError(null);
       try {
-        const resp = await fetch(`${API}/public/stats`);
-        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-        const data = await resp.json();
-        if (!cancelled) setStats(data);
-      } catch (e) {
-        if (!cancelled) setStatsError('keine Statistik verfügbar');
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout for optional stats
+        
+        const resp = await fetch(`${API}/public/stats`, { signal: controller.signal }).catch(() => null);
+        clearTimeout(timeoutId);
+        
+        if (!resp) return; // Silently ignore timeout/network errors for non-critical stats
+        if (!resp.ok) return; // Silently ignore HTTP errors
+        
+        const data = await resp.json().catch(() => null);
+        if (!cancelled && data) setStats(data);
       } finally {
         if (!cancelled) setStatsLoading(false);
       }
