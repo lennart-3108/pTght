@@ -6,6 +6,7 @@ import Avatar from "../components/Avatar";
 import LocationSelector from "../components/LocationSelector";
 import SportSelector from "../components/SportSelector";
 import AuthNoticeBanner from "../components/AuthNoticeBanner";
+import AdBanner from "../components/AdBanner";
 
 // load background images from sports folder and sort
 function importAllBackgrounds(r) {
@@ -1252,7 +1253,11 @@ export default function StartPage() {
                   </div>
                 </Component>
               );
-            });
+            }).reduce((acc, el, i) => {
+              acc.push(el);
+              if (i === 2) acc.push(<AdBanner key="adsense-feed" slot="XXXXXXXXXX" />);
+              return acc;
+            }, []);
           })()}
         </div>
       </section>

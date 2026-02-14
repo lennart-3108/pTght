@@ -44,6 +44,7 @@ import DatenschutzPage from "./pages/DatenschutzPage";
 import AGBPage from "./pages/AGBPage";
 import ReportIllegalContentPage from "./pages/ReportIllegalContentPage";
 import LegalFooter from "./components/LegalFooter";
+import CookieBanner from "./components/CookieBanner";
 import { LanguageProvider } from "./i18n";
 
 // Production Landing Page & Feature Flags
@@ -562,6 +563,7 @@ function App() {
         } />
       </Routes>
       <LegalFooter />
+      <CookieBanner />
     </Router>
     </LanguageProvider>
   );
