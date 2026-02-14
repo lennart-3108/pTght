@@ -30,12 +30,19 @@ export default function SportsPage() {
   useEffect(() => {
     if (!id) { setLeagues([]); return; }
     let mounted = true;
-    fetch(`${API_BASE}/leagues`)
+    const params = new URLSearchParams();
+    params.set('sportId', String(id));
+    params.set('limit', '200');
+    params.set('offset', '0');
+    fetch(`${API_BASE}/leagues?${params.toString()}`)
       .then((r) => r.ok ? r.json() : [])
-      .then((rows) => {
+      .then((result) => {
         if (!mounted) return;
-        const list = Array.isArray(rows) ? rows.filter(l => String(l.sportId) === String(id)) : [];
-        setLeagues(list);
+        if (Array.isArray(result)) {
+          setLeagues(result);
+          return;
+        }
+        setLeagues(Array.isArray(result?.data) ? result.data : []);
       })
       .catch(() => mounted && setLeagues([]));
     return () => { mounted = false; };

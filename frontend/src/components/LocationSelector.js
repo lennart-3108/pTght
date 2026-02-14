@@ -12,6 +12,7 @@ export default function LocationSelector({
   value = '', 
   onChange, 
   onLoadDistricts, 
+  onLoadCities,
   placeholder = 'Standort wählen',
   onOpen,
   isOpen,
@@ -29,8 +30,9 @@ export default function LocationSelector({
     }
   }, [isOpen]);
 
-  // Debug: Log props when they change
+  // Debug logging only in non-production
   useEffect(() => {
+    if (String(process.env.NODE_ENV || '').toLowerCase() === 'production') return;
     console.log('[LocationSelector] Props received:', {
       countries: countries.length,
       states: states.length,
@@ -66,6 +68,9 @@ export default function LocationSelector({
       newSet.delete(stateId);
     } else {
       newSet.add(stateId);
+      if (onLoadCities) {
+        onLoadCities(stateId);
+      }
     }
     setExpandedStates(newSet);
   };
@@ -100,9 +105,9 @@ export default function LocationSelector({
   const inputStyle = {
     padding: '10px 14px',
     borderRadius: 10,
-    border: '1px solid #2f6b57',
-    background: '#0b1e19',
-    color: '#e8efe8',
+    border: '1px solid rgba(222, 188, 124, 0.28)',
+    background: 'var(--ml-bg-elevated, #102820)',
+    color: 'var(--ml-text-main, #e8efe8)',
     fontSize: 15,
     width: '100%',
     minWidth: 200
@@ -144,8 +149,8 @@ export default function LocationSelector({
           left: 0,
           right: 0,
           marginTop: 4,
-          background: '#0b1e19',
-          border: '1px solid #2f6b57',
+          background: 'var(--ml-bg-surface, #0b1e19)',
+          border: '1px solid rgba(222, 188, 124, 0.22)',
           borderRadius: 10,
           maxHeight: 400,
           overflowY: 'auto',

@@ -42,6 +42,9 @@ export default function LeaguesPage() {
   // Reachability state: { [leagueId]: { ok: boolean, status: number|null, error: string|null } }
   const [reachable, setReachable] = useState({});
 
+  // Track loaded cities per state for lazy-loading
+  const [loadedStateCities, setLoadedStateCities] = useState(() => new Set());
+
   // helper: normalize strings
   const normalize = (s) => {
     if (s == null) return "";
@@ -114,6 +117,16 @@ export default function LeaguesPage() {
   // Fetch leagues from server with current filters
   const fetchLeagues = async (append = false) => {
     try {
+      // Scale optimization: do not load leagues until a city is selected.
+      if (!selectedCityObj?.id) {
+        setLeagues([]);
+        setTotalCount(0);
+        setCurrentOffset(0);
+        setLoading(false);
+        setLoadingMore(false);
+        return;
+      }
+
       if (append) {
         setLoadingMore(true);
       } else {
@@ -180,7 +193,6 @@ export default function LeaguesPage() {
     
     const token = localStorage.getItem("token");
     const fetchPromises = [
-      fetch(`${API_BASE}/cities/list`).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/sports/categories`).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/countries/list`).then(r => r.ok ? r.json() : []),
       fetch(`${API_BASE}/states/list`).then(r => r.ok ? r.json() : []),
@@ -214,9 +226,8 @@ export default function LeaguesPage() {
     }
 
     Promise.all(fetchPromises)
-      .then(([citiesData, sportsData, countriesData, statesData]) => {
+      .then(([sportsData, countriesData, statesData]) => {
         if (!mounted) return;
-        setCities(Array.isArray(citiesData) ? citiesData : []);
         setSports(Array.isArray(sportsData) ? sportsData : []);
         setCountries(Array.isArray(countriesData) ? countriesData : []);
         setStates(Array.isArray(statesData) ? statesData : []);
@@ -228,10 +239,75 @@ export default function LeaguesPage() {
     return () => { mounted = false; };
   }, []);
 
+  // If a cityId is set (from URL or profile), resolve its display name without loading all cities.
+  useEffect(() => {
+    let mounted = true;
+
+    async function loadCityNameIfNeeded() {
+      try {
+        if (!selectedCity) return;
+        if (selectedCityName) return;
+        const id = String(selectedCity).trim();
+        if (!id) return;
+        const r = await fetch(`${API_BASE}/cities/${encodeURIComponent(id)}`);
+        if (!r.ok) return;
+        const json = await r.json();
+        const city = json && json.city ? json.city : json;
+        if (!mounted) return;
+        if (city && city.name) {
+          setSelectedCityName(String(city.name));
+        }
+      } catch (e) {
+        // non-fatal
+      }
+    }
+
+    loadCityNameIfNeeded();
+    return () => { mounted = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCity]);
+
+  // Lazy-load cities for a state when user expands it in the LocationSelector.
+  const handleLoadCitiesForState = async (stateId) => {
+    const sid = String(stateId || '').trim();
+    if (!sid) return;
+    if (loadedStateCities.has(sid)) return;
+
+    setLoadedStateCities((prev) => {
+      const next = new Set(prev);
+      next.add(sid);
+      return next;
+    });
+
+    try {
+      const params = new URLSearchParams();
+      params.set('compact', '1');
+      params.set('state_id', sid);
+      params.set('limit', '500');
+      const r = await fetch(`${API_BASE}/cities/list?${params.toString()}`);
+      const rows = r.ok ? await r.json() : [];
+      const list = Array.isArray(rows) ? rows : [];
+      setCities((prev) => {
+        const seen = new Set((prev || []).map((c) => String(c.id)));
+        const merged = [...(prev || [])];
+        for (const c of list) {
+          if (!c || c.id == null) continue;
+          const key = String(c.id);
+          if (seen.has(key)) continue;
+          seen.add(key);
+          merged.push(c);
+        }
+        return merged;
+      });
+    } catch (e) {
+      // non-fatal
+    }
+  };
+
   // Fetch leagues whenever filters change (with debouncing for search)
   useEffect(() => {
-    // Don't fetch until we have cities and sports loaded
-    if (cities.length === 0 && sports.length === 0) return;
+    // Don't fetch until sports are loaded (cities are lazy)
+    if (sports.length === 0) return;
     
     // Debounce search queries to avoid API spam on every keystroke
     const debounceTimer = setTimeout(() => {
@@ -241,7 +317,7 @@ export default function LeaguesPage() {
     
     return () => clearTimeout(debounceTimer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCity, selectedSport, searchQuery, cities.length, sports.length]);
+  }, [selectedCity, selectedSport, searchQuery, sports.length]);
 
   // Apply client-side filters only for "Meine Ligen" (can't be done server-side without auth)
   const visibleLeagues = useMemo(() => {
@@ -485,6 +561,7 @@ export default function LeaguesPage() {
                 setSelectedCity(String(cityId));
                 handleCitySelect(String(cityId));
               }}
+              onLoadCities={handleLoadCitiesForState}
               placeholder="Stadt wählen..."
             />
           </div>

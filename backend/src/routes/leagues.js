@@ -245,6 +245,132 @@ module.exports = function leaguesRoutes(ctx) {
     }
   }
 
+  function parseCountRow(row) {
+    if (!row) return 0;
+    const raw = row.c ?? row.count ?? row["count(*)"] ?? 0;
+    return Number(raw || 0);
+  }
+
+  function stripLeagueShardSuffix(name) {
+    const raw = String(name || "").trim();
+    if (!raw) return raw;
+    return raw.replace(/\s+#\d+$/i, "").trim();
+  }
+
+  function readLeagueShardNumber(name) {
+    const match = String(name || "").trim().match(/\s+#(\d+)$/i);
+    if (!match) return 1;
+    const n = Number(match[1]);
+    return Number.isFinite(n) && n > 0 ? n : 1;
+  }
+
+  function nextLeagueShardName(baseName, existingNames) {
+    const used = new Set((existingNames || []).map(readLeagueShardNumber));
+    let next = 1;
+    while (used.has(next)) next += 1;
+    if (next <= 1) return baseName;
+    return `${baseName} #${next}`;
+  }
+
+  async function ensureCommunityOverflowLeague(trx, leagueRow) {
+    const leagueInfo = await trx("leagues").columnInfo().catch(() => ({}));
+    const hasUpdatedAt = Object.prototype.hasOwnProperty.call(leagueInfo, "updated_at");
+    const hasCreatedAt = Object.prototype.hasOwnProperty.call(leagueInfo, "created_at");
+    const hasMaxParticipants = Object.prototype.hasOwnProperty.call(leagueInfo, "max_participants");
+
+    const baseName = stripLeagueShardSuffix(leagueRow.name || "Community League");
+
+    const clusterQuery = trx("leagues").where({ level: "community", sport_id: leagueRow.sport_id });
+    if (Object.prototype.hasOwnProperty.call(leagueInfo, "location_id") && leagueRow.location_id != null) {
+      clusterQuery.andWhere({ location_id: leagueRow.location_id });
+    } else if (Object.prototype.hasOwnProperty.call(leagueInfo, "city_id") && leagueRow.city_id != null) {
+      clusterQuery.andWhere({ city_id: leagueRow.city_id });
+    }
+
+    const cluster = await clusterQuery
+      .andWhere(function () {
+        this.whereRaw("LOWER(name) = LOWER(?)", [baseName]).orWhereRaw("LOWER(name) LIKE LOWER(?)", [`${baseName} #%`]);
+      })
+      .orderBy("id", "asc");
+
+    for (const candidate of cluster) {
+      const maxParticipants = Number(candidate.max_participants || 0);
+      if (!maxParticipants || maxParticipants <= 0) return candidate;
+
+      const countRows = await trx("user_leagues").where({ league_id: candidate.id }).count({ c: "*" });
+      const count = parseCountRow(Array.isArray(countRows) ? countRows[0] : countRows);
+      if (count < maxParticipants) return candidate;
+    }
+
+    const nowIso = new Date().toISOString();
+    const existingNames = cluster.map((l) => String(l.name || "")).filter(Boolean);
+    const insertRec = {
+      name: nextLeagueShardName(baseName, existingNames),
+      sport_id: leagueRow.sport_id,
+      city_id: leagueRow.city_id ?? null,
+      location_id: leagueRow.location_id ?? null,
+      level: "community",
+      published: leagueRow.published,
+      status: leagueRow.status || "active",
+      start_date: leagueRow.start_date || nowIso,
+      end_date: leagueRow.end_date || null,
+      organizer_id: leagueRow.organizer_id ?? null,
+      is_community: leagueRow.is_community ?? 1,
+    };
+
+    if (hasMaxParticipants) insertRec.max_participants = Number(leagueRow.max_participants || 0) || 100;
+    if (hasCreatedAt) insertRec.created_at = nowIso;
+    if (hasUpdatedAt) insertRec.updated_at = nowIso;
+
+    const inserted = await trx("leagues").insert(insertRec);
+    const newLeagueId = Array.isArray(inserted) ? inserted[0] : inserted;
+    return trx("leagues").where({ id: newLeagueId }).first();
+  }
+
+  async function resolveJoinLeagueByCapacity(trx, requestedLeagueId) {
+    const requestedLeague = await trx("leagues").where({ id: requestedLeagueId }).first();
+    if (!requestedLeague) {
+      const err = new Error("LEAGUE_NOT_FOUND");
+      err.status = 404;
+      throw err;
+    }
+
+    const maxParticipants = Number(requestedLeague.max_participants || 0);
+    if (!maxParticipants || maxParticipants <= 0) {
+      return { league: requestedLeague, overflowCreated: false, requestedLeagueId };
+    }
+
+    const countRows = await trx("user_leagues").where({ league_id: requestedLeague.id }).count({ c: "*" });
+    const memberCount = parseCountRow(Array.isArray(countRows) ? countRows[0] : countRows);
+    if (memberCount < maxParticipants) {
+      return { league: requestedLeague, overflowCreated: false, requestedLeagueId };
+    }
+
+    const isCommunity = String(requestedLeague.level || "").toLowerCase() === "community" || Number(requestedLeague.is_community || 0) === 1;
+    if (!isCommunity) {
+      const err = new Error("LEAGUE_FULL");
+      err.status = 409;
+      throw err;
+    }
+
+    const previousLeagueIds = new Set(
+      await trx("leagues")
+        .where({ level: "community", sport_id: requestedLeague.sport_id })
+        .modify((qb) => {
+          if (requestedLeague.location_id != null) qb.andWhere({ location_id: requestedLeague.location_id });
+          else if (requestedLeague.city_id != null) qb.andWhere({ city_id: requestedLeague.city_id });
+        })
+        .pluck("id")
+    );
+
+    const targetLeague = await ensureCommunityOverflowLeague(trx, requestedLeague);
+    return {
+      league: targetLeague,
+      overflowCreated: !previousLeagueIds.has(targetLeague.id),
+      requestedLeagueId,
+    };
+  }
+
   const DISPLAY_NAME_SQL = "COALESCE(u.firstname || ' ' || u.lastname, u.name, u.email)";
 
   // GET / - Ligenliste (dynamisch publicState)
@@ -258,6 +384,8 @@ module.exports = function leaguesRoutes(ctx) {
 
       const leagueInfo = await k("leagues").columnInfo().catch(() => ({}));
       const hasPublicState = Object.prototype.hasOwnProperty.call(leagueInfo, "publicState");
+      const hasLevel = Object.prototype.hasOwnProperty.call(leagueInfo, "level");
+      const hasIsCommunity = Object.prototype.hasOwnProperty.call(leagueInfo, "is_community");
       const hasLeagueCityCol = Object.prototype.hasOwnProperty.call(leagueInfo, "city");
       const hasLeagueSportCol = Object.prototype.hasOwnProperty.call(leagueInfo, "sport");
 
@@ -305,6 +433,8 @@ module.exports = function leaguesRoutes(ctx) {
           // only reference l.city if that column actually exists, otherwise fallback to c.name or empty string
           (hasLeagueCityCol ? k.raw("COALESCE(c.name, l.city) as city") : k.raw("COALESCE(c.name, '') as city")),
           (hasLeagueSportCol ? k.raw("COALESCE(s.name, l.sport) as sport") : k.raw("COALESCE(s.name, '') as sport")),
+          ...(hasLevel ? ["l.level"] : []),
+          ...(hasIsCommunity ? ["l.is_community"] : []),
           "l.name",
           ...(hasPublicState ? ["l.publicState"] : [])
         )
@@ -336,6 +466,8 @@ module.exports = function leaguesRoutes(ctx) {
 
       const leagueInfo = await k("leagues").columnInfo().catch(() => ({}));
       const hasPublicState = Object.prototype.hasOwnProperty.call(leagueInfo, "publicState");
+      const hasLevel = Object.prototype.hasOwnProperty.call(leagueInfo, "level");
+      const hasIsCommunity = Object.prototype.hasOwnProperty.call(leagueInfo, "is_community");
       const hasLeagueCityCol2 = Object.prototype.hasOwnProperty.call(leagueInfo, "city");
       const hasLeagueSportCol2 = Object.prototype.hasOwnProperty.call(leagueInfo, "sport");
 
@@ -352,6 +484,8 @@ module.exports = function leaguesRoutes(ctx) {
           // only reference l.city if that column actually exists, otherwise fallback to c.name or empty string
           (hasLeagueCityCol2 ? k.raw("COALESCE(c.name, l.city) as city") : k.raw("COALESCE(c.name, '') as city")),
           (hasLeagueSportCol2 ? k.raw("COALESCE(s.name, l.sport) as sport") : k.raw("COALESCE(s.name, '') as sport")),
+          ...(hasLevel ? ["l.level"] : []),
+          ...(hasIsCommunity ? ["l.is_community"] : []),
           ...(hasPublicState ? ["l.publicState"] : [])
         )
         .where("l.id", id)
@@ -811,35 +945,49 @@ module.exports = function leaguesRoutes(ctx) {
       const k = resolveKnex(db);
       if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
 
-      const leagueId = Number(req.params.id);
+      const requestedLeagueId = Number(req.params.id);
       const userId = req.user.id;
 
       const outcome = await k.transaction(async (trx) => {
-        const existing = await trx("user_leagues").where({ user_id: userId, league_id: leagueId }).first();
+        const joinTarget = await resolveJoinLeagueByCapacity(trx, requestedLeagueId);
+        const effectiveLeagueId = Number(joinTarget.league.id);
+
+        const existing = await trx("user_leagues").where({ user_id: userId, league_id: effectiveLeagueId }).first();
         if (existing) return { joined: false, message: "Bereits Mitglied" };
 
         const ulCols = await trx("user_leagues").columnInfo().catch(() => ({}));
         const hasJoinedAt = Object.prototype.hasOwnProperty.call(ulCols, "joined_at");
-        const insertRec = { user_id: userId, league_id: leagueId };
+        const insertRec = { user_id: userId, league_id: effectiveLeagueId };
         if (hasJoinedAt) insertRec.joined_at = new Date().toISOString();
 
         await trx("user_leagues").insert(insertRec);
 
         let matchInfo = null;
         try {
-          matchInfo = await autoAssignMatchAfterJoin(trx, leagueId, userId);
+          matchInfo = await autoAssignMatchAfterJoin(trx, effectiveLeagueId, userId);
         } catch (matchErr) {
           console.error("autoAssignMatchAfterJoin threw:", matchErr && (matchErr.stack || matchErr.message || matchErr));
           matchInfo = { action: "error", error: matchErr && (matchErr.message || String(matchErr)) };
         }
 
-        return { joined: true, matchInfo };
+        return {
+          joined: true,
+          matchInfo,
+          league_id: effectiveLeagueId,
+          requested_league_id: requestedLeagueId,
+          overflow_created: !!joinTarget.overflowCreated,
+          redirected_to_overflow: effectiveLeagueId !== requestedLeagueId,
+        };
       });
 
       if (!outcome) return res.json({ joined: false, message: "Unbekannter Status" });
       if (!outcome.joined) return res.json(outcome);
 
       const payload = { joined: true };
+      if (outcome.league_id != null) payload.league_id = outcome.league_id;
+      if (outcome.requested_league_id != null) payload.requested_league_id = outcome.requested_league_id;
+      if (outcome.redirected_to_overflow != null) payload.redirected_to_overflow = outcome.redirected_to_overflow;
+      if (outcome.overflow_created != null) payload.overflow_created = outcome.overflow_created;
       if (outcome.matchInfo) {
         payload.matchAction = outcome.matchInfo.action;
         if (outcome.matchInfo.match) payload.match = outcome.matchInfo.match;
@@ -848,6 +996,10 @@ module.exports = function leaguesRoutes(ctx) {
       res.json(payload);
     } catch (err) {
       console.error("Fehler beim Beitreten zur Liga:", err);
+      if (err && err.status === 404) return res.status(404).json({ error: "LEAGUE_NOT_FOUND" });
+      if (err && err.status === 409 && err.message === "LEAGUE_FULL") {
+        return res.status(409).json({ error: "LEAGUE_FULL", message: "Liga ist voll" });
+      }
       res.status(500).json({ error: "Datenbankfehler" });
     }
   });

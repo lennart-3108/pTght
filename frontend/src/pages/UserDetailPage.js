@@ -744,6 +744,20 @@ export default function UserDetailPage() {
                 }}>Allrounder</span>
               )}
             </div>
+
+            <div
+              style={{
+                fontSize: 12,
+                color: "#9ddfc4",
+                border: "1px solid rgba(92,200,165,0.35)",
+                background: "rgba(10,34,27,0.72)",
+                borderRadius: 12,
+                padding: "4px 10px",
+              }}
+              title="Diese ID kann für Meldungen genutzt werden"
+            >
+              User-ID: {user.id}
+            </div>
             
             {/* Abzeichen Widget */}
             <div style={{ display: "flex", flexWrap: "wrap", gap: 4, justifyContent: "center", maxWidth: 160 }}>

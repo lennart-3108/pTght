@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Avatar from './Avatar';
 import { API_BASE } from '../config';
+import { useNavigate } from 'react-router-dom';
 
 export default function CommentsSection({
   gameId,
@@ -19,8 +20,37 @@ export default function CommentsSection({
   token,
   viewerId
 }) {
+  const navigate = useNavigate();
   const [replyToComment, setReplyToComment] = useState(null);
   const [replyText, setReplyText] = useState('');
+  const [menuCommentId, setMenuCommentId] = useState(null);
+
+  const HeartIcon = ({ filled = false, size = 16 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'} xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M12 21s-7.2-4.5-9.5-8C.2 9.8 1.5 6.5 4.7 5.6c2.1-.6 4 .2 5.3 1.8 1.3-1.6 3.2-2.4 5.3-1.8 3.2.9 4.5 4.2 2.2 7.4C19.2 16.5 12 21 12 21Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+    </svg>
+  );
+
+  const CommentIcon = ({ size = 14 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M5 18.5V5.5C5 4.67 5.67 4 6.5 4h11c.83 0 1.5.67 1.5 1.5v8c0 .83-.67 1.5-1.5 1.5H10l-5 3.5Z" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+    </svg>
+  );
+
+  const MoreIcon = ({ size = 16 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <circle cx="6" cy="12" r="1.8" fill="currentColor"/>
+      <circle cx="12" cy="12" r="1.8" fill="currentColor"/>
+      <circle cx="18" cy="12" r="1.8" fill="currentColor"/>
+    </svg>
+  );
+
+  const FlagIcon = ({ size = 14 }) => (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M6 20V4" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"/>
+      <path d="M6 5h10l-2 3 2 3H6" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"/>
+    </svg>
+  );
   
   const handleLike = async () => {
     if (likeLoading || !token) return;
@@ -144,13 +174,30 @@ export default function CommentsSection({
   
   const pillActive = {
     ...pill,
-    border: '2px solid #4af',
-    background: 'rgba(68, 170, 255, 0.15)',
-    color: '#4af'
+    border: '2px solid #debc7c',
+    background: 'rgba(222, 188, 124, 0.18)',
+    color: '#debc7c'
+  };
+
+  const openReportForComment = (comment) => {
+    const params = new URLSearchParams();
+    if (comment?.userId) params.set('reported_user_id', String(comment.userId));
+    params.set('category', 'insult_defamation');
+    params.set('subject', `Kommentar-Meldung im Match #${gameId}`);
+    if (typeof window !== 'undefined') {
+      params.set('content_url', `${window.location.origin}/matches/${gameId}#comment-${comment.id}`);
+    }
+    params.set(
+      'message',
+      `Gemeldeter Kommentar von ${comment.userName || 'Unbekannt'} (User-ID ${comment.userId || '-'}):\n"${String(comment.text || '').slice(0, 600)}"`
+    );
+    setMenuCommentId(null);
+    navigate(`/meldung-rechtswidriger-inhalte?${params.toString()}`);
   };
   
   const CommentItem = ({ comment, isReply = false }) => (
     <div
+      id={`comment-${comment.id}`}
       style={{
         display: 'flex',
         gap: 12,
@@ -170,22 +217,82 @@ export default function CommentsSection({
       <div style={{ flex: 1 }}>
         <div style={{
           display: 'flex',
-          alignItems: 'baseline',
+          alignItems: 'center',
+          justifyContent: 'space-between',
           gap: 8,
           marginBottom: 6
         }}>
-          <span style={{ fontWeight: 700, fontSize: 15, color: '#cfe' }}>
-            {comment.userName || 'User'}
-          </span>
-          <span style={{ fontSize: 12, color: '#7a9' }}>
-            {new Date(comment.createdAt).toLocaleString('de-DE', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric',
-              hour: '2-digit',
-              minute: '2-digit'
-            })}
-          </span>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+            <span style={{ fontWeight: 700, fontSize: 15, color: '#cfe' }}>
+              {comment.userName || 'User'}
+            </span>
+            <span style={{ fontSize: 12, color: '#7a9' }}>
+              {new Date(comment.createdAt).toLocaleString('de-DE', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </span>
+          </div>
+          {token && Number(viewerId) !== Number(comment.userId) && (
+            <div style={{ position: 'relative' }}>
+              <button
+                onClick={() => setMenuCommentId((prev) => (prev === comment.id ? null : comment.id))}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  color: '#7a9',
+                  cursor: 'pointer',
+                  width: 26,
+                  height: 26,
+                  borderRadius: 8,
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}
+                aria-label="Kommentaroptionen"
+              >
+                <MoreIcon />
+              </button>
+              {menuCommentId === comment.id && (
+                <div style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: 28,
+                  minWidth: 150,
+                  background: '#0b241c',
+                  border: '1px solid rgba(92,200,165,0.35)',
+                  borderRadius: 10,
+                  padding: 4,
+                  boxShadow: '0 10px 24px rgba(0,0,0,0.35)',
+                  zIndex: 2
+                }}>
+                  <button
+                    onClick={() => openReportForComment(comment)}
+                    style={{
+                      width: '100%',
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#debc7c',
+                      fontSize: 13,
+                      textAlign: 'left',
+                      padding: '8px 10px',
+                      cursor: 'pointer',
+                      borderRadius: 8,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8
+                    }}
+                  >
+                    <FlagIcon />
+                    Melden
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         <p style={{
           margin: 0,
@@ -203,7 +310,7 @@ export default function CommentsSection({
             style={{
               background: 'none',
               border: 'none',
-              color: comment.hasLiked ? '#f4a460' : '#7a9',
+              color: comment.hasLiked ? '#debc7c' : '#7a9',
               fontSize: 12,
               cursor: token ? 'pointer' : 'not-allowed',
               display: 'flex',
@@ -214,7 +321,7 @@ export default function CommentsSection({
               transition: 'all 0.2s'
             }}
           >
-            {comment.hasLiked ? '❤️' : '🤍'} {comment.likes || 0}
+            <HeartIcon filled={comment.hasLiked} size={13} /> {comment.likes || 0}
           </button>
           {!isReply && token && (
             <button
@@ -225,10 +332,13 @@ export default function CommentsSection({
                 color: '#7a9',
                 fontSize: 12,
                 cursor: 'pointer',
-                padding: '4px 8px'
+                padding: '4px 8px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
               }}
             >
-              💬 Antworten
+              <CommentIcon /> Antworten
             </button>
           )}
         </div>
@@ -307,7 +417,7 @@ export default function CommentsSection({
             cursor: token ? 'pointer' : 'not-allowed'
           }}
         >
-          <span style={{ fontSize: 18 }}>{hasLiked ? '❤️' : '🤍'}</span>
+          <HeartIcon filled={hasLiked} size={17} />
           <span>{likes} {likes === 1 ? 'Like' : 'Likes'}</span>
         </button>
       </div>
@@ -321,7 +431,7 @@ export default function CommentsSection({
           textTransform: 'uppercase',
           letterSpacing: '0.5px'
         }}>
-          💬 Kommentare ({comments.length})
+          Kommentare ({comments.length})
         </h3>
         
         <div style={{ marginBottom: 20 }}>

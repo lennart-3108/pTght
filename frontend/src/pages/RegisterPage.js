@@ -37,7 +37,6 @@ export default function RegisterPage() {
     country_code: "",
   });
   const [acceptTerms, setAcceptTerms] = useState(false);
-  const [acceptGdpr, setAcceptGdpr] = useState(false);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -134,15 +133,7 @@ export default function RegisterPage() {
     
     // Validate Terms acceptance
     if (!acceptTerms) {
-      setMessage("Bitte akzeptiere die Allgemeinen Geschäftsbedingungen.");
-      setLoading(false);
-      return;
-    }
-    
-    // Validate GDPR for EU countries
-    const euCountries = ['DE', 'AT', 'CH', 'FR', 'IT', 'NL', 'BE', 'ES', 'PT', 'PL', 'CZ', 'SK', 'HU', 'RO', 'BG', 'GR', 'HR', 'SI', 'LT', 'LV', 'EE', 'IE', 'DK', 'SE', 'FI', 'LU', 'MT', 'CY'];
-    if (form.country_code && euCountries.includes(form.country_code.toUpperCase()) && !acceptGdpr) {
-      setMessage("Bitte akzeptiere die Datenschutzerklärung (DSGVO).");
+      setMessage("Bitte bestätige, dass du mindestens 16 Jahre alt bist und die Nutzungsbedingungen sowie Datenschutzerklärung akzeptierst.");
       setLoading(false);
       return;
     }
@@ -155,7 +146,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           ...form,
           accept_terms: acceptTerms,
-          accept_gdpr: acceptGdpr
+          accept_gdpr: acceptTerms
         }),
       });
       const responseData = await (async () => {
@@ -519,60 +510,28 @@ export default function RegisterPage() {
                 }}
               />
               <span>
-                Ich akzeptiere die{' '}
+                Ich bin mindestens 16 Jahre alt und akzeptiere die{' '}
                 <a 
                   href="/agb" 
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: '#48baa6', textDecoration: 'underline' }}
                 >
-                  Allgemeinen Geschäftsbedingungen
+                  Nutzungsbedingungen
+                </a>
+                {' '}sowie die{' '}
+                <a
+                  href="/datenschutz"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: '#48baa6', textDecoration: 'underline' }}
+                >
+                  Datenschutzerklärung (DSGVO)
                 </a>
                 {' '}*
               </span>
             </label>
           </div>
-
-          {/* GDPR Checkbox - nur für EU Länder */}
-          {form.country_code && ['DE', 'AT', 'CH', 'FR', 'IT', 'NL', 'BE', 'ES', 'PT', 'PL', 'CZ', 'SK', 'HU', 'RO', 'BG', 'GR', 'HR', 'SI', 'LT', 'LV', 'EE', 'IE', 'DK', 'SE', 'FI', 'LU', 'MT', 'CY'].includes(form.country_code.toUpperCase()) && (
-            <div style={{ marginBottom: 16 }}>
-              <label style={{ 
-                display: 'flex',
-                alignItems: 'flex-start',
-                cursor: 'pointer',
-                color: '#e5e7eb',
-                fontSize: 14,
-                lineHeight: 1.6
-              }}>
-                <input 
-                  type="checkbox"
-                  checked={acceptGdpr}
-                  onChange={(e) => setAcceptGdpr(e.target.checked)}
-                  required
-                  style={{
-                    marginRight: 10,
-                    marginTop: 4,
-                    width: 18,
-                    height: 18,
-                    cursor: 'pointer',
-                    accentColor: '#48baa6'
-                  }}
-                />
-                <span>
-                  Ich stimme der{' '}
-                  <a 
-                    href="/datenschutz" 
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: '#48baa6', textDecoration: 'underline' }}
-                  >
-                    Datenschutzerklärung (DSGVO)
-                  </a>
-                  {' '}zu *
-                </span>
-              </label>
-            </div>
-          )}
 
           <button 
             type="submit" 

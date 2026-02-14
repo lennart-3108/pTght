@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const { isAuthenticated } = require('../middleware/auth');
+const { getTournamentCreationAllowance } = require('../services/license-guards');
 
 /**
  * GET /api/tournaments
@@ -148,6 +149,36 @@ router.post('/', isAuthenticated, async (req, res) => {
     } = req.body;
 
     const organizer_id = req.user.id;
+
+    const allowance = await getTournamentCreationAllowance(db, organizer_id);
+    if (allowance.licensingEnabled && !allowance.hasOrganizerLicense) {
+      return res.status(403).json({
+        error: 'ORGANIZER_LICENSE_REQUIRED',
+        message: 'Aktive Organizer-Lizenz erforderlich',
+      });
+    }
+
+    if (Number.isFinite(allowance.allowedConcurrentEvents)) {
+      const activeStatuses = ['draft', 'registration', 'active'];
+      const activeRow = await db('tournaments')
+        .where({ organizer_id })
+        .whereIn('status', activeStatuses)
+        .count({ c: '*' })
+        .first()
+        .catch(() => ({ c: 0 }));
+      const activeCount = Number(activeRow?.c || activeRow?.['count(*)'] || 0);
+
+      if (activeCount >= allowance.allowedConcurrentEvents) {
+        return res.status(403).json({
+          error: 'EVENT_LIMIT_REACHED',
+          message: 'Maximale Anzahl paralleler Events erreicht',
+          limits: {
+            max_concurrent_events: allowance.allowedConcurrentEvents,
+            current_active_events: activeCount,
+          },
+        });
+      }
+    }
 
     // Validation
     if (!name || !sport_id || !tournament_mode) {

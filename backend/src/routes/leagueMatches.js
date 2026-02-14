@@ -60,6 +60,8 @@ module.exports = function leagueMatchesRoutes({ db }) {
       const leagueInfo = await k("leagues").columnInfo().catch(() => ({}));
       const hasLeagueCityCol = Object.prototype.hasOwnProperty.call(leagueInfo, "city");
       const hasLeagueSportCol = Object.prototype.hasOwnProperty.call(leagueInfo, "sport");
+      const hasLevelCol = Object.prototype.hasOwnProperty.call(leagueInfo, "level");
+      const hasIsCommunityCol = Object.prototype.hasOwnProperty.call(leagueInfo, "is_community");
 
       // Build base query
       let query = k("leagues as l")
@@ -86,9 +88,13 @@ module.exports = function leagueMatchesRoutes({ db }) {
         .select(
           "l.id",
           { cityId: "c.id" },
+          'l.status',
           (hasLeagueCityCol ? k.raw("COALESCE(c.name, l.city) as city") : k.raw("COALESCE(c.name, '') as city")),
           { sportId: "s.id" },
           (hasLeagueSportCol ? k.raw("COALESCE(s.name, l.sport) as sport") : k.raw("COALESCE(s.name, '') as sport")),
+          (hasLevelCol ? k.raw("COALESCE(l.level, '') as level") : k.raw("'' as level")),
+          (hasLevelCol ? k.raw("COALESCE(l.level, '') as publicState") : k.raw("'' as publicState")),
+          (hasIsCommunityCol ? { is_community: 'l.is_community' } : k.raw('0 as is_community')),
           "l.name"
         )
         .orderBy(["l.name"])

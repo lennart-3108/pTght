@@ -7,7 +7,10 @@ module.exports = function countiesRoutes(ctx) {
   // GET /counties/list - List all counties/states, optionally filtered by country
   router.get("/counties/list", (req, res) => {
     const { country_id } = req.query;
-    let sql = "SELECT id, name, code, country_id AS countryId, latitude, longitude FROM counties WHERE 1=1";
+    const compact = String(req.query.compact || "").toLowerCase() === "1" || String(req.query.compact || "").toLowerCase() === "true";
+    let sql = compact
+      ? "SELECT id, name, country_id AS countryId FROM counties WHERE 1=1"
+      : "SELECT id, name, code, country_id AS countryId, latitude, longitude FROM counties WHERE 1=1";
     const params = [];
     
     if (country_id) {
@@ -25,7 +28,10 @@ module.exports = function countiesRoutes(ctx) {
   // Alias: support /states/list for older frontend clients
   router.get("/states/list", (req, res) => {
     const { country_id } = req.query;
-    let sql = "SELECT id, name, code, country_id AS countryId, latitude, longitude FROM counties WHERE 1=1";
+    const compact = String(req.query.compact || "").toLowerCase() === "1" || String(req.query.compact || "").toLowerCase() === "true";
+    let sql = compact
+      ? "SELECT id, name, country_id AS countryId FROM counties WHERE 1=1"
+      : "SELECT id, name, code, country_id AS countryId, latitude, longitude FROM counties WHERE 1=1";
     const params = [];
     if (country_id) {
       sql += " AND country_id = ?";
@@ -40,7 +46,10 @@ module.exports = function countiesRoutes(ctx) {
   // Alias: support /states for frontend without /list
   router.get("/states", (req, res) => {
     const { country_id } = req.query;
-    let sql = "SELECT id, name, code, country_id AS countryId, latitude, longitude FROM counties WHERE 1=1";
+    const compact = String(req.query.compact || "").toLowerCase() === "1" || String(req.query.compact || "").toLowerCase() === "true";
+    let sql = compact
+      ? "SELECT id, name, country_id AS countryId FROM counties WHERE 1=1"
+      : "SELECT id, name, code, country_id AS countryId, latitude, longitude FROM counties WHERE 1=1";
     const params = [];
     if (country_id) {
       sql += " AND country_id = ?";

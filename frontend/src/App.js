@@ -37,10 +37,19 @@ import Header from "./components/Header";
 import WelcomePage from "./pages/WelcomePage"; // <-- add this import
 import DevSportsImages from "./pages/DevSportsImages"; // dev gallery
 import SubscriptionsPage from "./pages/SubscriptionsPage"; // subscriptions/roles
+import TasksBoardPage from "./pages/TasksBoardPage";
+import ComplianceDashboardPage from "./pages/ComplianceDashboardPage";
+import ImpressumPage from "./pages/ImpressumPage";
+import DatenschutzPage from "./pages/DatenschutzPage";
+import AGBPage from "./pages/AGBPage";
+import ReportIllegalContentPage from "./pages/ReportIllegalContentPage";
+import LegalFooter from "./components/LegalFooter";
+import { LanguageProvider } from "./i18n";
 
 // Production Landing Page & Feature Flags
 import ProductionWorkInProgress from "./pages/ProductionWorkInProgress";
 import { FEATURES, INSTANCE_TYPE } from "./config";
+import { BookingsFeature, CompetitionsFeature } from "./components/FeatureWrapper";
 
 // Simpler Adminerkennung (z.B. im Token, sonst im localStorage)
 function isAdmin() {
@@ -96,6 +105,7 @@ function NavigationGuard({ setToken }) {
 function App() {
   const [token, setToken] = useState(localStorage.getItem("token"));
   const [isAdminFlag, setIsAdminFlag] = useState(localStorage.getItem("is_admin") === "1");
+  const showProjectTasks = ["development", "dev", "local"].includes(String(INSTANCE_TYPE || "").toLowerCase());
 
   useEffect(() => {
     // Suppress harmless network errors from non-critical API calls (e.g., public stats)
@@ -162,6 +172,7 @@ function App() {
   }
 
   return (
+    <LanguageProvider>
     <Router>
       {/* NavigationGuard attaches global 401 Invalid token handling */}
       <NavigationGuard setToken={setToken} />
@@ -193,9 +204,17 @@ function App() {
 
           {/* Geschützte Seiten (ohne /leagues und ohne /create, eigene Routen unten) */}
           {routes
-            .filter(r => r.path !== "/login" && r.path !== "/register")
-            .filter(r => r.path !== "/leagues")
-            .filter(r => r.path !== "/create") // neu: /create separat unten
+            .filter(r => ![
+              "/login",
+              "/register",
+              "/leagues",
+              "/create",
+              "/tasks",
+              "/agb",
+              "/datenschutz",
+              "/impressum",
+              "/reportillegalcontent"
+            ].includes(r.path))
             .map(r => (
               <Route
                 key={r.path}
@@ -215,8 +234,27 @@ function App() {
           <Route path="/leagues" element={<LeaguesPage />} />
           <Route path="/ligen" element={<LeaguesPage />} />
 
+          {/* Rechtstexte (public) */}
+          <Route path="/impressum" element={<ImpressumPage />} />
+          <Route path="/datenschutz" element={<DatenschutzPage />} />
+          <Route path="/agb" element={<AGBPage />} />
+          <Route path="/nutzungsbedingungen" element={<AGBPage />} />
+          <Route path="/meldung-rechtswidriger-inhalte" element={<ReportIllegalContentPage />} />
+
           {/* Subscriptions/Abos (public) */}
           <Route path="/abos" element={<SubscriptionsPage />} />
+
+          {/* Tasks Board (nur lokal/dev) */}
+          {showProjectTasks ? <Route path="/tasks" element={<TasksBoardPage />} /> : null}
+
+          <Route
+            path="/compliance"
+            element={
+              <ProtectedRoute token={token} setToken={setToken}>
+                <ComplianceDashboardPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* Teams */}
 
@@ -317,7 +355,9 @@ function App() {
             path="/tournaments"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
-                <TournamentsPage />
+                <CompetitionsFeature>
+                  <TournamentsPage />
+                </CompetitionsFeature>
               </ProtectedRoute>
             }
           />
@@ -327,7 +367,9 @@ function App() {
             path="/booking"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
-                <BookingPage />
+                <BookingsFeature>
+                  <BookingPage />
+                </BookingsFeature>
               </ProtectedRoute>
             }
           />
@@ -336,7 +378,9 @@ function App() {
             path="/slots"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
-                <SlotSearchPage />
+                <BookingsFeature>
+                  <SlotSearchPage />
+                </BookingsFeature>
               </ProtectedRoute>
             }
           />
@@ -344,7 +388,9 @@ function App() {
             path="/book/slot/:slotId"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
-                <SlotReviewPage />
+                <BookingsFeature>
+                  <SlotReviewPage />
+                </BookingsFeature>
               </ProtectedRoute>
             }
           />
@@ -352,7 +398,9 @@ function App() {
             path="/book/:bookingId/payment"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
-                <BookingPaymentPage />
+                <BookingsFeature>
+                  <BookingPaymentPage />
+                </BookingsFeature>
               </ProtectedRoute>
             }
           />
@@ -360,7 +408,9 @@ function App() {
             path="/book/:bookingId/confirm"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
-                <BookingConfirmationPage />
+                <BookingsFeature>
+                  <BookingConfirmationPage />
+                </BookingsFeature>
               </ProtectedRoute>
             }
           />
@@ -368,7 +418,9 @@ function App() {
             path="/booking/:bookingId"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
-                <BookingDetailPage />
+                <BookingsFeature>
+                  <BookingDetailPage />
+                </BookingsFeature>
               </ProtectedRoute>
             }
           />
@@ -376,7 +428,9 @@ function App() {
             path="/bookings"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
-                <MyBookingsPage />
+                <BookingsFeature>
+                  <MyBookingsPage />
+                </BookingsFeature>
               </ProtectedRoute>
             }
           />
@@ -384,7 +438,9 @@ function App() {
             path="/bookings/:id"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
-                <MyBookingsPage />
+                <BookingsFeature>
+                  <MyBookingsPage />
+                </BookingsFeature>
               </ProtectedRoute>
             }
           />
@@ -505,7 +561,9 @@ function App() {
           </>
         } />
       </Routes>
+      <LegalFooter />
     </Router>
+    </LanguageProvider>
   );
 }
 

@@ -57,6 +57,25 @@ function initialsFrom(name) {
   return (a + b) || a || '?';
 }
 
+function compactUserTag(name) {
+  const cleaned = String(name || '')
+    .replace(/[^\p{L}\s-]/gu, ' ')
+    .trim();
+  if (!cleaned) return '?';
+
+  const parts = cleaned.split(/\s+/).filter(Boolean);
+  const firstName = String(parts[0] || '');
+  const lastName = String(parts.slice(1).join(' ') || '');
+
+  const firstPart = firstName.slice(0, 4);
+  const remaining = Math.max(0, 6 - firstPart.length);
+  const lastPart = remaining > 0 ? lastName.slice(0, Math.min(4, remaining)) : '';
+
+  const value = `${firstPart}${lastPart}`.trim();
+  if (!value) return initialsFrom(name);
+  return value.toUpperCase();
+}
+
 // Simple in-memory cache for fetched avatars
 const avatarCache = new Map(); // key: userId -> { url: string|null, email: string|null }
 
@@ -69,9 +88,8 @@ export default function Avatar({ userId, name, src, size = 40, style = {}, class
     if (src) return toAbsolute(src);
     if (fetched) return toAbsolute(fetched);
     if (userEmail) return gravatarUrl(userEmail, size * 2);
-    if (name) return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&size=${size * 2}&background=163a2f&color=e8efe8&bold=true`;
     return null;
-  }, [src, fetched, userEmail, name, size]);
+  }, [src, fetched, userEmail, size]);
 
   useEffect(() => {
     let mounted = true;
@@ -141,7 +159,7 @@ export default function Avatar({ userId, name, src, size = 40, style = {}, class
 
   return (
     <span className={className} style={baseStyle} title={title || name || ''}>
-      {initialsFrom(name)}
+      {compactUserTag(name)}
     </span>
   );
 }

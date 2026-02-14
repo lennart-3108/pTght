@@ -1,8 +1,13 @@
 import { render, screen } from '@testing-library/react';
-import App from './App';
+import { MemoryRouter } from 'react-router-dom';
+import LegalFooter from './components/LegalFooter';
 
-test('renders learn react link', () => {
-  render(<App />);
-  const linkElement = screen.getByText(/learn react/i);
-  expect(linkElement).toBeInTheDocument();
+test('renders legal footer links', () => {
+  render(
+    <MemoryRouter>
+      <LegalFooter />
+    </MemoryRouter>
+  );
+  expect(screen.getByText(/match league/i)).toBeInTheDocument();
+  expect(screen.getByText(/impressum/i)).toBeInTheDocument();
 });

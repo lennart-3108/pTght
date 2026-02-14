@@ -1,5 +1,6 @@
 const express = require('express');
 const { createMiddleware } = require('./middleware');
+const { getTeamCreationAllowance } = require('../../services/license-guards');
 
 module.exports = function teamsRoutes(ctx) {
   const router = express.Router();
@@ -12,7 +13,54 @@ module.exports = function teamsRoutes(ctx) {
       const k = require('../../db') || db;
       const { name, league_id, sport_id, city_id } = req.body || {};
       if (!name || !league_id) return res.status(400).json({ error: 'MISSING_FIELDS' });
-      const insert = await k('teams').insert({ name, league_id, sport_id: sport_id || null, city_id: city_id || null, captain_user_id: req.user.id }).returning('*').catch(() => null);
+
+      let effectiveSportId = sport_id ? Number(sport_id) : null;
+      if (!effectiveSportId && league_id) {
+        const league = await k('leagues').where({ id: Number(league_id) }).first().catch(() => null);
+        if (league && league.sport_id != null) effectiveSportId = Number(league.sport_id);
+      }
+
+      const allowance = await getTeamCreationAllowance(k, req.user.id);
+      const teamsCols = await k('teams').columnInfo().catch(() => ({}));
+      const ownerColumn = Object.prototype.hasOwnProperty.call(teamsCols, 'captain_user_id') ? 'captain_user_id' : null;
+
+      if (ownerColumn && Number.isFinite(allowance.maxTeamsTotal)) {
+        const totalRow = await k('teams').where(ownerColumn, req.user.id).count({ c: '*' }).first().catch(() => ({ c: 0 }));
+        const ownedTotal = Number(totalRow?.c || totalRow?.['count(*)'] || 0);
+        if (ownedTotal >= allowance.maxTeamsTotal) {
+          return res.status(403).json({
+            error: 'TEAM_LIMIT_REACHED',
+            message: 'Maximale Anzahl Teams erreicht',
+            limits: {
+              max_teams_total: allowance.maxTeamsTotal,
+              current_teams_total: ownedTotal,
+            },
+          });
+        }
+
+        if (effectiveSportId && Number.isFinite(allowance.maxTeamsPerSport)) {
+          const sportRow = await k('teams')
+            .where(ownerColumn, req.user.id)
+            .andWhere('sport_id', effectiveSportId)
+            .count({ c: '*' })
+            .first()
+            .catch(() => ({ c: 0 }));
+          const ownedInSport = Number(sportRow?.c || sportRow?.['count(*)'] || 0);
+          if (ownedInSport >= allowance.maxTeamsPerSport) {
+            return res.status(403).json({
+              error: 'TEAM_LIMIT_PER_SPORT_REACHED',
+              message: 'Maximale Anzahl Teams für diese Sportart erreicht',
+              limits: {
+                sport_id: effectiveSportId,
+                max_teams_per_sport: allowance.maxTeamsPerSport,
+                current_teams_per_sport: ownedInSport,
+              },
+            });
+          }
+        }
+      }
+
+      const insert = await k('teams').insert({ name, league_id, sport_id: effectiveSportId || null, city_id: city_id || null, captain_user_id: req.user.id }).returning('*').catch(() => null);
       // sqlite returns array of ids; fetch created row
       let team;
       if (!insert) {

@@ -110,12 +110,11 @@ module.exports = function authRoutes(ctx) {
           console.log("Mailer nicht aktiviert, E-Mail nicht versendet an:", email, "enabled:", mailerState?.enabled, "transporter:", !!transporter);
           sendSuccess();
         }
-      }
+      });
     } catch (error) {
       console.error('[register] Unexpected error:', error);
       return res.status(500).json({ error: "Interner Serverfehler" });
     }
-    );
   });
 
   router.post("/login", (req, res) => {

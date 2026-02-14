@@ -121,6 +121,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
   const [showPassword, setShowPassword] = useState(false);
 
   const API = (typeof API_BASE === 'string' && API_BASE.trim()) ? API_BASE : '/api';
+  const isLocalDevHost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   // Login-Handler (hier an dein Backend anpassen!)
   const handleLogin = async (e) => {
@@ -180,6 +181,36 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
         );
       }
       
+      navigate("/");
+    } catch {
+      setLoginMsg("Server nicht erreichbar.");
+    }
+  };
+
+  const handleDevTestLogin = async () => {
+    const devEmail = "admin@example.com";
+    const devPassword = "Arabica.2025";
+    setEmail(devEmail);
+    setPassword(devPassword);
+    setLoginMsg("");
+    try {
+      const res = await fetch(`${API}/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: devEmail, password: devPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setLoginMsg(data.error || "Testuser-Login fehlgeschlagen.");
+        return;
+      }
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("is_admin", data.is_admin ? "1" : "0");
+      setToken(data.token);
+      setIsAdminFlag(!!data.is_admin);
+      setLoginMsg("✅ Testuser-Login erfolgreich!");
+      sessionStorage.setItem("loginSuccessAt", new Date().toISOString());
+      sessionStorage.setItem("loginEmail", devEmail);
       navigate("/");
     } catch {
       setLoginMsg("Server nicht erreichbar.");
@@ -316,7 +347,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
   }, []);
 
   return (
-    <div>
+    <div className="ml-page-shell">
       <AuthNoticeBanner />
       {/* Header with Login Button */}
       <div style={{
@@ -341,17 +372,8 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
           onClick={() => {
             document.getElementById('design-divider')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
           }}
-          style={{
-            padding: '10px 24px',
-            background: 'transparent',
-            border: '2px solid #debc7c',
-            borderRadius: 8,
-            color: '#debc7c',
-            fontSize: 15,
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'all 0.2s'
-          }}
+          className="ml-btn-ghost-gold"
+          style={{ fontSize: 15, transition: 'all 0.2s' }}
           onMouseOver={(e) => {
             e.target.style.background = '#debc7c';
             e.target.style.color = '#071716';
@@ -606,6 +628,26 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
           >
             Login
           </button>
+          {isLocalDevHost && (
+            <button
+              type="button"
+              onClick={handleDevTestLogin}
+              style={{
+                width: "100%",
+                marginTop: 10,
+                fontWeight: 700,
+                padding: '10px 22px',
+                borderRadius: 12,
+                border: '1px solid rgba(72, 186, 170, 0.5)',
+                background: 'rgba(72, 186, 170, 0.12)',
+                color: '#48baaa',
+                cursor: 'pointer',
+                fontSize: 14
+              }}
+            >
+              Login as testuser
+            </button>
+          )}
           {loginMsg && (
             <div style={{
               marginTop: 12,

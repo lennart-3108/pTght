@@ -22,9 +22,13 @@ function TeamsPage() {
   useEffect(() => {
     // load selectable filters
     fetch(API_BASE + '/sports/list').then(r => r.ok ? r.json() : []).then(s => setSports(Array.isArray(s) ? s : [])).catch(() => setSports([]));
-    fetch(API_BASE + '/cities/list').then(r => r.ok ? r.json() : []).then(c => setCities(Array.isArray(c) ? c : [])).catch(() => setCities([]));
-    // leagues endpoint returns array of leagues
-    fetch(API_BASE + '/leagues').then(r => r.ok ? r.json() : []).then(l => setLeagues(Array.isArray(l) ? l : [])).catch(() => setLeagues([]));
+    fetch(API_BASE + '/cities/list?compact=1&limit=1000').then(r => r.ok ? r.json() : []).then(c => setCities(Array.isArray(c) ? c : [])).catch(() => setCities([]));
+    // leagues endpoint supports pagination; load a capped list for the filter dropdown
+    fetch(API_BASE + '/leagues?limit=500&offset=0').then(r => r.ok ? r.json() : []).then(result => {
+      if (Array.isArray(result)) return setLeagues(result);
+      if (result && Array.isArray(result.data)) return setLeagues(result.data);
+      return setLeagues([]);
+    }).catch(() => setLeagues([]));
     loadTeams();
   }, []);
 

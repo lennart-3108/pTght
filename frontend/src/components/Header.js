@@ -1,8 +1,9 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import matchLeagueLogo from "../images/header/match_league_header_long.png"; // use long branded logo
-import { API_BASE, fetchWithTimeout } from "../config";
+import smallLogo from "../images/logo/matchleague_logo_4x4-removebg-preview.png";
+import { API_BASE, fetchWithTimeout, INSTANCE_TYPE } from "../config";
 import Avatar from "./Avatar";
+import { useLanguage } from "../i18n";
 import "./Header.css";
 
 function extractUserIdFromToken(token) {
@@ -70,6 +71,7 @@ function formatDebugTime(value) {
 }
 
 export default function Header() {
+  const { t, toggleLang } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -160,6 +162,8 @@ export default function Header() {
   const isAdmin = localStorage.getItem("is_admin") === "1";
   const token = localStorage.getItem("token");
   const myUserId = useMemo(() => extractUserIdFromToken(token), [token]);
+  const isTestInstance = INSTANCE_TYPE === "test";
+  const showProjectTasks = ["development", "dev", "local"].includes(String(INSTANCE_TYPE || "").toLowerCase());
 
   function handleLogout(e) {
     e.preventDefault();
@@ -560,7 +564,10 @@ export default function Header() {
       <div className="ml-header-container">
         <div className="ml-header__logo">
           <Link to="/start" className="ml-logo-link" aria-label="Start">
-            <img src={matchLeagueLogo} alt="MatchLeague" className="ml-logo-full" />
+            <div className="ml-logo-badge">
+              <img src={smallLogo} alt="ML" className="ml-logo-badge__icon" />
+              <h1 className="ml-logo-badge__title">Match League<sup>™</sup></h1>
+            </div>
           </Link>
         </div>
 
@@ -568,45 +575,61 @@ export default function Header() {
         <nav className="ml-nav">
           {!token && (
             <>
-              <Link to="/login" className="ml-nav__item" onClick={handleNavigate}>Login</Link>
-              <Link to="/leagues" className="ml-nav__item" onClick={handleNavigate}>Ligen</Link>
-              <Link to="/abos" className="ml-nav__item" onClick={handleNavigate}>Abos</Link>
-              <Link to="/register" className="ml-nav__item" onClick={handleNavigate}>Registrieren</Link>
+              <Link to="/login" className="ml-nav__item" onClick={handleNavigate}>{t('nav.login')}</Link>
+              <Link to="/leagues" className="ml-nav__item" onClick={handleNavigate}>{t('nav.leagues')}</Link>
+              <Link to="/abos" className="ml-nav__item" onClick={handleNavigate}>{t('nav.subscriptions')}</Link>
+              {showProjectTasks ? <Link to="/tasks" className="ml-nav__item" onClick={handleNavigate}>{t('nav.tasks')}</Link> : null}
+              <Link to="/register" className="ml-nav__item" onClick={handleNavigate}>{t('nav.register')}</Link>
             </>
           )}
 
           {token && (
             <>
-              <Link to={`/user/${myUserId}`} className="ml-nav__item" onClick={handleNavigate}>Profil</Link>
-              <Link to="/teams" className="ml-nav__item" onClick={handleNavigate}>Teams</Link>
-              <Link to="/leagues" className="ml-nav__item" onClick={handleNavigate}>Ligen</Link>
-              <Link to="/abos" className="ml-nav__item" onClick={handleNavigate}>Abos</Link>
-              <Link to="/booking" className="ml-nav__item" onClick={handleNavigate}>Platz buchen</Link>
+              {showProjectTasks ? <Link to="/tasks" className="ml-nav__item" onClick={handleNavigate}>{t('nav.tasks')}</Link> : null}
+              {!isTestInstance && <Link to="/leagues" className="ml-nav__item" onClick={handleNavigate}>{t('nav.leagues')}</Link>}
+              {!isTestInstance && <Link to="/abos" className="ml-nav__item" onClick={handleNavigate}>{t('nav.subscriptions')}</Link>}
+              {!isTestInstance && <Link to="/booking" className="ml-nav__item" onClick={handleNavigate}>{t('nav.booking')}</Link>}
+
+              {!isTestInstance && <Link to="/teams" className="ml-nav__item" onClick={handleNavigate}>Team Manager</Link>}
+              {!isTestInstance && <Link to="/tournaments" className="ml-nav__item" onClick={handleNavigate}>Competition Manager</Link>}
+              {userRoles.includes('trainer') && (
+                <Link to="/training" className="ml-nav__item" onClick={handleNavigate}>{t('nav.training')}</Link>
+              )}
+              {userRoles.includes('club_admin') && (
+                <Link to="/clubs" className="ml-nav__item" onClick={handleNavigate}>Club Manager</Link>
+              )}
               {userRoles.includes('location_provider') && (
                 <Link to="/location-manager" className="ml-nav__item" onClick={handleNavigate}>Location Manager</Link>
               )}
-              {userRoles.includes('trainer') && (
-                <Link to="/training" className="ml-nav__item" onClick={handleNavigate}>Training</Link>
-              )}
-              {userRoles.includes('club_admin') && (
-                <Link to="/clubs" className="ml-nav__item" onClick={handleNavigate}>Vereine</Link>
-              )}
-              <Link to="/chats" className="ml-nav__item" onClick={handleNavigate}>Chats</Link>
-              <Link to="/news" className="ml-nav__item" onClick={handleNavigate}>Neuigkeiten</Link>
+
+              {!isTestInstance && <Link to="/chats" className="ml-nav__item" onClick={handleNavigate}>{t('nav.chats')}</Link>}
+              {!isTestInstance && <Link to="/news" className="ml-nav__item" onClick={handleNavigate}>{t('nav.news')}</Link>}
+              <Link to="/tasks" className="ml-nav__item" onClick={handleNavigate}>{t('nav.tasks')}</Link>
             </>
           )}
 
           {isAdmin && (
             <>
+              <Link to="/compliance" className="ml-nav__item" onClick={handleNavigate}>{t('nav.compliance')}</Link>
               <Link to="/admin" className="ml-nav__item" onClick={handleNavigate}>Admin</Link>
               <Link to="/create" className="ml-nav__item" onClick={handleNavigate}>Create</Link>
             </>
           )}
+
+          <button
+            type="button"
+            className="ml-nav__item"
+            onClick={toggleLang}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+            title="Language"
+          >
+            {t('lang.switch')}
+          </button>
         </nav>
 
         {token && (
           <div className="ml-logout">
-            <a href="#logout" onClick={(e) => { handleNavigate(); handleLogout(e); }} className="ml-nav__item">Abmelden</a>
+            <a href="#logout" onClick={(e) => { handleNavigate(); handleLogout(e); }} className="ml-nav__item">{t('nav.logout')}</a>
           </div>
         )}
       </div>
@@ -979,24 +1002,22 @@ export default function Header() {
           </>
         )}
 
-        {token && (
-          <button
-            className={"ml-burger" + (open ? " is-open" : "")}
-            onClick={() => setOpen((v) => {
-              const next = !v;
-              if (next) {
-                setNotificationsOpen(false);
-                setChatsOpen(false);
-              }
-              return next;
-            })}
-            aria-label="Menü"
-          >
-            <span />
-            <span />
-            <span />
-          </button>
-        )}
+        <button
+          className={"ml-burger" + (open ? " is-open" : "")}
+          onClick={() => setOpen((v) => {
+            const next = !v;
+            if (next) {
+              setNotificationsOpen(false);
+              setChatsOpen(false);
+            }
+            return next;
+          })}
+          aria-label="Menü"
+        >
+          <span />
+          <span />
+          <span />
+        </button>
       </div>
       </div>
     </header>

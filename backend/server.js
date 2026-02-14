@@ -5,6 +5,7 @@ const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
+const { spawn } = require("child_process");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
 const { isAuthenticated } = require("./middleware/auth");
 
@@ -32,6 +33,79 @@ const cfg = loadConfig();
 // Aktiviert korrekte IP/Proto-Erkennung hinter Caddy/Reverse Proxy
 app.set('trust proxy', 1);
 const PORT = Number(process.env.PORT) || 5001;
+
+function isTruthy(value) {
+  const normalized = String(value || '').trim().toLowerCase();
+  return normalized === '1' || normalized === 'true' || normalized === 'yes' || normalized === 'on';
+}
+
+function startInternalAiAgentScheduler({ logger = console } = {}) {
+  const enabled = isTruthy(process.env.ENABLE_INTERNAL_AI_AGENT);
+  if (!enabled) {
+    logger.info('[AI Agent] Internal scheduler disabled (ENABLE_INTERNAL_AI_AGENT != 1).');
+    return () => {};
+  }
+
+  const intervalMs = Number(process.env.AGENT_INTERVAL_MS || 300000);
+  const runOnBoot = !isTruthy(process.env.AGENT_SKIP_BOOT_RUN);
+  let timer = null;
+  let inFlight = false;
+  let stopped = false;
+
+  const runOnce = () => new Promise((resolve) => {
+    if (inFlight || stopped) return resolve();
+    inFlight = true;
+    const started = Date.now();
+    logger.info('[AI Agent] Cycle started');
+
+    const child = spawn(process.execPath, ['scripts/ai-test-agent.js'], {
+      cwd: __dirname,
+      env: process.env,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+
+    let stderr = '';
+    child.stdout.on('data', (buf) => {
+      const msg = String(buf || '').trim();
+      if (msg) logger.info(`[AI Agent] ${msg}`);
+    });
+    child.stderr.on('data', (buf) => {
+      const msg = String(buf || '');
+      stderr += msg;
+      const trimmed = msg.trim();
+      if (trimmed) logger.warn(`[AI Agent] ${trimmed}`);
+    });
+
+    child.on('close', (code) => {
+      const duration = Date.now() - started;
+      if (Number(code) === 0) {
+        logger.info(`[AI Agent] Cycle finished successfully in ${duration}ms`);
+      } else {
+        logger.error(`[AI Agent] Cycle failed (exit ${code}) in ${duration}ms`);
+        if (stderr.trim()) logger.error(`[AI Agent] stderr: ${stderr.trim().slice(0, 2000)}`);
+      }
+      inFlight = false;
+      resolve();
+    });
+  });
+
+  if (runOnBoot) {
+    runOnce().catch(() => {});
+  }
+
+  timer = setInterval(() => {
+    runOnce().catch(() => {});
+  }, Math.max(30000, intervalMs));
+
+  logger.info(`[AI Agent] Internal scheduler enabled, interval=${Math.max(30000, intervalMs)}ms`);
+
+  return () => {
+    stopped = true;
+    if (timer) clearInterval(timer);
+    timer = null;
+    logger.info('[AI Agent] Internal scheduler stopped');
+  };
+}
 
 app.use(cors(cfg.cors));
 app.options("*", cors());
@@ -1323,6 +1397,8 @@ const chatsRoutes = require("./routes/chats");
 const rolesRoutes = require("./routes/roles");
 const clubsRoutes = require("./routes/clubs");
 const trainingRoutes = require("./routes/training");
+const tasksRoutes = require("./routes/tasks");
+const complianceRoutes = require("./routes/compliance");
 
 // Ensure we pass a usable knex instance into routes that expect it.
 // Prefer knexDirect (legacy), then adapter's knex, then the adapter object as last resort.
@@ -1344,6 +1420,12 @@ apiRouter.use("/", citiesRoutes({ db }));
 apiRouter.use("/roles", rolesRoutes({ db: resolvedKnexForRoutes }));
 apiRouter.use("/clubs", clubsRoutes({ db: resolvedKnexForRoutes }));
 apiRouter.use("/training", trainingRoutes({ db: resolvedKnexForRoutes }));
+apiRouter.use("/tasks", tasksRoutes({ db: resolvedKnexForRoutes }));
+apiRouter.use("/compliance", complianceRoutes({
+  db: resolvedKnexForRoutes,
+  sendMail,
+  mailerState,
+}));
 // Mount both new (for time-slots etc) and legacy (for join etc) matches routes
 apiRouter.use("/matches", matchesRoutes({ db: resolvedKnexForRoutes, SECRET: cfg.JWT_SECRET, SESSION_EPOCH: cfg.SESSION_EPOCH }));
 apiRouter.use("/matches", matchesRoutesLegacy({ db: resolvedKnexForRoutes }));
@@ -1976,6 +2058,21 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   } else {
     logDebug("Link tests are disabled (set ENABLE_LINK_TESTS=1 to enable).");
   }
+});
+
+const stopInternalAiAgentScheduler = startInternalAiAgentScheduler({
+  logger: {
+    info: (msg) => logInfo(msg),
+    warn: (msg) => console.warn(msg),
+    error: (msg) => logError(msg, { origin: 'ai-agent-internal' }),
+  },
+});
+
+process.on('SIGINT', () => {
+  try { stopInternalAiAgentScheduler(); } catch {}
+});
+process.on('SIGTERM', () => {
+  try { stopInternalAiAgentScheduler(); } catch {}
 });
 
 // Fail fast on bind errors so a supervisor can restart us (avoids zombie state)

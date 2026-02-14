@@ -1,11 +1,69 @@
 const express = require("express");
 
+function normalizeHost(req) {
+  const forwardedHost = req.headers['x-forwarded-host'];
+  const host = (forwardedHost || req.headers.host || req.hostname || '').split(',')[0].trim();
+  return host.split(':')[0].toLowerCase();
+}
+
+function isTestHost(req) {
+  return normalizeHost(req) === 'test.matchleague.org';
+}
+
+function isTennisSinglesOrDoubles(name) {
+  const lowerName = String(name || '').toLowerCase();
+  if (!lowerName.includes('tennis')) return false;
+  if (lowerName.includes('mixed')) return false;
+  return (
+    lowerName.includes('einzel') ||
+    lowerName.includes('single') ||
+    lowerName.includes('doppel') ||
+    lowerName.includes('double')
+  );
+}
+
+function isRacketSport(row) {
+  const lowerName = String(row?.name || '').toLowerCase();
+  const lowerCategory = String(row?.category_name || row?.cat_name || '').toLowerCase();
+  const lowerCategorySlug = String(row?.category_slug || row?.cat_slug || '').toLowerCase();
+
+  const isRacketCategory =
+    lowerCategory.includes('schläger') ||
+    lowerCategory.includes('schlaeger') ||
+    lowerCategory.includes('racket') ||
+    lowerCategory.includes('racquet') ||
+    lowerCategorySlug.includes('racket') ||
+    lowerCategorySlug.includes('racquet') ||
+    lowerCategorySlug.includes('schlaeger');
+
+  const isKnownRacketByName =
+    lowerName.includes('tennis') ||
+    lowerName.includes('badminton') ||
+    lowerName.includes('tischtennis') ||
+    lowerName.includes('table tennis') ||
+    lowerName.includes('padel') ||
+    lowerName.includes('squash') ||
+    lowerName.includes('pickleball') ||
+    lowerName.includes('racquetball');
+
+  return isRacketCategory || isKnownRacketByName;
+}
+
+function filterSportsForTest(rows) {
+  return (rows || []).filter((row) => {
+    if (!isRacketSport(row)) return false;
+    const lowerName = String(row?.name || '').toLowerCase();
+    if (!lowerName.includes('tennis')) return true;
+    return isTennisSinglesOrDoubles(row?.name);
+  });
+}
+
 module.exports = function sportsRoutes(ctx) {
   const router = express.Router();
   const { db } = ctx;
 
   // Liste aller Sportarten mit Kategorie-Info
-  router.get("/list", (_req, res) => {
+  router.get("/list", (req, res) => {
     db.all(`
       SELECT 
         s.id, 
@@ -21,12 +79,13 @@ module.exports = function sportsRoutes(ctx) {
       ORDER BY s.sort_order, s.name
     `, [], (err, rows) => {
       if (err) return res.status(500).json({ error: "Datenbankfehler" });
-      res.json(rows || []);
+      const resultRows = isTestHost(req) ? filterSportsForTest(rows) : (rows || []);
+      res.json(resultRows);
     });
   });
 
   // Kategorien mit ihren Sportarten (hierarchisch)
-  router.get("/categories", (_req, res) => {
+  router.get("/categories", (req, res) => {
     // Get all sports with their category info
     db.all(`
       SELECT 
@@ -41,6 +100,8 @@ module.exports = function sportsRoutes(ctx) {
         sc.id as cat_id,
         sc.name as cat_name,
         sc.slug as cat_slug,
+        sc.name as category_name,
+        sc.slug as category_slug,
         sc.icon as cat_icon,
         sc.sort_order as cat_sort
       FROM sports s
@@ -57,11 +118,13 @@ module.exports = function sportsRoutes(ctx) {
         console.log('[sports/categories] No sports found in database');
         return res.json([]);
       }
+
+      const filteredSports = isTestHost(req) ? filterSportsForTest(sports) : sports;
       
       // Group by sport_categories
       const categoryMap = {};
       
-      sports.forEach(sport => {
+      filteredSports.forEach(sport => {
         // Use category from sport_categories table if available
         const catId = sport.cat_id || 'uncategorized';
         const catName = sport.cat_name || 'Sonstige';
@@ -83,7 +146,7 @@ module.exports = function sportsRoutes(ctx) {
         // Only add main sports (not variants with parent_id)
         if (!sport.parent_id) {
           // Find variants for this sport
-          const variants = sports.filter(v => v.parent_id === sport.id);
+          const variants = filteredSports.filter(v => v.parent_id === sport.id);
           
           categoryMap[catId].sports.push({
             id: sport.id,
@@ -104,7 +167,7 @@ module.exports = function sportsRoutes(ctx) {
       
       // Sort by sort_order and convert to array
       const result = Object.values(categoryMap).sort((a, b) => a.sort_order - b.sort_order);
-      console.log(`[sports/categories] Returning ${result.length} categories with ${sports.length} total sports`);
+      console.log(`[sports/categories] Returning ${result.length} categories with ${filteredSports.length} total sports`);
       res.json(result);
     });
   });

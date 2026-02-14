@@ -6,7 +6,10 @@ module.exports = function countriesRoutes(ctx) {
 
   // GET /countries/list - List all countries
   router.get("/countries/list", (req, res) => {
-    const sql = "SELECT id, name, code, iso2, flag, phonecode, currency, latitude, longitude FROM countries ORDER BY name";
+    const compact = String(req.query.compact || "").toLowerCase() === "1" || String(req.query.compact || "").toLowerCase() === "true";
+    const sql = compact
+      ? "SELECT id, name, code FROM countries ORDER BY name"
+      : "SELECT id, name, code, iso2, flag, phonecode, currency, latitude, longitude FROM countries ORDER BY name";
     db.all(sql, [], (err, rows) =>
       err ? res.status(500).json({ error: "Datenbankfehler" }) : res.json(rows)
     );

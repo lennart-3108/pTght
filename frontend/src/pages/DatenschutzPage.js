@@ -1,189 +1,110 @@
-import React from "react";
+import React from 'react';
 
 export default function DatenschutzPage() {
   return (
-    <div style={{ 
-      maxWidth: 800, 
-      margin: '40px auto', 
-      padding: '0 20px',
-      color: '#e5e7eb',
-      lineHeight: 1.8
-    }}>
-      <h1 style={{ 
-        color: '#48baa6', 
-        marginBottom: 30,
-        fontSize: 32 
-      }}>
-        Datenschutzerklärung
-      </h1>
+    <div style={{ maxWidth: 900, margin: '40px auto', padding: '0 20px', color: '#e5e7eb', lineHeight: 1.8 }}>
+      <h1 style={{ color: '#debc7c', marginBottom: 20, fontSize: 32 }}>Datenschutzerklärung</h1>
+      <p style={{ fontSize: 14, color: '#9ca3af', marginBottom: 24 }}>Stand: Februar 2026</p>
 
-      <p style={{ fontSize: 14, color: '#9ca3af', marginBottom: 30 }}>
-        Stand: Januar 2026
-      </p>
-
-      <section style={{ marginBottom: 40 }}>
-        <h2 style={{ color: '#48baa6', fontSize: 24, marginBottom: 16 }}>
-          1. Verantwortlicher
-        </h2>
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ color: '#48baa6', fontSize: 22 }}>1. Verantwortlicher</h2>
         <p>
-          Verantwortlich für die Datenverarbeitung auf dieser Plattform ist:<br /><br />
-          Match League<br />
-          E-Mail: info@matchleague.org
+          Lennart Allenstein<br />
+          Osterdeich 54, 28203 Bremen<br />
+          E-Mail: lennart.allenstein@matchleague.org
         </p>
       </section>
 
-      <section style={{ marginBottom: 40 }}>
-        <h2 style={{ color: '#48baa6', fontSize: 24, marginBottom: 16 }}>
-          2. Erhebung und Speicherung personenbezogener Daten
-        </h2>
-        <p style={{ marginBottom: 12 }}>
-          Bei der Registrierung auf unserer Plattform erheben wir folgende Daten:
-        </p>
-        <ul style={{ marginLeft: 20, marginBottom: 12 }}>
-          <li>Vorname und Nachname</li>
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ color: '#48baa6', fontSize: 22 }}>2. Art der Plattform</h2>
+        <p>MatchLeague ist eine soziale Plattform zur sportlichen Vernetzung von Nutzerinnen und Nutzern.</p>
+      </section>
+
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ color: '#48baa6', fontSize: 22 }}>3. Verarbeitete personenbezogene Daten</h2>
+        <ul style={{ marginLeft: 20 }}>
+          <li>Vorname</li>
+          <li>Nachname (öffentlich sichtbar ausschließlich als Anfangsbuchstabe)</li>
+          <li>Profilbild</li>
           <li>E-Mail-Adresse</li>
-          <li>Geburtsdatum</li>
-          <li>Geschlecht</li>
-          <li>Wohnort (Stadt/Bezirk)</li>
-          <li>Sportliche Präferenzen</li>
+          <li>sportbezogene Aktivitäten (z. B. Matches, Ergebnisse, Zeitpunkte)</li>
+          <li>technische Daten (IP-Adresse, Browser, Gerätetyp)</li>
         </ul>
+      </section>
+
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ color: '#48baa6', fontSize: 22 }}>4. Öffentliche Sichtbarkeit</h2>
         <p>
-          Diese Daten werden benötigt, um Ihnen die Nutzung der Plattform zu ermöglichen 
-          und passende Sportpartner zu finden.
+          Für andere registrierte Nutzer sichtbar sind Vorname, erster Buchstabe des Nachnamens, Profilbild sowie sportbezogene
+          Aktivitäten und Ergebnisse. Diese Sichtbarkeit ist ein wesentlicher Bestandteil der Plattform.
         </p>
       </section>
 
-      <section style={{ marginBottom: 40 }}>
-        <h2 style={{ color: '#48baa6', fontSize: 24, marginBottom: 16 }}>
-          3. Zweck der Datenverarbeitung
-        </h2>
-        <p style={{ marginBottom: 12 }}>
-          Ihre Daten werden für folgende Zwecke verarbeitet:
-        </p>
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ color: '#48baa6', fontSize: 22 }}>5. Zwecke der Datenverarbeitung</h2>
         <ul style={{ marginLeft: 20 }}>
-          <li>Bereitstellung und Verwaltung Ihres Nutzerkontos</li>
-          <li>Vermittlung von Sportpartnern und Organisation von Matches</li>
-          <li>Buchung von Sportanlagen</li>
-          <li>Kommunikation zwischen Nutzern</li>
-          <li>Verbesserung unserer Dienstleistungen</li>
-          <li>Versand von Benachrichtigungen und Updates</li>
+          <li>Betrieb und Bereitstellung der Plattform</li>
+          <li>Darstellung sportlicher Aktivitäten</li>
+          <li>Vernetzung von Nutzern</li>
+          <li>Sicherheit und Missbrauchsprävention</li>
+          <li>Finanzierung der Plattform durch Werbung</li>
         </ul>
       </section>
 
-      <section style={{ marginBottom: 40 }}>
-        <h2 style={{ color: '#48baa6', fontSize: 24, marginBottom: 16 }}>
-          4. Rechtsgrundlage der Verarbeitung
-        </h2>
-        <p style={{ marginBottom: 12 }}>
-          Die Verarbeitung Ihrer personenbezogenen Daten erfolgt auf Grundlage von:
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ color: '#48baa6', fontSize: 22 }}>6. Werbung & Drittanbieter</h2>
+        <p>
+          Zur Finanzierung der Plattform wird Werbung eingebunden. Dabei können personenbezogene Daten an Google (z. B. Google Ad
+          Manager / AdMob) übermittelt werden, insbesondere IP-Adresse, Geräteinformationen und Interaktionsdaten. Eine weitere
+          Weitergabe personenbezogener Daten an andere Dritte erfolgt nicht.
         </p>
+      </section>
+
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ color: '#48baa6', fontSize: 22 }}>7. Rechtsgrundlagen</h2>
+        <p>Die Datenverarbeitung erfolgt gemäß Art. 6 DSGVO auf Grundlage von Einwilligung, Vertragserfüllung und berechtigtem Interesse.</p>
+      </section>
+
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ color: '#48baa6', fontSize: 22 }}>8. Freiwilligkeit & Widerruf</h2>
+        <p>Die Bereitstellung personenbezogener Daten erfolgt freiwillig. Einwilligungen können jederzeit mit Wirkung für die Zukunft widerrufen werden.</p>
+      </section>
+
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ color: '#48baa6', fontSize: 22 }}>9. Speicherdauer</h2>
+        <p>Personenbezogene Daten werden nur so lange gespeichert, wie dies für den Betrieb der Plattform erforderlich ist oder gesetzliche Aufbewahrungspflichten bestehen.</p>
+      </section>
+
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ color: '#48baa6', fontSize: 22 }}>10. Rechte betroffener Personen</h2>
         <ul style={{ marginLeft: 20 }}>
-          <li>Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung)</li>
-          <li>Art. 6 Abs. 1 lit. a DSGVO (Einwilligung)</li>
-          <li>Art. 6 Abs. 1 lit. f DSGVO (berechtigte Interessen)</li>
+          <li>Auskunft</li>
+          <li>Berichtigung</li>
+          <li>Löschung</li>
+          <li>Einschränkung der Verarbeitung</li>
+          <li>Datenübertragbarkeit</li>
+          <li>Beschwerde bei einer Aufsichtsbehörde</li>
         </ul>
       </section>
 
-      <section style={{ marginBottom: 40 }}>
-        <h2 style={{ color: '#48baa6', fontSize: 24, marginBottom: 16 }}>
-          5. Weitergabe von Daten
-        </h2>
-        <p style={{ marginBottom: 12 }}>
-          Wir geben Ihre Daten nur in folgenden Fällen weiter:
-        </p>
-        <ul style={{ marginLeft: 20 }}>
-          <li>An andere Nutzer, soweit dies für die Organisation von Matches erforderlich ist</li>
-          <li>An Betreiber von Sportanlagen bei Buchungen</li>
-          <li>An technische Dienstleister (z.B. Hosting-Provider)</li>
-          <li>Wenn wir gesetzlich dazu verpflichtet sind</li>
-        </ul>
-      </section>
-
-      <section style={{ marginBottom: 40 }}>
-        <h2 style={{ color: '#48baa6', fontSize: 24, marginBottom: 16 }}>
-          6. Speicherdauer
-        </h2>
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ color: '#48baa6', fontSize: 22 }}>11. Meldung von Datenschutzverstößen</h2>
         <p>
-          Wir speichern Ihre personenbezogenen Daten so lange, wie dies für die Erfüllung 
-          der genannten Zwecke erforderlich ist. Nach Löschung Ihres Kontos werden Ihre 
-          Daten gelöscht, soweit keine gesetzlichen Aufbewahrungspflichten bestehen.
+          Datenschutzverstöße können gemeldet werden über:
+          <br />
+          <a href="mailto:lennart.allenstein@matchleague.org?subject=Datenschutzversto%C3%9F%20MatchLeague" style={{ color: '#debc7c' }}>
+            lennart.allenstein@matchleague.org
+          </a>
         </p>
       </section>
 
-      <section style={{ marginBottom: 40 }}>
-        <h2 style={{ color: '#48baa6', fontSize: 24, marginBottom: 16 }}>
-          7. Ihre Rechte
-        </h2>
-        <p style={{ marginBottom: 12 }}>
-          Sie haben folgende Rechte bezüglich Ihrer personenbezogenen Daten:
-        </p>
-        <ul style={{ marginLeft: 20 }}>
-          <li><strong>Auskunftsrecht:</strong> Sie können Auskunft über Ihre gespeicherten Daten verlangen</li>
-          <li><strong>Berichtigungsrecht:</strong> Sie können die Berichtigung unrichtiger Daten verlangen</li>
-          <li><strong>Löschungsrecht:</strong> Sie können die Löschung Ihrer Daten verlangen</li>
-          <li><strong>Einschränkung der Verarbeitung:</strong> Sie können die Einschränkung der Verarbeitung verlangen</li>
-          <li><strong>Datenübertragbarkeit:</strong> Sie können Ihre Daten in einem strukturierten Format erhalten</li>
-          <li><strong>Widerspruchsrecht:</strong> Sie können der Verarbeitung Ihrer Daten widersprechen</li>
-        </ul>
-      </section>
-
-      <section style={{ marginBottom: 40 }}>
-        <h2 style={{ color: '#48baa6', fontSize: 24, marginBottom: 16 }}>
-          8. Cookies und Tracking
-        </h2>
+      <section style={{ marginBottom: 22 }}>
+        <h2 style={{ color: '#48baa6', fontSize: 22 }}>12. Internationale Nutzer</h2>
         <p>
-          Wir verwenden Cookies, um die Funktionalität der Plattform zu gewährleisten und 
-          Ihr Nutzererlebnis zu verbessern. Sie können die Verwendung von Cookies in Ihren 
-          Browser-Einstellungen deaktivieren, dies kann jedoch die Funktionalität der 
-          Plattform einschränken.
+          Die Plattform orientiert sich an den Vorgaben der DSGVO. Zusätzlich gelten die zwingenden gesetzlichen Datenschutzbestimmungen
+          des jeweiligen Landes.
         </p>
       </section>
-
-      <section style={{ marginBottom: 40 }}>
-        <h2 style={{ color: '#48baa6', fontSize: 24, marginBottom: 16 }}>
-          9. Sicherheit
-        </h2>
-        <p>
-          Wir setzen technische und organisatorische Sicherheitsmaßnahmen ein, um Ihre Daten 
-          gegen zufällige oder vorsätzliche Manipulationen, Verlust, Zerstörung oder gegen 
-          den Zugriff unberechtigter Personen zu schützen.
-        </p>
-      </section>
-
-      <section style={{ marginBottom: 40 }}>
-        <h2 style={{ color: '#48baa6', fontSize: 24, marginBottom: 16 }}>
-          10. Änderungen der Datenschutzerklärung
-        </h2>
-        <p>
-          Wir behalten uns vor, diese Datenschutzerklärung anzupassen, um sie an geänderte 
-          Rechtslagen oder Änderungen unserer Dienstleistungen anzupassen. Die aktuelle 
-          Version finden Sie stets auf dieser Seite.
-        </p>
-      </section>
-
-      <section style={{ marginBottom: 40 }}>
-        <h2 style={{ color: '#48baa6', fontSize: 24, marginBottom: 16 }}>
-          11. Beschwerderecht
-        </h2>
-        <p>
-          Sie haben das Recht, sich bei einer Datenschutz-Aufsichtsbehörde über die 
-          Verarbeitung Ihrer personenbezogenen Daten durch uns zu beschweren.
-        </p>
-      </section>
-
-      <div style={{ 
-        marginTop: 60, 
-        paddingTop: 30, 
-        borderTop: '1px solid #374151',
-        fontSize: 14,
-        color: '#9ca3af' 
-      }}>
-        <p>
-          <strong>Kontakt für Datenschutzanfragen:</strong><br />
-          Match League<br />
-          E-Mail: datenschutz@matchleague.org
-        </p>
-      </div>
     </div>
   );
 }

@@ -69,6 +69,9 @@ tmp/
 backend/.env.prod
 /backend/.env
 
+# Copilot temporary SSH keys (do not commit)
+.copilot_strato_key
+.copilot_strato_key.pub
 # Local runtime artifacts (do not commit)
 backend/backend-run.log
 frontend-run.log
@@ -80,3 +83,5 @@ frontend/frontend.pid
 *.pid
 *-start.log
 backend/sportsplatform.db.before_cleanup_379k
+backend-dev.log
+backend/.env.test

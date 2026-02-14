@@ -1,6 +1,6 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { API_BASE } from "../config";
+import { API_BASE, FEATURES } from "../config";
 import smallLogo from "../images/logo/matchleague_logo_4x4-removebg-preview.png";
 import Avatar from "../components/Avatar";
 import LocationSelector from "../components/LocationSelector";
@@ -12,6 +12,7 @@ function importAllBackgrounds(r) {
   return r.keys().map((k) => ({ key: k.replace(/^\.\//, ''), src: r(k) }));
 }
 // Use sports images for hero rotation
+const MAX_HERO_BACKGROUNDS = 8;
 const backgrounds = importAllBackgrounds(require.context("../images/sports", false, /\.(png|jpe?g|webp|svg)$/));
 backgrounds.sort((a, b) => {
   const re = /^(\d+)-/;
@@ -22,6 +23,7 @@ backgrounds.sort((a, b) => {
   if (mb) return 1;
   return a.key.localeCompare(b.key);
 });
+const heroBackgrounds = backgrounds.slice(0, MAX_HERO_BACKGROUNDS);
 
 export default function StartPage() {
   const navigate = useNavigate();
@@ -31,6 +33,7 @@ export default function StartPage() {
   const [countries, setCountries] = useState([]);
   const [states, setStates] = useState([]);
   const [districts, setDistricts] = useState([]);
+  const [citiesLoaded, setCitiesLoaded] = useState(false);
   const [selectedSport, setSelectedSport] = useState("");
   const [selectedSportName, setSelectedSportName] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
@@ -94,10 +97,45 @@ export default function StartPage() {
 
   // rotate backgrounds every 5s
   useEffect(() => {
-    if (!backgrounds.length) return;
-    const t = setInterval(() => setIndex((i) => (i + 1) % backgrounds.length), 5000);
+    if (!heroBackgrounds.length) return;
+    const t = setInterval(() => setIndex((i) => (i + 1) % heroBackgrounds.length), 5000);
     return () => clearInterval(t);
   }, []);
+
+  const loadCitiesIfNeeded = useCallback(async () => {
+    if (citiesLoaded || cities.length > 0) return;
+    try {
+      const res = await fetch(`${API_BASE}/cities/list?type=city&compact=1`);
+      if (!res.ok) return;
+      const list = await res.json();
+      if (Array.isArray(list)) {
+        setCities(list);
+        setCitiesLoaded(true);
+      }
+    } catch {
+      // ignore on purpose; selector still works with currently loaded values
+    }
+  }, [citiesLoaded, cities.length]);
+
+  const loadDistrictsForCity = useCallback(async (cityId) => {
+    const id = Number(cityId);
+    if (!Number.isFinite(id) || id <= 0) return;
+    const alreadyLoaded = districts.some((district) => Number(district.parentCityId || district.cityId) === id);
+    if (alreadyLoaded) return;
+    try {
+      const res = await fetch(`${API_BASE}/districts/by-city/${id}`);
+      if (!res.ok) return;
+      const list = await res.json();
+      if (!Array.isArray(list) || !list.length) return;
+      setDistricts((prev) => {
+        const existingIds = new Set(prev.map((d) => String(d.id)));
+        const additions = list.filter((d) => !existingIds.has(String(d.id)));
+        return additions.length ? [...prev, ...additions] : prev;
+      });
+    } catch {
+      // ignore on purpose; city selection still works
+    }
+  }, [districts]);
 
 
   // Auto-detect location via GPS
@@ -187,42 +225,47 @@ export default function StartPage() {
     let mounted = true;
     setLoading(true);
     setErr("");
-    const safeJson = async (r) => {
+    const fetchJsonWithTimeout = async (url, { timeout = 6000, options = {}, fallback = [] } = {}) => {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeout);
       try {
-        if (!r || !r.ok) return [];
-        const ct = (r.headers && typeof r.headers.get === 'function') ? (r.headers.get('content-type') || '') : '';
-        if (ct.includes('text/html')) return [];
-        return await r.json();
-      } catch { return []; }
+        const res = await fetch(url, { ...options, signal: controller.signal });
+        if (!res || !res.ok) return fallback;
+        const ct = (res.headers && typeof res.headers.get === 'function') ? (res.headers.get('content-type') || '') : '';
+        if (ct.includes('text/html')) return fallback;
+        const data = await res.json().catch(() => fallback);
+        return data ?? fallback;
+      } catch {
+        return fallback;
+      } finally {
+        clearTimeout(timer);
+      }
     };
 
     Promise.all([
-      fetch(`${API_BASE}/leagues`).then(safeJson),
-      fetch(`${API_BASE}/sports/categories`).then(safeJson),
-      fetch(`${API_BASE}/cities/list?type=city`).then(safeJson),
-      fetch(`${API_BASE}/countries/list`).then(safeJson),
-      fetch(`${API_BASE}/counties/list`).then(safeJson),
-      fetch(`${API_BASE}/districts/list`).then(safeJson),
+      fetchJsonWithTimeout(`${API_BASE}/leagues`, { fallback: [] }),
+      fetchJsonWithTimeout(`${API_BASE}/sports/categories`, { fallback: [] }),
+      fetchJsonWithTimeout(`${API_BASE}/countries/list?compact=1`, { fallback: [] }),
+      fetchJsonWithTimeout(`${API_BASE}/counties/list?compact=1`, { fallback: [] }),
     ])
-      .then(([ls, ss, cs, co, sts, dists]) => {
+      .then(([ls, ss, co, sts]) => {
         if (!mounted) return;
         console.log('[StartPage] Data loaded:', { 
           leagues: ls?.length || 0, 
           sports: ss?.length || 0, 
-          cities: cs?.length || 0, 
+          cities: 0,
           countries: co?.length || 0,
           states: sts?.length || 0,
-          districts: dists?.length || 0
+          districts: 0
         });
-        console.log('[StartPage] Sample city:', cs?.[0]);
         console.log('[StartPage] Sample state:', sts?.[0]);
         setLeagues(Array.isArray(ls) ? ls : []);
         setSports(Array.isArray(ss) ? ss : []);
-        setCities(Array.isArray(cs) ? cs : []);
+        setCities([]);
         const initialCountries = Array.isArray(co) ? co : [];
         setCountries(initialCountries);
         setStates(Array.isArray(sts) ? sts : []);
-        setDistricts(Array.isArray(dists) ? dists : []);
+        setDistricts([]);
         // Fallback: if countries are empty (e.g., missing /api proxy on non-local host),
         // try talking directly to localhost:5001
         if (!initialCountries.length) {
@@ -230,7 +273,7 @@ export default function StartPage() {
           // Avoid duplicate fetch if API_BASE already points to localhost
           const isAlreadyLocalhost = String(API_BASE).startsWith('http://localhost:5001');
           if (!isAlreadyLocalhost) {
-            fetch(`${fallbackBase}/countries/list`).then(safeJson)
+            fetchJsonWithTimeout(`${fallbackBase}/countries/list`, { fallback: [] })
               .then(list => {
                 if (!mounted) return;
                 if (Array.isArray(list) && list.length) {
@@ -240,49 +283,6 @@ export default function StartPage() {
               }).catch(() => {});
           }
         }
-        // auto-select user's city from /me/leagues (first league city)
-        (async () => {
-          try {
-            const token = localStorage.getItem('token');
-            if (!token) return;
-            const meLeagues = await fetch(`${API_BASE}/me/leagues`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : []);
-            const firstCity = (meLeagues || []).find(l => l.cityId)?.cityId;
-            if (firstCity) {
-              setSelectedCity(String(firstCity));
-              const cityObj = Array.isArray(cs) && cs.find(c => String(c.id) === String(firstCity));
-              if (cityObj) setSelectedCityName(cityObj.name);
-            }
-            // store for dashboard
-            setMyLeagues(Array.isArray(meLeagues) ? meLeagues : []);
-            const myGamesResp = await fetch(`${API_BASE}/me/games`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : { upcoming: [], completed: [] });
-            setMyGames({
-              upcoming: Array.isArray(myGamesResp.upcoming) ? myGamesResp.upcoming : [],
-              completed: Array.isArray(myGamesResp.completed) ? myGamesResp.completed : [],
-            });
-            if ((meLeagues || []).length) {
-              const lid = meLeagues[0].id || meLeagues[0].leagueId;
-              setSelectedMyLeagueId(String(lid || ""));
-              if (lid) {
-                const [st, members, games] = await Promise.all([
-                  fetch(`${API_BASE}/leagues/${lid}/standings?format=table`).then(r => r.ok ? r.json() : []),
-                  fetch(`${API_BASE}/leagues/${lid}/members`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : []),
-                  fetch(`${API_BASE}/leagues/${lid}/games`).then(r => r.ok ? r.json() : { upcoming: [], completed: [] })
-                ]);
-                setStandings({ leagueId: String(lid), rows: Array.isArray(st) ? st : [] });
-                setLeagueMembers(Array.isArray(members) ? members : []);
-                setLeagueGames({
-                  upcoming: Array.isArray(games.upcoming) ? games.upcoming : [],
-                  completed: Array.isArray(games.completed) ? games.completed : []
-                });
-              }
-            }
-          } catch {}
-        })();
-        // store countries for state filtering fallback via cities list (if needed)
-        // Note: states are exposed via cities/list response entries
-
-        // Load news feed
-        loadNewsFeed('all');
 
         // Load random location for ad
         loadRandomLocation();
@@ -301,21 +301,27 @@ export default function StartPage() {
           let meLeagues = [];
           try {
             meLeagues = token
-              ? await fetch(`${API_BASE}/me/leagues`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : [])
+              ? await fetchJsonWithTimeout(`${API_BASE}/me/leagues`, {
+                  options: { headers: { Authorization: `Bearer ${token}` } },
+                  fallback: []
+                })
               : [];
             if (!located) {
               const firstCity = (meLeagues || []).find(l => l.cityId)?.cityId;
               if (firstCity && mounted) {
                 setSelectedCity(String(firstCity));
-                const cityObj = Array.isArray(cs) && cs.find(c => String(c.id) === String(firstCity));
-                if (cityObj) setSelectedCityName(cityObj.name);
+                const leagueWithCity = (meLeagues || []).find((l) => String(l.cityId) === String(firstCity));
+                if (leagueWithCity?.city) setSelectedCityName(leagueWithCity.city);
               }
             }
             if (mounted) {
               setMyLeagues(Array.isArray(meLeagues) ? meLeagues : []);
             }
             const myGamesResp = token
-              ? await fetch(`${API_BASE}/me/games`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : { upcoming: [], completed: [] })
+              ? await fetchJsonWithTimeout(`${API_BASE}/me/games`, {
+                  options: { headers: { Authorization: `Bearer ${token}` } },
+                  fallback: { upcoming: [], completed: [] }
+                })
               : { upcoming: [], completed: [] };
             if (mounted) {
               setMyGames({
@@ -328,9 +334,14 @@ export default function StartPage() {
               setSelectedMyLeagueId(String(lid || ""));
               if (lid) {
                 const [st, members, games] = await Promise.all([
-                  fetch(`${API_BASE}/leagues/${lid}/standings?format=table`).then(r => r.ok ? r.json() : []),
-                  fetch(`${API_BASE}/leagues/${lid}/members`, { headers: { Authorization: `Bearer ${token}` } }).then(r => r.ok ? r.json() : []),
-                  fetch(`${API_BASE}/leagues/${lid}/games`).then(r => r.ok ? r.json() : { upcoming: [], completed: [] })
+                  fetchJsonWithTimeout(`${API_BASE}/leagues/${lid}/standings?format=table`, { fallback: [] }),
+                  fetchJsonWithTimeout(`${API_BASE}/leagues/${lid}/members`, {
+                    options: { headers: { Authorization: `Bearer ${token}` } },
+                    fallback: []
+                  }),
+                  fetchJsonWithTimeout(`${API_BASE}/leagues/${lid}/games`, {
+                    fallback: { upcoming: [], completed: [] }
+                  })
                 ]);
                 if (mounted) {
                   setStandings({ leagueId: String(lid), rows: Array.isArray(st) ? st : [] });
@@ -433,10 +444,10 @@ export default function StartPage() {
   if (err) return <div style={{ padding: 24, color: "crimson" }}>Fehler: {err}</div>;
 
   return (
-    <div>
+    <div className="ml-page-shell">
       <AuthNoticeBanner />
       <section className="hero-carousel" style={{ marginBottom: 24 }}>
-        {backgrounds.map((b, i) => (
+        {heroBackgrounds.map((b, i) => (
           <div key={i} className={`hero-slide ${i === index ? 'active' : ''}`} style={{ backgroundImage: `url(${b.src})` }} />
         ))}
 
@@ -494,8 +505,10 @@ export default function StartPage() {
                   onOpen={() => {
                     setLocationDropdownOpen(true);
                     setSportDropdownOpen(false);
+                    loadCitiesIfNeeded();
                   }}
                   onClose={() => setLocationDropdownOpen(false)}
+                  onLoadDistricts={loadDistrictsForCity}
                 />
               </div>
               
@@ -503,21 +516,18 @@ export default function StartPage() {
                 <div
                   role="group"
                   aria-label="Suchmodus"
-                  style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
-                    gap: 6,
-                    padding: 6,
-                    borderRadius: 14,
-                    border: '2px solid #debc7c',
-                    background: 'rgba(8,28,25,0.96)',
-                    boxShadow: '0 8px 20px rgba(0,0,0,0.28)'
-                  }}
+                  className="ml-segmented"
                 >
                   {[
                     { value: 'match', label: 'Match' },
-                    { value: 'competition', label: 'Competition' },
-                    { value: 'slot', label: 'Slot buchen' }
+                    {
+                      value: 'competition',
+                      label: FEATURES.SHOW_COMPETITIONS ? 'Competition' : 'Competition (Coming Soon)'
+                    },
+                    {
+                      value: 'slot',
+                      label: FEATURES.SHOW_BOOKINGS ? 'Slot buchen' : 'Slot buchen (Coming Soon)'
+                    }
                   ].map((opt) => {
                     const active = searchMode === opt.value;
                     return (
@@ -526,18 +536,7 @@ export default function StartPage() {
                         type="button"
                         onClick={() => setSearchMode(active ? '' : opt.value)}
                         aria-pressed={active}
-                        style={{
-                          padding: '10px 12px',
-                          borderRadius: 10,
-                          border: active ? '2px solid #debc7c' : '2px solid transparent',
-                          background: active ? '#debc7c' : 'transparent',
-                          color: active ? '#10261f' : '#debc7c',
-                          cursor: 'pointer',
-                          fontWeight: 800,
-                          fontSize: 14,
-                          letterSpacing: 0.2,
-                          transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease'
-                        }}
+                        className={`ml-segmented-option ${active ? 'ml-segmented-option--active' : ''}`}
                       >
                         {opt.label}
                       </button>
@@ -558,7 +557,7 @@ export default function StartPage() {
                     }
 
                     if (searchMode === 'competition') {
-                      navigate(`/ligen?${qp.toString()}`);
+                      navigate(`/tournaments?${qp.toString()}`);
                       return;
                     }
 
@@ -569,19 +568,8 @@ export default function StartPage() {
                     slotParams.set('time', now.toTimeString().slice(0, 5));
                     navigate(`/slots?${slotParams.toString()}`);
                   }}
-                  style={{
-                    padding: '12px 22px',
-                    borderRadius: 12,
-                    border: 'none',
-                    background: searchMode ? '#debc7c' : 'rgba(222,188,124,0.4)',
-                    color: '#10261f',
-                    cursor: searchMode ? 'pointer' : 'not-allowed',
-                    fontWeight: 800,
-                    fontSize: 15,
-                    boxShadow: '0 8px 20px rgba(0,0,0,0.28)',
-                    transition: 'transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease',
-                    width: '100%'
-                  }}
+                  className="ml-btn-gold"
+                  style={{ width: '100%' }}
                   disabled={searching || !searchMode}
                 >
                   {searching ? 'Suche…' : 'Suchen'}
@@ -609,17 +597,12 @@ export default function StartPage() {
                 to="/match-search" 
                 style={{ 
                   display: 'inline-block',
-                  padding: '12px 24px', 
-                  borderRadius: 10, 
-                  background: '#debc7c', 
-                  color: '#081c19', 
-                  fontWeight: 700, 
-                  fontSize: 14,
                   textDecoration: 'none',
-                  transition: 'all 0.2s'
+                  minWidth: 190
                 }}
+                className="ml-btn-gold"
               >
-                🎾 Match suchen
+                Match suchen
               </Link>
             </div>
           ) : (
@@ -760,19 +743,14 @@ export default function StartPage() {
               <div style={{ color: '#9db', marginBottom: 16 }}>Du bist noch in keiner Liga angemeldet.</div>
               <Link 
                 to="/leagues" 
+                className="ml-btn-gold"
                 style={{ 
                   display: 'inline-block',
-                  padding: '12px 24px', 
-                  borderRadius: 10, 
-                  background: '#debc7c', 
-                  color: '#081c19', 
-                  fontWeight: 700, 
-                  fontSize: 14,
                   textDecoration: 'none',
-                  transition: 'all 0.2s'
+                  minWidth: 190
                 }}
               >
-                🏆 Liga suchen
+                Liga suchen
               </Link>
             </div>
           ) : (
