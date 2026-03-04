@@ -20,11 +20,11 @@ function extractUserIdFromToken(token) {
   }
 }
 
-function formatShortTimestamp(value) {
+function formatShortTimestamp(value, locale = "de-DE") {
   if (!value) return "";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleString("de-DE", {
+  return date.toLocaleString(locale, {
     day: "2-digit",
     month: "2-digit",
     hour: "2-digit",
@@ -59,11 +59,11 @@ function writeCache(key, value) {
   } catch {}
 }
 
-function formatDebugTime(value) {
+function formatDebugTime(value, locale = "de-DE") {
   if (!value) return "–";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "–";
-  return date.toLocaleTimeString("de-DE", {
+  return date.toLocaleTimeString(locale, {
     hour: "2-digit",
     minute: "2-digit",
     second: "2-digit",
@@ -71,7 +71,8 @@ function formatDebugTime(value) {
 }
 
 export default function Header() {
-  const { t, toggleLang } = useLanguage();
+  const { t, toggleLang, lang } = useLanguage();
+  const uiLocale = lang === 'en' ? 'en-US' : 'de-DE';
   const navigate = useNavigate();
   const location = useLocation();
   const [open, setOpen] = useState(false);
@@ -163,6 +164,8 @@ export default function Header() {
   const token = localStorage.getItem("token");
   const myUserId = useMemo(() => extractUserIdFromToken(token), [token]);
   const isTestInstance = INSTANCE_TYPE === "test";
+  // Import FEATURES for nav gating
+  const _FEATURES = require('../config').FEATURES;
   const showProjectTasks = ["development", "dev", "local"].includes(String(INSTANCE_TYPE || "").toLowerCase());
 
   function handleLogout(e) {
@@ -586,24 +589,26 @@ export default function Header() {
           {token && (
             <>
               {showProjectTasks ? <Link to="/tasks" className="ml-nav__item" onClick={handleNavigate}>{t('nav.tasks')}</Link> : null}
-              {!isTestInstance && <Link to="/leagues" className="ml-nav__item" onClick={handleNavigate}>{t('nav.leagues')}</Link>}
-              {!isTestInstance && <Link to="/abos" className="ml-nav__item" onClick={handleNavigate}>{t('nav.subscriptions')}</Link>}
-              {!isTestInstance && <Link to="/booking" className="ml-nav__item" onClick={handleNavigate}>{t('nav.booking')}</Link>}
+              {_FEATURES.SHOW_LEAGUES && <Link to="/leagues" className="ml-nav__item" onClick={handleNavigate}>{t('nav.leagues')}</Link>}
+              <Link to="/mymatches" className="ml-nav__item" onClick={handleNavigate}>{t('nav.myMatches')}</Link>
+              {_FEATURES.SHOW_SUBSCRIPTIONS && <Link to="/abos" className="ml-nav__item" onClick={handleNavigate}>{t('nav.subscriptions')}</Link>}
+              {_FEATURES.SHOW_BOOKINGS && <Link to="/booking" className="ml-nav__item" onClick={handleNavigate}>{t('nav.booking')}</Link>}
 
-              {!isTestInstance && <Link to="/teams" className="ml-nav__item" onClick={handleNavigate}>Team Manager</Link>}
-              {!isTestInstance && <Link to="/tournaments" className="ml-nav__item" onClick={handleNavigate}>Competition Manager</Link>}
+              {_FEATURES.SHOW_TEAMS && <Link to="/teams" className="ml-nav__item" onClick={handleNavigate}>{t('nav.teamManager')}</Link>}
+              {_FEATURES.SHOW_COMPETITIONS && <Link to="/tournaments" className="ml-nav__item" onClick={handleNavigate}>{t('nav.competitionManager')}</Link>}
               {userRoles.includes('trainer') && (
                 <Link to="/training" className="ml-nav__item" onClick={handleNavigate}>{t('nav.training')}</Link>
               )}
               {userRoles.includes('club_admin') && (
-                <Link to="/clubs" className="ml-nav__item" onClick={handleNavigate}>Club Manager</Link>
+                <Link to="/clubs" className="ml-nav__item" onClick={handleNavigate}>{t('nav.clubManager')}</Link>
               )}
               {userRoles.includes('location_provider') && (
-                <Link to="/location-manager" className="ml-nav__item" onClick={handleNavigate}>Location Manager</Link>
+                <Link to="/location-manager" className="ml-nav__item" onClick={handleNavigate}>{t('nav.locationManager')}</Link>
               )}
 
-              {!isTestInstance && <Link to="/chats" className="ml-nav__item" onClick={handleNavigate}>{t('nav.chats')}</Link>}
-              {!isTestInstance && <Link to="/news" className="ml-nav__item" onClick={handleNavigate}>{t('nav.news')}</Link>}
+              {_FEATURES.SHOW_CHATS && <Link to="/chats" className="ml-nav__item" onClick={handleNavigate}>{t('nav.chats')}</Link>}
+              {_FEATURES.SHOW_NEWS && <Link to="/news" className="ml-nav__item" onClick={handleNavigate}>{t('nav.news')}</Link>}
+              {myUserId && <Link to={`/user/${myUserId}`} className="ml-nav__item" onClick={handleNavigate}>{t('nav.profile')}</Link>}
               <Link to="/tasks" className="ml-nav__item" onClick={handleNavigate}>{t('nav.tasks')}</Link>
             </>
           )}
@@ -619,9 +624,9 @@ export default function Header() {
           <button
             type="button"
             className="ml-nav__item"
-            onClick={toggleLang}
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleLang(); }}
             style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
-            title="Language"
+            title={t('lang.title')}
           >
             {t('lang.switch')}
           </button>
@@ -710,7 +715,7 @@ export default function Header() {
                                         {busy ? "…" : "Annehmen"}
                                       </button>
                                     </div>
-                                    <div className="ml-popover__itemMeta">{formatShortTimestamp(item.timestamp)}</div>
+                                    <div className="ml-popover__itemMeta">{formatShortTimestamp(item.timestamp, uiLocale)}</div>
                                     <div className="ml-popover__itemText">{truncate(details, 180)}</div>
                                   </div>
                                 </div>
@@ -771,7 +776,7 @@ export default function Header() {
                                       </div>
                                     </div>
                                     <div className="ml-popover__itemMeta">
-                                      {formatShortTimestamp(item.timestamp)}
+                                      {formatShortTimestamp(item.timestamp, uiLocale)}
                                       {item.leagueName ? ` · ${item.leagueName}` : ""}
                                     </div>
                                     <div className="ml-popover__itemText">{truncate(item.details, 180)}</div>
@@ -894,7 +899,7 @@ export default function Header() {
                                     <div className="ml-popover__itemTitle">{item.title}</div>
                                   </div>
                                   <div className="ml-popover__itemMeta">
-                                    {formatShortTimestamp(item.timestamp)}
+                                    {formatShortTimestamp(item.timestamp, uiLocale)}
                                     {item.leagueName ? ` · ${item.leagueName}` : ""}
                                     {item.sportName ? ` · ${item.sportName}` : ""}
                                   </div>
@@ -982,7 +987,7 @@ export default function Header() {
                                       <div className="ml-popover__itemTitle">{name}</div>
                                       {chat.unread ? <span className="ml-popover__pill">Neu</span> : null}
                                     </div>
-                                    <div className="ml-popover__itemMeta">{typeLabel} · {formatShortTimestamp(ts)}</div>
+                                    <div className="ml-popover__itemMeta">{typeLabel} · {formatShortTimestamp(ts, uiLocale)}</div>
                                     <div className="ml-popover__itemText">{truncate(preview, 160)}</div>
                                   </div>
                                 </div>

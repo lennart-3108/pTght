@@ -5,6 +5,7 @@ const { v4: uuidv4 } = require('uuid');
 const rulesetValidator = require('../services/rulesetValidator');
 const resultDecision = require('../services/resultDecision');
 const standingsService = require('../services/standingsService');
+const { isAuthenticated, isAdmin } = require('../middleware/auth');
 
 /**
  * POST /api/results/report/:matchId
@@ -17,12 +18,11 @@ const standingsService = require('../services/standingsService');
  *   "idempotency_key": "uuid" // Optional, for retry safety
  * }
  */
-router.post('/report/:matchId', async (req, res) => {
+router.post('/report/:matchId', isAuthenticated, async (req, res) => {
   const matchId = parseInt(req.params.matchId);
   const { result_data, reported_by, idempotency_key } = req.body;
 
-  // TODO: Get user_id from auth middleware
-  const reportedByUserId = req.user?.id || 1; // Placeholder
+  const reportedByUserId = req.user.id;
 
   try {
     // Validate input
@@ -169,12 +169,11 @@ router.post('/report/:matchId', async (req, res) => {
  * POST /api/results/:id/confirm
  * Confirm a pending result (must be opposite team from reporter)
  */
-router.post('/:id/confirm', async (req, res) => {
+router.post('/:id/confirm', isAuthenticated, async (req, res) => {
   const resultId = parseInt(req.params.id);
   const { confirmed_by } = req.body; // 'home' or 'away'
   
-  // TODO: Get user_id from auth
-  const confirmedByUserId = req.user?.id || 1;
+  const confirmedByUserId = req.user.id;
 
   try {
     const result = await db('results')
@@ -260,12 +259,11 @@ router.post('/:id/confirm', async (req, res) => {
  * POST /api/results/:id/dispute
  * Dispute a pending result
  */
-router.post('/:id/dispute', async (req, res) => {
+router.post('/:id/dispute', isAuthenticated, async (req, res) => {
   const resultId = parseInt(req.params.id);
   const { disputed_by, dispute_reason } = req.body;
   
-  // TODO: Get user_id from auth
-  const disputedByUserId = req.user?.id || 1;
+  const disputedByUserId = req.user.id;
 
   try {
     const result = await db('results')
@@ -341,12 +339,11 @@ router.post('/:id/dispute', async (req, res) => {
  * POST /api/results/:id/adjudicate
  * Admin-only: Resolve a disputed result
  */
-router.post('/:id/adjudicate', async (req, res) => {
+router.post('/:id/adjudicate', isAdmin, async (req, res) => {
   const resultId = parseInt(req.params.id);
   const { admin_decision, admin_notes, corrected_result_data } = req.body;
   
-  // TODO: Require admin auth
-  const adminUserId = req.user?.id || 1;
+  const adminUserId = req.user.id;
 
   try {
     const result = await db('results')

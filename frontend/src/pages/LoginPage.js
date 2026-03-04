@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 import AuthNoticeBanner from "../components/AuthNoticeBanner";
+import { useLanguage } from "../i18n";
 // large hero logo not currently used here
 import smallLogo from "../images/logo/matchleague_logo_4x4-removebg-preview.png";
 // dynamically load all images from the background folder
@@ -56,18 +57,19 @@ function StatNumber({ value, label }) {
 }
 
 function StatsPanel({ stats, statsLoading, statsError }) {
-  if (statsLoading && !stats) return <div style={{ padding: 16 }}>Lade Statistik…</div>;
+  const { t } = useLanguage();
+  if (statsLoading && !stats) return <div style={{ padding: 16 }}>{t('login.stats.loading')}</div>;
   if (statsError) return <div style={{ padding: 16, opacity: 0.7 }}>{statsError}</div>;
   if (!stats) return null;
   const items = [
-    { key: 'users', label: 'Nutzer', val: stats.users },
-    stats.confirmedUsers != null ? { key: 'confirmedUsers', label: 'Bestätigt', val: stats.confirmedUsers } : null,
-    { key: 'leagues', label: 'Ligen', val: stats.leagues },
-    { key: 'matches', label: 'Matches', val: stats.matches },
-    stats.teams != null ? { key: 'teams', label: 'Teams', val: stats.teams } : null,
-    stats.teamMembers != null ? { key: 'teamMembers', label: 'Team-Mitglieder', val: stats.teamMembers } : null,
-    { key: 'memberships', label: 'Liga-Mitgliedschaften', val: stats.memberships },
-    { key: 'sports', label: 'Sportarten', val: stats.sports }
+    { key: 'users', label: t('login.stats.users'), val: stats.users },
+    stats.confirmedUsers != null ? { key: 'confirmedUsers', label: t('login.stats.confirmed'), val: stats.confirmedUsers } : null,
+    { key: 'leagues', label: t('login.stats.leagues'), val: stats.leagues },
+    { key: 'matches', label: t('login.stats.matches'), val: stats.matches },
+    stats.teams != null ? { key: 'teams', label: t('login.stats.teams'), val: stats.teams } : null,
+    stats.teamMembers != null ? { key: 'teamMembers', label: t('login.stats.teamMembers'), val: stats.teamMembers } : null,
+    { key: 'memberships', label: t('login.stats.memberships'), val: stats.memberships },
+    { key: 'sports', label: t('login.stats.sports'), val: stats.sports }
   ].filter(Boolean);
   return (
     <div style={{
@@ -87,6 +89,7 @@ function StatsPanel({ stats, statsLoading, statsError }) {
 
 export default function LoginPage({ setToken, setIsAdminFlag }) {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   // Login-Form-States
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -121,7 +124,6 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
   const [showPassword, setShowPassword] = useState(false);
 
   const API = (typeof API_BASE === 'string' && API_BASE.trim()) ? API_BASE : '/api';
-  const isLocalDevHost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
 
   // Login-Handler (hier an dein Backend anpassen!)
   const handleLogin = async (e) => {
@@ -183,39 +185,11 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
       
       navigate("/");
     } catch {
-      setLoginMsg("Server nicht erreichbar.");
+      setLoginMsg(t('login.serverUnreachable'));
     }
   };
 
-  const handleDevTestLogin = async () => {
-    const devEmail = "admin@example.com";
-    const devPassword = "Arabica.2025";
-    setEmail(devEmail);
-    setPassword(devPassword);
-    setLoginMsg("");
-    try {
-      const res = await fetch(`${API}/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: devEmail, password: devPassword }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setLoginMsg(data.error || "Testuser-Login fehlgeschlagen.");
-        return;
-      }
-      localStorage.setItem("token", data.token);
-      localStorage.setItem("is_admin", data.is_admin ? "1" : "0");
-      setToken(data.token);
-      setIsAdminFlag(!!data.is_admin);
-      setLoginMsg("✅ Testuser-Login erfolgreich!");
-      sessionStorage.setItem("loginSuccessAt", new Date().toISOString());
-      sessionStorage.setItem("loginEmail", devEmail);
-      navigate("/");
-    } catch {
-      setLoginMsg("Server nicht erreichbar.");
-    }
-  };
+
 
   // Resend confirmation email handler
   const handleResendConfirmation = async () => {
@@ -229,18 +203,18 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
       });
       const data = await res.json();
       if (data.success) {
-        setResendMsg("✅ Bestätigungs-E-Mail wurde erneut versendet!");
+        setResendMsg(t('login.resend.ok'));
       } else {
         // Handle rate limiting with user-friendly message
         if (res.status === 429 || data.error?.includes('Too many') || data.retry_after) {
           const retryMinutes = data.retry_after ? Math.ceil(data.retry_after / 60) : 5;
-          setResendMsg(`⏱️ Bitte warte noch ${retryMinutes} Minuten, bevor du die E-Mail erneut anforderst.`);
+          setResendMsg(t('login.resend.wait', { minutes: retryMinutes }));
         } else {
-          setResendMsg(data.error || "Fehler beim Versenden der E-Mail.");
+          setResendMsg(data.error || t('login.resend.error'));
         }
       }
     } catch {
-      setResendMsg("Server nicht erreichbar.");
+      setResendMsg(t('login.serverUnreachable'));
     } finally {
       setResending(false);
     }
@@ -263,7 +237,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
         setResetError(data.error || "Fehler beim Versenden der E-Mail.");
       }
     } catch {
-      setResetError("Server nicht erreichbar.");
+      setResetError(t('login.serverUnreachable'));
     } finally {
       setSendingReset(false);
     }
@@ -284,12 +258,12 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
       });
       const data = await response.json();
       if (data.success) {
-        setResetMsg("✅ Passwort erfolgreich geändert!");
+        setResetMsg(t('login.password.changedOk'));
       } else {
-        setResetMsg(data.error || "Fehler beim Zurücksetzen.");
+        setResetMsg(data.error || t('login.password.resetError'));
       }
     } catch {
-      setResetMsg("Server nicht erreichbar.");
+      setResetMsg(t('login.serverUnreachable'));
     }
   };
 
@@ -405,12 +379,12 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
         }} />
 
         <div className="hero-overlay">
-          <div className="hero-inner" style={{ alignItems: 'flex-start' }}>
-            <div className="hero-stripe" style={{ marginLeft: '28%', transform: 'translateX(-50%) skewX(-25deg)' }}>
+          <div className="hero-inner">
+            <div className="hero-stripe">
               <img src={smallLogo} alt="ML" className="hero-small-logo" />
-              <h1 className="hero-title" style={{ fontWeight: 700 }}>Match League</h1>
+              <h1 className="hero-title">Match League<sup style={{ fontSize: '0.5em', marginLeft: '2px' }}>™</sup></h1>
             </div>
-            <p className="hero-sub" style={{ color: '#ffffffff', fontWeight: 700, marginLeft: '28%', transform: 'translateX(-50%)', textAlign: 'left' }}>Connect. Match. Win.</p>
+            <p className="hero-sub"><b>Connect. Match. Win.</b></p>
           </div>
         </div>
 
@@ -520,7 +494,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
           <div style={{ position: 'relative', marginBottom: 8 }}>
             <input
               type={showPassword ? "text" : "password"}
-              placeholder="Passwort"
+              placeholder={t('login.password.placeholder')}
               value={password}
               onChange={e => setPassword(e.target.value)}
               required
@@ -530,7 +504,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              title={showPassword ? "Passwort verbergen" : "Passwort anzeigen"}
+              title={showPassword ? t('login.password.hide') : t('login.password.show')}
               style={{
                 position: 'absolute',
                 right: '44px',
@@ -597,7 +571,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
                 e.target.style.transform = 'translateY(-50%) scale(1)';
                 e.target.style.boxShadow = '0 2px 8px rgba(72, 186, 170, 0.2)';
               }}
-              title="Passwort vergessen?"
+              title={t('login.reset.title')}
             >
               ?
             </button>
@@ -628,26 +602,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
           >
             Login
           </button>
-          {isLocalDevHost && (
-            <button
-              type="button"
-              onClick={handleDevTestLogin}
-              style={{
-                width: "100%",
-                marginTop: 10,
-                fontWeight: 700,
-                padding: '10px 22px',
-                borderRadius: 12,
-                border: '1px solid rgba(72, 186, 170, 0.5)',
-                background: 'rgba(72, 186, 170, 0.12)',
-                color: '#48baaa',
-                cursor: 'pointer',
-                fontSize: 14
-              }}
-            >
-              Login as testuser
-            </button>
-          )}
+
           {loginMsg && (
             <div style={{
               marginTop: 12,
@@ -687,7 +642,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
                 fontWeight: 600,
                 marginBottom: 8
               }}>
-                E-Mail noch nicht bestätigt
+                {t('login.unconfirmed.title')}
               </div>
               <div style={{ 
                 fontSize: 13, 
@@ -695,7 +650,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
                 opacity: 0.85,
                 marginBottom: 12
               }}>
-                Bitte bestätige <strong style={{ color: '#f5c542' }}>{unconfirmedEmail}</strong>
+                {t('login.unconfirmed.subtitle', { email: unconfirmedEmail })}
               </div>
               <button
                 onClick={handleResendConfirmation}
@@ -713,7 +668,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
                   transition: 'all 0.2s'
                 }}
               >
-                {resending ? 'Wird gesendet...' : 'E-Mail erneut senden'}
+                {resending ? t('login.unconfirmed.sending') : t('login.unconfirmed.resend')}
               </button>
               {resendMsg && (
                 <div style={{
@@ -739,20 +694,20 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
           style={{ marginTop: 12, width: "100%", fontWeight: 700 }}
           type="button"
         >
-          Registrieren
+          {t('login.register')}
         </button>
 
         {/* Community Statistik */}
         <div style={{ marginTop: 40, paddingTop: 32, borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-          <h3 style={{ fontWeight: 700, margin: '0 0 12px' }}>Community Statistik</h3>
+          <h3 style={{ fontWeight: 700, margin: '0 0 12px' }}>{t('login.communityStatsTitle')}</h3>
           <p style={{ marginTop: 0, lineHeight: 1.4, opacity: 0.85, fontSize: 14 }}>
-            Ein schneller Überblick über die Aktivität auf der Plattform – wächst jeden Tag.
+            {t('login.tagline')}
           </p>
           <div style={{ border: '1px solid rgba(255,255,255,0.08)', borderRadius: 16, background: 'rgba(255,255,255,0.03)', backdropFilter: 'blur(4px)', overflow: 'hidden' }}>
             <StatsPanel stats={stats} statsLoading={statsLoading} statsError={statsError} />
           </div>
           {stats && stats.generatedAt && (
-            <div style={{ marginTop: 8, fontSize: 11, opacity: 0.5 }}>Aktualisiert: {new Date(stats.generatedAt).toLocaleTimeString()}</div>
+            <div style={{ marginTop: 8, fontSize: 11, opacity: 0.5 }}>{t('login.updatedAt', { time: new Date(stats.generatedAt).toLocaleTimeString() })}</div>
           )}
         </div>
         </div>
@@ -850,7 +805,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
                   margin: '0 0 12px',
                   textAlign: 'center'
                 }}>
-                  Passwort vergessen?
+                  {t('login.reset.title')}
                 </h3>
 
                 {/* Message */}
@@ -862,7 +817,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
                   margin: '0 0 24px',
                   textAlign: 'center'
                 }}>
-                  Möchtest du einen Link zum Zurücksetzen deines Passworts per E-Mail an <strong style={{ color: '#48baaa' }}>{email || 'deine E-Mail-Adresse'}</strong> erhalten?
+                  {t('login.reset.msg1')} <strong style={{ color: '#48baaa' }}>{email || t('login.reset.yourEmail')}</strong> {t('login.reset.msg2')}
                 </p>
 
                 {resetError && (
@@ -908,7 +863,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
                       e.target.style.borderColor = 'rgba(72, 186, 170, 0.3)';
                     }}
                   >
-                    Abbrechen
+                    {t('login.reset.cancel')}
                   </button>
                   <button
                     onClick={handleSendPasswordReset}
@@ -939,7 +894,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
                       }
                     }}
                   >
-                    {sendingReset ? 'Wird gesendet...' : 'Ja, E-Mail senden'}
+                    {sendingReset ? t('login.reset.sending') : t('login.reset.send')}
                   </button>
                 </div>
 
@@ -951,7 +906,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
                     margin: '12px 0 0',
                     textAlign: 'center'
                   }}>
-                    Bitte gib zuerst deine E-Mail-Adresse im Login-Formular ein.
+                    {t('login.reset.enterEmailFirst')}
                   </p>
                 )}
               </>
@@ -981,7 +936,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
                   margin: '0 0 12px',
                   textAlign: 'center'
                 }}>
-                  E-Mail versendet!
+                  {t('login.reset.sentTitle')}
                 </h3>
 
                 {/* Success message */}
@@ -993,7 +948,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
                   margin: '0 0 24px',
                   textAlign: 'center'
                 }}>
-                  Wir haben dir einen Link zum Zurücksetzen deines Passworts an <strong style={{ color: '#22c55e' }}>{email}</strong> gesendet. Bitte überprüfe dein Postfach.
+                  {t('login.reset.sentMsg1')} <strong style={{ color: '#22c55e' }}>{email}</strong> {t('login.reset.sentMsg2')}
                 </p>
 
                 <button
@@ -1014,7 +969,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
                     transition: 'all 0.2s'
                   }}
                 >
-                  Schließen
+                  {t('login.reset.close')}
                 </button>
               </>
             )}

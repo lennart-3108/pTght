@@ -16,13 +16,18 @@ export default function WelcomePage({ setToken, setIsAdminFlag }) {
   const oneTime = q.get("one_time");
   const isAdmin = q.get("is_admin") === "1";
   const [joinedAnyLeague, setJoinedAnyLeague] = React.useState(null); // null=unknown, true/false known
-  const navigate = require('react-router-dom').useNavigate();
+  const navigate = useNavigate();
+  const [authBusy, setAuthBusy] = React.useState(false);
+  const [authReady, setAuthReady] = React.useState(() => {
+    try { return !!localStorage.getItem('token'); } catch { return false; }
+  });
 
   React.useEffect(() => {
     // If an opaque one_time token was provided, exchange it for a JWT (server-side single-use)
     if (oneTime) {
       try {
         (async () => {
+          setAuthBusy(true);
           const res = await fetch(`${API_BASE}/auth/exchange-one-time`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ one_time: oneTime })
           });
@@ -33,11 +38,14 @@ export default function WelcomePage({ setToken, setIsAdminFlag }) {
               localStorage.setItem('is_admin', data.is_admin ? '1' : '0');
               setToken && setToken(data.token);
               setIsAdminFlag && setIsAdminFlag(!!data.is_admin);
+              setAuthReady(true);
             }
           }
+          setAuthBusy(false);
         })();
       } catch (e) {
         // ignore exchange errors; user can still use login
+        setAuthBusy(false);
       }
     } else if (token && setToken) {
       try {
@@ -45,6 +53,7 @@ export default function WelcomePage({ setToken, setIsAdminFlag }) {
         localStorage.setItem('is_admin', isAdmin ? '1' : '0');
         setToken(token);
         setIsAdminFlag && setIsAdminFlag(!!isAdmin);
+        setAuthReady(true);
       } catch (e) {
         // ignore storage errors
       }
@@ -75,8 +84,43 @@ export default function WelcomePage({ setToken, setIsAdminFlag }) {
     })();
   }, []); // run once
 
-  const handleContinue = () => {
-    // If token was provided assume logged-in state; go to start
+  const ensureAuth = async () => {
+    try {
+      const has = !!localStorage.getItem('token');
+      if (has) { setAuthReady(true); return true; }
+    } catch {}
+
+    if (!oneTime) return false;
+    try {
+      setAuthBusy(true);
+      const res = await fetch(`${API_BASE}/auth/exchange-one-time`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ one_time: oneTime }),
+      });
+      if (!res.ok) return false;
+      const data = await res.json().catch(() => ({}));
+      if (!data.token) return false;
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('is_admin', data.is_admin ? '1' : '0');
+      setToken && setToken(data.token);
+      setIsAdminFlag && setIsAdminFlag(!!data.is_admin);
+      setAuthReady(true);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const handleContinue = async () => {
+    const ok = await ensureAuth();
+    if (!ok) {
+      // fallback: send user to login instead of a protected page that bounces around
+      navigate('/login');
+      return;
+    }
     navigate('/');
   };
 
@@ -166,10 +210,13 @@ export default function WelcomePage({ setToken, setIsAdminFlag }) {
                 style={{ 
                   padding: '12px 32px', 
                   fontSize: 16, 
-                  fontWeight: 700 
+                  fontWeight: 700,
+                  opacity: authBusy ? 0.7 : 1,
+                  cursor: authBusy ? 'not-allowed' : 'pointer'
                 }}
+                disabled={authBusy || !authReady && !!oneTime}
               >
-                Los geht's
+                {authBusy ? 'Lädt…' : "Los geht's"}
               </button>
             </div>
           </div>

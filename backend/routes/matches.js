@@ -173,6 +173,80 @@ module.exports = function matchesRoutes({ db }) {
     return fetchMessageById(k, newId);
   }
 
+  // ── Bot-Logik ────────────────────────────────────────────────────────────
+
+  function getBotUserId() {
+    const id = Number(process.env.BOT_USER_ID);
+    return Number.isFinite(id) && id > 0 ? id : null;
+  }
+
+  /** Antwortet automatisch mit einer Chat-Nachricht als Bot */
+  async function maybeBotChatReply(k, match, senderUserId, messageText) {
+    const botId = getBotUserId();
+    if (!botId) return;
+    // Bot muss Teilnehmer sein, Absender darf NICHT der Bot sein
+    const botIsParticipant = (Number(match.home_user_id) === botId || Number(match.away_user_id) === botId);
+    if (!botIsParticipant) return;
+    if (Number(senderUserId) === botId) return;
+
+    const lower = (messageText || '').trim().toLowerCase();
+    if (lower === 'hey') {
+      await k('match_messages').insert({
+        match_id:       match.id,
+        body:           'hey lass uns spielen',
+        sender_user_id: botId,
+        sender_team_id: null,
+        created_at:     new Date().toISOString(),
+      }).catch(() => {});
+    }
+  }
+
+  /** Nimmt einen Terminvorschlag automatisch an, wenn Stunde == 18 und Empfänger der Bot ist */
+  async function maybeBotAcceptProposal(k, match, proposalId, recipientUserId, startsAt) {
+    const botId = getBotUserId();
+    if (!botId) return;
+    if (Number(recipientUserId) !== botId) return;
+    if (!startsAt) return;
+
+    // Stunde aus ISO-String extrahieren
+    const hour = new Date(startsAt).getHours();
+    if (hour !== 18) return;
+
+    // Proposal akzeptieren
+    await k('match_schedule_proposals')
+      .where({ id: proposalId })
+      .update({ status: 'accepted', responded_at: new Date().toISOString() })
+      .catch(() => {});
+
+    // Match-Kickoff setzen
+    await k('matches').where({ id: match.id })
+      .update({ kickoff_at: startsAt, status: 'scheduled' })
+      .catch(async () => {
+        await k('matches').where({ id: match.id }).update({ kickoff_at: startsAt }).catch(() => {});
+      });
+
+    // Action-Message
+    await insertActionMessage(k, {
+      matchId:      match.id,
+      senderUserId: botId,
+      senderTeamId: null,
+      action:       'schedule_accepted',
+      body:         `📅 Terminvorschlag angenommen: ${formatStartsAt(startsAt)}`,
+      data:         { proposalId, startsAt },
+    }).catch(() => {});
+
+    // Chat-Nachricht
+    await k('match_messages').insert({
+      match_id:       match.id,
+      body:           '18 uhr passt',
+      sender_user_id: botId,
+      sender_team_id: null,
+      created_at:     new Date().toISOString(),
+    }).catch(() => {});
+  }
+
+  // ── Ende Bot-Logik ───────────────────────────────────────────────────────
+
   function buildUserDisplayExpression(usersInfo, alias) {
     if (!usersInfo) usersInfo = {};
     const hasFirst = Object.prototype.hasOwnProperty.call(usersInfo, 'firstname');
@@ -1478,6 +1552,9 @@ module.exports = function matchesRoutes({ db }) {
         data: { proposalId: newId, optionId, startsAt },
       });
 
+      // Bot nimmt 18-Uhr-Vorschlag automatisch an
+      await maybeBotAcceptProposal(k, match, newId, recipientUserId, startsAt).catch(() => {});
+
       return res.status(201).json({ ok: true, id: newId });
     } catch (e) {
       console.error('Send proposal failed', e && (e.stack || e.message || e));
@@ -1782,6 +1859,10 @@ module.exports = function matchesRoutes({ db }) {
       };
       const inserted = await k('match_messages').insert(insertRec);
       const newId = Array.isArray(inserted) ? inserted[0] : inserted;
+
+      // Bot-Auto-Reply prüfen (fire-and-forget, kein await nötig für Response)
+      maybeBotChatReply(k, match, Number(req.user.id), trimmed).catch(() => {});
+
       const row = await fetchMessageById(k, newId);
       const payload = row ? {
         id: row.id,

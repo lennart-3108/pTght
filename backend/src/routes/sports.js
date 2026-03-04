@@ -68,11 +68,13 @@ module.exports = function sportsRoutes(ctx) {
       SELECT 
         s.id, 
         s.name,
+        s.name_en,
         s.category_id,
         s.parent_sport_id,
         s.variant_type,
         s.type,
-        sc.name as category_name
+        sc.name as category_name,
+        sc.name_en as category_name_en
       FROM sports s
       LEFT JOIN sport_categories sc ON s.category_id = sc.id
       WHERE s.published = 1
@@ -91,6 +93,7 @@ module.exports = function sportsRoutes(ctx) {
       SELECT 
         s.id, 
         s.name,
+        s.name_en,
         s.type,
         s.category,
         s.parent_id,
@@ -99,6 +102,7 @@ module.exports = function sportsRoutes(ctx) {
         s.category_id,
         sc.id as cat_id,
         sc.name as cat_name,
+        sc.name_en as cat_name_en,
         sc.slug as cat_slug,
         sc.name as category_name,
         sc.slug as category_slug,
@@ -128,6 +132,7 @@ module.exports = function sportsRoutes(ctx) {
         // Use category from sport_categories table if available
         const catId = sport.cat_id || 'uncategorized';
         const catName = sport.cat_name || 'Sonstige';
+        const catNameEn = sport.cat_name_en || catName;
         const catSlug = sport.cat_slug || 'other';
         const catIcon = sport.cat_icon || '🏆';
         const catSort = sport.cat_sort || 99;
@@ -136,6 +141,7 @@ module.exports = function sportsRoutes(ctx) {
           categoryMap[catId] = {
             id: catId,
             name: catName,
+            name_en: catNameEn,
             slug: catSlug,
             icon: catIcon,
             sort_order: catSort,
@@ -151,6 +157,7 @@ module.exports = function sportsRoutes(ctx) {
           categoryMap[catId].sports.push({
             id: sport.id,
             name: sport.name,
+            name_en: sport.name_en || sport.name,
             type: sport.type,
             category: sport.category,
             team_size: sport.team_size,
@@ -158,6 +165,7 @@ module.exports = function sportsRoutes(ctx) {
             variants: variants.map(v => ({
               id: v.id,
               name: v.name,
+              name_en: v.name_en || v.name,
               type: v.type,
               category: v.category
             }))
@@ -177,7 +185,7 @@ module.exports = function sportsRoutes(ctx) {
   // Einzelne Sportart
   router.get("/:id", (req, res) => {
     const id = Number(req.params.id);
-    db.get(`SELECT id, name FROM sports WHERE id = ? AND published = 1`, [id], (err, row) => {
+    db.get(`SELECT id, name, name_en FROM sports WHERE id = ? AND published = 1`, [id], (err, row) => {
       if (err) return res.status(500).json({ error: "Datenbankfehler" });
       if (!row) return res.status(404).json({ error: "Nicht gefunden" });
       res.json(row);

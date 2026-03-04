@@ -286,15 +286,22 @@ module.exports = function meRoutes({ db }) {
       const tsSelect = tsCol ? k.raw(`g.${tsCol} as kickoff_at`) : k.raw("NULL as kickoff_at");
 
       const uid = req.user.id;
+
+      // Also check match_participants table for participant-based matches
+      const hasParticipants = await tableExists(k, "match_participants");
+
       const all = await k({ g: table })
         .leftJoin({ l: "leagues" }, "l.id", "g.league_id")
         .leftJoin({ s: "sports" }, "s.id", "l.sport_id")
         .leftJoin({ c: "cities" }, "c.id", "l.city_id")
         .where((qb) => {
-          // Wenn weder home noch away-Spalte existiert, keine Filter -> leere Liste
           let hasAny = false;
           if (cols.home) { qb.orWhere(`g.${cols.home}`, uid); hasAny = true; }
           if (cols.away) { qb.orWhere(`g.${cols.away}`, uid); hasAny = true; }
+          if (hasParticipants) {
+            qb.orWhereIn("g.id", k("match_participants").select("match_id").where("user_id", uid));
+            hasAny = true;
+          }
           if (!hasAny) qb.whereRaw("1 = 0");
         })
         .modify((qb) => { if (tsCol) qb.orderBy(`g.${tsCol}`, "desc"); else qb.orderBy("g.id", "desc"); })
@@ -307,17 +314,18 @@ module.exports = function meRoutes({ db }) {
           { sport: "s.name" },
           selectHome,
           selectAway,
-          // include ids when present to allow FE to calculate W/L/D
           ...(cols.home === "home_user_id" ? [k.raw("g.home_user_id as home_user_id")] : [k.raw("NULL as home_user_id")]),
           ...(cols.away === "away_user_id" ? [k.raw("g.away_user_id as away_user_id")] : [k.raw("NULL as away_user_id")]),
           "g.home_score",
-          "g.away_score"
-        );
+          "g.away_score",
+          ...(Object.prototype.hasOwnProperty.call(ci, "status") ? ["g.status"] : [])
+        )
+        .groupBy("g.id");
 
-      // Mutual exclusive bucketing by score presence only
+      // Bucketing: completed (score set + confirmed), upcoming (everything else incl. result_pending)
       const withTs = (all || []).map(r => ({ ...r, ts: r.kickoff_at ? (Date.parse(r.kickoff_at) || 0) : 0 }));
-      const completed = withTs.filter(r => (r.home_score != null && r.away_score != null)).sort((a,b) => (b.ts - a.ts));
-      const upcoming = withTs.filter(r => (r.home_score == null && r.away_score == null)).sort((a,b) => (a.ts - b.ts));
+      const completed = withTs.filter(r => r.status === 'completed' || (r.home_score != null && r.away_score != null && r.status !== 'result_pending')).sort((a,b) => (b.ts - a.ts));
+      const upcoming = withTs.filter(r => !(r.status === 'completed' || (r.home_score != null && r.away_score != null && r.status !== 'result_pending'))).sort((a,b) => (a.ts - b.ts));
       return res.json({ upcoming, completed });
     } catch (e) {
       console.error("/me/games failed:", {

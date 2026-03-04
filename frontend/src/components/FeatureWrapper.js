@@ -64,3 +64,25 @@ export function VenuesFeature({ children }) {
     </FeatureWrapper>
   );
 }
+
+export function SubscriptionsFeature({ children }) {
+  return (
+    <FeatureWrapper 
+      feature={FEATURES.SHOW_LEAGUES} 
+      message="Abos & Mitgliedschaften – Coming Soon"
+    >
+      {children}
+    </FeatureWrapper>
+  );
+}
+
+export function TeamsFeature({ children }) {
+  return (
+    <FeatureWrapper 
+      feature={FEATURES.SHOW_LEAGUES} 
+      message="Teams & Ligen – Coming Soon"
+    >
+      {children}
+    </FeatureWrapper>
+  );
+}

@@ -50,7 +50,7 @@ import { LanguageProvider } from "./i18n";
 // Production Landing Page & Feature Flags
 import ProductionWorkInProgress from "./pages/ProductionWorkInProgress";
 import { FEATURES, INSTANCE_TYPE } from "./config";
-import { BookingsFeature, CompetitionsFeature } from "./components/FeatureWrapper";
+import { BookingsFeature, CompetitionsFeature, LeaguesFeature, TeamsFeature, SubscriptionsFeature, VenuesFeature } from "./components/FeatureWrapper";
 
 // Simpler Adminerkennung (z.B. im Token, sonst im localStorage)
 function isAdmin() {
@@ -231,9 +231,9 @@ function App() {
               />
             ))}
 
-          {/* Leagues-Übersicht (public) */}
-          <Route path="/leagues" element={<LeaguesPage />} />
-          <Route path="/ligen" element={<LeaguesPage />} />
+          {/* Leagues-Übersicht (public, Coming Soon in test) */}
+          <Route path="/leagues" element={<LeaguesFeature><LeaguesPage /></LeaguesFeature>} />
+          <Route path="/ligen" element={<LeaguesFeature><LeaguesPage /></LeaguesFeature>} />
 
           {/* Rechtstexte (public) */}
           <Route path="/impressum" element={<ImpressumPage />} />
@@ -242,8 +242,8 @@ function App() {
           <Route path="/nutzungsbedingungen" element={<AGBPage />} />
           <Route path="/meldung-rechtswidriger-inhalte" element={<ReportIllegalContentPage />} />
 
-          {/* Subscriptions/Abos (public) */}
-          <Route path="/abos" element={<SubscriptionsPage />} />
+          {/* Subscriptions/Abos (public, Coming Soon in test) */}
+          <Route path="/abos" element={<SubscriptionsFeature><SubscriptionsPage /></SubscriptionsFeature>} />
 
           {/* Tasks Board (nur lokal/dev) */}
           {showProjectTasks ? <Route path="/tasks" element={<TasksBoardPage />} /> : null}
@@ -259,11 +259,11 @@ function App() {
 
           {/* Teams */}
 
-          {/* League-Detail (public) */}
-          <Route path="/league/:leagueId" element={<LeagueDetailPage />} />
-          <Route path="/teams" element={<TeamsPage />} />
-          <Route path="/teams/create" element={<CreateTeamPage />} />
-          <Route path="/teams/:id" element={<TeamDetailPage />} />
+          {/* League-Detail (public, Coming Soon in test) */}
+          <Route path="/league/:leagueId" element={<LeaguesFeature><LeagueDetailPage /></LeaguesFeature>} />
+          <Route path="/teams" element={<TeamsFeature><TeamsPage /></TeamsFeature>} />
+          <Route path="/teams/create" element={<TeamsFeature><CreateTeamPage /></TeamsFeature>} />
+          <Route path="/teams/:id" element={<TeamsFeature><TeamDetailPage /></TeamsFeature>} />
 
           {/* Städte */}
           <Route
@@ -456,42 +456,42 @@ function App() {
             }
           />
 
-          {/* Location Manager */}
+          {/* Location Manager (Coming Soon in test) */}
           <Route
             path="/location-manager"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
-                <LocationManagerPage />
+                <VenuesFeature><LocationManagerPage /></VenuesFeature>
               </ProtectedRoute>
             }
           />
 
-          {/* Booking Reporting */}
+          {/* Booking Reporting (Coming Soon in test) */}
           <Route
             path="/booking-reporting"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
-                <BookingReportingPage />
+                <VenuesFeature><BookingReportingPage /></VenuesFeature>
               </ProtectedRoute>
             }
           />
 
-          {/* Location Details */}
+          {/* Location Details (Coming Soon in test) */}
           <Route
             path="/location/:locationId"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
-                <LocationDetailsPage />
+                <VenuesFeature><LocationDetailsPage /></VenuesFeature>
               </ProtectedRoute>
             }
           />
 
-          {/* Asset Configurator */}
+          {/* Asset Configurator (Coming Soon in test) */}
           <Route
             path="/location/:locationId/asset/:assetId/configure"
             element={
               <ProtectedRoute token={token} setToken={setToken}>
-                <AssetConfiguratorPage />
+                <VenuesFeature><AssetConfiguratorPage /></VenuesFeature>
               </ProtectedRoute>
             }
           />

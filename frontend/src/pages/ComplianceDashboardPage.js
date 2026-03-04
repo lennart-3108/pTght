@@ -129,7 +129,7 @@ export default function ComplianceDashboardPage() {
   }
 
   const openTasks = useMemo(
-    () => tasks.filter((task) => task && task.status !== 'done').slice(0, 20),
+    () => tasks.filter((task) => task && task.status !== 'done' && (task.assignee === 'Compliance' || (task.title && task.title.startsWith('Compliance:')))).slice(0, 20),
     [tasks]
   );
 

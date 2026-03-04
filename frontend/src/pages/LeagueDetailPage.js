@@ -3,7 +3,9 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { API_BASE, fetchWithTimeout } from "../config";
 import { handleInvalidToken } from "../utils/auth";
 import Avatar from "../components/Avatar";
+import { formatPlayerName } from "../utils/nameFormat";
 import { useResponsive } from "../hooks/useResponsive";
+import { useLanguage } from "../i18n";
 
 // Import sport background images
 function importAllSportImages(r) {
@@ -21,6 +23,7 @@ const sportBackgrounds = importAllSportImages(
 export default function LeagueDetailPage() {
   const { leagueId } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   
   // Dynamic responsive hook
   const isMobile = useResponsive(768);
@@ -333,12 +336,12 @@ export default function LeagueDetailPage() {
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
 
-      const baseMsg = j.joined ? "✅ Beigetreten." : (j.message || "Bereits Mitglied");
+      const baseMsg = j.joined ? t('league.join.ok') : (j.message || t('league.join.alreadyMember'));
       let extrasMsg = "";
-      if (j.matchAction === "paired") extrasMsg = " Ein Match wurde dir direkt zugewiesen.";
-      else if (j.matchAction === "created") extrasMsg = " Ein offenes Match wurde für dich erstellt.";
-      else if (j.matchAction === "existing") extrasMsg = " Du hattest bereits ein offenes Match.";
-      else if (j.matchAction === "error") extrasMsg = ` Match-Zuordnung fehlgeschlagen: ${j.matchError || "unbekannter Fehler"}.`;
+      if (j.matchAction === "paired") extrasMsg = ` ${t('league.join.paired')}`;
+      else if (j.matchAction === "created") extrasMsg = ` ${t('league.join.created')}`;
+      else if (j.matchAction === "existing") extrasMsg = ` ${t('league.join.existing')}`;
+      else if (j.matchAction === "error") extrasMsg = ` ${t('league.join.error', { error: j.matchError || 'unknown' })}`;
       setJoinMsg(`${baseMsg}${extrasMsg}`.trim());
 
       if (j.match && j.match.id) {
@@ -369,10 +372,10 @@ export default function LeagueDetailPage() {
           const result = await runMatchSearch({ auto: true });
           if (result && result.action) {
             let autoMsg = "";
-            if (result.action === "joined") autoMsg = " Automatische Matchsuche: Du wurdest einem offenen Match hinzugefügt.";
-            else if (result.action === "created") autoMsg = " Automatische Matchsuche: Offenes Match erstellt.";
-            else if (result.action === "paired") autoMsg = " Automatische Matchsuche: Gegner gefunden.";
-            else if (result.action === "skipped") autoMsg = " Automatische Matchsuche: Bereits ein offenes Match vorhanden.";
+            if (result.action === "joined") autoMsg = ` ${t('league.join.auto.joined')}`;
+            else if (result.action === "created") autoMsg = ` ${t('league.join.auto.created')}`;
+            else if (result.action === "paired") autoMsg = ` ${t('league.join.auto.paired')}`;
+            else if (result.action === "skipped") autoMsg = ` ${t('league.join.auto.skipped')}`;
             if (autoMsg) setJoinMsg(prev => `${prev}${autoMsg}`.trim());
           }
           extrasReloaded = true;
@@ -489,8 +492,8 @@ export default function LeagueDetailPage() {
   async function createMatch(e) {
     e && e.preventDefault();
     try {
-      if (!opponentId) throw new Error("Bitte einen Gegner wählen.");
-      if (!kickoffLocal) throw new Error("Bitte Datum/Zeit wählen.");
+      if (!opponentId) throw new Error(t('league.pickOpponent'));
+      if (!kickoffLocal) throw new Error(t('league.pickDateTime'));
       const token = localStorage.getItem("token");
       const iso = new Date(kickoffLocal).toISOString();
       const r = await fetch(`${API_BASE}/leagues/${leagueId}/matches`, {
@@ -510,16 +513,16 @@ export default function LeagueDetailPage() {
       // Wenn ID geliefert wird, navigieren
       if (j && j.id) navigate(`/matches/${j.id}`);
     } catch (e) {
-      alert(`Match erstellen fehlgeschlagen: ${e.message || e}`);
+      alert(t('league.createMatchFailed', { error: (e.message || e) }));
     }
   }
 
-  if (loading) return <div style={{ padding: 16 }}>Lade Liga ...</div>;
+  if (loading) return <div style={{ padding: 16 }}>{t('league.loading')}</div>;
   if (err) {
     if (handleInvalidToken(err, navigate)) return null;
-    return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+    return <div style={{ padding: 16, color: "crimson" }}>{t('match.errorPrefix')}: {err}</div>;
   }
-  if (!league) return <div style={{ padding: 16 }}>Keine Daten.</div>;
+  if (!league) return <div style={{ padding: 16 }}>{t('league.noData')}</div>;
 
   // Mobile responsive styles (now using dynamic hook)
   const wrap = { 
@@ -637,7 +640,7 @@ export default function LeagueDetailPage() {
         }}>
           <div>
             <div style={{ fontSize: isMobile ? 11 : 12, color: '#9ab', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: 6 }}>
-              Tabellenführer
+              {t('league.leader')}
             </div>
             {standingsWithMembers && standingsWithMembers.length > 0 ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -647,12 +650,12 @@ export default function LeagueDetailPage() {
                     {standingsWithMembers[0].username || 'N/A'}
                   </div>
                   <div style={{ fontSize: isMobile ? 11 : 12, color: '#9ab' }}>
-                    {standingsWithMembers[0].points || 0} Punkte · {standingsWithMembers[0].played || 0} Spiele
+                    {standingsWithMembers[0].points || 0} {t('league.points')} · {standingsWithMembers[0].played || 0} {t('league.games')}
                   </div>
                 </div>
               </div>
             ) : (
-              <div style={{ color: '#7a9', fontSize: isMobile ? 13 : 14 }}>Noch keine Daten</div>
+              <div style={{ color: '#7a9', fontSize: isMobile ? 13 : 14 }}>{t('league.noDataYet')}</div>
             )}
           </div>
           <div>
@@ -670,14 +673,14 @@ export default function LeagueDetailPage() {
                         {topScorer.username || 'N/A'}
                       </div>
                       <div style={{ fontSize: isMobile ? 11 : 12, color: '#9ab' }}>
-                        {topScorer.goals_for || 0} Tore
+                        {topScorer.goals_for || 0} {t('league.goals')}
                       </div>
                     </div>
                   </div>
                 );
               })()
             ) : (
-              <div style={{ color: '#7a9', fontSize: isMobile ? 13 : 14 }}>Noch keine Daten</div>
+              <div style={{ color: '#7a9', fontSize: isMobile ? 13 : 14 }}>{t('league.noDataYet')}</div>
             )}
           </div>
         </div>
@@ -697,49 +700,49 @@ export default function LeagueDetailPage() {
               try {
                 setMatchSearching(true);
                 const result = await runMatchSearch({ auto: false });
-                if (result?.action === 'joined') alert('Match gefunden und beigetreten');
-                else if (result?.action === 'created') alert('Offenes Match erstellt');
-                else if (result?.action === 'paired') alert('Gegner ohne Wochen-Spiel gefunden. Vorschlag erstellt.');
-                else if (result?.action === 'skipped') alert('Du hast bereits ein offenes Match.');
+                if (result?.action === 'joined') alert(t('league.search.result.joined'));
+                else if (result?.action === 'created') alert(t('league.search.result.created'));
+                else if (result?.action === 'paired') alert(t('league.search.result.paired'));
+                else if (result?.action === 'skipped') alert(t('league.search.result.skipped'));
               } catch (e) {
-                alert(`Match-Suche fehlgeschlagen: ${e.message || e}`);
+                alert(t('league.search.failed', { error: (e.message || e) }));
               } finally {
                 setMatchSearching(false);
               }
             }}
             disabled={!token || matchSearching}
           >
-            {matchSearching ? 'Suchen...' : 'Match suchen'}
+            {matchSearching ? t('league.searching') : t('league.searchMatch')}
           </button>
         </div>
       )}
 
       {amMember && myOpenMatch && (
         <div style={{ marginTop: 12 }}>
-          Du hast bereits ein offenes Match.{' '}
-          <Link to={`/matches/${myOpenMatch.id}`}>Zum Match</Link>
+          {t('league.openMatch.notice')}{' '}
+          <Link to={`/matches/${myOpenMatch.id}`}>{t('league.openMatch.toMatch')}</Link>
         </div>
       )}
 
       {amMember && !myOpenMatch && hasWeeklyMatch && (
         <div style={{ marginTop: 12 }}>
-          Du hattest diese Woche bereits ein Spiel. Die Matchsuche ist nächste Woche wieder verfügbar.
+          {t('league.weeklyLimit')}
         </div>
       )}
 
       {loadingExtras ? (
-        <div style={{ ...card, ...pad, marginTop: 16 }}>Lade zusätzliche Daten...</div>
+        <div style={{ ...card, ...pad, marginTop: 16 }}>{t('league.loadingExtra')}</div>
       ) : (
         <>
           {/* Mitglieder */}
           <div style={{ ...card, marginTop: 16 }}>
             <div style={{ ...pad, paddingBottom: 8 }}>
-              <div style={{ fontSize: 18, fontWeight: 700 }}>Tabelle</div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{t('league.table.title')}</div>
               <div style={{ marginTop: 8 }}>
                 <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  Saison:
+                  {t('league.table.season')}
                   <select value={selectedSeasonId} onChange={(e) => setSelectedSeasonId(e.target.value)}>
-                    <option value="current">Aktuelle Saison</option>
+                    <option value="current">{t('league.table.currentSeason')}</option>
                     {seasons.map(se => <option key={se.id} value={se.id}>{se.name}</option>)}
                     <option value="overall">Overall</option>
                   </select>
@@ -748,22 +751,22 @@ export default function LeagueDetailPage() {
             </div>
             <div style={{ ...pad, paddingTop: 8 }}>
               {standingsWithMembers.length === 0 ? (
-                <div style={small}>Keine Einträge.</div>
+                <div style={small}>{t('league.table.noEntries')}</div>
               ) : (
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                       <tr style={{ textAlign: 'left', borderBottom: '2px solid #234' }}>
-                        <th style={{ padding: '8px 6px' }}>Platz</th>
-                        <th style={{ padding: '8px 6px' }}>Team/Spieler</th>
-                        <th style={{ padding: '8px 6px' }}>Sp</th>
-                        <th style={{ padding: '8px 6px' }}>S</th>
-                        <th style={{ padding: '8px 6px' }}>U</th>
-                        <th style={{ padding: '8px 6px' }}>N</th>
-                        <th style={{ padding: '8px 6px' }}>Tore</th>
-                        <th style={{ padding: '8px 6px' }}>Diff</th>
-                        <th style={{ padding: '8px 6px' }}>Pkt</th>
-                        <th style={{ padding: '8px 6px' }}>Form</th>
+                        <th style={{ padding: '8px 6px' }}>{t('league.table.place')}</th>
+                        <th style={{ padding: '8px 6px' }}>{t('league.table.teamPlayer')}</th>
+                        <th style={{ padding: '8px 6px' }}>{t('league.table.played')}</th>
+                        <th style={{ padding: '8px 6px' }}>{t('league.table.won')}</th>
+                        <th style={{ padding: '8px 6px' }}>{t('league.table.draw')}</th>
+                        <th style={{ padding: '8px 6px' }}>{t('league.table.lost')}</th>
+                        <th style={{ padding: '8px 6px' }}>{t('league.table.goals')}</th>
+                        <th style={{ padding: '8px 6px' }}>{t('league.table.diff')}</th>
+                        <th style={{ padding: '8px 6px' }}>{t('league.table.points')}</th>
+                        <th style={{ padding: '8px 6px' }}>{t('league.table.form')}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -784,7 +787,7 @@ export default function LeagueDetailPage() {
                               return uid ? (
                                 <span style={{ display: 'inline-flex', alignItems: 'center' }}>
                                   {avatar}
-                                  <Link to={`/user/${uid}`} style={{ color: '#cfe', textDecoration: 'none' }} title="Profil öffnen">
+                                  <Link to={`/user/${uid}`} style={{ color: '#cfe', textDecoration: 'none' }} title={t('league.openProfile')}>
                                     {display}
                                   </Link>
                                   <span aria-hidden style={{ marginLeft: 6, opacity: 0.7 }}>↗︎</span>
@@ -835,7 +838,7 @@ export default function LeagueDetailPage() {
               </div>
               <div style={{ ...pad, paddingTop: 8 }}>
                 {games.upcoming.length === 0 ? (
-                  <div style={small}>Keine kommenden Spiele.</div>
+                  <div style={small}>{t('league.noUpcoming')}</div>
                 ) : (
                   <div style={{ display: 'grid', gap: 8 }}>
                     {games.upcoming.map(g => {
@@ -854,13 +857,13 @@ export default function LeagueDetailPage() {
                           <div className="ml-match__side">
                             {hId ? (
                               <Link to={`/user/${hId}`} style={{ display: 'contents' }}>
-                                <Avatar userId={hId} name={g.home} size={44} title={g.home} />
-                                <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.home}</span>
+                                <Avatar userId={hId} name={formatPlayerName(g.home)} size={44} title={g.home} />
+                                <span style={{ color: '#cfe', textDecoration: 'none' }}>{formatPlayerName(g.home)}</span>
                               </Link>
                             ) : (
                               <>
-                                <Avatar userId={hId} name={g.home} size={44} />
-                                <span>{g.home}</span>
+                                <Avatar userId={hId} name={formatPlayerName(g.home)} size={44} />
+                                <span>{formatPlayerName(g.home)}</span>
                               </>
                             )}
                           </div>
@@ -868,13 +871,13 @@ export default function LeagueDetailPage() {
                           <div className="ml-match__side" style={{ justifyContent: 'flex-end' }}>
                             {aId ? (
                               <Link to={`/user/${aId}`} style={{ display: 'contents' }}>
-                                <Avatar userId={aId} name={g.away} size={44} title={g.away} />
-                                <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.away}</span>
+                                <Avatar userId={aId} name={formatPlayerName(g.away)} size={44} title={g.away} />
+                                <span style={{ color: '#cfe', textDecoration: 'none' }}>{formatPlayerName(g.away)}</span>
                               </Link>
                             ) : (
                               <>
-                                <Avatar userId={aId} name={g.away} size={44} />
-                                <span>{g.away}</span>
+                                <Avatar userId={aId} name={formatPlayerName(g.away)} size={44} />
+                                <span>{formatPlayerName(g.away)}</span>
                               </>
                             )}
                           </div>
@@ -901,7 +904,7 @@ export default function LeagueDetailPage() {
               </div>
               <div style={{ ...pad, paddingTop: 8 }}>
                 {games.completed.length === 0 ? (
-                  <div style={small}>Keine abgeschlossenen Spiele.</div>
+                  <div style={small}>{t('league.noCompleted')}</div>
                 ) : (
                   <div style={{ display: 'grid', gap: 8 }}>
                     {games.completed.map(g => {
@@ -923,13 +926,13 @@ export default function LeagueDetailPage() {
                           <div className="ml-match__side">
                             {hId ? (
                               <Link to={`/user/${hId}`} style={{ display: 'contents' }}>
-                                <Avatar userId={hId} name={g.home} size={44} title={g.home} />
-                                <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.home}</span>
+                                <Avatar userId={hId} name={formatPlayerName(g.home)} size={44} title={g.home} />
+                                <span style={{ color: '#cfe', textDecoration: 'none' }}>{formatPlayerName(g.home)}</span>
                               </Link>
                             ) : (
                               <>
-                                <Avatar userId={hId} name={g.home} size={44} />
-                                <span>{g.home}</span>
+                                <Avatar userId={hId} name={formatPlayerName(g.home)} size={44} />
+                                <span>{formatPlayerName(g.home)}</span>
                               </>
                             )}
                           </div>
@@ -937,13 +940,13 @@ export default function LeagueDetailPage() {
                           <div className="ml-match__side" style={{ justifyContent: 'flex-end' }}>
                             {aId ? (
                               <Link to={`/user/${aId}`} style={{ display: 'contents' }}>
-                                <Avatar userId={aId} name={g.away} size={44} title={g.away} />
-                                <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.away}</span>
+                                <Avatar userId={aId} name={formatPlayerName(g.away)} size={44} title={g.away} />
+                                <span style={{ color: '#cfe', textDecoration: 'none' }}>{formatPlayerName(g.away)}</span>
                               </Link>
                             ) : (
                               <>
-                                <Avatar userId={aId} name={g.away} size={44} />
-                                <span>{g.away}</span>
+                                <Avatar userId={aId} name={formatPlayerName(g.away)} size={44} />
+                                <span>{formatPlayerName(g.away)}</span>
                               </>
                             )}
                           </div>
@@ -969,7 +972,7 @@ export default function LeagueDetailPage() {
       )}
 
       <div style={{ marginTop: 12 }}>
-        <Link to="/leagues">← Zurück zur Übersicht</Link>
+        <Link to="/leagues">{t('league.backToOverview')}</Link>
       </div>
     </div>
   );

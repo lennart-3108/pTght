@@ -104,6 +104,12 @@
   border: 1px solid rgba(72, 186, 166, 0.3);
 }
 
+.license-coming-soon {
+  background: rgba(156, 163, 175, 0.15);
+  color: #9ca3af;
+  border: 1px solid rgba(156, 163, 175, 0.25);
+}
+
 .plans-section {
   margin-bottom: 60px;
 }
@@ -143,6 +149,33 @@
   transition: all 0.3s;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+.plan-card--coming-soon {
+  border-color: rgba(156, 163, 175, 0.25);
+}
+
+.plan-coming-soon-overlay {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: rgba(10, 31, 28, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+}
+
+.plan-coming-soon-text {
+  padding: 10px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(156, 163, 175, 0.35);
+  background: rgba(255, 255, 255, 0.06);
+  color: #e5e7eb;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .plan-card:hover {

@@ -7,6 +7,8 @@ import LocationSelector from "../components/LocationSelector";
 import SportSelector from "../components/SportSelector";
 import AuthNoticeBanner from "../components/AuthNoticeBanner";
 import AdBanner from "../components/AdBanner";
+import { useLanguage } from "../i18n";
+import { formatPlayerName } from "../utils/nameFormat";
 
 // load background images from sports folder and sort
 function importAllBackgrounds(r) {
@@ -28,6 +30,8 @@ const heroBackgrounds = backgrounds.slice(0, MAX_HERO_BACKGROUNDS);
 
 export default function StartPage() {
   const navigate = useNavigate();
+  const { lang, t } = useLanguage();
+  const uiLocale = lang === 'en' ? 'en-US' : 'de-DE';
   const [leagues, setLeagues] = useState([]);
   const [sports, setSports] = useState([]);
   const [cities, setCities] = useState([]);
@@ -39,7 +43,8 @@ export default function StartPage() {
   const [selectedSportName, setSelectedSportName] = useState("");
   const [selectedCity, setSelectedCity] = useState("");
   const [selectedCityName, setSelectedCityName] = useState("");
-  const [searchMode, setSearchMode] = useState("");
+  const initialSearchMode = (FEATURES.SHOW_COMPETITIONS || FEATURES.SHOW_BOOKINGS) ? "" : "match";
+  const [searchMode, setSearchMode] = useState(initialSearchMode);
   const [openMatches, setOpenMatches] = useState([]);
   const [searching, setSearching] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -143,7 +148,7 @@ export default function StartPage() {
   const detectLocation = async (shouldSet = () => true) => {
     if (!navigator.geolocation) {
       console.warn('[StartPage] Geolocation not supported');
-      alert('Dein Browser unterstützt keine Standortermittlung.');
+      alert(t('start.geo.notSupported'));
       return;
     }
 
@@ -166,7 +171,7 @@ export default function StartPage() {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         console.warn('[StartPage] Location API error:', errorData);
-        alert('Fehler beim Abrufen der nächsten Stadt. Bitte wähle deine Stadt manuell aus.');
+        alert(t('start.geo.fetchCityError'));
         return;
       }
 
@@ -180,18 +185,18 @@ export default function StartPage() {
         console.log(`[StartPage] Auto-set location: ${data.city.name}${data.state ? ', ' + data.state.name : ''}${data.country ? ', ' + data.country.name : ''}`);
         return true;
       }
-      alert('Keine Stadt in deiner Nähe gefunden. Bitte wähle deine Stadt manuell aus.');
+      alert(t('start.geo.noCityFound'));
       return false;
     } catch (error) {
       console.warn('[StartPage] Location detection failed:', error);
       if (error.code === 1) {
-        alert('Standortfreigabe wurde verweigert. Bitte erlaube den Zugriff in deinen Browser-Einstellungen.');
+        alert(t('start.geo.denied'));
       } else if (error.code === 2) {
-        alert('Standort konnte nicht ermittelt werden.');
+        alert(t('start.geo.unavailable'));
       } else if (error.code === 3) {
-        alert('Zeitüberschreitung bei der Standortermittlung.');
+        alert(t('start.geo.timeout'));
       } else {
-        alert(error.message || 'Fehler bei der Standortermittlung. Bitte wähle deine Stadt manuell aus.');
+        alert(error.message || t('start.geo.generic'));
       }
       return false;
     } finally {
@@ -357,7 +362,7 @@ export default function StartPage() {
           } catch {}
         })();
       })
-      .catch(e => { if (mounted) setErr(e.message || "Fehler beim Laden."); })
+      .catch(e => { if (mounted) setErr(e.message || t('start.loadError')); })
       .finally(() => { if (mounted) setLoading(false); });
     return () => { mounted = false; };
   }, []);
@@ -427,7 +432,7 @@ export default function StartPage() {
     const publicFeed = (upcomingWithOpponent || []).slice(0, 5).map((game) => ({
       id: `upcoming-${game.id}`,
       title: `Anstehendes Match: ${game.home} vs ${game.away}`,
-      description: `${game.kickoff_at ? new Date(game.kickoff_at).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'Termin tbd'} • ${game.league || 'Match'}`,
+      description: `${game.kickoff_at ? new Date(game.kickoff_at).toLocaleString(uiLocale, { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : (lang === 'en' ? 'Time tbd' : 'Termin tbd')} • ${game.league || 'Match'}`,
       timestamp: game.kickoff_at || null,
       type: 'match',
       feedType: 'public',
@@ -441,8 +446,8 @@ export default function StartPage() {
     };
   }, [myGames.completed, myLeagues, upcomingWithOpponent]);
 
-  if (loading) return <div style={{ padding: 24 }}>Lade Startseite ...</div>;
-  if (err) return <div style={{ padding: 24, color: "crimson" }}>Fehler: {err}</div>;
+  if (loading) return <div style={{ padding: 24 }}>{t('start.loading')}</div>;
+  if (err) return <div style={{ padding: 24, color: "crimson" }}>{t('start.errorPrefix')}: {err}</div>;
 
   return (
     <div className="ml-page-shell">
@@ -458,7 +463,7 @@ export default function StartPage() {
               <img src={smallLogo} alt="ML" className="hero-small-logo" />
               <h1 className="hero-title">Match League<sup style={{ fontSize: '0.5em', marginLeft: '2px' }}>™</sup></h1>
             </div>
-            <p className="hero-sub"><b>Willkommen bei MatchLeague. Connect. Match. Win.</b></p>
+            <p className="hero-sub"><b>{t('start.welcome')}</b></p>
             <div
               className="hero-controls"
               style={{
@@ -479,7 +484,7 @@ export default function StartPage() {
                     setSelectedSportName(sportName);
                     setSelectedSport(String(sportId));
                   }}
-                  placeholder="Sportart"
+                  placeholder={t('start.sportPlaceholder')}
                   isOpen={sportDropdownOpen}
                   onOpen={() => {
                     setSportDropdownOpen(true);
@@ -501,7 +506,7 @@ export default function StartPage() {
                     setSelectedCity(String(cityId));
                     console.log('[StartPage] Location selected:', { locationName, cityId, stateId, countryId, districtId });
                   }}
-                  placeholder="Stadt"
+                  placeholder={t('start.cityPlaceholder')}
                   isOpen={locationDropdownOpen}
                   onOpen={() => {
                     setLocationDropdownOpen(true);
@@ -516,18 +521,20 @@ export default function StartPage() {
               <div style={{ display: 'grid', gap: 10, width: '100%' }}>
                 <div
                   role="group"
-                  aria-label="Suchmodus"
+                  aria-label={t('start.searchMode')}
                   className="ml-segmented"
                 >
                   {[
-                    { value: 'match', label: 'Match' },
+                    { value: 'match', label: t('start.mode.match'), enabled: true },
                     {
                       value: 'competition',
-                      label: FEATURES.SHOW_COMPETITIONS ? 'Competition' : 'Competition (Coming Soon)'
+                      label: FEATURES.SHOW_COMPETITIONS ? t('start.mode.competition') : t('start.mode.competitionSoon'),
+                      enabled: !!FEATURES.SHOW_COMPETITIONS,
                     },
                     {
                       value: 'slot',
-                      label: FEATURES.SHOW_BOOKINGS ? 'Slot buchen' : 'Slot buchen (Coming Soon)'
+                      label: FEATURES.SHOW_BOOKINGS ? t('start.mode.slot') : t('start.mode.slotSoon'),
+                      enabled: !!FEATURES.SHOW_BOOKINGS,
                     }
                   ].map((opt) => {
                     const active = searchMode === opt.value;
@@ -535,9 +542,13 @@ export default function StartPage() {
                       <button
                         key={opt.value}
                         type="button"
-                        onClick={() => setSearchMode(active ? '' : opt.value)}
+                        onClick={() => {
+                          if (!opt.enabled) return;
+                          setSearchMode(active ? '' : opt.value);
+                        }}
                         aria-pressed={active}
                         className={`ml-segmented-option ${active ? 'ml-segmented-option--active' : ''}`}
+                        disabled={!opt.enabled}
                       >
                         {opt.label}
                       </button>
@@ -573,7 +584,7 @@ export default function StartPage() {
                   style={{ width: '100%' }}
                   disabled={searching || !searchMode}
                 >
-                  {searching ? 'Suche…' : 'Suchen'}
+                  {searching ? t('start.searching') : t('start.search')}
                 </button>
               </div>
             </div>
@@ -588,12 +599,12 @@ export default function StartPage() {
         {/* Kommende Spiele (max 3) */}
   <section className="ml-card">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', marginBottom: 8 }}>
-            <h3 style={{ margin: 0 }}>Kommende Spiele</h3>
+            <h3 style={{ margin: 0 }}>{t('start.upcoming')}</h3>
             <span />
           </div>
           {(upcomingWithOpponent.length === 0) ? (
             <div style={{ padding: '20px', textAlign: 'center' }}>
-              <div style={{ color: '#9db', marginBottom: 16 }}>Keine anstehenden Spiele.</div>
+              <div style={{ color: '#9db', marginBottom: 16 }}>{t('start.noUpcoming')}</div>
               <Link 
                 to="/match-search" 
                 style={{ 
@@ -603,7 +614,7 @@ export default function StartPage() {
                 }}
                 className="ml-btn-gold"
               >
-                Match suchen
+                {t('start.findMatch')}
               </Link>
             </div>
           ) : (
@@ -621,19 +632,19 @@ export default function StartPage() {
                   <Link to={`/user/${uid}`} style={{ color: '#cfe', textDecoration: 'none' }}>{name}</Link>
                 ) : (<span>{name}</span>);
                 const kx = g.kickoff_at || g.kickoffAt || g.date || null;
-                const when = kx ? new Date(kx).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
+                const when = kx ? new Date(kx).toLocaleDateString(uiLocale, { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
                 return (
                   <div key={g.id} className="ml-match" style={{ padding: '10px 2px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                     <div className="ml-match__side">
                       {hId ? (
                         <Link to={`/user/${hId}`} style={{ display: 'contents' }}>
-                          <Avatar userId={hId} name={g.home} size={44} title={g.home} />
-                          <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.home}</span>
+                          <Avatar userId={hId} name={formatPlayerName(g.home)} size={44} title={g.home} />
+                          <span style={{ color: '#cfe', textDecoration: 'none' }}>{formatPlayerName(g.home)}</span>
                         </Link>
                       ) : (
                         <>
-                          <Avatar userId={hId} name={g.home} size={44} />
-                          <span>{g.home}</span>
+                          <Avatar userId={hId} name={formatPlayerName(g.home)} size={44} />
+                          <span>{formatPlayerName(g.home)}</span>
                         </>
                       )}
                     </div>
@@ -641,13 +652,13 @@ export default function StartPage() {
                     <div className="ml-match__side" style={{ justifyContent: 'flex-end' }}>
                       {aId ? (
                         <Link to={`/user/${aId}`} style={{ display: 'contents' }}>
-                          <Avatar userId={aId} name={g.away} size={44} title={g.away} />
-                          <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.away}</span>
+                          <Avatar userId={aId} name={formatPlayerName(g.away)} size={44} title={g.away} />
+                          <span style={{ color: '#cfe', textDecoration: 'none' }}>{formatPlayerName(g.away)}</span>
                         </Link>
                       ) : (
                         <>
-                          <Avatar userId={aId} name={g.away} size={44} />
-                          <span>{g.away}</span>
+                          <Avatar userId={aId} name={formatPlayerName(g.away)} size={44} />
+                          <span>{formatPlayerName(g.away)}</span>
                         </>
                       )}
                     </div>
@@ -657,7 +668,7 @@ export default function StartPage() {
                     </div>
                     {g?.id ? (
                       <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end' }}>
-                        <Link to={`/matches/${g.id}`} style={{ color: '#debc7c', fontWeight: 700, textDecoration: 'none' }}>Details</Link>
+                        <Link to={`/matches/${g.id}`} style={{ color: '#debc7c', fontWeight: 700, textDecoration: 'none' }}>{t('start.details')}</Link>
                       </div>
                     ) : null}
                   </div>
@@ -669,11 +680,11 @@ export default function StartPage() {
         {/* Letzte Spiele (max 3) */}
   <section className="ml-card">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', marginBottom: 8 }}>
-            <h3 style={{ margin: 0 }}>Letzte Spiele</h3>
+            <h3 style={{ margin: 0 }}>{t('start.recent')}</h3>
             <span />
           </div>
           {(!myGames.completed || myGames.completed.length === 0) ? (
-            <div style={{ color: '#9db' }}>Keine vergangenen Spiele.</div>
+            <div style={{ color: '#9db' }}>{t('start.noRecent')}</div>
           ) : (
             <div style={{ display: 'grid', gap: 8 }}>
               {myGames.completed.slice(0, 3).map(g => {
@@ -694,13 +705,13 @@ export default function StartPage() {
                     <div className="ml-match__side">
                       {hId ? (
                         <Link to={`/user/${hId}`} style={{ display: 'contents' }}>
-                          <Avatar userId={hId} name={g.home} size={44} title={g.home} />
-                          <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.home}</span>
+                          <Avatar userId={hId} name={formatPlayerName(g.home)} size={44} title={g.home} />
+                          <span style={{ color: '#cfe', textDecoration: 'none' }}>{formatPlayerName(g.home)}</span>
                         </Link>
                       ) : (
                         <>
-                          <Avatar userId={hId} name={g.home} size={44} />
-                          <span>{g.home}</span>
+                          <Avatar userId={hId} name={formatPlayerName(g.home)} size={44} />
+                          <span>{formatPlayerName(g.home)}</span>
                         </>
                       )}
                     </div>
@@ -708,19 +719,19 @@ export default function StartPage() {
                     <div className="ml-match__side" style={{ justifyContent: 'flex-end' }}>
                       {aId ? (
                         <Link to={`/user/${aId}`} style={{ display: 'contents' }}>
-                          <Avatar userId={aId} name={g.away} size={44} title={g.away} />
-                          <span style={{ color: '#cfe', textDecoration: 'none' }}>{g.away}</span>
+                          <Avatar userId={aId} name={formatPlayerName(g.away)} size={44} title={g.away} />
+                          <span style={{ color: '#cfe', textDecoration: 'none' }}>{formatPlayerName(g.away)}</span>
                         </Link>
                       ) : (
                         <>
-                          <Avatar userId={aId} name={g.away} size={44} />
-                          <span>{g.away}</span>
+                          <Avatar userId={aId} name={formatPlayerName(g.away)} size={44} />
+                          <span>{formatPlayerName(g.away)}</span>
                         </>
                       )}
                     </div>
                     <div style={{ gridColumn: '1 / -1', color: '#9db', fontSize: 12, display: 'flex', justifyContent: 'space-between' }}>
                       <span>{[g.sport, g.league, g.city].filter(Boolean).join(' · ')}</span>
-                      <span>{g.kickoff_at ? new Date(g.kickoff_at).toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'short' }) : '—'}</span>
+                      <span>{g.kickoff_at ? new Date(g.kickoff_at).toLocaleDateString(uiLocale, { weekday: 'short', day: 'numeric', month: 'short' }) : '—'}</span>
                     </div>
                     {g?.id ? (
                       <div style={{ gridColumn: '1 / -1', display: 'flex', justifyContent: 'flex-end' }}>
@@ -738,10 +749,10 @@ export default function StartPage() {
   {/* Row 2: Tabellen mit Ligen-Auswahl */}
         {/* Standings preview */}
         <section className="ml-card" style={{ gridColumn: '1 / -1' }}>
-          <h2 style={{ margin: '0 0 16px 0' }}>Meine Ligen</h2>
+          <h2 style={{ margin: '0 0 16px 0' }}>{t('start.myLeagues.title')}</h2>
           {myLeagues.length === 0 ? (
             <div style={{ padding: '20px', textAlign: 'center' }}>
-              <div style={{ color: '#9db', marginBottom: 16 }}>Du bist noch in keiner Liga angemeldet.</div>
+              <div style={{ color: '#9db', marginBottom: 16 }}>{t('start.myLeagues.none')}</div>
               <Link 
                 to="/leagues" 
                 className="ml-btn-gold"
@@ -751,14 +762,14 @@ export default function StartPage() {
                   minWidth: 190
                 }}
               >
-                Liga suchen
+                {t('start.myLeagues.searchLeague')}
               </Link>
             </div>
           ) : (
             <>
               <div style={{ marginBottom: 16 }}>
                 <label style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  Liga:
+                  {t('start.myLeagues.leagueLabel')}
                   <select
                   value={selectedMyLeagueId}
                   onChange={async (e) => {
@@ -793,7 +804,7 @@ export default function StartPage() {
             </div>
           )}
           {(!standings.rows || standings.rows.length === 0) ? (
-            <div style={{ color: '#9db' }}>Keine Tabellenstände verfügbar.</div>
+            <div style={{ color: '#9db' }}>{t('start.noStandings')}</div>
           ) : (
             <div className="ml-card" style={{ overflowX: 'auto', marginTop: 8 }}>
               {(() => {
@@ -933,7 +944,7 @@ export default function StartPage() {
                             <Avatar userId={uid} name={display} size={40} style={{ marginRight: 12 }} />
                             {uid ? (
                               <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-                                <Link to={`/user/${uid}`} className="ml-link-profile" title="Profil öffnen">{display}</Link>
+                                <Link to={`/user/${uid}`} className="ml-link-profile" title={t('common.openProfile')}>{display}</Link>
                                 <span aria-hidden className="ml-link-profile-icon">↗︎</span>
                               </span>
                             ) : (
@@ -977,7 +988,7 @@ export default function StartPage() {
               </table>
               {standings.leagueId ? (
                 <div style={{ marginTop: 8 }}>
-                  <Link to={`/league/${standings.leagueId}`}>Zur Liga</Link>
+                  <Link to={`/league/${standings.leagueId}`}>{t('start.toLeague')}</Link>
                 </div>
               ) : null}
             </div>
@@ -990,61 +1001,9 @@ export default function StartPage() {
       <section className="ml-card" style={{ marginTop: 16 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', alignItems: 'center', marginBottom: 12 }}>
           <div>
-            <h3 style={{ margin: 0 }}>Aktivitäten</h3>
-            <div style={{ color: '#9db', fontSize: 12, marginTop: 4 }}>Neueste Updates</div>
+            <h3 style={{ margin: 0 }}>{t('start.activities.title')}</h3>
+            <div style={{ color: '#9db', fontSize: 12, marginTop: 4 }}>{t('start.activities.subtitle')}</div>
           </div>
-        </div>
-
-        {/* Filter Tabs */}
-        <div style={{ display: 'flex', gap: 8, marginBottom: 16, borderBottom: '1px solid #2f6b57', paddingBottom: 8 }}>
-          <button
-            onClick={() => setNewsFilter('all')}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '8px 8px 0 0',
-              border: 'none',
-              background: newsFilter === 'all' ? '#1a3c33' : 'transparent',
-              color: newsFilter === 'all' ? '#debc7c' : '#9db',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 13,
-              transition: 'all 0.2s'
-            }}
-          >
-            📋 Alle
-          </button>
-          <button
-            onClick={() => setNewsFilter('matches')}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '8px 8px 0 0',
-              border: 'none',
-              background: newsFilter === 'matches' ? '#1a3c33' : 'transparent',
-              color: newsFilter === 'matches' ? '#debc7c' : '#9db',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 13,
-              transition: 'all 0.2s'
-            }}
-          >
-            ⚽ Match-News
-          </button>
-          <button
-            onClick={() => setNewsFilter('friends')}
-            style={{
-              padding: '8px 16px',
-              borderRadius: '8px 8px 0 0',
-              border: 'none',
-              background: newsFilter === 'friends' ? '#1a3c33' : 'transparent',
-              color: newsFilter === 'friends' ? '#debc7c' : '#9db',
-              cursor: 'pointer',
-              fontWeight: 600,
-              fontSize: 13,
-              transition: 'all 0.2s'
-            }}
-          >
-            👥 Freunde
-          </button>
         </div>
 
         {/* Aktivitäten Content */}
@@ -1091,9 +1050,9 @@ export default function StartPage() {
 
             if (sortedFeed.length === 0) {
               const emptyMessages = {
-                all: 'Keine Aktivitäten verfügbar.',
-                matches: 'Keine Match-News verfügbar.',
-                friends: 'Keine Freundes-Aktivitäten verfügbar.'
+                all: t('start.activities.empty.all'),
+                matches: t('start.activities.empty.matches'),
+                friends: t('start.activities.empty.friends')
               };
               
               return (
@@ -1166,11 +1125,11 @@ export default function StartPage() {
                             background: '#debc7c',
                             color: '#0f2a20'
                           }}>
-                            WERBUNG
+                            {t('start.activities.adLabel')}
                           </span>
                         </div>
                         <div style={{ fontSize: 13, color: '#9db' }}>
-                          {item.description || 'Verfügbare Plätze anzeigen'}
+                          {item.description || t('start.activities.showCourts')}
                         </div>
                       </div>
                     </div>
@@ -1240,7 +1199,7 @@ export default function StartPage() {
                   </div>
                   {item.timestamp && (
                     <div style={{ fontSize: 10, color: '#789', marginTop: 4 }}>
-                      {new Date(item.timestamp).toLocaleString('de-DE', { 
+                      {new Date(item.timestamp).toLocaleString(uiLocale, { 
                         day: '2-digit', 
                         month: '2-digit', 
                         year: '2-digit',

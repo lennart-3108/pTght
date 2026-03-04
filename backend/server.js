@@ -7,7 +7,7 @@ const path = require("path");
 const fs = require("fs");
 const { spawn } = require("child_process");
 require("dotenv").config({ path: path.join(__dirname, ".env") });
-const { isAuthenticated } = require("./middleware/auth");
+const { isAuthenticated, isAdmin } = require("./middleware/auth");
 
 // Ensure all DB layers point to the same SQLite file.
 // Prefer env SQLITE_FILE; if not set, use common fallback filenames if present.
@@ -672,9 +672,8 @@ app.get("/leagues", async (req, res) => {
   }
 });
 
-// --- NEW: Admin helpers to inspect DB sources and optionally merge missing leagues ---
-// Note: no auth added here; enable in your setup if needed.
-app.get("/admin/db-info", async (req, res) => {
+// --- Admin helpers to inspect DB sources and optionally merge missing leagues ---
+app.get("/admin/db-info", isAdmin, async (req, res) => {
   try {
     const kAdapter = (db && db.knex && db.client) ? db.knex : null;
     const kDirect = (knexDirect && knexDirect.client) ? knexDirect : null;
@@ -723,7 +722,7 @@ app.get("/admin/db-info", async (req, res) => {
 
 // Merge missing leagues from secondary sources into adapter DB (safe onConflict)
 // POST /admin/merge-leagues
-app.post("/admin/merge-leagues", async (req, res) => {
+app.post("/admin/merge-leagues", isAdmin, async (req, res) => {
   try {
     const primary = (db && db.knex && db.knex.client) ? db.knex : null;
     if (!primary) return res.status(500).json({ error: "PRIMARY_DB_NOT_AVAILABLE" });
@@ -1548,10 +1547,20 @@ app.use("/chats", chatsRoutes({ db: resolvedKnexForRoutes }));
 // --- ensure root /sports exists (some setups expose only /sports/:id/... but not GET /sports) ---
 apiRouter.get("/sports", async (req, res) => {
   try {
-    // prefer direct knex if available
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
     if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
-    const rows = await k("sports").select("id", "name").orderBy("name");
+    const hasResultTypes = await k.schema.hasTable('result_types').catch(() => false);
+    let rows;
+    if (hasResultTypes) {
+      rows = await k('sports as s')
+        .leftJoin('result_types as rt', 'rt.id', 's.result_type_id')
+        .select('s.id', 's.name', 's.result_type_id as resultTypeId',
+          'rt.name as resultTypeName', 'rt.slug as resultTypeSlug',
+          'rt.icon as resultTypeIcon', 'rt.schema as resultTypeSchema')
+        .orderBy('s.name');
+    } else {
+      rows = await k('sports').select('id', 'name').orderBy('name');
+    }
     return res.json(rows || []);
   } catch (e) {
     console.error("GET /sports failed:", e && (e.stack || e.message || e));
@@ -1564,10 +1573,36 @@ apiRouter.get("/sports/list", async (req, res) => {
   try {
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
     if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
-    const rows = await k("sports").select("id", "name").orderBy("name");
+    const hasResultTypes = await k.schema.hasTable('result_types').catch(() => false);
+    let rows;
+    if (hasResultTypes) {
+      rows = await k('sports as s')
+        .leftJoin('result_types as rt', 'rt.id', 's.result_type_id')
+        .select('s.id', 's.name', 's.result_type_id as resultTypeId',
+          'rt.name as resultTypeName', 'rt.slug as resultTypeSlug',
+          'rt.icon as resultTypeIcon', 'rt.schema as resultTypeSchema')
+        .orderBy('s.name');
+    } else {
+      rows = await k('sports').select('id', 'name').orderBy('name');
+    }
     return res.json(rows || []);
   } catch (e) {
     console.error("GET /sports/list failed:", e && (e.stack || e.message || e));
+    return res.status(500).json({ error: "Datenbankfehler", details: (e && e.message) || String(e) });
+  }
+});
+
+// Result types
+apiRouter.get("/result-types", async (req, res) => {
+  try {
+    const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
+    if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
+    const hasResultTypes = await k.schema.hasTable('result_types').catch(() => false);
+    if (!hasResultTypes) return res.json([]);
+    const rows = await k('result_types').select('id', 'name', 'slug', 'description', 'icon', 'schema').orderBy('id');
+    return res.json(rows || []);
+  } catch (e) {
+    console.error("GET /result-types failed:", e && (e.stack || e.message || e));
     return res.status(500).json({ error: "Datenbankfehler", details: (e && e.message) || String(e) });
   }
 });
@@ -1577,7 +1612,18 @@ app.get("/sports/list", async (req, res) => {
   try {
     const k = (knexDirect && knexDirect.client) ? knexDirect : (db && db.knex ? db.knex : null);
     if (!k) return res.status(500).json({ error: "DB_NOT_AVAILABLE" });
-    const rows = await k("sports").select("id", "name").orderBy("name");
+    const hasResultTypes = await k.schema.hasTable('result_types').catch(() => false);
+    let rows;
+    if (hasResultTypes) {
+      rows = await k('sports as s')
+        .leftJoin('result_types as rt', 'rt.id', 's.result_type_id')
+        .select('s.id', 's.name', 's.result_type_id as resultTypeId',
+          'rt.name as resultTypeName', 'rt.slug as resultTypeSlug',
+          'rt.icon as resultTypeIcon', 'rt.schema as resultTypeSchema')
+        .orderBy('s.name');
+    } else {
+      rows = await k('sports').select('id', 'name').orderBy('name');
+    }
     return res.json(rows || []);
   } catch (e) {
     console.error("GET /sports/list (root) failed:", e && (e.stack || e.message || e));
@@ -1894,33 +1940,7 @@ app.get('/states/list', async (req, res) => {
   }
 });
 
-// --- TEMP DEBUG: lookup user by email (only for local debugging) ---
-app.get('/debug/user', async (req, res) => {
-  try {
-    const email = String(req.query.email || '').trim();
-    if (!email) return res.status(400).json({ error: 'email query required' });
-    // use adapter/db directly (ctx.db is not in scope here but 'db' is)
-  db.get(`SELECT id, email, firstname, lastname FROM users WHERE email = ?`, [email], (err, row) => {
-      if (err) return res.status(500).json({ error: 'db error', details: err.message });
-      if (!row) return res.status(404).json({ error: 'not found' });
-      return res.json({ user: row });
-    });
-  } catch (e) {
-    return res.status(500).json({ error: 'internal', details: String(e) });
-  }
-});
-
-// TEMP: list a few users (debug only)
-app.get('/debug/users', async (req, res) => {
-  try {
-    db.all('SELECT id, email, firstname, lastname FROM users LIMIT 20', [], (err, rows) => {
-      if (err) return res.status(500).json({ error: 'db error', details: err.message });
-      return res.json({ count: (rows || []).length, users: rows || [] });
-    });
-  } catch (e) {
-    return res.status(500).json({ error: 'internal', details: String(e) });
-  }
-});
+// DEBUG ENDPOINTS REMOVED (security: exposed PII without auth)
 
 // --- Error handling middleware (logs and returns minimal response) ---
 app.use((err, req, res, next) => {
@@ -2339,6 +2359,46 @@ apiRouter.post('/open-matches', isAuthenticated, async (req, res) => {
   } catch (e) {
     console.error('[POST /api/open-matches] failed', e && (e.stack || e.message || e));
     return res.status(500).json({ error: 'DB_ERROR' });
+  }
+});
+
+// Contact form endpoint (public, no auth required)
+const _contactRateLimit = new Map();
+apiRouter.post('/contact', (req, res) => {
+  try {
+    const { name, email, message } = req.body || {};
+    if (!name || !email || !message) {
+      return res.status(400).json({ error: 'Name, E-Mail und Nachricht sind erforderlich.' });
+    }
+    if (String(name).length > 100 || String(email).length > 200 || String(message).length > 2000) {
+      return res.status(400).json({ error: 'Eingabe zu lang.' });
+    }
+    // Simple rate limiting: 3 requests per IP per 10 minutes
+    const ip = req.ip || req.connection.remoteAddress || 'unknown';
+    const now = Date.now();
+    const key = ip;
+    const entry = _contactRateLimit.get(key) || { count: 0, reset: now + 10 * 60 * 1000 };
+    if (now > entry.reset) { entry.count = 0; entry.reset = now + 10 * 60 * 1000; }
+    entry.count++;
+    _contactRateLimit.set(key, entry);
+    if (entry.count > 3) {
+      return res.status(429).json({ error: 'Zu viele Anfragen. Bitte warte 10 Minuten.' });
+    }
+
+    const prefix = process.env.MAIL_SUBJECT_PREFIX ? `[${process.env.MAIL_SUBJECT_PREFIX}] ` : '';
+    const to = 'lennart.allenstein@matchleague.org';
+    const subject = `${prefix}Kontaktanfrage von ${String(name).trim()}`;
+    const html = `<p><strong>Name:</strong> ${String(name).trim()}</p>\n<p><strong>E-Mail:</strong> ${String(email).trim()}</p>\n<p><strong>Nachricht:</strong></p>\n<p>${String(message).trim().replace(/\n/g, '<br>')}</p>`;
+    const text = `Name: ${String(name).trim()}\nE-Mail: ${String(email).trim()}\n\nNachricht:\n${String(message).trim()}`;
+
+    sendMail({ to, subject, html, text })
+      .then(() => logDebug('[contact] email sent to', to))
+      .catch(err => logError('[contact] email failed', err && err.message));
+
+    return res.json({ ok: true });
+  } catch (e) {
+    logError('[POST /api/contact] failed', e && (e.stack || e.message || e));
+    return res.status(500).json({ error: 'SERVER_ERROR' });
   }
 });
 

@@ -1,4 +1,4 @@
-const knex = require('knex')(require('./knexfile').development);
+const knex = require('knex')(require('./knexfile'));
 
 async function check() {
   const rulesets = await knex('rulesets').select('id', 'name', 'sport_id', 'version', 'is_active');

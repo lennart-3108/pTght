@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { API_BASE } from '../config';
+import { useLanguage } from '../i18n';
 
 export default function CreateMatchModal({ sports, cities, onClose, onSuccess }) {
+  const { t } = useLanguage();
   const [sportId, setSportId] = useState('');
   const [cityId, setCityId] = useState('');
   const [date, setDate] = useState('');
@@ -121,7 +123,7 @@ export default function CreateMatchModal({ sports, cities, onClose, onSuccess })
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 8 }}>
           <h2 style={{ marginTop: 0, marginBottom: 0, fontSize: 22 }}>
-            Öffentliches Match erstellen
+            {t('match.createPublic.title')}
           </h2>
           <button 
             onClick={onClose}
@@ -138,7 +140,7 @@ export default function CreateMatchModal({ sports, cities, onClose, onSuccess })
           >×</button>
         </div>
         <p style={{ margin: '0 0 16px 0', color: '#9db', fontSize: 14, lineHeight: 1.5 }}>
-          Erstelle ein öffentliches Match, das andere Spieler finden und beitreten können. Wähle Sportart, Stadt und einen verfügbaren Platz.
+          {t('match.createPublic.subtitleLong')}
         </p>
 
         {error && (

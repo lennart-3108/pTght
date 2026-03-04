@@ -1,126 +1,200 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { API_BASE } from '../config';
+import React from 'react';
+import { useLanguage } from '../i18n';
 import './SubscriptionsPage.css';
 
 export default function SubscriptionsPage() {
-  const navigate = useNavigate();
-  const token = localStorage.getItem('token');
-  const [roles, setRoles] = useState([]);
-  const [licensePlans, setLicensePlans] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [bookingPlan, setBookingPlan] = useState(null);
-  const [showPayPalModal, setShowPayPalModal] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const handleBuyPlan = (plan) => {
-    if (!token) {
-      navigate('/login');
-      return;
-    }
-    setSelectedPlan(plan);
-    setShowPayPalModal(true);
+  const { lang, t } = useLanguage();
+  // MVP1: only FREE USER is active. All other roles exist architecturally but are disabled.
+  const copy = {
+    de: {
+      freeDesc: 'Basisrolle – kostenlos. Matches erstellen, suchen, beitreten und chatten.',
+      teamCaptainDesc: 'Team-Organisation (Team gründen, Mitglieder, Liga-Anmeldung).',
+      clubOwnerDesc: 'Vereinsstruktur & mehrere Teams verwalten.',
+      locationOwnerDesc: 'Sportanlagen & Plätze verwalten (Booking später).',
+      eventOwnerDesc: 'Ligen & Turniere organisieren.',
+      trainerDesc: 'Trainings planen, Gruppen verwalten, Leistung tracken.',
+      adminDesc: 'Intern (Moderation/Support). Nicht buchbar.',
+      freePlanDesc: 'Alles, was du für MVP1 brauchst.',
+      comingSoon: 'Kommt bald',
+    },
+    en: {
+      freeDesc: 'Base role – free. Create/search/join matches and chat.',
+      teamCaptainDesc: 'Team organisation (create team, members, league registration).',
+      clubOwnerDesc: 'Club structure & manage multiple teams.',
+      locationOwnerDesc: 'Manage venues & courts (booking later).',
+      eventOwnerDesc: 'Organise leagues & tournaments.',
+      trainerDesc: 'Plan training, manage groups, track performance.',
+      adminDesc: 'Internal (moderation/support). Not purchasable.',
+      freePlanDesc: 'Everything you need for MVP1.',
+      comingSoon: 'Coming soon',
+    },
   };
+  const c = copy[lang] || copy.de;
 
-  const handlePayPalConfirm = async () => {
-    if (!selectedPlan) return;
+  const roles = [
+    {
+      id: 'free',
+      name: 'free',
+      display_name: 'FREE USER',
+      description: c.freeDesc,
+      mvp1_active: true,
+    },
+    {
+      id: 'team_captain',
+      name: 'team_captain',
+      display_name: 'TEAM CAPTAIN',
+      description: c.teamCaptainDesc,
+      mvp1_active: false,
+    },
+    {
+      id: 'club_owner',
+      name: 'club_owner',
+      display_name: 'CLUB OWNER',
+      description: c.clubOwnerDesc,
+      mvp1_active: false,
+    },
+    {
+      id: 'location_owner',
+      name: 'location_owner',
+      display_name: 'LOCATION OWNER',
+      description: c.locationOwnerDesc,
+      mvp1_active: false,
+    },
+    {
+      id: 'event_owner',
+      name: 'event_owner',
+      display_name: 'EVENT OWNER / LIGA MANAGER',
+      description: c.eventOwnerDesc,
+      mvp1_active: false,
+    },
+    {
+      id: 'trainer',
+      name: 'trainer',
+      display_name: 'TRAINER',
+      description: c.trainerDesc,
+      mvp1_active: false,
+    },
+    {
+      id: 'admin',
+      name: 'admin',
+      display_name: 'ADMIN',
+      description: c.adminDesc,
+      mvp1_active: true,
+      internal: true,
+    },
+  ];
 
-    setIsProcessing(true);
-
-    try {
-      // Simuliere PayPal-Zahlung
-      const response = await fetch(`${API_BASE}/roles/purchase`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          license_plan_id: selectedPlan.id,
-          payment_method: 'paypal_simulated',
-          amount: selectedPlan.price
-        })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Buchung fehlgeschlagen');
-      }
-
-      const result = await response.json();
-
-      // Erfolg - Modal schließen und Bestätigung anzeigen
-      setShowPayPalModal(false);
-      setSelectedPlan(null);
-      
-      alert(`✓ Zahlung erfolgreich!\n\nLizenz "${result.message}" wurde aktiviert.\n\nEine Bestätigung wurde an deine E-Mail gesendet.`);
-      
-      // Reload page to show new role
-      setTimeout(() => window.location.reload(), 2000);
-
-    } catch (err) {
-      console.error('Error purchasing license:', err);
-      alert('Fehler beim Buchen der Lizenz: ' + err.message);
-    } finally {
-      setIsProcessing(false);
-    }
-  };
-
-  const handlePayPalCancel = () => {
-    setShowPayPalModal(false);
-    setSelectedPlan(null);
-    setIsProcessing(false);
-  };
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setLoading(true);
-        const [rolesRes, plansRes] = await Promise.all([
-          fetch(`${API_BASE}/roles`),
-          fetch(`${API_BASE}/roles/license-plans`)
-        ]);
-
-        if (!rolesRes.ok || !plansRes.ok) {
-          throw new Error('Fehler beim Laden der Daten');
-        }
-
-        const rolesData = await rolesRes.json();
-        const plansData = await plansRes.json();
-
-        setRoles(rolesData);
-        setLicensePlans(plansData);
-      } catch (err) {
-        console.error('Error loading subscriptions:', err);
-        setError('Fehler beim Laden der Abos');
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
-  }, []);
+  const licensePlans = [
+    {
+      id: 'plan_free',
+      role_name: 'free',
+      role_display_name: 'FREE USER',
+      name: 'Free (MVP1)',
+      price: 0,
+      billing_period: 'free',
+      description: c.freePlanDesc,
+      features: [
+        lang === 'en' ? 'register / login' : 'registrieren / login',
+        lang === 'en' ? 'edit profile' : 'profil bearbeiten',
+        lang === 'en' ? 'choose sport & city' : 'sport & stadt wählen',
+        lang === 'en' ? 'create match' : 'match erstellen',
+        lang === 'en' ? 'search match' : 'match suchen',
+        lang === 'en' ? 'join / leave match' : 'match beitreten / verlassen',
+        lang === 'en' ? 'match chat' : 'match-chat nutzen',
+        lang === 'en' ? 'match history' : 'eigene match-historie',
+      ],
+      limits: {},
+      is_coming_soon: false,
+    },
+    {
+      id: 'plan_team_captain',
+      role_name: 'team_captain',
+      role_display_name: 'TEAM CAPTAIN',
+      name: 'Coming Soon',
+      price: null,
+      billing_period: 'coming_soon',
+      description: lang === 'en' ? 'Coming soon – team features & organisation.' : 'Kommt bald – Team-Features & Organisation.',
+      features: lang === 'en'
+        ? ['create team', 'invite members', 'register team in league']
+        : ['team gründen', 'mitglieder einladen', 'team in liga anmelden'],
+      limits: {},
+      is_coming_soon: true,
+    },
+    {
+      id: 'plan_club_owner',
+      role_name: 'club_owner',
+      role_display_name: 'CLUB OWNER',
+      name: 'Coming Soon',
+      price: null,
+      billing_period: 'coming_soon',
+      description: lang === 'en' ? 'Coming soon – club structure & multiple teams.' : 'Kommt bald – Vereinsstruktur & mehrere Teams.',
+      features: lang === 'en'
+        ? ['manage multiple teams', 'assign coaches', 'club dashboard']
+        : ['mehrere teams verwalten', 'trainer zuweisen', 'club-dashboard'],
+      limits: {},
+      is_coming_soon: true,
+    },
+    {
+      id: 'plan_location_owner',
+      role_name: 'location_owner',
+      role_display_name: 'LOCATION OWNER',
+      name: 'Coming Soon',
+      price: null,
+      billing_period: 'coming_soon',
+      description: lang === 'en' ? 'Coming soon – venues/courts/slots (booking later).' : 'Kommt bald – Locations/Plätze/Slots (Booking später).',
+      features: lang === 'en'
+        ? ['create venue', 'define courts', 'generate slots']
+        : ['location erstellen', 'plätze definieren', 'slots generieren'],
+      limits: {},
+      is_coming_soon: true,
+    },
+    {
+      id: 'plan_event_owner',
+      role_name: 'event_owner',
+      role_display_name: 'EVENT OWNER / LIGA MANAGER',
+      name: 'Coming Soon',
+      price: null,
+      billing_period: 'coming_soon',
+      description: lang === 'en' ? 'Coming soon – organise leagues/tournaments.' : 'Kommt bald – Ligen/Turniere organisieren.',
+      features: lang === 'en'
+        ? ['create league', 'standings', 'configure tournaments']
+        : ['liga erstellen', 'tabellen', 'turniere konfigurieren'],
+      limits: {},
+      is_coming_soon: true,
+    },
+    {
+      id: 'plan_trainer',
+      role_name: 'trainer',
+      role_display_name: 'TRAINER',
+      name: 'Coming Soon',
+      price: null,
+      billing_period: 'coming_soon',
+      description: lang === 'en' ? 'Coming soon – training groups & tracking.' : 'Kommt bald – Trainingsgruppen & Tracking.',
+      features: lang === 'en'
+        ? ['plan training', 'manage participants', 'track performance data']
+        : ['trainings planen', 'teilnehmer verwalten', 'leistungsdaten tracken'],
+      limits: {},
+      is_coming_soon: true,
+    },
+  ].filter(p => p.role_name !== 'admin');
 
   const getRoleIcon = (roleName) => {
     const icons = {
-      free_user: '👤',
+      free: '👤',
       team_captain: '⚽',
+      club_owner: '🏛️',
+      location_owner: '🏟️',
+      event_owner: '🏆',
       trainer: '🎓',
-      club_admin: '🏛️',
-      location_provider: '🏟️',
-      league_organizer: '🏆'
+      admin: '🛡️',
     };
     return icons[roleName] || '📋';
   };
 
   const getBillingPeriodLabel = (period) => {
     const labels = {
-      monthly: 'Monatlich',
-      seasonal: 'Saisonal',
-      annual: 'Jährlich',
-      per_event: 'Pro Event'
+      free: t('subs.billing.free'),
+      coming_soon: t('subs.billing.comingSoon'),
     };
     return labels[period] || period;
   };
@@ -133,59 +207,37 @@ export default function SubscriptionsPage() {
     return acc;
   }, {});
 
-  if (loading) {
-    return (
-      <div className="subscriptions-page">
-        <div className="subscriptions-container">
-          <div style={{ textAlign: 'center', padding: '40px', color: '#9ca3af' }}>
-            Lädt...
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="subscriptions-page">
-        <div className="subscriptions-container">
-          <div style={{ textAlign: 'center', padding: '40px', color: '#ef4444' }}>
-            {error}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="subscriptions-page">
       <div className="subscriptions-container">
         <div className="subscriptions-header">
-          <h1>Rollen & Lizenzen</h1>
+          <h1>{t('subs.title')}</h1>
           <p className="subscriptions-subtitle">
-            Finde die passende Lizenz für deine Bedürfnisse
+            {t('subs.subtitle')}
           </p>
         </div>
 
         <div className="roles-section">
-          <h2>Verfügbare Rollen</h2>
+          <h2>{t('subs.rolesTitle')}</h2>
           <div className="roles-grid">
             {roles.map(role => {
               const plans = groupedPlans[role.name] || [];
-              const requiresLicense = role.requires_license || plans.length > 0;
+              const isComingSoon = !role.mvp1_active && !role.internal;
               
               return (
-                <div key={role.id} className="role-card">
+                <div key={role.id} className={`role-card${isComingSoon ? ' role-card--coming-soon' : ''}${role.internal ? ' role-card--internal' : ''}`}>
                   <div className="role-card-header">
                     <span className="role-icon">{getRoleIcon(role.name)}</span>
                     <h3>{role.display_name}</h3>
                   </div>
                   <p className="role-description">{role.description}</p>
                   <div className="role-license-status">
-                    {requiresLicense ? (
-                      <span className="license-required">Lizenz erforderlich</span>
+                    {role.internal ? (
+                      <span className="license-required">{t('badge.internal')}</span>
+                    ) : isComingSoon ? (
+                      <span className="license-coming-soon">{t('badge.comingSoon')}</span>
                     ) : (
-                      <span className="license-free">Kostenlos</span>
+                      <span className="license-free">{t('badge.active')}</span>
                     )}
                   </div>
                 </div>
@@ -196,7 +248,7 @@ export default function SubscriptionsPage() {
 
         {Object.keys(groupedPlans).length > 0 && (
           <div className="plans-section">
-            <h2>Lizenzpläne</h2>
+            <h2>{t('subs.plansTitle')}</h2>
             
             {Object.entries(groupedPlans).map(([roleName, plans]) => {
               const role = roles.find(r => r.name === roleName);
@@ -211,14 +263,20 @@ export default function SubscriptionsPage() {
                   
                   <div className="plans-grid">
                     {plans.map(plan => (
-                      <div key={plan.id} className="plan-card">
+                      <div key={plan.id} className={`plan-card${plan.is_coming_soon ? ' plan-card--coming-soon' : ''}`}>
                         <div className="plan-header">
                           <h4>{plan.name}</h4>
                           <div className="plan-price">
-                            <span className="price-amount">€{plan.price}</span>
-                            <span className="price-period">
-                              /{getBillingPeriodLabel(plan.billing_period)}
-                            </span>
+                            {plan.is_coming_soon ? (
+                              <span className="price-amount">Coming Soon</span>
+                            ) : (
+                              <>
+                                <span className="price-amount">€{plan.price}</span>
+                                <span className="price-period">
+                                  /{getBillingPeriodLabel(plan.billing_period)}
+                                </span>
+                              </>
+                            )}
                           </div>
                         </div>
 
@@ -256,14 +314,10 @@ export default function SubscriptionsPage() {
                           </div>
                         )}
 
-                        {token && (
-                          <button
-                            className="plan-buy-button"
-                            onClick={() => handleBuyPlan(plan)}
-                            disabled={bookingPlan === plan.id}
-                          >
-                            {bookingPlan === plan.id ? 'Wird gebucht...' : 'Jetzt buchen'}
-                          </button>
+                        {plan.is_coming_soon && (
+                          <div className="plan-coming-soon-overlay">
+                            <div className="plan-coming-soon-text">{t('badge.comingSoon')}</div>
+                          </div>
                         )}
                       </div>
                     ))}
@@ -276,70 +330,10 @@ export default function SubscriptionsPage() {
 
         <div className="subscriptions-footer">
           <p>
-            Für weitere Informationen oder individuelle Angebote kontaktiere uns bitte.
+            {t('subs.footer')}
           </p>
         </div>
       </div>
-
-      {/* PayPal Simulations-Modal */}
-      {showPayPalModal && selectedPlan && (
-        <div className="paypal-modal-overlay" onClick={handlePayPalCancel}>
-          <div className="paypal-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="paypal-header">
-              <img 
-                src="https://www.paypalobjects.com/webstatic/mktg/logo/pp_cc_mark_111x69.jpg" 
-                alt="PayPal" 
-                className="paypal-logo"
-              />
-            </div>
-
-            <div className="paypal-content">
-              <h3>Zahlung bestätigen</h3>
-              
-              <div className="payment-details">
-                <div className="detail-row">
-                  <span className="detail-label">Artikel:</span>
-                  <span className="detail-value">{selectedPlan.name}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Rolle:</span>
-                  <span className="detail-value">{selectedPlan.role_display_name}</span>
-                </div>
-                <div className="detail-row">
-                  <span className="detail-label">Zeitraum:</span>
-                  <span className="detail-value">{getBillingPeriodLabel(selectedPlan.billing_period)}</span>
-                </div>
-                <div className="detail-row total">
-                  <span className="detail-label">Gesamtbetrag:</span>
-                  <span className="detail-value">€{selectedPlan.price}</span>
-                </div>
-              </div>
-
-              <p className="paypal-notice">
-                <strong>Simulation:</strong> Dies ist eine simulierte PayPal-Zahlung. 
-                Keine echte Abbuchung wird durchgeführt.
-              </p>
-
-              <div className="paypal-actions">
-                <button 
-                  className="paypal-cancel-btn"
-                  onClick={handlePayPalCancel}
-                  disabled={isProcessing}
-                >
-                  Abbrechen
-                </button>
-                <button 
-                  className="paypal-confirm-btn"
-                  onClick={handlePayPalConfirm}
-                  disabled={isProcessing}
-                >
-                  {isProcessing ? 'Wird verarbeitet...' : 'Jetzt bezahlen'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

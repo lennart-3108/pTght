@@ -69,22 +69,20 @@ export default function CookieBanner() {
     <div style={styles.overlay}>
       <div style={styles.banner}>
         <div style={styles.text}>
-          <strong style={{ fontSize: 16 }}>Cookie-Einstellungen</strong>
-          <p style={{ margin: '8px 0 0', fontSize: 13, lineHeight: 1.6 }}>
-            Wir verwenden Cookies, um die Plattform zu verbessern und Werbung zu finanzieren.
-            Mit „Akzeptieren" stimmst du der Nutzung von Cookies durch uns und unsere Partner
-            (u.a. Google AdSense) zu.
+          <strong style={{ fontSize: 15, letterSpacing: 0.2 }}>Deine Privatsphäre</strong>
+          <p style={{ margin: '8px 0 0', fontSize: 13, lineHeight: 1.65, color: '#b8cec6' }}>
+            MatchLeague nutzt Cookies für den Betrieb der Plattform sowie — mit deiner Zustimmung — 
+            zur Analyse und Verbesserung des Angebots.
           </p>
           {showDetails && (
             <div style={styles.details}>
-              <p style={{ margin: '8px 0 4px', fontWeight: 600, fontSize: 13 }}>Was wird gespeichert:</p>
-              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, lineHeight: 1.8 }}>
-                <li><strong>Werbe-Cookies</strong> – Personalisierte Werbung via Google AdSense</li>
-                <li><strong>Analyse-Cookies</strong> – Nutzungsstatistiken zur Verbesserung</li>
-                <li><strong>Technisch notwendig</strong> – Login, Einstellungen (immer aktiv)</li>
+              <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12, lineHeight: 2, color: '#c8d6cd' }}>
+                <li><strong style={{ color: '#e5e7eb' }}>Notwendig</strong> – Authentifizierung, Sitzung, Einstellungen</li>
+                <li><strong style={{ color: '#e5e7eb' }}>Analyse</strong> – Anonyme Nutzungsstatistiken</li>
+                <li><strong style={{ color: '#e5e7eb' }}>Werbung</strong> – Personalisierte Inhalte (Google)</li>
               </ul>
-              <p style={{ margin: '8px 0 0', fontSize: 11, color: '#8cbfad' }}>
-                Mehr Informationen: <a href="/datenschutz" style={{ color: '#7fd9ba' }}>Datenschutzerklärung</a>
+              <p style={{ margin: '10px 0 0', fontSize: 11, color: '#7a9e91' }}>
+                <a href="/datenschutz" style={{ color: '#7fd9ba', textDecoration: 'none' }}>Datenschutzerklärung</a>
               </p>
             </div>
           )}
@@ -166,13 +164,13 @@ const styles = {
     cursor: 'pointer',
   },
   acceptBtn: {
-    background: '#3da87a',
+    background: '#debc7c',
     border: 'none',
-    color: '#fff',
+    color: '#111827',
     padding: '8px 20px',
     borderRadius: 8,
     fontSize: 13,
-    fontWeight: 600,
+    fontWeight: 700,
     cursor: 'pointer',
   },
 };

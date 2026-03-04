@@ -9,7 +9,7 @@ module.exports = function authRoutes(ctx) {
 
   router.post("/register", (req, res) => {
     try {
-      console.log('[register] Request body:', JSON.stringify(req.body, null, 2));
+      // Request body logging removed (security: contained plaintext passwords)
       
       const { 
         firstname, lastname, birthday, email, password, sports, 
@@ -49,11 +49,55 @@ module.exports = function authRoutes(ctx) {
     const confirmationToken = jwt.sign({ email, epoch: SESSION_EPOCH || 1 }, SECRET, { expiresIn: "1d" });
     const hashedPassword = bcrypt.hashSync(password, 10);
 
-    db.run(
-      `INSERT INTO users (firstname, lastname, birthday, email, password, confirmation_token, is_confirmed, city_id, district_id, gender, accept_terms, accept_gdpr, country_code)
-       VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)`,
-      [firstname, lastname, birthday, email, hashedPassword, confirmationToken, city_id || null, district_id || null, gender || null, accept_terms ? 1 : 0, accept_gdpr ? 1 : 0, country_code || null],
-      function (err) {
+    // Insert user with default role=free when the column exists.
+    db.all(`PRAGMA table_info(users)`, (piErr, cols) => {
+      if (piErr) {
+        console.error('[register] PRAGMA table_info(users) error:', piErr);
+        return res.status(500).json({ error: "Datenbankfehler beim Anlegen des Nutzers" });
+      }
+      const colNames = new Set((cols || []).map(c => String(c.name || '').toLowerCase()));
+      const hasRole = colNames.has('role');
+
+      const columns = [
+        'firstname',
+        'lastname',
+        'birthday',
+        'email',
+        'password',
+        'confirmation_token',
+        'is_confirmed',
+        'city_id',
+        'district_id',
+        'gender',
+        'accept_terms',
+        'accept_gdpr',
+        'country_code',
+      ];
+      const values = [
+        firstname,
+        lastname,
+        birthday,
+        email,
+        hashedPassword,
+        confirmationToken,
+        0,
+        city_id || null,
+        district_id || null,
+        gender || null,
+        accept_terms ? 1 : 0,
+        accept_gdpr ? 1 : 0,
+        country_code || null,
+      ];
+
+      if (hasRole) {
+        columns.push('role');
+        values.push('free');
+      }
+
+      const placeholders = values.map(() => '?').join(', ');
+      const sql = `INSERT INTO users (${columns.join(', ')}) VALUES (${placeholders})`;
+
+      db.run(sql, values, function (err) {
         if (err) {
           console.error('[register] Database error:', err);
           if (err.code === "SQLITE_CONSTRAINT") {
@@ -86,7 +130,7 @@ module.exports = function authRoutes(ctx) {
           });
 
         if (mailerState?.enabled && transporter) {
-          console.log("Mailer aktiviert, versende E-Mail an:", email);
+          // mailer log sanitized (no PII)
           const subject = "E-Mail bestätigen";
           const html = renderEmailTemplate({
             title: "E-Mail bestätigen",
@@ -111,6 +155,7 @@ module.exports = function authRoutes(ctx) {
           sendSuccess();
         }
       });
+    });
     } catch (error) {
       console.error('[register] Unexpected error:', error);
       return res.status(500).json({ error: "Interner Serverfehler" });
@@ -126,17 +171,20 @@ module.exports = function authRoutes(ctx) {
     // Allow login via username or email. If a 'username' column exists, try matching by username first.
     db.all(`PRAGMA table_info(users)`, (piErr, cols) => {
       if (piErr) return res.status(500).json({ error: "Datenbankfehler" });
-      const hasUsername = Array.isArray(cols) && cols.some(c => String(c.name).toLowerCase() === 'username');
+      const colNames = new Set((cols || []).map(c => String(c.name || '').toLowerCase()));
+      const hasUsername = colNames.has('username');
+      const hasRole = colNames.has('role');
       const key = String(email).trim();
       
       // Special case: allow "admin" as username only
       const isAdminLogin = key === 'admin';
       
+      const selectRole = hasRole ? ', role' : '';
       const querySql = hasUsername && isAdminLogin
-        ? `SELECT id, email, password, is_admin, is_confirmed FROM users WHERE username = ?`
+        ? `SELECT id, email, password, is_admin, is_confirmed${selectRole} FROM users WHERE username = ?`
         : hasUsername
-          ? `SELECT id, email, password, is_admin, is_confirmed FROM users WHERE username = ? OR email = ?`
-          : `SELECT id, email, password, is_admin, is_confirmed FROM users WHERE email = ?`;
+          ? `SELECT id, email, password, is_admin, is_confirmed${selectRole} FROM users WHERE username = ? OR email = ?`
+          : `SELECT id, email, password, is_admin, is_confirmed${selectRole} FROM users WHERE email = ?`;
       const params = hasUsername && isAdminLogin ? [key] : hasUsername ? [key, key] : [key];
 
       db.get(querySql, params, (err, user) => {
@@ -158,12 +206,14 @@ module.exports = function authRoutes(ctx) {
         }
         if (!ok) return res.status(401).json({ error: "Ungültige Zugangsdaten" });
 
+        const role = (user && user.role) ? String(user.role) : (user.is_admin ? 'admin' : 'free');
+
         const token = jwt.sign(
-          { id: user.id, email: user.email, isAdmin: !!user.is_admin, epoch: SESSION_EPOCH || 1 },
+          { id: user.id, email: user.email, isAdmin: !!user.is_admin, role, epoch: SESSION_EPOCH || 1 },
           SECRET,
           { expiresIn: "7d" }
         );
-        return res.json({ token, is_admin: !!user.is_admin });
+        return res.json({ token, is_admin: !!user.is_admin, role });
       });
     });
   });
@@ -287,7 +337,7 @@ module.exports = function authRoutes(ctx) {
                     return res.status(200).json({ success: true, message: 'Mailer-Fehler – Link wird angezeigt', confirmUrl });
                   });
                 } else {
-                  console.log('[resend-confirmation] mailer not enabled; confirmUrl:', confirmUrl);
+                  console.log('[resend-confirmation] mailer not enabled (dev mode)');
                   // record cooldown even when returning dev url to avoid spamming endpoint in dev
                   try { if (cooldowns) cooldowns.set(email, Date.now()); } catch (e) { /* non-fatal */ }
                   return res.status(200).json({ success: true, message: 'Mailer not enabled; confirm URL returned (dev)', confirmUrl });
@@ -378,7 +428,7 @@ module.exports = function authRoutes(ctx) {
                 return res.status(500).json({ success: false, error: "Fehler beim Versenden der E-Mail" });
               });
             } else {
-              console.log('[forgot-password] mailer not enabled; resetUrl:', resetUrl);
+              console.log('[forgot-password] mailer not enabled (dev mode)');
               return res.json({ 
                 success: true, 
                 message: "Mailer nicht aktiviert (dev)", 

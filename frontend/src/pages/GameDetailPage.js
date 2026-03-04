@@ -12,10 +12,13 @@ import TerminManagerKalender from "../components/TerminManagerKalender";
 import LocationSelector from "../components/LocationSelector";
 import CommentsSection from "../components/CommentsSection";
 import TennisResultEntry from "../components/TennisResultEntry";
+import { useLanguage } from "../i18n";
 
 export default function GameDetailPage() {
   const { gameId } = useParams();
   const navigate = useNavigate();
+  const { t, lang } = useLanguage();
+  const uiLocale = lang === 'en' ? 'en-GB' : 'de-DE';
   
   // Dynamic responsive hook
   const isMobile = useResponsive(768);
@@ -54,6 +57,12 @@ export default function GameDetailPage() {
   // permission to submit result (must be declared before any early return)
   const [canSubmit, setCanSubmit] = useState(false);
   const [cannotReason, setCannotReason] = useState('');
+  // Result confirmation state
+  const [resultPending, setResultPending] = useState(false);
+  const [resultIsSubmitter, setResultIsSubmitter] = useState(false);
+  const [pendingScore, setPendingScore] = useState(null);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [confirmMsg, setConfirmMsg] = useState('');
   // weekly status for league (to disable join when already has a weekly match)
   const [hasWeeklyMatch, setHasWeeklyMatch] = useState(false);
   const [joinMsg, setJoinMsg] = useState('');
@@ -102,7 +111,7 @@ export default function GameDetailPage() {
         return j;
       })
       .then(j => mounted && setGame(j))
-      .catch(e => mounted && setErr(e.message || "Fehler"))
+      .catch(e => mounted && setErr(e.message || t('match.errorPrefix')))
       .finally(() => mounted && setLoading(false));
     
     // Fetch booking data for this match
@@ -180,15 +189,14 @@ export default function GameDetailPage() {
     if (!input) return "-";
     const d = new Date(input);
     if (Number.isNaN(d.getTime())) return "-";
-    // German long date
     const opts = { year: 'numeric', month: 'long', day: 'numeric' };
-    return d.toLocaleDateString('de-DE', opts);
+    return d.toLocaleDateString(uiLocale, opts);
   }
   function formatTime(input) {
     if (!input) return "";
     const d = new Date(input);
     if (Number.isNaN(d.getTime())) return "";
-    return d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString(uiLocale, { hour: '2-digit', minute: '2-digit' });
   }
 
   // Handle booking cancellation
@@ -212,12 +220,13 @@ export default function GameDetailPage() {
     const diff = d.getTime() - now.getTime();
     const abs = Math.abs(diff);
     const days = Math.floor(abs / (24*60*60*1000));
-    if (days >= 2) return diff >= 0 ? `in ${days} Tagen` : `vor ${days} Tagen`;
+    if (days >= 2) return diff >= 0 ? t('match.time.inDays', { count: days }) : t('match.time.agoDays', { count: days });
     const hours = Math.floor(abs / (60*60*1000));
-    if (hours >= 1) return diff >= 0 ? `in ${hours} Stunden` : `vor ${hours} Stunden`;
+    if (hours >= 1) return diff >= 0 ? t('match.time.inHours', { count: hours }) : t('match.time.agoHours', { count: hours });
     const mins = Math.max(1, Math.floor(abs / (60*1000)));
-    return diff >= 0 ? `in ${mins} Minuten` : `vor ${mins} Minuten`;
-  }, []);
+    return diff >= 0 ? t('match.time.inMinutes', { count: mins }) : t('match.time.agoMinutes', { count: mins });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
   
   // Time remaining until deadline (for kickoff_end_at)
   const timeRemaining = useMemo(() => (when) => {
@@ -226,15 +235,16 @@ export default function GameDetailPage() {
     if (Number.isNaN(d.getTime())) return "";
     const now = new Date();
     const diff = d.getTime() - now.getTime();
-    if (diff < 0) return "abgelaufen";
+    if (diff < 0) return t('match.time.expired');
     const days = Math.floor(diff / (24*60*60*1000));
-    if (days >= 2) return `noch ${days} Tage`;
-    if (days === 1) return `noch 1 Tag`;
+    if (days >= 2) return t('match.time.remainDays', { count: days });
+    if (days === 1) return t('match.time.remain1Day');
     const hours = Math.floor(diff / (60*60*1000));
-    if (hours >= 1) return `noch ${hours} Stunden`;
+    if (hours >= 1) return t('match.time.remainHours', { count: hours });
     const mins = Math.max(1, Math.floor(diff / (60*1000)));
-    return `noch ${mins} Minuten`;
-  }, []);
+    return t('match.time.remainMinutes', { count: mins });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
   // fetch league games to build player histories
   const [leagueGames, setLeagueGames] = useState([]);
   const leagueId = game?.leagueId || null;
@@ -314,10 +324,10 @@ export default function GameDetailPage() {
 
     const terminButtonLabel = useMemo(() => {
       const viewerUserId = terminMeta?.viewerUserId || viewerId || null;
-      if (terminProposal && terminProposal.status === 'accepted') return 'Termin ändern';
-      if (!terminProposal || terminProposal.status !== 'sent') return 'Termin vereinbaren';
-      if (viewerUserId != null && Number(terminProposal.proposerUserId) === Number(viewerUserId)) return 'Einladung gesendet';
-      return 'Termin vorschlag erhalten';
+      if (terminProposal && terminProposal.status === 'accepted') return t('match.termin.change');
+      if (!terminProposal || terminProposal.status !== 'sent') return t('match.termin.arrange');
+      if (viewerUserId != null && Number(terminProposal.proposerUserId) === Number(viewerUserId)) return t('match.termin.invitationSent');
+      return t('match.termin.proposalReceived');
     }, [terminProposal, terminMeta, viewerId]);
   useEffect(() => {
     let mounted = true;
@@ -344,18 +354,28 @@ export default function GameDetailPage() {
     let mounted = true;
     (async () => {
       try {
-        if (!token || !gameId) { if (mounted){ setCanSubmit(false); setCannotReason(''); } return; }
+        if (!token || !gameId) { if (mounted){ setCanSubmit(false); setCannotReason(''); setResultPending(false); } return; }
         const r = await fetch(`${API_BASE}/matches/${gameId}/can-submit`, { headers: { Authorization: `Bearer ${token}` } });
         const j = await r.json().catch(() => ({ canSubmit: false }));
         if (!mounted) return;
         setCanSubmit(!!j.canSubmit);
         setCannotReason(j.reason || '');
+        // Handle result_pending confirmation flow
+        if (j.resultPending) {
+          setResultPending(true);
+          setResultIsSubmitter(!!j.isSubmitter);
+          setPendingScore(j.pendingScore || null);
+        } else {
+          setResultPending(false);
+          setResultIsSubmitter(false);
+          setPendingScore(null);
+        }
       } catch {
-        if (mounted) { setCanSubmit(false); setCannotReason(''); }
+        if (mounted) { setCanSubmit(false); setCannotReason(''); setResultPending(false); }
       }
     })();
     return () => { mounted = false; };
-  }, [token, gameId, game?.kickoff_at]);
+  }, [token, gameId, game?.kickoff_at, game?.status]);
 
   // when game kickoff is present, prefill calendar fields with local date+time
   useEffect(() => {
@@ -392,58 +412,78 @@ export default function GameDetailPage() {
     setTimeStr(`${hh}:${mm}`);
   }, [scheduleHours, scheduleMinutes]);
 
-  if (loading) return <div style={{ padding: 16 }}>Lade Spiel ...</div>;
+  if (loading) return <div style={{ padding: 16 }}>{t('match.loading')}</div>;
   if (err) {
     if (handleInvalidToken(err, navigate)) return null;
-    return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+    return <div style={{ padding: 16, color: "crimson" }}>{t('match.errorPrefix')}: {err}</div>;
   }
-  if (!game) return <div style={{ padding: 16 }}>Kein Spiel gefunden.</div>;
+  if (!game) return <div style={{ padding: 16 }}>{t('match.notFound')}</div>;
 
   const playerA = { name: game.home_user_name || game.home || "-", id: game.home_user_id || null };
   const playerB = { name: game.away_user_name || game.away || "-", id: game.away_user_id || null };
 
+  const participants = Array.isArray(game.participants) ? game.participants : [];
+  const format = game.format || {};
+  const maxPlayers = Number.isFinite(Number(format.maxPlayers)) ? Number(format.maxPlayers) : (Number.isFinite(Number(game.max_players)) ? Number(game.max_players) : null);
+  const joinedCount = Number.isFinite(Number(format.joinedCount))
+    ? Number(format.joinedCount)
+    : (participants.length || [game.home_user_id, game.away_user_id].filter(v => v != null).length);
+  const viewerParticipant = viewerId ? participants.find(p => String(p.user_id) === String(viewerId)) : null;
+  const isParticipantByParticipants = !!viewerParticipant;
   const isParticipant = viewerId && (
+    isParticipantByParticipants ||
     (game.home_user_id != null && String(game.home_user_id) === String(viewerId)) ||
     (game.away_user_id != null && String(game.away_user_id) === String(viewerId))
   );
-  const isCompleted = (game.home_score != null && game.away_score != null);
+  const hasCapacity = (maxPlayers == null) ? true : (joinedCount < maxPlayers);
+  const teamCount = Number.isFinite(Number(format.teamCount)) ? Number(format.teamCount) : (Number.isFinite(Number(game.team_count)) ? Number(game.team_count) : 0);
+  const allowTeamChoice = (format.allowTeamChoice != null) ? !!format.allowTeamChoice : (game.allow_team_choice != null ? Number(game.allow_team_choice) !== 0 : true);
+  const viewerTeamIndex = viewerParticipant && viewerParticipant.team_index != null ? Number(viewerParticipant.team_index) : null;
+
+  const isCompleted = (game.status === 'completed') || (game.home_score != null && game.away_score != null && game.status !== 'result_pending');
+  const isResultPending = game.status === 'result_pending';
+  const isResultDisputed = game.status === 'result_disputed';
+  const isCancelled = game.status === 'cancelled';
 
   const statusLabel = (() => {
-    if (game.home_score != null && game.away_score != null) return 'Absolviert';
+    if (game.status === 'cancelled') return t('match.status.cancelled', 'Abgesagt');
+    if (game.status === 'result_pending') return t('match.status.resultPending', 'Ergebnis ausstehend');
+    if (game.status === 'result_disputed') return t('match.status.resultDisputed', 'Ergebnis abgelehnt');
+    if (game.home_score != null && game.away_score != null) return t('match.status.completed');
     
     // Check if match is scheduled (status = 'scheduled' or has accepted proposal)
     if (game.status === 'scheduled' || (terminProposal && terminProposal.status === 'accepted')) {
-      return 'Match geplant';
+      return t('match.status.scheduled');
     }
 
     const now = new Date();
 
-    // For open time windows (fixed/range), a match is not "absolviert" just because the window started.
-    // Only after the window end has passed, we treat it as "Absolviert / ohne Ergebnis".
+    // For open time windows (fixed/range), a match is not completed just because the window started.
+    // Only after the window end has passed, we treat it as completed without result.
     const isOpenWindow = game.when_type === 'fixed' || game.when_type === 'range' || (!!game.kickoff_end_at && game.when_type !== 'exact');
     if (isOpenWindow) {
-      if (!game.kickoff_end_at) return 'Termin ausstehend';
+      if (!game.kickoff_end_at) return t('match.status.datePending');
       const end = new Date(game.kickoff_end_at);
-      if (Number.isNaN(end.getTime())) return 'Match ausstehend';
-      if (now.getTime() >= end.getTime()) return 'Absolviert / ohne Ergebnis';
-      return 'Match ausstehend';
+      if (Number.isNaN(end.getTime())) return t('match.status.pending');
+      if (now.getTime() >= end.getTime()) return t('match.status.completedNoResult');
+      return t('match.status.pending');
     }
 
-    if (!game.kickoff_at) return 'Termin ausstehend';
+    if (!game.kickoff_at) return t('match.status.datePending');
     const kickoff = new Date(game.kickoff_at);
-    if (Number.isNaN(kickoff.getTime())) return 'Match ausstehend';
+    if (Number.isNaN(kickoff.getTime())) return t('match.status.pending');
 
     const diffMs = now.getTime() - kickoff.getTime();
     if (diffMs >= 0) {
       const diffMin = diffMs / 60000;
-      if (diffMin < 60) return 'Live';
-      if (diffMin < 120) return 'Laufend';
-      return 'Absolviert / ohne Ergebnis';
+      if (diffMin < 60) return t('match.status.live');
+      if (diffMin < 120) return t('match.status.ongoing');
+      return t('match.status.completedNoResult');
     }
 
     const sameDay = now.getFullYear() === kickoff.getFullYear() && now.getMonth() === kickoff.getMonth() && now.getDate() === kickoff.getDate();
-    if (sameDay) return 'Heute';
-    return 'Match ausstehend';
+    if (sameDay) return t('match.status.today');
+    return t('match.status.pending');
   })();
 
   // compute simple table positions from standings (win=3, draw=1, loss=0)
@@ -514,7 +554,7 @@ export default function GameDetailPage() {
     setSubmitMsg('');
     setSubmitLoading(true);
     if (!token) { 
-      setSubmitMsg('Bitte einloggen.'); 
+      setSubmitMsg(t('match.join.loginRequired')); 
       setSubmitLoading(false);
       return; 
     }
@@ -550,24 +590,67 @@ export default function GameDetailPage() {
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
       
-      setSubmitMsg('✅ Ergebnis gespeichert!');
+      setSubmitMsg(t('match.result.pendingConfirmation', 'Ergebnis eingetragen — warte auf Bestätigung durch Gegner.'));
       setGame(j);
-      // Redirect to league after confirmation
-      setTimeout(() => { window.location.href = `/league/${leagueId || ''}`; }, 1200);
+      setResultPending(true);
+      setResultIsSubmitter(true);
     } catch (e) {
       if (e.name === 'AbortError') {
-        setSubmitMsg('⚠️ Zeitüberschreitung - Versuche es nochmal.');
+        setSubmitMsg(t('match.timeoutRetry'));
       } else {
-        setSubmitMsg('❌ ' + (e.message || 'Fehler beim Speichern.'));
+        setSubmitMsg('❌ ' + (e.message || t('match.save.error')));
       }
     } finally {
       setSubmitLoading(false);
     }
   }
 
+  async function confirmResult() {
+    setConfirmLoading(true);
+    setConfirmMsg('');
+    try {
+      const r = await fetch(`${API_BASE}/matches/${gameId}/result/confirm`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error || j?.message || `HTTP ${r.status}`);
+      setConfirmMsg(t('match.result.confirmed', 'Ergebnis bestätigt!'));
+      setGame(j);
+      setResultPending(false);
+      setTimeout(() => { window.location.href = `/league/${leagueId || ''}`; }, 1500);
+    } catch (e) {
+      setConfirmMsg('❌ ' + (e.message || 'Fehler'));
+    } finally {
+      setConfirmLoading(false);
+    }
+  }
+
+  async function rejectResult() {
+    setConfirmLoading(true);
+    setConfirmMsg('');
+    try {
+      const r = await fetch(`${API_BASE}/matches/${gameId}/result/reject`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error || j?.message || `HTTP ${r.status}`);
+      setConfirmMsg(t('match.result.rejected', 'Ergebnis abgelehnt. Ein neues Ergebnis kann eingetragen werden.'));
+      setGame(j);
+      setResultPending(false);
+      setCanSubmit(true);
+      setCannotReason('');
+    } catch (e) {
+      setConfirmMsg('❌ ' + (e.message || 'Fehler'));
+    } finally {
+      setConfirmLoading(false);
+    }
+  }
+
   async function joinMatch() {
     setJoinMsg('');
-    if (!token) { setJoinMsg('Bitte einloggen.'); return; }
+    if (!token) { setJoinMsg(t('match.join.loginRequired')); return; }
     try {
       const r = await fetch(`${API_BASE}/matches/${gameId}/join`, {
         method: 'POST',
@@ -575,13 +658,31 @@ export default function GameDetailPage() {
       });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
-      setJoinMsg('Beigetreten.');
+      setJoinMsg(t('match.join.ok'));
       // Re-fetch canonical projection to ensure names and permissions are fresh
       const fres = await fetch(`${API_BASE}/matches/${gameId}`);
       const fresh = await fres.json().catch(() => j);
       setGame(fres.ok ? fresh : j);
     } catch (e) {
-      setJoinMsg(e.message || 'Beitreten fehlgeschlagen.');
+      setJoinMsg(e.message || t('match.join.failed'));
+    }
+  }
+
+  async function selectTeam(teamIndex) {
+    setJoinMsg('');
+    if (!token) { setJoinMsg(t('match.join.loginRequired')); return; }
+    try {
+      const r = await fetch(`${API_BASE}/matches/${gameId}/select-team`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ team_index: teamIndex })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
+      setJoinMsg(t('match.team.selected'));
+      setGame(j);
+    } catch (e) {
+      setJoinMsg(e.message || t('match.team.selectFailed'));
     }
   }
 
@@ -591,12 +692,12 @@ export default function GameDetailPage() {
     setScheduleLoading(true);
     
     if (!token) { 
-      setScheduleMsg('Bitte einloggen.'); 
+      setScheduleMsg(t('match.join.loginRequired')); 
       setScheduleLoading(false);
       return; 
     }
     if (!dateStr || !timeStr) { 
-      setScheduleMsg('Bitte Datum und Uhrzeit wählen.'); 
+      setScheduleMsg(t('match.schedule.pickDateTime')); 
       setScheduleLoading(false);
       return; 
     }
@@ -607,7 +708,7 @@ export default function GameDetailPage() {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
       
-      setScheduleMsg('⏳ Speichere Termin...');
+      setScheduleMsg(t('match.schedule.saving'));
       
       const r = await fetch(`${API_BASE}/matches/${gameId}/schedule`, {
         method: 'POST',
@@ -620,7 +721,7 @@ export default function GameDetailPage() {
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
       
-      setScheduleMsg('✅ Termin gespeichert!');
+      setScheduleMsg(t('match.schedule.saved'));
       
       // Optimistic update first for instant feedback
       setGame(prevGame => ({
@@ -648,9 +749,9 @@ export default function GameDetailPage() {
       
     } catch (e) {
       if (e.name === 'AbortError') {
-        setScheduleMsg('⚠️ Zeitüberschreitung - Versuche es nochmal.');
+        setScheduleMsg(t('match.timeoutRetry'));
       } else {
-        setScheduleMsg('❌ ' + (e.message || 'Termin setzen fehlgeschlagen.'));
+        setScheduleMsg('❌ ' + (e.message || t('match.schedule.failed')));
       }
     } finally {
       setScheduleLoading(false);
@@ -659,7 +760,7 @@ export default function GameDetailPage() {
 
   async function suggestNextSlot() {
     setScheduleMsg('');
-    if (!token) { setScheduleMsg('Bitte einloggen.'); return; }
+    if (!token) { setScheduleMsg(t('match.join.loginRequired')); return; }
     try {
       const baseAt = dateStr && timeStr ? `${dateStr}T${timeStr}` : undefined;
       const r = await fetch(`${API_BASE}/matches/${gameId}/suggest-slot`, {
@@ -678,25 +779,28 @@ export default function GameDetailPage() {
           setDateStr(`${yyyy}-${mm}-${dd}`);
           setScheduleHours(d.getHours());
           setScheduleMinutes(d.getMinutes());
-          setScheduleMsg('Vorschlag übernommen. Bitte speichern.');
+          setScheduleMsg(t('match.schedule.proposalTaken'));
         }
       }
     } catch (e) {
-      setScheduleMsg(e.message || 'Vorschlag fehlgeschlagen.');
+      setScheduleMsg(e.message || t('match.suggest.failed'));
     }
   }
 
   async function cancelMatch() {
     setScheduleMsg('');
-    if (!token) { setScheduleMsg('Bitte einloggen.'); return; }
+    if (!token) { setScheduleMsg(t('match.join.loginRequired')); return; }
+    if (!window.confirm(t('match.cancel.confirm'))) return;
     try {
       const r = await fetch(`${API_BASE}/matches/${gameId}`, { method: 'DELETE', headers: { Authorization: `Bearer ${token}` } });
       const j = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
-      // after deletion, navigate back to league overview
-  navigate(leagueId ? `/league/${leagueId}` : '/leagues', { replace: true });
+      // Soft-delete: match is now cancelled, refresh page to show new status
+      setScheduleMsg(t('match.cancel.success'));
+      // Reload match data to reflect cancelled status
+      setTimeout(() => window.location.reload(), 800);
     } catch (e) {
-      setScheduleMsg(e.message || 'Absagen fehlgeschlagen.');
+      setScheduleMsg(e.message || t('match.cancel.failed'));
     }
   }
 
@@ -710,8 +814,8 @@ export default function GameDetailPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Fehler beim Annehmen');
-      setProposalActionMsg('✅ Termin angenommen! Match-Startdatum wurde gesetzt.');
+      if (!res.ok) throw new Error(data.error || t('match.proposal.acceptError'));
+      setProposalActionMsg(t('match.proposal.accepted'));
       // Reload termin manager data
       const terminRes = await fetch(`${API_BASE}/matches/${gameId}/termin-manager`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -726,7 +830,7 @@ export default function GameDetailPage() {
       const gameData = await gameRes.json().catch(() => ({}));
       if (gameRes.ok) setGame(gameData);
     } catch (e) {
-      setProposalActionMsg(e.message || 'Fehler');
+      setProposalActionMsg(e.message || t('match.errorPrefix'));
     } finally {
       setProposalActionLoading(false);
     }
@@ -742,8 +846,8 @@ export default function GameDetailPage() {
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Fehler beim Ablehnen');
-      setProposalActionMsg('Terminvorschlag abgelehnt');
+      if (!res.ok) throw new Error(data.error || t('match.proposal.rejectError'));
+      setProposalActionMsg(t('match.proposal.rejected'));
       // Reload termin manager data
       const terminRes = await fetch(`${API_BASE}/matches/${gameId}/termin-manager`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -755,7 +859,7 @@ export default function GameDetailPage() {
       }
       setTimeout(() => setProposalActionMsg(''), 3000);
     } catch (e) {
-      setProposalActionMsg(e.message || 'Fehler');
+      setProposalActionMsg(e.message || t('match.errorPrefix'));
     } finally {
       setProposalActionLoading(false);
     }
@@ -770,7 +874,7 @@ export default function GameDetailPage() {
       {/* Hero match card */}
       <div style={{ ...cardStyle, padding: isMobile ? 12 : 20, background: 'linear-gradient(145deg, #102a22, #0c1f1a)' }}>
         {/* Join CTA for open matches (viewer is not host and opponent missing) */}
-        {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && !(viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId))) && (() => {
+        {(token && game && game.home_score == null && game.away_score == null && !isParticipant && hasCapacity) && (() => {
           const isOpenMatch = game.league === 'Open Matches' || (game.league && game.league.includes('Open Matches'));
           const canJoin = isOpenMatch || !hasWeeklyMatch;
           return (
@@ -793,7 +897,7 @@ export default function GameDetailPage() {
                 letterSpacing: '0.3px'
               }}>
                 <span style={{ fontSize: isMobile ? 22 : 28 }}>🏆</span>
-                Mitspieler gesucht!
+                {t('match.cta.title')}
               </div>
               <div style={{ 
                 color: '#e8efe8', 
@@ -802,7 +906,9 @@ export default function GameDetailPage() {
                 lineHeight: 1.6,
                 fontWeight: 500
               }}>
-                {playerA.name} sucht einen Gegner für dieses Match. Tritt bei und fordere ihn heraus!
+                {teamCount && teamCount >= 2
+                  ? t('match.cta.teamText', { name: playerA.name, joined: joinedCount, cap: maxPlayers ? `/${maxPlayers}` : '' })
+                  : t('match.cta.opponentText', { name: playerA.name })}
               </div>
               <button
                 onClick={joinMatch}
@@ -836,7 +942,7 @@ export default function GameDetailPage() {
                   }
                 }}
               >
-                {isOpenMatch ? '✨ Jetzt beitreten' : '⚔️ Challenge annehmen'}
+                {isOpenMatch ? t('match.cta.joinNow') : t('match.cta.acceptChallenge')}
               </button>
               {!canJoin && !isOpenMatch && (
                 <div style={{ 
@@ -849,12 +955,78 @@ export default function GameDetailPage() {
                   background: 'rgba(100, 100, 100, 0.2)',
                   borderRadius: 8
                 }}>
-                  Du hast diese Woche bereits ein Match in dieser Liga.
+                  {t('match.cta.weeklyLimit')}
                 </div>
               )}
             </div>
           );
         })()}
+
+        {/* Team selection for participant-based team matches */}
+        {(token && game && isParticipant && allowTeamChoice && teamCount >= 2 && (maxPlayers == null || maxPlayers > 2) && !isCompleted) && (
+          <div style={{
+            padding: isMobile ? '12px' : '14px',
+            background: 'rgba(47, 107, 87, 0.12)',
+            border: '1px solid rgba(47, 107, 87, 0.35)',
+            borderRadius: 14,
+            marginBottom: isMobile ? 14 : 18,
+          }}>
+            <div style={{ fontWeight: 800, color: '#debc7c', marginBottom: 10 }}>
+              {t('match.team.selectTitle')}
+            </div>
+            {viewerTeamIndex == null && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: isMobile ? '10px 12px' : '12px 16px',
+                marginBottom: 12,
+                background: 'rgba(222, 188, 124, 0.08)',
+                border: '1px dashed rgba(222, 188, 124, 0.4)',
+                borderRadius: 12,
+                color: '#e8efe8',
+                fontSize: isMobile ? 13 : 14,
+                lineHeight: 1.5,
+              }}>
+                <span style={{ fontSize: 22, flexShrink: 0 }}>👋</span>
+                <span>{t('match.team.notSelected')}</span>
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button
+                onClick={() => selectTeam(1)}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: 12,
+                  border: '1px solid #2f6b57',
+                  background: viewerTeamIndex === 1 ? 'linear-gradient(135deg, #debc7c, #c9a75f)' : '#0f2a20',
+                  color: viewerTeamIndex === 1 ? '#10261f' : '#e8efe8',
+                  cursor: 'pointer',
+                  fontWeight: 800,
+                }}
+              >
+                {t('match.team.team1')}
+              </button>
+              <button
+                onClick={() => selectTeam(2)}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: 12,
+                  border: '1px solid #2f6b57',
+                  background: viewerTeamIndex === 2 ? 'linear-gradient(135deg, #debc7c, #c9a75f)' : '#0f2a20',
+                  color: viewerTeamIndex === 2 ? '#10261f' : '#e8efe8',
+                  cursor: 'pointer',
+                  fontWeight: 800,
+                }}
+              >
+                {t('match.team.team2')}
+              </button>
+            </div>
+            {joinMsg && (
+              <div style={{ marginTop: 10, fontSize: 13, color: '#cfe8dc' }}>{joinMsg}</div>
+            )}
+          </div>
+        )}
         
         {/* Terminvorschlag Widget - 1:1 wie im Termin Manager */}
         {terminProposal && terminProposal.status === 'sent' && (() => {
@@ -871,7 +1043,7 @@ export default function GameDetailPage() {
                 fontWeight: 600,
                 color: '#debc7c'
               }}>
-                📅 Terminvorschlag
+                📅 {t('match.proposal.title')}
               </div>
               
               {proposalActionMsg && (
@@ -879,9 +1051,9 @@ export default function GameDetailPage() {
                   padding: isMobile ? 8 : 10,
                   marginBottom: isMobile ? 8 : 10,
                   borderRadius: 8,
-                  background: proposalActionMsg.includes('✅') || proposalActionMsg.includes('angenommen') ? 'rgba(74, 157, 95, 0.15)' : 'rgba(255, 107, 107, 0.15)',
-                  border: `1px solid ${proposalActionMsg.includes('✅') || proposalActionMsg.includes('angenommen') ? '#4a9d5f' : '#ff6b6b'}`,
-                  color: proposalActionMsg.includes('✅') || proposalActionMsg.includes('angenommen') ? '#6bff9d' : '#ff6b6b',
+                  background: proposalActionMsg.includes('✅') || proposalActionMsg.includes('accepted') || proposalActionMsg.includes('angenommen') ? 'rgba(74, 157, 95, 0.15)' : 'rgba(255, 107, 107, 0.15)',
+                  border: `1px solid ${proposalActionMsg.includes('✅') || proposalActionMsg.includes('accepted') || proposalActionMsg.includes('angenommen') ? '#4a9d5f' : '#ff6b6b'}`,
+                  color: proposalActionMsg.includes('✅') || proposalActionMsg.includes('accepted') || proposalActionMsg.includes('angenommen') ? '#6bff9d' : '#ff6b6b',
                   fontSize: isMobile ? 11 : 13
                 }}>
                   {proposalActionMsg}
@@ -901,10 +1073,10 @@ export default function GameDetailPage() {
               }}>
                 <div>
                   <div style={{ fontWeight: 700, color: '#e8efe8', fontSize: isMobile ? 13 : 14 }}>
-                    {dt ? dt.toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'Terminvorschlag'}
+                    {dt ? dt.toLocaleString(uiLocale, { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : t('match.proposal.title')}
                   </div>
                   <div style={{ color: '#9db', fontSize: isMobile ? 11 : 13 }}>
-                    {byYou ? 'von dir' : 'vom Gegner'} · Status: <span style={{ color: '#c9a75f' }}>ausstehend</span>
+                    {byYou ? t('match.proposal.byYou') : t('match.proposal.byOpponent')} · Status: <span style={{ color: '#c9a75f' }}>{t('match.proposal.pending')}</span>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: isMobile ? 6 : 8, flexWrap: 'wrap' }}>
@@ -925,7 +1097,7 @@ export default function GameDetailPage() {
                           opacity: proposalActionLoading ? 0.5 : 1
                         }}
                       >
-                        Annehmen
+                        {t('match.proposal.accept')}
                       </button>
                       <button 
                         onClick={counterProposal}
@@ -941,7 +1113,7 @@ export default function GameDetailPage() {
                           borderRadius: 10
                         }}
                       >
-                        Gegenvorschlag
+                        {t('match.proposal.counter')}
                       </button>
                       <button 
                         onClick={() => rejectProposal(terminProposal.id)}
@@ -957,7 +1129,7 @@ export default function GameDetailPage() {
                           borderRadius: 10
                         }}
                       >
-                        Ablehnen
+                        {t('match.proposal.reject')}
                       </button>
                     </>
                   ) : (
@@ -974,7 +1146,7 @@ export default function GameDetailPage() {
                         borderRadius: 10
                       }}
                     >
-                      Details ansehen
+                      {t('match.proposal.details')}
                     </button>
                   )}
                 </div>
@@ -1006,7 +1178,7 @@ export default function GameDetailPage() {
               letterSpacing: '0.3px'
             }}>
               <span style={{ fontSize: isMobile ? 22 : 28 }}>👥</span>
-              Mitspieler gesucht
+              {t('match.creator.title')}
             </div>
             <div style={{ 
               color: '#c5d9ce', 
@@ -1015,7 +1187,7 @@ export default function GameDetailPage() {
               marginBottom: isMobile ? 10 : 14,
               fontWeight: 500
             }}>
-              Dein Match ist veröffentlicht und für alle Spieler sichtbar.
+              {t('match.creator.subtitle')}
             </div>
             <div style={{ 
               display: 'inline-flex',
@@ -1029,7 +1201,7 @@ export default function GameDetailPage() {
               color: '#debc7c',
               fontWeight: 700
             }}>
-              🎯 Spiel aktiv
+              {t('match.creator.badgeActive')}
             </div>
           </div>
         )}
@@ -1091,13 +1263,13 @@ export default function GameDetailPage() {
                     {formatTime(game.kickoff_at) && <span style={{ marginLeft: 6 }}>{formatTime(game.kickoff_at)}</span>}
                   </>
                 ) : game.when_type === 'range' && game.range_days ? (
-                  `📅 In den nächsten ${game.range_days} Tag${game.range_days !== 1 ? 'en' : ''}`
+                  game.range_days !== 1 ? t('match.date.rangeNext', { count: game.range_days }) : t('match.date.rangeNext1')
                 ) : game.when_type === 'fixed' && game.kickoff_end_at ? (
-                  `📅 Zeitraum: ${formatDate(game.kickoff_at || '')} - ${formatDate(game.kickoff_end_at)}`
+                  t('match.date.period', { from: formatDate(game.kickoff_at || ''), to: formatDate(game.kickoff_end_at) })
                 ) : game.kickoff_end_at ? (
-                  `📅 Bis ${formatDate(game.kickoff_end_at)}`
+                  t('match.date.until', { date: formatDate(game.kickoff_end_at) })
                 ) : (
-                  '⏰ Noch kein Termin vereinbart'
+                  t('match.date.noneYet')
                 )}
               </div>
             </div>
@@ -1128,7 +1300,7 @@ export default function GameDetailPage() {
                 <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
                   <path d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V14C20 15.1046 19.1046 16 18 16H11.5L7 19.5V16H6C4.89543 16 4 15.1046 4 14V6Z" fill="none" stroke="currentColor" strokeWidth="2" />
                 </svg>
-                Match-Chat
+                {t('match.chat')}
                 {chatUnread && (
                   <span style={{
                     position: 'absolute',
@@ -1148,7 +1320,7 @@ export default function GameDetailPage() {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
                 {game.kickoff_end_at && (
                   <div style={{ fontSize: 13, color: '#ffd35d', fontWeight: 500 }}>
-                    {timeRemaining(game.kickoff_end_at).replace('noch', 'Noch')} um den Termin zu vereinbaren
+                    {timeRemaining(game.kickoff_end_at)} {t('match.deadline.hint')}
                   </div>
                 )}
                 <button onClick={() => setShowTerminManager(true)} style={{ 
@@ -1167,7 +1339,7 @@ export default function GameDetailPage() {
                 </button>
               </div>
             )}
-            {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
+            {(token && game && !isCancelled && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
               <button onClick={cancelMatch} style={{ 
                 padding: isMobile ? '8px 12px' : '10px 16px', 
                 borderRadius: 10, 
@@ -1179,7 +1351,7 @@ export default function GameDetailPage() {
                 cursor: 'pointer',
                 boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
                 transition: 'all 0.2s ease'
-              }}>ABSAGEN</button>
+              }}>{t('match.cancel')}</button>
             )}
           </div>
         </div>
@@ -1205,23 +1377,23 @@ export default function GameDetailPage() {
             ) : game.when_type === 'range' && game.kickoff_end_at ? (
               <span>{timeRemaining(game.kickoff_end_at)}</span>
             ) : game.when_type === 'fixed' && game.kickoff_at && game.kickoff_end_at ? (
-              <span>Zeitraum: {formatDate(game.kickoff_at)} - {formatDate(game.kickoff_end_at)}</span>
+              <span>{t('match.date.periodLabel', { from: formatDate(game.kickoff_at), to: formatDate(game.kickoff_end_at) })}</span>
             ) : game.when_type === 'exact' && game.kickoff_at ? (
               <>
                 {formatDate(game.kickoff_at)}
                 {formatTime(game.kickoff_at) && <span style={{ marginLeft: 8, color: '#9db' }}>{formatTime(game.kickoff_at)}</span>}
               </>
             ) : game.kickoff_at && game.kickoff_end_at ? (
-              <span>Zeitraum: {formatDate(game.kickoff_at)} - {formatDate(game.kickoff_end_at)}</span>
+              <span>{t('match.date.periodLabel', { from: formatDate(game.kickoff_at), to: formatDate(game.kickoff_end_at) })}</span>
             ) : game.kickoff_at ? (
               <>
                 {formatDate(game.kickoff_at)}
                 {formatTime(game.kickoff_at) && <span style={{ marginLeft: 8, color: '#9db' }}>{formatTime(game.kickoff_at)}</span>}
               </>
             ) : game.kickoff_end_at ? (
-              'Zeitraum flexibel'
+              t('match.date.periodFlex')
             ) : (
-              'Termin ausstehend'
+              t('match.status.datePending')
             )}
           </div>
           <div style={{ 
@@ -1234,7 +1406,7 @@ export default function GameDetailPage() {
             borderRadius: 20
           }}>
             <span style={{ width: 10, height: 10, background: '#ffd35d', borderRadius: '50%', boxShadow: '0 0 8px rgba(255, 211, 93, 0.5)' }} />
-            <span style={{ color: '#ffd35d', fontSize: isMobile ? 13 : 14, fontWeight: 600 }}>{statusLabel || (isCompleted ? 'Absolviert' : 'Match ausstehend')}</span>
+            <span style={{ color: '#ffd35d', fontSize: isMobile ? 13 : 14, fontWeight: 600 }}>{statusLabel || (isCompleted ? t('match.status.completed') : t('match.status.pending'))}</span>
           </div>
           {game.when_type === 'exact' && game.kickoff_at && (
             <div style={{ color: '#9db', fontSize: 14 }}>{relativeFromNow(game.kickoff_at)}</div>
@@ -1243,7 +1415,7 @@ export default function GameDetailPage() {
             <div style={{ color: '#9db', fontSize: 14 }}>{timeRemaining(game.kickoff_end_at)}</div>
           )}
           {game.kickoff_end_at && !game.kickoff_at && (
-            <div style={{ color: '#9db', fontSize: 14 }}>Bis {formatDate(game.kickoff_end_at)}</div>
+            <div style={{ color: '#9db', fontSize: 14 }}>{t('match.date.untilPlain', { date: formatDate(game.kickoff_end_at) })}</div>
           )}
         </div>
         
@@ -1271,7 +1443,7 @@ export default function GameDetailPage() {
                 fontSize: 13,
                 color: '#9db'
               }}>
-                📅 Zeitraum: {formatDate(game.kickoff_at)} - {formatDate(game.kickoff_end_at)}
+                📅 {t('match.date.periodLabel', { from: formatDate(game.kickoff_at), to: formatDate(game.kickoff_end_at) })}
               </div>
             )}
             {game.when_type === 'exact' && game.kickoff_at && (
@@ -1283,7 +1455,7 @@ export default function GameDetailPage() {
                 fontSize: 13,
                 color: '#9db'
               }}>
-                📅 Festes Datum
+                {t('match.date.fixedDate')}
               </div>
             )}
             {!game.when_type && !game.kickoff_at && !game.kickoff_end_at && (
@@ -1295,7 +1467,7 @@ export default function GameDetailPage() {
                 fontSize: 13,
                 color: '#9db'
               }}>
-                🕐 Datum offen
+                {t('match.date.dateOpen')}
               </div>
             )}
           </div>
@@ -1349,7 +1521,7 @@ export default function GameDetailPage() {
                         fontSize: isMobile ? 12 : 13,
                         fontWeight: 500,
                         marginTop: 2
-                      }}>{tablePositions[playerA.name].rank}. Rang</div>
+                      }}>{t('match.rank', { rank: tablePositions[playerA.name].rank })}</div>
                     )}
                   </div>
                 </Link>
@@ -1376,7 +1548,7 @@ export default function GameDetailPage() {
                         fontSize: isMobile ? 12 : 13,
                         fontWeight: 500,
                         marginTop: 2
-                      }}>{tablePositions[playerA.name].rank}. Rang</div>
+                      }}>{t('match.rank', { rank: tablePositions[playerA.name].rank })}</div>
                     )}
                   </div>
                 </>
@@ -1415,7 +1587,7 @@ export default function GameDetailPage() {
                         fontSize: isMobile ? 12 : 13,
                         fontWeight: 500,
                         marginTop: 2
-                      }}>{tablePositions[playerB.name].rank}. Rang</div>
+                      }}>{t('match.rank', { rank: tablePositions[playerB.name].rank })}</div>
                     )}
                   </div>
                 </Link>
@@ -1437,7 +1609,7 @@ export default function GameDetailPage() {
                         fontSize: isMobile ? 12 : 13,
                         fontWeight: 500,
                         marginTop: 2
-                      }}>{tablePositions[playerB.name].rank}. Rang</div>
+                      }}>{t('match.rank', { rank: tablePositions[playerB.name].rank })}</div>
                     )}
                   </div>
                   <Avatar 
@@ -1474,7 +1646,108 @@ export default function GameDetailPage() {
                   {Number(game.home_score)} : {Number(game.away_score)}
                 </div>
               </div>
-            ) : (token && isParticipant && !!game.kickoff_at) ? (
+            ) : isResultPending ? (
+              /* Ergebnis wartet auf Bestätigung */
+              <div style={{
+                marginBottom: isMobile ? 16 : 20,
+                padding: isMobile ? 16 : 20,
+                background: 'rgba(15, 42, 32, 0.8)',
+                borderRadius: 12,
+                border: '1px solid rgba(212, 175, 55, 0.4)',
+                textAlign: 'center'
+              }}>
+                <div style={{ 
+                  fontSize: isMobile ? 13 : 15, 
+                  fontWeight: 700, 
+                  color: '#debc7c', 
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  marginBottom: 12
+                }}>
+                  {t('match.result.pendingTitle', 'Ergebnis wartet auf Bestätigung')}
+                </div>
+                <div style={{ 
+                  fontSize: isMobile ? 28 : 40, 
+                  fontWeight: 900, 
+                  color: '#e8efe8',
+                  marginBottom: 16
+                }}>
+                  {game.home_score != null ? Number(game.home_score) : (pendingScore?.home_score ?? '?')} : {game.away_score != null ? Number(game.away_score) : (pendingScore?.away_score ?? '?')}
+                </div>
+                {resultIsSubmitter ? (
+                  <div style={{ 
+                    fontSize: isMobile ? 12 : 14,
+                    color: '#9db',
+                    fontStyle: 'italic'
+                  }}>
+                    {t('match.result.waitingForOpponent', 'Warte auf Bestätigung durch deinen Gegner...')}
+                  </div>
+                ) : (
+                  <div>
+                    <div style={{ 
+                      fontSize: isMobile ? 12 : 14,
+                      color: '#c8dcc8',
+                      marginBottom: 14
+                    }}>
+                      {t('match.result.opponentSubmitted', 'Dein Gegner hat dieses Ergebnis eingetragen. Stimmt das?')}
+                    </div>
+                    <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+                      <button 
+                        onClick={confirmResult}
+                        disabled={confirmLoading}
+                        style={{
+                          padding: isMobile ? '10px 20px' : '12px 28px',
+                          borderRadius: 24,
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #2ecc71, #27ae60)',
+                          color: '#fff',
+                          fontSize: isMobile ? 13 : 15,
+                          fontWeight: 700,
+                          cursor: confirmLoading ? 'not-allowed' : 'pointer',
+                          opacity: confirmLoading ? 0.6 : 1,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          boxShadow: '0 4px 12px rgba(46, 204, 113, 0.3)',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        {t('match.result.confirm', 'Bestätigen')}
+                      </button>
+                      <button 
+                        onClick={rejectResult}
+                        disabled={confirmLoading}
+                        style={{
+                          padding: isMobile ? '10px 20px' : '12px 28px',
+                          borderRadius: 24,
+                          border: '1px solid rgba(231, 76, 60, 0.5)',
+                          background: 'rgba(231, 76, 60, 0.15)',
+                          color: '#e74c3c',
+                          fontSize: isMobile ? 13 : 15,
+                          fontWeight: 700,
+                          cursor: confirmLoading ? 'not-allowed' : 'pointer',
+                          opacity: confirmLoading ? 0.6 : 1,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.5px',
+                          transition: 'all 0.2s ease'
+                        }}
+                      >
+                        {t('match.result.reject', 'Ablehnen')}
+                      </button>
+                    </div>
+                    {confirmMsg && (
+                      <div style={{ 
+                        marginTop: 12, 
+                        fontSize: isMobile ? 12 : 14, 
+                        color: confirmMsg.startsWith('❌') ? '#e74c3c' : '#2ecc71',
+                        fontWeight: 600
+                      }}>
+                        {confirmMsg}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            ) : (token && isParticipant && !!game.kickoff_at && (game.away_user_id != null || game.away)) ? (
               /* Teilnehmer kann Ergebnis eintragen */
               (() => {
                 const isTennis = game?.sport?.toLowerCase().includes('tennis');
@@ -1496,7 +1769,7 @@ export default function GameDetailPage() {
                       letterSpacing: '0.5px',
                       textAlign: 'center'
                     }}>
-                      Ergebnis eintragen
+                      {t('match.result.entryTitle')}
                     </div>
                     
                     {/* Anzahl Sätze - nur für Tennis Open Matches */}
@@ -1509,7 +1782,7 @@ export default function GameDetailPage() {
                         marginBottom: 16
                       }}>
                         <span style={{ color: '#9db', fontSize: isMobile ? 13 : 14, fontWeight: 600 }}>
-                          Anzahl Sätze:
+                          {t('match.tennis.setCount')}
                         </span>
                         <Counter
                           value={tennisNumSets}
@@ -1598,7 +1871,7 @@ export default function GameDetailPage() {
                       letterSpacing: '0.5px',
                       width: '100%'
                     }}>
-                      {submitLoading ? '⏳ Speichere...' : 'Ergebnis speichern'}
+                      {submitLoading ? t('match.save.loading') : t('match.saveResult')}
                     </button>
                     
                     {(!canSubmit && cannotReason && cannotReason !== 'OPPONENT_NOT_ASSIGNED') && (
@@ -1614,22 +1887,22 @@ export default function GameDetailPage() {
                         fontWeight: 600,
                         boxShadow: '0 2px 8px rgba(255, 200, 100, 0.1)'
                       }}>
-                        {cannotReason === 'KICKOFF_NOT_SET' ? '📅 Termin noch nicht festgelegt' : 
-                         cannotReason === 'KICKOFF_NOT_REACHED' ? '⏰ Ergebnis kann erst ab Startdatum eingetragen werden' :
-                         cannotReason === 'LEAGUE_MEMBERS_ONLY' ? '🔒 Nur Liga-Mitglieder' : cannotReason}
+                        {cannotReason === 'KICKOFF_NOT_SET' ? t('match.cannot.kickoffNotSet') : 
+                         cannotReason === 'KICKOFF_NOT_REACHED' ? t('match.cannot.kickoffNotReached') :
+                         cannotReason === 'LEAGUE_MEMBERS_ONLY' ? t('match.cannot.leagueMembersOnly') : cannotReason}
                       </div>
                     )}
                     {submitMsg && (
                       <div style={{ 
-                        color: submitMsg.includes('gespeichert') ? '#99ff99' : '#ff9999', 
+                        color: submitMsg.includes('✅') ? '#99ff99' : '#ff9999', 
                         fontSize: isMobile ? 12 : 13, 
                         textAlign: 'center',
                         marginTop: 10,
                         fontWeight: 600,
                         padding: '8px 12px',
-                        background: submitMsg.includes('gespeichert') ? 'rgba(153, 255, 153, 0.1)' : 'rgba(255, 153, 153, 0.1)',
+                        background: submitMsg.includes('✅') ? 'rgba(153, 255, 153, 0.1)' : 'rgba(255, 153, 153, 0.1)',
                         borderRadius: 8,
-                        border: submitMsg.includes('gespeichert') ? '1px solid rgba(153, 255, 153, 0.3)' : '1px solid rgba(255, 153, 153, 0.3)'
+                        border: submitMsg.includes('✅') ? '1px solid rgba(153, 255, 153, 0.3)' : '1px solid rgba(255, 153, 153, 0.3)'
                       }}>
                         {submitMsg}
                       </div>
@@ -1673,7 +1946,7 @@ export default function GameDetailPage() {
                     fontSize: isMobile ? 11 : 13, 
                     color: '#9db'
                   }}>
-                    <div style={{ marginBottom: 6, fontWeight: 700, fontSize: isMobile ? 10 : 11, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>Letzte 5</div>
+                    <div style={{ marginBottom: 6, fontWeight: 700, fontSize: isMobile ? 10 : 11, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>{t('match.lastForm')}</div>
                     <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
                       {histA.slice(0, 5).map(h => {
                         const won = (h.home === playerA.name && h.home_score > h.away_score) || 
@@ -1693,7 +1966,7 @@ export default function GameDetailPage() {
                             boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
                             border: won ? '1px solid rgba(45, 95, 63, 0.5)' : draw ? '1px solid rgba(95, 95, 45, 0.5)' : '1px solid rgba(95, 45, 45, 0.5)'
                           }}>
-                            {won ? 'S' : draw ? 'U' : 'N'}
+                            {won ? t('match.form.win') : draw ? t('match.form.draw') : t('match.form.loss')}
                           </span>
                         );
                       })}
@@ -1713,7 +1986,7 @@ export default function GameDetailPage() {
                     color: '#9db',
                     textAlign: 'right'
                   }}>
-                    <div style={{ marginBottom: 6, fontWeight: 700, fontSize: isMobile ? 10 : 11, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>Letzte 5</div>
+                    <div style={{ marginBottom: 6, fontWeight: 700, fontSize: isMobile ? 10 : 11, textTransform: 'uppercase', letterSpacing: '0.5px', opacity: 0.8 }}>{t('match.lastForm')}</div>
                     <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                       {histB.slice(0, 5).map(h => {
                         const won = (h.home === playerB.name && h.home_score > h.away_score) || 
@@ -1733,7 +2006,7 @@ export default function GameDetailPage() {
                             boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
                             border: won ? '1px solid rgba(45, 95, 63, 0.5)' : draw ? '1px solid rgba(95, 95, 45, 0.5)' : '1px solid rgba(95, 45, 45, 0.5)'
                           }}>
-                            {won ? 'S' : draw ? 'U' : 'N'}
+                            {won ? t('match.form.win') : draw ? t('match.form.draw') : t('match.form.loss')}
                           </span>
                         );
                       })}
@@ -1760,7 +2033,7 @@ export default function GameDetailPage() {
               color: '#ffc864',
               fontWeight: 500
             }}>
-              📅 Ergebnis erst möglich, wenn ein Termin festgelegt ist.
+              {t('match.result.requiresTime')}
             </div>
           </div>
         )}
@@ -1877,6 +2150,7 @@ export default function GameDetailPage() {
 
 // Collapsible schedule section with counter-based time selection
 function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, setHours, setMinutes, onSubmit, onSuggest, location, setLocation, message, loading, game, userProfile, onBookingConfirmed }) {
+  const { t } = useLanguage();
   const [locationMode, setLocationMode] = useState('booking'); // Default to 'booking' to show slots
   const [availableSlots, setAvailableSlots] = useState([]);
   const [loadingSlots, setLoadingSlots] = useState(false);
@@ -1971,12 +2245,12 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
         const data = await res.json();
         setAvailableSlots(Array.isArray(data) ? data : []);
       } else {
-        setSlotsError('Fehler beim Laden der Slots');
+        setSlotsError(t('match.slots.loadError'));
         setAvailableSlots([]);
       }
     } catch (err) {
       console.error('Failed to search slots:', err);
-      setSlotsError(err.message || 'Netzwerkfehler');
+      setSlotsError(err.message || t('match.networkError'));
       setAvailableSlots([]);
     } finally {
       setLoadingSlots(false);
@@ -1995,14 +2269,14 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
     <div style={{ marginTop: 16, background: '#0a1c17', padding: 16, borderRadius: 12, border: '1px solid #26493c' }}>
       {!open && (
         <button onClick={() => setOpen(true)} style={{ padding: '8px 12px', borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22', color: '#dfe' }}>
-          Termin bearbeiten
+          {t('match.schedule.editDate')}
         </button>
       )}
       {open && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Step 1: Location Selection Mode */}
           <div>
-            <h4 style={{ color: '#e8efe8', margin: '0 0 12px 0' }}>1️⃣ Location festlegen</h4>
+            <h4 style={{ color: '#e8efe8', margin: '0 0 12px 0' }}>1️⃣ {t('match.schedule.setLocation')}</h4>
             <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               <button
                 type="button"
@@ -2017,7 +2291,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
                   flex: '1 1 200px'
                 }}
               >
-                📍 Ort manuell eingeben
+                📍 {t('match.schedule.manualLocation')}
               </button>
               
               <button
@@ -2033,7 +2307,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
                   flex: '1 1 200px'
                 }}
               >
-                🏟️ Platz buchen
+                🏟️ {t('match.schedule.bookCourt')}
               </button>
             </div>
           </div>
@@ -2041,7 +2315,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
           {/* Manual Location Input */}
           {locationMode === 'manual' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <label style={{ color: '#9db', fontSize: '14px', fontWeight: '500' }}>Ort / Adresse</label>
+              <label style={{ color: '#9db', fontSize: '14px', fontWeight: '500' }}>{t('match.booking.locationLabel')}</label>
               <LocationSelector
                 cities={cities}
                 countries={countries}
@@ -2050,7 +2324,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
                 value={selectedLocationName}
                 onChange={handleLocationChange}
                 onLoadDistricts={handleLoadDistricts}
-                placeholder="Standort wählen"
+                placeholder={t('match.booking.locationPlaceholder')}
               />
             </div>
           )}
@@ -2068,7 +2342,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
               }}>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'flex-end', flexWrap: 'wrap' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: '1 1 140px' }}>
-                    <label style={{ color: '#9db', fontSize: '13px', fontWeight: '500' }}>📅 Datum</label>
+                    <label style={{ color: '#9db', fontSize: '13px', fontWeight: '500' }}>{t('match.booking.date')}</label>
                     <input 
                       type="date" 
                       value={dateStr} 
@@ -2086,7 +2360,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
                   </div>
                   
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: '0 0 auto' }}>
-                    <label style={{ color: '#9db', fontSize: '13px', fontWeight: '500' }}>🕐 Uhrzeit</label>
+                    <label style={{ color: '#9db', fontSize: '13px', fontWeight: '500' }}>{t('match.booking.time')}</label>
                     <TimeCounter
                       hours={hours}
                       minutes={minutes}
@@ -2097,7 +2371,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: '1 1 180px' }}>
                     <label style={{ color: '#9db', fontSize: '13px', fontWeight: '500' }}>
-                      📍 Stadt {game?.city && <span style={{ color: '#6a8', fontSize: '11px' }}>(Standard: {game.city})</span>}
+                      {t('match.booking.city')} {game?.city && <span style={{ color: '#6a8', fontSize: '11px' }}>({t('match.booking.cityDefault', { city: game.city })})</span>}
                     </label>
                     <select
                       value={searchCity}
@@ -2112,7 +2386,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
                         fontSize: 14
                       }}
                     >
-                      <option value="">{game?.city || 'Alle Städte'}</option>
+                      <option value="">{game?.city || t('match.booking.allCities')}</option>
                       {cities.filter(c => c.name !== game?.city).map(city => (
                         <option key={city.id} value={city.name}>{city.name}</option>
                       ))}
@@ -2130,7 +2404,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
                   marginBottom: 12
                 }}>
                   <h4 style={{ color: '#e8efe8', margin: 0, fontSize: 16 }}>
-                    Verfügbare Plätze
+                    {t('match.booking.availableCourts')}
                     {game?.sport && <span style={{ color: '#6a8', fontSize: 14, fontWeight: 400, marginLeft: 8 }}>· {game.sport}</span>}
                   </h4>
                   {!loadingSlots && availableSlots.length > 0 && (
@@ -2142,7 +2416,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
                       color: '#6db', 
                       fontWeight: 600 
                     }}>
-                      {availableSlots.length} Plätze
+                      {t('match.booking.courtsCount', { count: availableSlots.length })}
                     </div>
                   )}
                 </div>
@@ -2150,7 +2424,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
                 {loadingSlots ? (
                   <div style={{ padding: 40, textAlign: 'center', color: '#9db', background: '#0f2a20', borderRadius: 10 }}>
                     <div style={{ fontSize: 32, marginBottom: 8 }}>⏳</div>
-                    <div>Suche verfügbare Plätze...</div>
+                    <div>{t('match.booking.searchingCourts')}</div>
                   </div>
                 ) : slotsError ? (
                   <div style={{ padding: 30, textAlign: 'center', color: '#ff6b6b', background: '#2a0f0f', borderRadius: 10 }}>
@@ -2160,14 +2434,11 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
                 ) : availableSlots.length === 0 ? (
                   <div style={{ padding: 40, textAlign: 'center', color: '#9db', background: '#0f2a20', borderRadius: 10 }}>
                     <div style={{ fontSize: 32, marginBottom: 12 }}>🔍</div>
-                    <p style={{ margin: '0 0 8px 0', fontSize: 15 }}>Keine verfügbaren Plätze gefunden</p>
+                    <p style={{ margin: '0 0 8px 0', fontSize: 15 }}>{t('match.booking.noCourtsFound')}</p>
                     <p style={{ fontSize: 13, margin: 0, color: '#789' }}>
-                      für {dateStr} um {hours.toString().padStart(2, '0')}:{minutes.toString().padStart(2, '0')} Uhr
+                      {t('match.booking.forTime', { date: dateStr, time: `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}` })}
                     </p>
-                    <p style={{ fontSize: 13, margin: 0, color: '#789' }}>
-                      für {dateStr} um {hours.toString().padStart(2, '0')}:{minutes.toString().padStart(2, '0')} Uhr
-                    </p>
-                    <p style={{ fontSize: 13, marginTop: 12, color: '#789' }}>Versuche ein anderes Datum oder eine andere Uhrzeit.</p>
+                    <p style={{ fontSize: 13, marginTop: 12, color: '#789' }}>{t('match.booking.tryOther')}</p>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -2215,7 +2486,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
                             fontWeight: 600,
                             letterSpacing: '0.5px'
                           }}>
-                            NÄCHSTER FREIER PLATZ
+                            {t('match.booking.nextFree')}
                           </div>
                         )}
                         
@@ -2229,7 +2500,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
                             {slot.surface && ` · ${slot.surface}`}
                           </div>
                           <div style={{ fontSize: 13, color: '#9db', marginBottom: 4 }}>
-                            🕐 {displayStartTime} - {displayEndTime} Uhr
+                            🕐 {t('match.schedule.timeDisplay', { from: displayStartTime, to: displayEndTime })}
                           </div>
                           {slot.city && slot.address && (
                             <div style={{ fontSize: 12, color: '#789', marginTop: 4 }}>
@@ -2296,7 +2567,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
                               e.currentTarget.style.transform = 'scale(1)';
                             }}
                           >
-                            Jetzt buchen →
+                            {t('match.schedule.bookNow')} →
                           </button>
                         </div>
                       </div>
@@ -2326,7 +2597,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
                   opacity: loading || !dateStr || !location ? 0.7 : 1
                 }}
               >
-                {loading ? '⏳ Speichere...' : '💾 Termin & Ort speichern'}
+                {loading ? t('match.save.loading') : t('match.timeLocation.save')}
               </button>
               <button 
                 type="button" 
@@ -2340,7 +2611,7 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
                   cursor: 'pointer'
                 }}
               >
-                Abbrechen
+                {t('common.cancel')}
               </button>
             </div>
           )}
@@ -2349,9 +2620,9 @@ function ScheduleSection({ open, setOpen, dateStr, setDateStr, hours, minutes, s
             <div style={{ 
               padding: '10px 12px', 
               borderRadius: 8,
-              background: message.includes('gespeichert') ? '#102a22' : '#2a1212',
-              border: `1px solid ${message.includes('gespeichert') ? '#2f6b57' : '#6b2f2f'}`,
-              color: message.includes('gespeichert') ? '#9f9' : '#fcc'
+              background: message.includes('✅') ? '#102a22' : '#2a1212',
+              border: `1px solid ${message.includes('✅') ? '#2f6b57' : '#6b2f2f'}`,
+              color: message.includes('✅') ? '#9f9' : '#fcc'
             }}>
               {message}
             </div>

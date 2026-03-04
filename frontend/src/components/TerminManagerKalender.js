@@ -1,11 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useLanguage } from '../i18n';
+import { API_BASE } from '../config';
 
-const API_BASE = process.env.REACT_APP_API_URL || '/api';
-
-function fmtDate(dateStr) {
+function fmtDate(dateStr, loc = 'de-DE') {
   const d = new Date(dateStr);
   if (Number.isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+  return d.toLocaleDateString(loc, { weekday: 'short', day: '2-digit', month: '2-digit' });
 }
 
 function fmtTime(timeStr) {
@@ -42,12 +42,12 @@ function getWeekInfo(dateStr) {
   };
 }
 
-function fmtWeekRange(startStr, endStr) {
+function fmtWeekRange(startStr, endStr, loc = 'de-DE') {
   if (!startStr || !endStr) return '';
   const start = new Date(startStr);
   const end = new Date(endStr);
   if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return '';
-  return `${start.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}`;
+  return `${start.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' })}`;
 }
 
 function generateAvailableTimes(startTime, endTime, durationMinutes) {
@@ -67,7 +67,28 @@ function generateAvailableTimes(startTime, endTime, durationMinutes) {
   return times;
 }
 
+function groupFramesByWeek(frameList) {
+  const grouped = {};
+  (frameList || []).forEach((f) => {
+    const info = getWeekInfo(f.date);
+    if (!info) return;
+    if (!grouped[info.key]) grouped[info.key] = { ...info, daysMap: {} };
+    if (!grouped[info.key].daysMap[f.date]) grouped[info.key].daysMap[f.date] = [];
+    grouped[info.key].daysMap[f.date].push(f);
+  });
+  return Object.values(grouped)
+    .map((w) => ({
+      ...w,
+      days: Object.entries(w.daysMap)
+        .map(([date, arr]) => ({ date, frames: arr.sort((a, b) => (a.time_start || '').localeCompare(b.time_start || '')) }))
+        .sort((a, b) => a.date.localeCompare(b.date))
+    }))
+    .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
+}
+
 export default function TerminManagerKalender({ matchId, token, onClose, onInvitationSent, matchInfo }) {
+  const { t, lang } = useLanguage();
+  const locale = lang === 'en' ? 'en-GB' : 'de-DE';
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -75,7 +96,6 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
   const [slots, setSlots] = useState([]);
   const [meta, setMeta] = useState(null);
   const [otherAvailability, setOtherAvailability] = useState([]);
-  const [myAvailability, setMyAvailability] = useState([]);
   const [proposals, setProposals] = useState([]);
 
   // Host: neuen Verfügbarkeits-Slot anlegen
@@ -103,7 +123,16 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
 
   useEffect(() => {
     if (matchId && token) load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [matchId, token]);
+
+  // Auto-clear success message
+  useEffect(() => {
+    if (success) {
+      const timer = setTimeout(() => setSuccess(''), 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [success]);
 
   async function load() {
     setLoading(true);
@@ -124,10 +153,8 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
       // availability endpoint is best-effort; do not block UI if it fails
       if (availRes.ok) {
         setOtherAvailability(availData.theirAvailability || []);
-        setMyAvailability(availData.myAvailability || []);
       } else {
         setOtherAvailability([]);
-        setMyAvailability([]);
       }
 
       const terminData = await terminRes.json().catch(() => ({}));
@@ -150,11 +177,11 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
   async function addFrame() {
     setError('');
     if (!newDate || !newStart || !newEnd) {
-      setError('Bitte Datum und Zeit ausfüllen');
+      setError(t('tm.fillDateAndTime'));
       return;
     }
     if (newStart >= newEnd) {
-      setError('Endzeit muss nach Startzeit liegen');
+      setError(t('tm.endAfterStart'));
       return;
     }
     try {
@@ -167,11 +194,12 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
         body: JSON.stringify({ date: newDate, timeStart: newStart, timeEnd: newEnd })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Fehler beim Speichern');
+      if (!res.ok) throw new Error(data.error || t('tm.saveError'));
       setShowAddSlot(false);
       setNewDate('');
       setNewStart('');
       setNewEnd('');
+      setSuccess(t('tm.frameSaved'));
       load();
     } catch (e) {
       setError(e.message);
@@ -188,7 +216,7 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
 
   async function proposeSlot(frame) {
     if (!meta?.canProposeSlots && !meta?.canCreateSlots) {
-      setError('Nur der Gast kann eine Anfrage senden.');
+      setError(t('tm.onlyGuestCanSend'));
       return;
     }
     const chosen = customTimes[frame.id] || fmtTime(frame.time_start);
@@ -196,12 +224,12 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
     const frameStart = parseTime(frame.date, frame.time_start);
     const frameEnd = parseTime(frame.date, frame.time_end);
     if (!start || !frameStart || !frameEnd) {
-      setError('Ungültige Zeitangabe.');
+      setError(t('tm.invalidTime'));
       return;
     }
     const end = new Date(start.getTime() + slotDuration * 60000);
     if (start < frameStart || end > frameEnd) {
-      setError('Startzeit liegt außerhalb des Host-Slots.');
+      setError(t('tm.outsideFrame'));
       return;
     }
     setSending(true);
@@ -221,8 +249,9 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
         })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Fehler beim Senden');
+      if (!res.ok) throw new Error(data.error || t('tm.sendError'));
       setCustomTimes((prev) => ({ ...prev, [frame.id]: chosen }));
+      setSuccess(t('tm.slotProposed'));
       load();
     } catch (e) {
       setError(e.message);
@@ -238,7 +267,8 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Fehler beim Akzeptieren');
+      if (!res.ok) throw new Error(data.error || t('tm.acceptError'));
+      setSuccess(t('tm.slotAccepted'));
       load();
     } catch (e) {
       setError(e.message);
@@ -252,7 +282,24 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Fehler beim Löschen');
+      if (!res.ok) throw new Error(data.error || t('tm.deleteError'));
+      load();
+    } catch (e) {
+      setError(e.message);
+    }
+  }
+
+  async function deleteFrame(frameId) {
+    setError('');
+    if (!window.confirm(t('tm.deleteFrameConfirm'))) return;
+    try {
+      const res = await fetch(`${API_BASE}/matches/${matchId}/time-frames/${frameId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || t('tm.deleteError'));
+      setSuccess(t('tm.frameDeleted'));
       load();
     } catch (e) {
       setError(e.message);
@@ -304,19 +351,19 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
 
   async function sendAvailabilityInvitation() {
     if (!selectedAvailSlot || !proposedTime) {
-      setError('Bitte eine Startzeit wählen');
+      setError(t('tm.selectStartTime'));
       return;
     }
     const start = parseTime(selectedAvailSlot.date, proposedTime);
     const frameStart = parseTime(selectedAvailSlot.date, selectedAvailSlot.time_start);
     const frameEnd = parseTime(selectedAvailSlot.date, selectedAvailSlot.time_end);
     if (!start || !frameStart || !frameEnd) {
-      setError('Ungültige Zeitangabe.');
+      setError(t('tm.invalidTime'));
       return;
     }
     const end = new Date(start.getTime() + slotDuration * 60000);
     if (start < frameStart || end > frameEnd) {
-      setError('Startzeit liegt außerhalb des Verfügbarkeits-Slots.');
+      setError(t('tm.outsideAvail'));
       return;
     }
     setSending(true);
@@ -331,7 +378,7 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
         });
         if (!rejectRes.ok) {
           const err = await rejectRes.json().catch(() => ({}));
-          throw new Error(err.error || 'Fehler beim Ablehnen');
+          throw new Error(err.error || t('tm.rejectError'));
         }
       }
 
@@ -347,17 +394,17 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
         })
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Fehler beim Senden');
+      if (!res.ok) throw new Error(data.error || t('tm.sendError'));
       
       closeAvailSlotModal();
       
       if (rejectingProposal) {
-        setSuccess('Gegenvorschlag erfolgreich versendet!');
+        setSuccess(t('tm.counterSent'));
         setRejectingProposal(null);
         load();
         setTimeout(() => setSuccess(''), 5000);
       } else {
-        setSuccess('Einladung erfolgreich versendet!');
+        setSuccess(t('tm.invitationSent'));
         if (onInvitationSent) {
           setTimeout(() => onInvitationSent(), 500);
         } else {
@@ -382,8 +429,8 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Fehler beim Annehmen');
-      setSuccess('✅ Termin angenommen! Match-Startdatum wurde gesetzt.');
+      if (!res.ok) throw new Error(data.error || t('tm.acceptError'));
+      setSuccess('✅ ' + t('tm.accept') + '! ');
       load();
       setTimeout(() => setSuccess(''), 5000);
     } catch (e) {
@@ -407,8 +454,8 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
         headers: { Authorization: `Bearer ${token}` }
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || 'Fehler beim Ablehnen');
-      setSuccess('Terminvorschlag abgelehnt');
+      if (!res.ok) throw new Error(data.error || t('tm.rejectError'));
+      setSuccess(t('tm.proposalRejected'));
       load();
       setTimeout(() => setSuccess(''), 3000);
     } catch (e) {
@@ -418,31 +465,20 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
     }
   }
 
-  function handleCounterProposal(slot) {
-    // When user clicks a slot while rejecting, send counter-proposal
-    setSelectedAvailSlot(slot);
-    // Close rejecting modal will be handled after sending
-  }
+  // Split frames into "mine" (created by me) and "opponent" (created by other player)
+  const viewerId = meta?.viewerId ? Number(meta.viewerId) : null;
 
-  const framesByWeek = useMemo(() => {
-    const grouped = {};
-    (frames || []).forEach((f) => {
-      const info = getWeekInfo(f.date);
-      if (!info) return;
-      if (!grouped[info.key]) grouped[info.key] = { ...info, daysMap: {} };
-      if (!grouped[info.key].daysMap[f.date]) grouped[info.key].daysMap[f.date] = [];
-      grouped[info.key].daysMap[f.date].push(f);
-    });
+  const myFramesByWeek = useMemo(() => {
+    if (!viewerId) return [];
+    const myFrames = (frames || []).filter(f => Number(f.created_by_user_id) === viewerId);
+    return groupFramesByWeek(myFrames);
+  }, [frames, viewerId]);
 
-    return Object.values(grouped)
-      .map((w) => ({
-        ...w,
-        days: Object.entries(w.daysMap)
-          .map(([date, arr]) => ({ date, frames: arr.sort((a, b) => (a.time_start || '').localeCompare(b.time_start || '')) }))
-          .sort((a, b) => a.date.localeCompare(b.date))
-      }))
-      .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
-  }, [frames]);
+  const opponentFramesByWeek = useMemo(() => {
+    if (!viewerId) return [];
+    const theirFrames = (frames || []).filter(f => Number(f.created_by_user_id) !== viewerId);
+    return groupFramesByWeek(theirFrames);
+  }, [frames, viewerId]);
 
   const otherAvailabilityByWeek = useMemo(() => {
     const grouped = {};
@@ -472,138 +508,96 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
       .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
   }, [otherAvailability]);
 
-  const myAvailabilityByWeek = useMemo(() => {
-    const grouped = {};
-    (myAvailability || []).forEach((day) => {
-      const info = getWeekInfo(day.date);
-      if (!info) return;
-      if (!grouped[info.key]) grouped[info.key] = { ...info, daysMap: {} };
-      if (!grouped[info.key].daysMap[day.date]) grouped[info.key].daysMap[day.date] = [];
-      (day.windows || []).forEach((w, idx) => {
-        grouped[info.key].daysMap[day.date].push({
-          id: w.id || `${day.date}-${idx}`,
-          date: day.date,
-          time_start: w.timeStart,
-          time_end: w.timeEnd
-        });
-      });
-    });
+  // myAvailability data is now shown via myFramesByWeek (time-frames system)
 
-    return Object.values(grouped)
-      .map((w) => ({
-        ...w,
-        days: Object.entries(w.daysMap)
-          .map(([date, arr]) => ({ date, frames: arr.sort((a, b) => (a.time_start || '').localeCompare(b.time_start || '')) }))
-          .sort((a, b) => a.date.localeCompare(b.date))
-      }))
-      .filter((w) => w.days.length > 0)
-      .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
-  }, [myAvailability]);
-
-  if (loading) return <div style={styles.overlay}><div style={styles.modal}>Laden...</div></div>;
+  if (loading) return <div style={styles.overlay}><div style={styles.modal}>{t('tm.loading')}</div></div>;
 
   return (
     <div style={styles.overlay} onClick={onClose}>
       <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
         <div style={styles.headerRow}>
-          <h1 style={styles.title}>Termin Manager</h1>
+          <h1 style={styles.title}>{t('tm.title')}</h1>
           <button onClick={onClose} style={styles.closeBtn}>×</button>
         </div>
 
         {matchInfo && (
           <div style={styles.matchInfo}>
-            {matchInfo.home_player || 'Spieler 1'} vs. {matchInfo.away_player || 'Spieler 2'} · {matchInfo.sport || 'Tennis'} {matchInfo.league ? `· ${matchInfo.league}` : ''}
+            {matchInfo.home_player || t('tm.player1')} vs. {matchInfo.away_player || t('tm.player2')} · {matchInfo.sport || 'Tennis'} {matchInfo.league ? `· ${matchInfo.league}` : ''}
           </div>
         )}
 
         {error && <div style={styles.error}>{error}</div>}
         {success && <div style={styles.success}>{success}</div>}
 
+        {/* ── My Availability Frames (with add + delete) ── */}
         <div style={styles.sectionHeader}>
           <div>
-            <h3 style={{ margin: 0, color: '#e8efe8' }}>Verfügbare Zeiten</h3>
+            <h3 style={{ margin: 0, color: '#e8efe8' }}>{t('tm.myTimes')}</h3>
+            <div style={{ color: '#9db', fontSize: 13, marginTop: 2 }}>{t('tm.myTimesHint')}</div>
           </div>
-          {meta?.canCreateFrames && (
-            <button onClick={() => setShowAddSlot((v) => !v)} style={styles.btnPrimary}>
-              {showAddSlot ? 'Schließen' : 'Slot hinzufügen'}
-            </button>
-          )}
+          <button onClick={() => setShowAddSlot((v) => !v)} style={styles.btnPrimary}>
+              {showAddSlot ? t('tm.closeSlot') : t('tm.addSlot')}
+          </button>
         </div>
 
         {showAddSlot && (
           <div style={styles.addForm}>
             <div style={styles.formRow}>
               <div style={styles.formGroup}>
-                <label style={styles.label}>Datum</label>
+                <label style={styles.label}>{t('tm.date')}</label>
                 <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} style={styles.input} />
               </div>
               <div style={styles.formGroup}>
-                <label style={styles.label}>Von</label>
+                <label style={styles.label}>{t('tm.from')}</label>
                 <input type="time" value={newStart} onChange={(e) => setNewStart(e.target.value)} style={styles.input} />
               </div>
               <div style={styles.formGroup}>
-                <label style={styles.label}>Bis</label>
+                <label style={styles.label}>{t('tm.to')}</label>
                 <input type="time" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} style={styles.input} />
               </div>
             </div>
             <div style={styles.formActions}>
-              <button onClick={addFrame} style={styles.btnPrimary}>Speichern</button>
-              <button onClick={() => { setShowAddSlot(false); setNewDate(''); setNewStart(''); setNewEnd(''); }} style={styles.btnGhost}>Abbrechen</button>
+              <button onClick={addFrame} style={styles.btnPrimary}>{t('tm.save')}</button>
+              <button onClick={() => { setShowAddSlot(false); setNewDate(''); setNewStart(''); setNewEnd(''); }} style={styles.btnGhost}>{t('tm.cancel')}</button>
             </div>
           </div>
         )}
 
-        {framesByWeek.length === 0 && (
-          <div style={styles.empty}>Noch keine Zeiten hinterlegt.</div>
-        )}}
+        {myFramesByWeek.length === 0 && !showAddSlot && (
+          <div style={styles.empty}>{t('tm.noMyTimes')}</div>
+        )}
 
         <div style={{ display: 'grid', gap: 14 }}>
-          {framesByWeek.map((week) => (
+          {myFramesByWeek.map((week) => (
             <div key={week.key} style={styles.weekCard}>
               <div style={styles.weekHeader}>
-                <div style={{ fontWeight: 800, color: '#debc7c' }}>KW {week.week}</div>
-                <div style={{ color: '#9db', fontSize: 12 }}>{fmtWeekRange(week.weekStartStr, week.weekEndStr)}</div>
+                <div style={{ fontWeight: 800, color: '#debc7c' }}>{lang === 'en' ? 'W' : 'KW'} {week.week}</div>
+                <div style={{ color: '#9db', fontSize: 12 }}>{fmtWeekRange(week.weekStartStr, week.weekEndStr, locale)}</div>
               </div>
 
               <div style={{ display: 'grid', gap: 10 }}>
-                {week.days.map(({ date, frames }) => (
+                {week.days.map(({ date, frames: dayFrames }) => (
                   <div key={date} style={styles.dateCard}>
                     <div style={styles.dateHeader}>
-                      <div style={{ fontWeight: 700 }}>{fmtDate(date)}</div>
-                      <div style={{ color: '#9db', fontSize: 13 }}>{frames.length} Slot{frames.length !== 1 ? 's' : ''}</div>
+                      <div style={{ fontWeight: 700 }}>{fmtDate(date, locale)}</div>
+                      <div style={{ color: '#9db', fontSize: 13 }}>{dayFrames.length} Slot{dayFrames.length !== 1 ? 's' : ''}</div>
                     </div>
 
                     <div style={{ display: 'grid', gap: 10 }}>
-                      {frames.map((frame) => {
-                        const latest = latestStart(frame);
-                        const chosen = customTimes[frame.id] || fmtTime(frame.time_start);
-                        const canPropose = meta?.canProposeSlots || meta?.canCreateSlots;
-                        return (
-                          <div key={frame.id} style={styles.frameRow}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                              <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtTime(frame.time_start)} - {fmtTime(frame.time_end)}</div>
-                              <div style={{ color: '#9db', fontSize: 13 }}>Spätester Start: {latest || '—'} · Dauer {slotDuration} Min</div>
-                            </div>
-                            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                              <input
-                                type="time"
-                                value={chosen}
-                                min={fmtTime(frame.time_start)}
-                                max={latest || undefined}
-                                onChange={(e) => setCustomTimes((prev) => ({ ...prev, [frame.id]: e.target.value }))}
-                                style={styles.inputTime}
-                              />
-                              <button
-                                onClick={() => proposeSlot(frame)}
-                                disabled={!canPropose || sending}
-                                style={{ ...styles.btnPrimary, opacity: canPropose ? 1 : 0.5, cursor: canPropose ? 'pointer' : 'not-allowed' }}
-                              >
-                                Einladung senden
-                              </button>
-                            </div>
+                      {dayFrames.map((frame) => (
+                        <div key={frame.id} style={styles.frameRow}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                            <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtTime(frame.time_start)} – {fmtTime(frame.time_end)}</div>
+                            <div style={{ color: '#9db', fontSize: 13 }}>{t('tm.duration', { min: slotDuration })}</div>
                           </div>
-                        );
-                      })}
+                          <button
+                            onClick={() => deleteFrame(frame.id)}
+                            style={{ ...styles.btnGhost, fontSize: 12, padding: '6px 12px', color: '#ff6b6b', borderColor: '#ff6b6b44' }}
+                          >
+                            {t('tm.delete')}
+                          </button>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ))}
@@ -612,35 +606,60 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
           ))}
         </div>
 
-        {myAvailabilityByWeek.length > 0 && (
-          <div style={{ marginTop: 18 }}>
+        {/* ── Opponent Frames (with propose slot) ── */}
+        {opponentFramesByWeek.length > 0 && (
+          <div style={{ marginTop: 22 }}>
             <div style={styles.sectionHeaderSimple}>
-              <h3 style={{ margin: 0, color: '#e8efe8' }}>Deine Verfügbarkeiten</h3>
+              <h3 style={{ margin: 0, color: '#e8efe8' }}>{t('tm.opponentTimes')}</h3>
+              <div style={{ color: '#9db', fontSize: 13 }}>{t('tm.opponentTimesHint')}</div>
             </div>
 
             <div style={{ display: 'grid', gap: 14 }}>
-              {myAvailabilityByWeek.map((week) => (
+              {opponentFramesByWeek.map((week) => (
                 <div key={week.key} style={styles.weekCard}>
                   <div style={styles.weekHeader}>
-                    <div style={{ fontWeight: 800, color: '#debc7c' }}>KW {week.week}</div>
-                    <div style={{ color: '#9db', fontSize: 12 }}>{fmtWeekRange(week.weekStartStr, week.weekEndStr)}</div>
+                    <div style={{ fontWeight: 800, color: '#debc7c' }}>{lang === 'en' ? 'W' : 'KW'} {week.week}</div>
+                    <div style={{ color: '#9db', fontSize: 12 }}>{fmtWeekRange(week.weekStartStr, week.weekEndStr, locale)}</div>
                   </div>
 
                   <div style={{ display: 'grid', gap: 10 }}>
-                    {week.days.map(({ date, frames }) => (
+                    {week.days.map(({ date, frames: dayFrames }) => (
                       <div key={date} style={styles.dateCard}>
                         <div style={styles.dateHeader}>
-                          <div style={{ fontWeight: 700 }}>{fmtDate(date)}</div>
-                          <div style={{ color: '#9db', fontSize: 13 }}>{frames.length} Slot{frames.length !== 1 ? 's' : ''}</div>
+                          <div style={{ fontWeight: 700 }}>{fmtDate(date, locale)}</div>
+                          <div style={{ color: '#9db', fontSize: 13 }}>{dayFrames.length} Slot{dayFrames.length !== 1 ? 's' : ''}</div>
                         </div>
 
-                        <div style={{ display: 'grid', gap: 8 }}>
-                          {frames.map((frame) => (
-                            <div key={frame.id} style={styles.windowRow}>
-                              <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtTime(frame.time_start)} - {fmtTime(frame.time_end)}</div>
-                              <div style={{ color: '#9db', fontSize: 13 }}>Dein Slot</div>
-                            </div>
-                          ))}
+                        <div style={{ display: 'grid', gap: 10 }}>
+                          {dayFrames.map((frame) => {
+                            const latest = latestStart(frame);
+                            const chosen = customTimes[frame.id] || fmtTime(frame.time_start);
+                            return (
+                              <div key={frame.id} style={styles.frameRow}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                  <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtTime(frame.time_start)} – {fmtTime(frame.time_end)}</div>
+                                  <div style={{ color: '#9db', fontSize: 13 }}>{t('tm.latestStart', { time: latest || '—' })} · {t('tm.duration', { min: slotDuration })}</div>
+                                </div>
+                                <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                                  <input
+                                    type="time"
+                                    value={chosen}
+                                    min={fmtTime(frame.time_start)}
+                                    max={latest || undefined}
+                                    onChange={(e) => setCustomTimes((prev) => ({ ...prev, [frame.id]: e.target.value }))}
+                                    style={styles.inputTime}
+                                  />
+                                  <button
+                                    onClick={() => proposeSlot(frame)}
+                                    disabled={sending}
+                                    style={{ ...styles.btnPrimary, opacity: sending ? 0.5 : 1, cursor: sending ? 'not-allowed' : 'pointer' }}
+                                  >
+                                    {t('tm.sendInvitation')}
+                                  </button>
+                                </div>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}
@@ -654,22 +673,22 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
         {otherAvailabilityByWeek.length > 0 && (
           <div style={{ marginTop: 18 }}>
             <div style={styles.sectionHeaderSimple}>
-              <h3 style={{ margin: 0, color: '#e8efe8' }}>Verfügbarkeiten des Gegners</h3>
+              <h3 style={{ margin: 0, color: '#e8efe8' }}>{t('tm.opponentAvailability')}</h3>
             </div>
 
             <div style={{ display: 'grid', gap: 14 }}>
               {otherAvailabilityByWeek.map((week) => (
                 <div key={week.key} style={styles.weekCard}>
                   <div style={styles.weekHeader}>
-                    <div style={{ fontWeight: 800, color: '#debc7c' }}>KW {week.week}</div>
-                    <div style={{ color: '#9db', fontSize: 12 }}>{fmtWeekRange(week.weekStartStr, week.weekEndStr)}</div>
+                    <div style={{ fontWeight: 800, color: '#debc7c' }}>{lang === 'en' ? 'W' : 'KW'} {week.week}</div>
+                    <div style={{ color: '#9db', fontSize: 12 }}>{fmtWeekRange(week.weekStartStr, week.weekEndStr, locale)}</div>
                   </div>
 
                   <div style={{ display: 'grid', gap: 10 }}>
                     {week.days.map(({ date, frames }) => (
                       <div key={date} style={styles.dateCard}>
                         <div style={styles.dateHeader}>
-                          <div style={{ fontWeight: 700 }}>{fmtDate(date)}</div>
+                          <div style={{ fontWeight: 700 }}>{fmtDate(date, locale)}</div>
                           <div style={{ color: '#9db', fontSize: 13 }}>{frames.length} Slot{frames.length !== 1 ? 's' : ''}</div>
                         </div>
 
@@ -681,7 +700,7 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
                                 onClick={() => openAvailSlotModal({ ...frame, date })}
                                 style={{ ...styles.btnPrimary, fontSize: 12, padding: '6px 12px' }}
                               >
-                                Slot wählen
+                                {t('tm.sendInvitation')}
                               </button>
                             </div>
                           ))}
@@ -697,10 +716,10 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
 
         <div style={{ marginTop: 24 }}>
           <div style={styles.sectionHeaderSimple}>
-            <h3 style={{ margin: 0, color: '#e8efe8' }}>Terminvorschläge</h3>
+            <h3 style={{ margin: 0, color: '#e8efe8' }}>{t('tm.proposals')}</h3>
           </div>
           {slots.length === 0 && proposals.length === 0 ? (
-            <div style={styles.empty}>Keine Anfragen vorhanden.</div>
+            <div style={styles.empty}>{t('tm.noRequests')}</div>
           ) : (
             <div style={{ display: 'grid', gap: 10 }}>
               {proposals.map((p) => {
@@ -712,16 +731,16 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
                   <div key={p.id} style={styles.slotItem}>
                     <div>
                       <div style={{ fontWeight: 700, color: '#e8efe8' }}>
-                        {dt ? dt.toLocaleString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : 'Terminvorschlag'}
+                        {dt ? dt.toLocaleString(locale, { weekday: 'short', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }) : t('tm.proposal')}
                       </div>
-                      <div style={{ color: '#9db', fontSize: 13 }}>{byYou ? 'von dir' : 'vom Gegner'} · Status: <span style={{ color: '#c9a75f' }}>{p.status === 'sent' ? 'ausstehend' : p.status}</span></div>
+                      <div style={{ color: '#9db', fontSize: 13 }}>{byYou ? t('tm.byYou') : t('tm.byOpponent')} · {t('tm.status')}: <span style={{ color: '#c9a75f' }}>{p.status === 'sent' ? t('tm.pending') : p.status}</span></div>
                     </div>
                     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                       {canAccept && (
                         <>
-                          <button onClick={() => acceptProposal(p.id)} disabled={sending} style={{ ...styles.btnPrimary, opacity: sending ? 0.5 : 1 }}>Annehmen</button>
-                          <button onClick={() => rejectProposal(p.id, true)} disabled={sending} style={styles.btnSecondary}>Gegenvorschlag</button>
-                          <button onClick={() => rejectProposal(p.id, false)} disabled={sending} style={styles.btnGhost}>Ablehnen</button>
+                          <button onClick={() => acceptProposal(p.id)} disabled={sending} style={{ ...styles.btnPrimary, opacity: sending ? 0.5 : 1 }}>{t('tm.accept')}</button>
+                          <button onClick={() => rejectProposal(p.id, true)} disabled={sending} style={styles.btnSecondary}>{t('tm.counterProposal')}</button>
+                          <button onClick={() => rejectProposal(p.id, false)} disabled={sending} style={styles.btnGhost}>{t('tm.reject')}</button>
                         </>
                       )}
                     </div>
@@ -735,15 +754,15 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
                 return (
                   <div key={s.id} style={styles.slotItem}>
                     <div>
-                      <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtDate(s.slot_start)} · {new Date(s.slot_start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })} - {new Date(s.slot_end).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' })}</div>
-                      <div style={{ color: '#9db', fontSize: 13 }}>Dauer {s.duration_minutes} Min · {byYou ? 'von dir' : 'vom Host'} · Status: <span style={{ color: statusColor }}>{s.status}</span></div>
+                      <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtDate(s.slot_start, locale)} · {new Date(s.slot_start).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })} - {new Date(s.slot_end).toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}</div>
+                      <div style={{ color: '#9db', fontSize: 13 }}>{t('tm.duration', { min: s.duration_minutes })} · {byYou ? t('tm.byYou') : t('tm.byHost')} · {t('tm.status')}: <span style={{ color: statusColor }}>{s.status}</span></div>
                     </div>
                     <div style={{ display: 'flex', gap: 8 }}>
                       {s.status !== 'accepted' && meta?.canCreateSlots && (
-                        <button onClick={() => removeSlot(s.id)} style={styles.btnGhost}>Zurückziehen</button>
+                        <button onClick={() => removeSlot(s.id)} style={styles.btnGhost}>{t('tm.withdraw')}</button>
                       )}
                       {s.status === 'proposed' && meta?.canCreateFrames && (
-                        <button onClick={() => acceptSlot(s.id)} style={styles.btnPrimary}>Akzeptieren</button>
+                        <button onClick={() => acceptSlot(s.id)} style={styles.btnPrimary}>{t('tm.acceptSlot')}</button>
                       )}
                     </div>
                   </div>
@@ -758,21 +777,21 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
             <div style={{ ...styles.modal, maxWidth: 500 }} onClick={(e) => e.stopPropagation()}>
               <div style={styles.headerRow}>
                 <h2 style={{ margin: 0, fontSize: 20, color: '#e8efe8' }}>
-                  {rejectingProposal ? 'Gegenvorschlag senden' : 'Termin vorschlagen'}
+                  {rejectingProposal ? t('tm.sendCounter') : t('tm.proposeTime')}
                 </h2>
                 <button onClick={closeAvailSlotModal} style={styles.closeBtn}>×</button>
               </div>
 
               <div style={{ marginBottom: 16, padding: 12, background: '#0f2a20', borderRadius: 10, border: '1px solid #26493c' }}>
-                <div style={{ fontWeight: 700, color: '#e8efe8', marginBottom: 4 }}>{fmtDate(selectedAvailSlot.date)}</div>
-                <div style={{ color: '#9db', fontSize: 14 }}>Verfügbarer Zeitraum: {fmtTime(selectedAvailSlot.time_start)} - {fmtTime(selectedAvailSlot.time_end)}</div>
-                <div style={{ color: '#9db', fontSize: 13, marginTop: 4 }}>Spielzeit: {slotDuration} Min · Spätester Start: {latestStartForAvailSlot(selectedAvailSlot) || '—'}</div>
+                <div style={{ fontWeight: 700, color: '#e8efe8', marginBottom: 4 }}>{fmtDate(selectedAvailSlot.date, locale)}</div>
+                <div style={{ color: '#9db', fontSize: 14 }}>{t('tm.availableRange', { from: fmtTime(selectedAvailSlot.time_start), to: fmtTime(selectedAvailSlot.time_end) })}</div>
+                <div style={{ color: '#9db', fontSize: 13, marginTop: 4 }}>{t('tm.playTime', { min: slotDuration })} · {t('tm.latestStart', { time: latestStartForAvailSlot(selectedAvailSlot) || '—' })}</div>
               </div>
 
               {error && <div style={styles.error}>{error}</div>}
 
               <div style={{ marginBottom: 16 }}>
-                <label style={{ ...styles.label, display: 'block', marginBottom: 8 }}>Gewünschte Startzeit</label>
+                <label style={{ ...styles.label, display: 'block', marginBottom: 8 }}>{t('tm.desiredStart')}</label>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <button
                     onClick={prevTime}
@@ -825,7 +844,7 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
                   </button>
                 </div>
                 <div style={{ color: '#9db', fontSize: 12, marginTop: 6, textAlign: 'center' }}>
-                  {timeIndex + 1} von {availableTimes.length} verfügbaren Zeiten
+                  {t('tm.ofAvailable', { current: timeIndex + 1, total: availableTimes.length })}
                 </div>
               </div>
 
@@ -835,9 +854,9 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
                   disabled={sending || !proposedTime}
                   style={{ ...styles.btnPrimary, flex: 1, opacity: sending || !proposedTime ? 0.5 : 1, cursor: sending || !proposedTime ? 'not-allowed' : 'pointer' }}
                 >
-                  {sending ? 'Wird gesendet...' : 'Einladung versenden'}
+                  {sending ? t('tm.sending') : t('tm.sendInvitationFull')}
                 </button>
-                <button onClick={closeAvailSlotModal} style={{ ...styles.btnGhost, flex: 1 }}>Abbrechen</button>
+                <button onClick={closeAvailSlotModal} style={{ ...styles.btnGhost, flex: 1 }}>{t('tm.cancel')}</button>
               </div>
             </div>
           </div>

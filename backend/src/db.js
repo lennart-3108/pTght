@@ -111,6 +111,7 @@ function createIncrementalAdmin(db, setBanner) {
       if (has('email')) { columns.push('email'); values.push(MAIN_EMAIL); }
       if (has('password')) { columns.push('password'); values.push(hashed); }
       if (has('is_admin')) { columns.push('is_admin'); values.push(1); }
+      if (has('role')) { columns.push('role'); values.push('admin'); }
       if (has('is_confirmed')) { columns.push('is_confirmed'); values.push(1); }
       if (has('firstname')) { columns.push('firstname'); values.push('Admin'); }
       if (has('lastname')) { columns.push('lastname'); values.push(''); }

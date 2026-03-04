@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { API_BASE, FEATURES } from "../config";
 import LocationSelector from "../components/LocationSelector";
 import TestInstanceDisclaimer from "../components/TestInstanceDisclaimer";
+import { useLanguage } from "../i18n";
 
 // Test instance: restrict to Tennis Singles only
 const SPORT_OPTIONS = FEATURES.RESTRICT_TO_TENNIS_SINGLES
@@ -18,6 +19,7 @@ const SPORT_OPTIONS = FEATURES.RESTRICT_TO_TENNIS_SINGLES
     ];
 
 export default function RegisterPage() {
+  const { t } = useLanguage();
   // Test instance disclaimer state - MUST be at top before any conditional returns
   const [showDisclaimer, setShowDisclaimer] = useState(FEATURES.SHOW_TEST_DISCLAIMER);
   const [disclaimerAccepted, setDisclaimerAccepted] = useState(!FEATURES.SHOW_TEST_DISCLAIMER);
@@ -126,14 +128,14 @@ export default function RegisterPage() {
     }
     
     if (age < 16) {
-      setMessage("Du musst mindestens 16 Jahre alt sein, um dich zu registrieren.");
+      setMessage(t('register.minAge'));
       setLoading(false);
       return;
     }
     
     // Validate Terms acceptance
     if (!acceptTerms) {
-      setMessage("Bitte bestätige, dass du mindestens 16 Jahre alt bist und die Nutzungsbedingungen sowie Datenschutzerklärung akzeptierst.");
+      setMessage(t('register.confirmAgeTerms'));
       setLoading(false);
       return;
     }
@@ -159,7 +161,7 @@ export default function RegisterPage() {
       }
       console.log("Backend-Antwort /register:", responseData || "(no json)");
       setMessage(
-        "Registrierung erfolgreich! Bitte prüfe dein E-Mail-Postfach und bestätige den Link."
+        t('register.success')
       );
       setForm({
         firstname: "",
@@ -172,7 +174,7 @@ export default function RegisterPage() {
     } catch (err) {
       console.error("Fehler bei Registrierung:", err?.message || err);
       setMessage(
-        err?.message || "Registrierung fehlgeschlagen. Bitte überprüfe deine Daten."
+        err?.message || t('register.failed')
       );
     } finally {
       setLoading(false);
@@ -217,7 +219,7 @@ export default function RegisterPage() {
           fontWeight: 700,
           color: '#e5e7eb'
         }}>
-          Registrieren
+          {t('register.title')}
         </h2>
         <p style={{ 
           margin: '0 0 32px 0',
@@ -225,7 +227,7 @@ export default function RegisterPage() {
           fontSize: 14,
           lineHeight: 1.5
         }}>
-          Erstelle deinen Account und werde Teil der Community
+          {t('register.subtitle')}
         </p>
         
         <form onSubmit={handleSubmit}>
@@ -237,7 +239,7 @@ export default function RegisterPage() {
               color: '#e5e7eb',
               fontSize: 14
             }}>
-              Vorname
+              {t('register.firstName')}
             </label>
             <input 
               required 
@@ -270,7 +272,7 @@ export default function RegisterPage() {
               color: '#e5e7eb',
               fontSize: 14
             }}>
-              Nachname
+              {t('register.lastName')}
             </label>
             <input 
               required 
@@ -303,7 +305,7 @@ export default function RegisterPage() {
               color: '#e5e7eb',
               fontSize: 14
             }}>
-              E-Mail
+              {t('register.email')}
             </label>
             <input 
               required 
@@ -337,7 +339,7 @@ export default function RegisterPage() {
               color: '#e5e7eb',
               fontSize: 14
             }}>
-              Standort (optional)
+              {t('register.locationOptional')}
             </label>
             <div style={{ maxWidth: 520 }}>
               <LocationSelector
@@ -348,7 +350,7 @@ export default function RegisterPage() {
                 value={form.city_name}
                 onChange={handleLocationChange}
                 onLoadDistricts={handleLoadDistricts}
-                placeholder="Stadt oder Bezirk wählen"
+                placeholder={t('register.cityDistrictPlaceholder')}
               />
             </div>
           </div>
@@ -361,7 +363,7 @@ export default function RegisterPage() {
               color: '#e5e7eb',
               fontSize: 14
             }}>
-              Geburtstag
+              {t('register.birthday')}
             </label>
             <input 
               required 
@@ -395,7 +397,7 @@ export default function RegisterPage() {
               color: '#e5e7eb',
               fontSize: 14
             }}>
-              Passwort
+              {t('register.password')}
             </label>
             <input 
               required 
@@ -431,7 +433,7 @@ export default function RegisterPage() {
               color: '#e5e7eb',
               fontSize: 14
             }}>
-              Passwort bestätigen
+              {t('register.passwordConfirm')}
             </label>
             <input 
               required 
@@ -441,7 +443,7 @@ export default function RegisterPage() {
               onChange={handleChange} 
               minLength={6} 
               autoComplete="new-password"
-              placeholder="Passwort wiederholen"
+              placeholder={t('register.passwordRepeat')}
               style={{
                 width: '100%',
                 padding: '12px 16px',
@@ -459,12 +461,12 @@ export default function RegisterPage() {
             />
             {form.passwordConfirm && form.password !== form.passwordConfirm && (
               <div style={{ marginTop: 6, fontSize: 13, color: '#ef4444' }}>
-                Passwörter stimmen nicht überein
+                {t('register.passwordMismatch')}
               </div>
             )}
             {form.passwordConfirm && form.password === form.passwordConfirm && form.password.length >= 6 && (
               <div style={{ marginTop: 6, fontSize: 13, color: '#48baa6' }}>
-                ✓ Passwörter stimmen überein
+                {t('register.passwordMatch')}
               </div>
             )}
           </div>
@@ -477,7 +479,7 @@ export default function RegisterPage() {
               color: '#e5e7eb',
               fontSize: 14
             }}>
-              Geschlecht
+              {t('register.gender')}
             </label>
             <GenderSelector 
               value={form.gender} 
@@ -510,14 +512,14 @@ export default function RegisterPage() {
                 }}
               />
               <span>
-                Ich bin mindestens 16 Jahre alt und akzeptiere die{' '}
+                {t('register.terms')}{' '}
                 <a 
                   href="/agb" 
                   target="_blank"
                   rel="noopener noreferrer"
                   style={{ color: '#48baa6', textDecoration: 'underline' }}
                 >
-                  Nutzungsbedingungen
+                  {t('register.terms.termsLink')}
                 </a>
                 {' '}sowie die{' '}
                 <a
@@ -526,7 +528,7 @@ export default function RegisterPage() {
                   rel="noopener noreferrer"
                   style={{ color: '#48baa6', textDecoration: 'underline' }}
                 >
-                  Datenschutzerklärung (DSGVO)
+                  {t('register.terms.privacyLink')}
                 </a>
                 {' '}*
               </span>
@@ -544,7 +546,7 @@ export default function RegisterPage() {
               fontWeight: 700
             }}
           >
-            {loading ? 'Wird gesendet...' : 'Registrieren'}
+            {loading ? t('register.sending') : t('register.button')}
           </button>
         </form>
         
@@ -569,9 +571,9 @@ export default function RegisterPage() {
           fontSize: 14,
           color: '#9ca3af'
         }}>
-          Bereits registriert?{' '}
+          {t('register.alreadyRegistered')}{' '}
           <a 
-            href="/" 
+            href="/login" 
             style={{ 
               color: '#48baa6',
               fontWeight: 600,
@@ -580,7 +582,7 @@ export default function RegisterPage() {
             onMouseEnter={(e) => e.target.style.textDecoration = 'underline'}
             onMouseLeave={(e) => e.target.style.textDecoration = 'none'}
           >
-            Zum Login
+            {t('register.toLogin')}
           </a>
         </div>
         </div>
@@ -591,12 +593,13 @@ export default function RegisterPage() {
 
 // Gender Selector Component
 function GenderSelector({ value, onChange }) {
+  const { t } = useLanguage();
   const [showDropdown, setShowDropdown] = React.useState(false);
   
   const genderOptions = [
-    { value: 'male', label: 'Männlich', icon: '♂' },
-    { value: 'female', label: 'Weiblich', icon: '♀' },
-    { value: 'other', label: 'Divers', icon: '⚧' }
+    { value: 'male', label: t('register.gender.male'), icon: '♂' },
+    { value: 'female', label: t('register.gender.female'), icon: '♀' },
+    { value: 'other', label: t('register.gender.other'), icon: '⚧' }
   ];
 
   const selectedOption = genderOptions.find(opt => opt.value === value);
@@ -626,7 +629,7 @@ function GenderSelector({ value, onChange }) {
         onMouseLeave={(e) => e.target.style.borderColor = '#2f6b57'}
       >
         <span>
-          {selectedOption ? `${selectedOption.icon} ${selectedOption.label}` : '-- Geschlecht wählen --'}
+          {selectedOption ? `${selectedOption.icon} ${selectedOption.label}` : t('register.genderPlaceholder')}
         </span>
         <span style={{ fontSize: 12, color: '#6b8578' }}>
           {showDropdown ? '▲' : '▼'}

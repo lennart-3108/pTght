@@ -5,9 +5,11 @@ import { handleInvalidToken } from "../utils/auth";
 import LocationSelector from "../components/LocationSelector";
 import SportSelector from "../components/SportSelector";
 import { LeaguesFeature } from "../components/FeatureWrapper";
+import { useLanguage } from "../i18n";
 
 export default function LeaguesPage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [searchParams] = useSearchParams();
   const [leagues, setLeagues] = useState([]);
   const [cities, setCities] = useState([]);
@@ -180,7 +182,7 @@ export default function LeaguesPage() {
 
     } catch (e) {
       console.error("[LeaguesPage] Failed to fetch leagues:", e);
-      setErr(e.message || "Fehler beim Laden der Ligen");
+      setErr(e.message || t('start.loadError'));
     } finally {
       setLoading(false);
       setLoadingMore(false);
@@ -435,10 +437,10 @@ export default function LeaguesPage() {
     return rawName || `Community League ${l.id}`;
   }
 
-  if (loading) return <div style={{ padding: 16 }}>Lade Ligen …</div>;
+  if (loading) return <div style={{ padding: 16 }}>{t('leagues.loading')}</div>;
   if (err) {
     if (handleInvalidToken(err, navigate)) return null;
-    return <div style={{ padding: 16, color: "crimson" }}>Fehler: {err}</div>;
+    return <div style={{ padding: 16, color: "crimson" }}>{t('match.errorPrefix')}: {err}</div>;
   }
 
   return (
@@ -451,7 +453,7 @@ export default function LeaguesPage() {
           fontWeight: 700, 
           color: "#e5e7eb" 
         }}>
-          Ligen
+          {t('leagues.title')}
         </h1>
         <p style={{ 
           margin: 0, 
@@ -459,7 +461,7 @@ export default function LeaguesPage() {
           fontSize: 16,
           lineHeight: 1.5 
         }}>
-          Finde die perfekte Liga für deinen Sport in deiner Region
+          {t('leagues.subtitle')}
         </p>
       </div>
 
@@ -478,7 +480,7 @@ export default function LeaguesPage() {
           fontWeight: 600, 
           color: "#e5e7eb" 
         }}>
-          Filter & Suche
+          {t('leagues.filterTitle')}
         </h3>
         
         {/* Search Field */}
@@ -490,11 +492,11 @@ export default function LeaguesPage() {
             color: '#e5e7eb',
             fontSize: 14
           }}>
-            Suche
+            {t('leagues.searchLabel')}
           </label>
           <input
             type="text"
-            placeholder="Liga, Stadt oder Sport suchen..."
+            placeholder={t('leagues.searchPlaceholder')}
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             style={{
@@ -537,7 +539,7 @@ export default function LeaguesPage() {
                 setSelectedSportName(sportName);
                 setSelectedSport(String(sportId));
               }}
-              placeholder="Sportart wählen..."
+              placeholder={t('leagues.sportPlaceholder')}
             />
           </div>
 
@@ -562,7 +564,7 @@ export default function LeaguesPage() {
                 handleCitySelect(String(cityId));
               }}
               onLoadCities={handleLoadCitiesForState}
-              placeholder="Stadt wählen..."
+              placeholder={t('leagues.cityPlaceholder')}
             />
           </div>
         </div>
@@ -616,7 +618,7 @@ export default function LeaguesPage() {
             className="btn btn-primary"
             style={{ fontSize: 14 }}
           >
-            Alle Filter zurücksetzen
+            {t('leagues.resetFilters')}
           </button>
           
           <div style={{ 
@@ -627,7 +629,7 @@ export default function LeaguesPage() {
             fontSize: 13,
             color: "#48baa6"
           }}>
-            {visibleLeagues.length} Ligen gefunden
+            {t('leagues.foundCount', { count: visibleLeagues.length })}
           </div>
         </div>
       </div>
@@ -642,9 +644,9 @@ export default function LeaguesPage() {
           border: '1px solid rgba(255,255,255,0.05)'
         }}>
           <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-          <h3 style={{ margin: "0 0 8px", color: "#e5e7eb" }}>Keine Ligen gefunden</h3>
+          <h3 style={{ margin: "0 0 8px", color: "#e5e7eb" }}>{t('leagues.noneTitle')}</h3>
           <p style={{ margin: 0, color: "#9ca3af" }}>
-            Versuche andere Filter oder erweitere deine Suche
+            {t('leagues.noneHint')}
           </p>
         </div>
       ) : (
@@ -789,7 +791,7 @@ export default function LeaguesPage() {
                               marginTop: 4,
                               opacity: 0.8
                             }}>
-                              Detail nicht verfügbar
+                              {t('leagues.detailUnavailable')}
                             </div>
                           )}
                         </div>
@@ -844,7 +846,7 @@ export default function LeaguesPage() {
                                   border: "1px solid #48baa6"
                                 }}
                               >
-                                ℹ️ Info
+                                {t('leagues.info')}
                               </Link>
                             );
                           } else {
@@ -859,7 +861,7 @@ export default function LeaguesPage() {
                                   display: "inline-block"
                                 }}
                               >
-                                Beitreten
+                                {t('leagues.join')}
                               </Link>
                             );
                           }
@@ -874,7 +876,6 @@ export default function LeaguesPage() {
         </div>
       )}
 
-      {/* Load More Button */}
       {!loading && leagues.length > 0 && currentOffset < totalCount && (
         <div style={{ 
           textAlign: 'center', 
@@ -896,14 +897,14 @@ export default function LeaguesPage() {
               transition: 'all 0.2s'
             }}
           >
-            {loadingMore ? 'Lädt...' : `Mehr laden (${currentOffset} von ${totalCount})`}
+            {loadingMore ? t('leagues.loadingMore') : t('leagues.loadMore', { current: currentOffset, total: totalCount })}
           </button>
           <div style={{ 
             marginTop: 8, 
             color: '#9ca3af',
             fontSize: 13
           }}>
-            {totalCount - currentOffset} weitere Ligen verfügbar
+            {t('leagues.moreAvailable', { count: (totalCount - currentOffset) })}
           </div>
         </div>
       )}
@@ -917,7 +918,7 @@ export default function LeaguesPage() {
           color: '#9ca3af',
           fontSize: 13
         }}>
-          Zeige {Math.min(currentOffset, totalCount)} von {totalCount} Ligen
+          {t('leagues.showing', { shown: Math.min(currentOffset, totalCount), total: totalCount })}
         </div>
       )}
       </div>

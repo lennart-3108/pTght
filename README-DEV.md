@@ -11,10 +11,10 @@
    cp backend/database.sqlite backend/database-dev.sqlite
    Edit backend/.env and set DB_PATH=database-dev.sqlite
 
-4) Start dev backend locally (port in example is 5003):
+4) Start dev backend locally (default port is 5001):
    cd backend
    npm ci
-   npm run start:dev
+   npm run dev
 
 5) Build and serve frontend for dev or run dev server:
    cd frontend

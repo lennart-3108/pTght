@@ -73,13 +73,7 @@ router.post('/webhook/deploy', (req, res) => {
   });
 });
 
-// Status endpoint to check deploy webhook
-router.get('/webhook/deploy/status', (req, res) => {
-  res.json({ 
-    available: true,
-    usage: 'POST /api/deploy/webhook/deploy with X-Deploy-Token header'
-  });
-});
+// Status endpoint removed (security: revealed deploy API surface)
 
 // Simple restart endpoint - just restarts the server process
 router.post('/webhook/restart', (req, res) => {

@@ -1,11 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useLanguage } from "../i18n";
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { API_BASE } from '../config';
 import Avatar from '../components/Avatar';
 import LocationSelector from '../components/LocationSelector';
 import SportSelector from '../components/SportSelector';
+import { formatPlayerName } from '../utils/nameFormat';
 
 export default function SearchMatchDialog() {
+  const { t, lang } = useLanguage();
+  const uiLocale = lang === 'en' ? 'en-GB' : 'de-DE';
   const navigate = useNavigate();
   const [sp, setSp] = useSearchParams();
   const [sports, setSports] = useState([]);
@@ -109,27 +113,6 @@ export default function SearchMatchDialog() {
     }
   };
 
-  const findDefaultTennisSportId = () => {
-    const lower = (s) => (s || '').toLowerCase();
-    const byName = (name) => lower(name).includes('tennis') && (lower(name).includes('einzel') || lower(name).includes('single'));
-    const exact = sports.find(s => byName(s.name));
-    if (exact) return exact.id;
-    const tennisOnly = sports.find(s => lower(s.name).includes('tennis'));
-    if (tennisOnly) return tennisOnly.id;
-    // Try variants from categories
-    for (const cat of sportCategories || []) {
-      for (const sport of cat.sports || []) {
-        for (const variant of sport.variants || []) {
-          if (byName(variant.name)) return variant.id;
-          if (lower(variant.name).includes('tennis')) return variant.id;
-        }
-        if (byName(sport.name)) return sport.id;
-        if (lower(sport.name).includes('tennis')) return sport.id;
-      }
-    }
-    return null;
-  };
-
   const detectLocationCreate = async () => {
     if (locationPrefillDone) return false;
     if (typeof navigator === 'undefined' || !navigator.geolocation) return false;
@@ -208,9 +191,9 @@ export default function SearchMatchDialog() {
   const createDefaultRange = (start = '18:00', end = '20:00') => ({ id: `r-${Math.random().toString(36).slice(2, 8)}`, start, end });
 
   const presetOptions = [
-    { key: 'morning', label: '🌅 Morgens', start: '08:00', end: '11:00' },
-    { key: 'midday', label: '☀️ Mittags', start: '12:00', end: '16:00' },
-    { key: 'evening', label: '🌙 Abends', start: '17:00', end: '21:00' },
+    { key: 'morning', label: t('match.search.presetMorning'), start: '08:00', end: '11:00' },
+    { key: 'midday', label: t('match.search.presetMidday'), start: '12:00', end: '16:00' },
+    { key: 'evening', label: t('match.search.presetEvening'), start: '17:00', end: '21:00' },
   ];
 
   const getIsoWeekInfo = (isoDate) => {
@@ -281,21 +264,12 @@ export default function SearchMatchDialog() {
     return () => { mounted = false; };
   }, []);
 
-  // Prefill defaults: sport -> Tennis Einzel (fallback tennis), city -> user's league city
+  // Prefill defaults: city -> user's league city (only if nothing selected)
   useEffect(() => {
     if (!authed || defaultsLoaded) return;
     if (!cities.length || !sports.length) return;
     (async () => {
       try {
-        // Sport default
-        if (!cmSportId) {
-          const foundId = findDefaultTennisSportId();
-          if (foundId) {
-            setCmSportId(String(foundId));
-            setSportId(String(foundId));
-          }
-        }
-
         // City default from user's leagues
         if (!cmCityId && !cityId) {
           const token = localStorage.getItem('token');
@@ -449,17 +423,17 @@ export default function SearchMatchDialog() {
     const startSanitized = snapToQuarter(start);
     const endSanitized = snapToQuarter(end);
     if (!step3Complete) {
-      setCreateErr('Bitte Schritt 3 abschließen, bevor Verfügbarkeiten gesetzt werden.');
+      setCreateErr(t('match.search.errorCompleteStep3'));
       return false;
     }
     if (!dateStr) {
-      setCreateErr('Bitte Datum wählen.');
+      setCreateErr(t('match.search.errorSelectDate'));
       return false;
     }
     const startM = parseTimeToMinutes(startSanitized);
     const endM = parseTimeToMinutes(endSanitized);
     if (startM === null || endM === null || startM >= endM) {
-      setCreateErr('Bitte gültige Zeitspanne wählen (von < bis).');
+      setCreateErr(t('match.search.errorValidTimeRange'));
       return false;
     }
     const newStartDate = new Date(`${dateStr}T${startSanitized}:00`);
@@ -472,7 +446,7 @@ export default function SearchMatchDialog() {
       return newStartDate < existingEndDate && existingStartDate < newEndDate;
     });
     if (conflict) {
-      setCreateErr('Konflikt: Überschneidung mit bestehendem Slot.');
+      setCreateErr(t('match.search.errorSlotConflict'));
       return false;
     }
     setCmAvailability(prev => [...prev, { date: dateStr, timeStart: startSanitized, timeEnd: endSanitized }]);
@@ -482,11 +456,11 @@ export default function SearchMatchDialog() {
 
   const updateDayAvailability = (dateStr, ranges) => {
     if (!step3Complete) {
-      setCreateErr('Bitte Schritt 3 abschließen, bevor Verfügbarkeiten gesetzt werden.');
+      setCreateErr(t('match.search.errorCompleteStep3'));
       return false;
     }
     if (!dateStr) {
-      setCreateErr('Bitte Datum wählen.');
+      setCreateErr(t('match.search.errorSelectDate'));
       return false;
     }
     if (!ranges || ranges.length === 0) {
@@ -504,14 +478,14 @@ export default function SearchMatchDialog() {
     });
 
     if (normalized.some(n => n.startM === null || n.endM === null || n.startM >= n.endM)) {
-      setCreateErr('Bitte gültige Zeitspannen wählen (von < bis).');
+      setCreateErr(t('match.search.errorValidTimeRanges'));
       return false;
     }
 
     const sorted = [...normalized].sort((a, b) => a.startM - b.startM);
     for (let i = 1; i < sorted.length; i++) {
       if (sorted[i].startM < sorted[i - 1].endM) {
-        setCreateErr('Konflikt: Überlappende Slots am selben Tag.');
+        setCreateErr(t('match.search.errorOverlappingSlots'));
         return false;
       }
     }
@@ -524,16 +498,16 @@ export default function SearchMatchDialog() {
 
   const applyPresetsToAllDays = () => {
     if (!step3Complete) {
-      setCreateErr('Bitte Schritt 3 abschließen, bevor Verfügbarkeiten gesetzt werden.');
+      setCreateErr(t('match.search.errorCompleteStep3'));
       return;
     }
     const activePresets = presetOptions.filter(p => presetSelections[p.key]);
     if (activePresets.length === 0) {
-      setCreateErr('Bitte mindestens einen Zeitraum auswählen.');
+      setCreateErr(t('match.search.errorSelectTimePeriod'));
       return;
     }
     if (selectedDates.length === 0) {
-      setCreateErr('Bitte Datum wählen.');
+      setCreateErr(t('match.search.errorSelectDate'));
       return;
     }
 
@@ -559,7 +533,7 @@ export default function SearchMatchDialog() {
     });
 
     if (added === 0) {
-      setCreateErr('Kein Zeitraum hinzugefügt (evtl. Konflikte).');
+      setCreateErr(t('match.search.errorNoTimePeriodAdded'));
       return;
     }
 
@@ -653,13 +627,13 @@ export default function SearchMatchDialog() {
   const leaguesFiltered = useMemo(() => [], []);
 
   async function handleCreate() {
-    if (!authed) { setCreateErr('Bitte zuerst anmelden.'); return; }
+    if (!authed) { setCreateErr(t('match.search.errorLoginFirst')); return; }
     if (!cmSportId || !cmCityId) {
-      setCreateErr('Bitte Sportart und Stadt auswählen.');
+      setCreateErr(t('match.search.errorSelectSportCity'));
       return;
     }
     if (!cmType) {
-      setCreateErr('Bitte wähle ein Level aus');
+      setCreateErr(t('match.search.errorSelectLevel'));
       return;
     }
     
@@ -668,11 +642,11 @@ export default function SearchMatchDialog() {
     if (availabilityMode === 'preset') {
       const activePresets = presetOptions.filter(p => presetSelections[p.key]);
       if (activePresets.length === 0) {
-        setCreateErr('Bitte mindestens einen Zeitraum auswählen.');
+        setCreateErr(t('match.search.errorSelectTimePeriod'));
         return;
       }
       if (selectedDates.length === 0) {
-        setCreateErr('Bitte mindestens ein Datum wählen.');
+        setCreateErr(t('match.search.errorSelectAtLeastOneDate'));
         return;
       }
       
@@ -684,7 +658,7 @@ export default function SearchMatchDialog() {
       });
     } else {
       if (cmAvailability.length === 0) {
-        setCreateErr('Bitte mindestens einen verfügbaren Zeitraum eintragen');
+        setCreateErr(t('match.search.errorEnterAvailability'));
         return;
       }
     }
@@ -694,7 +668,7 @@ export default function SearchMatchDialog() {
       
       // Validierung: Level ist Pflicht
       if (!cmType) {
-        setCreateErr('Bitte wähle ein Level aus');
+        setCreateErr(t('match.search.errorSelectLevel'));
         setCreating(false);
         return;
       }
@@ -747,14 +721,14 @@ export default function SearchMatchDialog() {
         body: JSON.stringify(body)
       });
       if (!resp.ok) {
-        const t = await resp.json().catch(() => ({}));
-        throw new Error(t.error || 'Konnte Match nicht erstellen');
+        const respData = await resp.json().catch(() => ({}));
+        throw new Error(respData.error || t('match.search.errorCreateFailed'));
       }
       const match = await resp.json();
       setShowCreate(false);
       navigate(`/matches/${match.id}`);
     } catch (e) {
-      setCreateErr(e?.message || 'Fehler beim Erstellen');
+      setCreateErr(e?.message || t('match.search.errorCreatingMatch'));
     } finally {
       setCreating(false);
     }
@@ -763,7 +737,7 @@ export default function SearchMatchDialog() {
   return (
     <div style={{ maxWidth: 1000, margin: '20px auto', padding: 16 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-        <h1 style={{ marginTop: 0, marginBottom: 0 }}>Match suchen</h1>
+        <h1 style={{ marginTop: 0, marginBottom: 0 }}>{t('match.search.title')}</h1>
         <button onClick={openCreate} disabled={!authed} style={{ 
           background: '#debc7c', 
           color: '#10261f', 
@@ -773,7 +747,7 @@ export default function SearchMatchDialog() {
           cursor: authed ? 'pointer' : 'not-allowed', 
           fontWeight: 700,
           opacity: authed ? 1 : 0.5
-        }}>{authed ? 'Match erstellen' : 'Einloggen um zu erstellen'}</button>
+        }}>{authed ? t('match.search.createMatch') : t('match.search.loginToCreate')}</button>
       </div>
       <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', alignItems: 'center', marginBottom: 12 }}>
         <div style={{ minWidth: 200 }}>
@@ -781,7 +755,7 @@ export default function SearchMatchDialog() {
             sports={sportCategories}
             value={sportId ? (sports.find(s => String(s.id) === String(sportId))?.name || '') : ''}
             onChange={(sportName, sportIdVal) => setSportId(sportIdVal)}
-            placeholder="Sportart wählen"
+            placeholder={t('match.search.selectSport')}
             isOpen={sportDropdownOpen}
             onOpen={() => {
               setSportDropdownOpen(true);
@@ -805,7 +779,7 @@ export default function SearchMatchDialog() {
                 setStateId(selectedCity.stateId || '');
               }
             }}
-            placeholder="Stadt"
+            placeholder={t('match.search.city')}
             isOpen={locationDropdownOpen}
             onOpen={() => {
               setLocationDropdownOpen(true);
@@ -831,10 +805,10 @@ export default function SearchMatchDialog() {
                 cursor: 'pointer'
               }}
             >
-              <option value="3">In den nächsten 3 Tagen</option>
-              <option value="7">In den nächsten 7 Tagen</option>
-              <option value="14">In den nächsten 14 Tagen</option>
-              <option value="30">In den nächsten 30 Tagen</option>
+              <option value="3">{t('match.search.next3Days')}</option>
+              <option value="7">{t('match.search.next7Days')}</option>
+              <option value="14">{t('match.search.next14Days')}</option>
+              <option value="30">{t('match.search.next30Days')}</option>
             </select>
           ) : (
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -879,7 +853,7 @@ export default function SearchMatchDialog() {
               cursor: 'pointer',
               fontWeight: 600
             }}
-            title={dateFilterMode === 'range' ? 'Zeitraum wählen' : 'Tage wählen'}
+            title={dateFilterMode === 'range' ? t('match.search.selectPeriod') : t('match.search.selectDays')}
           >
             {dateFilterMode === 'range' ? '📅' : '🔢'}
           </button>
@@ -899,7 +873,7 @@ export default function SearchMatchDialog() {
               cursor: 'pointer',
               fontWeight: 600
             }}
-            title="Tabellenansicht"
+            title={t('match.search.tableView')}
           >
             📋
           </button>
@@ -915,7 +889,7 @@ export default function SearchMatchDialog() {
               cursor: 'pointer',
               fontWeight: 600
             }}
-            title="Kartenansicht"
+            title={t('match.search.cardView')}
           >
             🃏
           </button>
@@ -931,7 +905,7 @@ export default function SearchMatchDialog() {
               cursor: 'pointer',
               fontWeight: 600
             }}
-            title="Kartenansicht"
+            title={t('match.search.mapView')}
           >
             🗺️
           </button>
@@ -942,57 +916,57 @@ export default function SearchMatchDialog() {
       {viewMode === 'table' && (
         <div style={{ marginTop: 20, overflowX: 'auto' }}>
           {rows.length === 0 ? (
-            <div style={{ color: '#9db', padding: 20, textAlign: 'center' }}>Keine offenen Matches gefunden.</div>
+            <div style={{ color: '#9db', padding: 20, textAlign: 'center' }}>{t('match.search.noResults')}</div>
           ) : (
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid #2f6b57' }}>
-                  <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>Sport</th>
+                  <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>{t('match.search.thSport')}</th>
                   <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>Level</th>
-                  <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>Spieler</th>
-                  <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>Ort</th>
-                  <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>Zeit</th>
+                  <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>{t('match.search.thPlayer')}</th>
+                  <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>{t('match.search.thLocation')}</th>
+                  <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>{t('match.search.thTime')}</th>
                   <th style={{ textAlign: 'left', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>Status</th>
-                  <th style={{ textAlign: 'right', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>Aktion</th>
+                  <th style={{ textAlign: 'right', padding: '12px 8px', color: '#debc7c', fontWeight: 700 }}>{t('match.search.thAction')}</th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map(m => {
                   const aName = m.home || m.home_name || 'A';
-                  const bName = m.away || m.away_name || 'Gegner gesucht';
-                  const status = (m.status || 'Ausstehend');
+                  const bName = m.away || m.away_name || t('match.search.opponentWanted');
+                  const status = (m.status || t('match.search.statusPending'));
                   
-                  let dateText = 'Datum: offen';
+                  let dateText = t('match.search.dateOpen');
                   if (m.when_type === 'range' && m.range_days) {
-                    dateText = `In ${m.range_days} Tag${m.range_days !== 1 ? 'en' : ''}`;
+                    dateText = t('match.search.inDays', { days: m.range_days });
                   } else if (m.when_type === 'fixed' && m.kickoff_at && m.kickoff_end_at) {
                     try {
                       const start = new Date(m.kickoff_at);
                       const end = new Date(m.kickoff_end_at);
-                      const dateStr = start.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
-                      const startTime = start.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-                      const endTime = end.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                      const dateStr = start.toLocaleDateString(uiLocale, { day: 'numeric', month: 'numeric' });
+                      const startTime = start.toLocaleTimeString(uiLocale, { hour: '2-digit', minute: '2-digit' });
+                      const endTime = end.toLocaleTimeString(uiLocale, { hour: '2-digit', minute: '2-digit' });
                       dateText = `${dateStr}, ${startTime}-${endTime}`;
                     } catch (e) {
-                      dateText = 'Zeitraum: offen';
+                      dateText = t('match.search.periodOpen');
                     }
                   } else if (m.when_type === 'exact' && m.kickoff_at) {
                     try {
                       const date = new Date(m.kickoff_at);
-                      const dateStr = date.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
-                      const time = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                      const dateStr = date.toLocaleDateString(uiLocale, { day: 'numeric', month: 'numeric' });
+                      const time = date.toLocaleTimeString(uiLocale, { hour: '2-digit', minute: '2-digit' });
                       dateText = `${dateStr}, ${time}`;
                     } catch (e) {
-                      dateText = 'Datum: offen';
+                      dateText = t('match.search.dateOpen');
                     }
                   } else if (m.kickoff_at) {
                     try {
                       const date = new Date(m.kickoff_at);
-                      const dateStr = date.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
-                      const time = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+                      const dateStr = date.toLocaleDateString(uiLocale, { day: 'numeric', month: 'numeric' });
+                      const time = date.toLocaleTimeString(uiLocale, { hour: '2-digit', minute: '2-digit' });
                       dateText = `${dateStr}, ${time}`;
                     } catch (e) {
-                      dateText = 'Datum: offen';
+                      dateText = t('match.search.dateOpen');
                     }
                   }
                   
@@ -1013,12 +987,12 @@ export default function SearchMatchDialog() {
                           fontSize: 11, 
                           fontWeight: 700 
                         }}>
-                          {m.type || 'Offen'}
+                          {m.type || t('match.search.levelOpen')}
                         </span>
                       </td>
                       <td style={{ padding: '12px 8px' }}>
                         <div style={{ fontWeight: 600 }}>{aName}</div>
-                        {bName !== 'Gegner gesucht' && <div style={{ fontSize: 12, color: '#8bbfad' }}>vs {bName}</div>}
+                        {bName !== t('match.search.opponentWanted') && <div style={{ fontSize: 12, color: '#8bbfad' }}>vs {bName}</div>}
                       </td>
                       <td style={{ padding: '12px 8px' }}>
                         <div>{m.location_name || m.city_name || '-'}</div>
@@ -1031,7 +1005,7 @@ export default function SearchMatchDialog() {
                           fontSize: 12,
                           fontWeight: 600
                         }}>
-                          {status === 'open' ? '🟢 Offen' : status === 'scheduled' ? '📅 Geplant' : status}
+                          {status === 'open' ? t('match.search.statusOpen') : status === 'scheduled' ? t('match.search.statusScheduled') : status}
                         </span>
                       </td>
                       <td style={{ padding: '12px 8px', textAlign: 'right' }}>
@@ -1063,48 +1037,48 @@ export default function SearchMatchDialog() {
       {viewMode === 'cards' && (
       <div style={{ display: 'grid', gap: 10, marginTop: 20 }}>
         {rows.length === 0 ? (
-          <div style={{ color: '#9db' }}>Keine offenen Matches gefunden.</div>
+          <div style={{ color: '#9db' }}>{t('match.search.noResults')}</div>
         ) : rows.map(m => {
-          const aName = m.home || m.home_name || 'A';
-          const bName = m.away || m.away_name || 'Gegner gesucht';
-          const status = (m.status || 'Ausstehend');
+          const aName = formatPlayerName(m.home || m.home_name || 'A');
+          const bName = formatPlayerName(m.away || m.away_name || t('match.search.opponentWanted'));
+          const status = (m.status || t('match.search.statusPending'));
           
           // Format date based on when_type
-          let dateText = 'Datum: offen';
+          let dateText = t('match.search.dateOpen');
           
           if (m.when_type === 'range' && m.range_days) {
-            dateText = `In den nächsten ${m.range_days} Tag${m.range_days !== 1 ? 'en' : ''}`;
+            dateText = t('match.search.inNextDays', { days: m.range_days });
           } else if (m.when_type === 'fixed' && m.kickoff_at && m.kickoff_end_at) {
             try {
               const start = new Date(m.kickoff_at);
               const end = new Date(m.kickoff_end_at);
-              const dayName = start.toLocaleDateString('de-DE', { weekday: 'long' });
-              const dateStr = start.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric', year: '2-digit' });
-              const startTime = start.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-              const endTime = end.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-              dateText = `am ${dayName} ${dateStr}, zwischen ${startTime}-${endTime} Uhr`;
+              const dayName = start.toLocaleDateString(uiLocale, { weekday: 'long' });
+              const dateStr = start.toLocaleDateString(uiLocale, { day: 'numeric', month: 'numeric', year: '2-digit' });
+              const startTime = start.toLocaleTimeString(uiLocale, { hour: '2-digit', minute: '2-digit' });
+              const endTime = end.toLocaleTimeString(uiLocale, { hour: '2-digit', minute: '2-digit' });
+              dateText = t('match.search.dateFixedRange', { dayName, date: dateStr, start: startTime, end: endTime });
             } catch (e) {
-              dateText = 'Zeitraum: offen';
+              dateText = t('match.search.periodOpen');
             }
           } else if (m.when_type === 'exact' && m.kickoff_at) {
             try {
               const date = new Date(m.kickoff_at);
-              const dayName = date.toLocaleDateString('de-DE', { weekday: 'long' });
-              const dateStr = date.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric', year: '2-digit' });
-              const time = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-              dateText = `am ${dayName} ${dateStr}, um ${time} Uhr`;
+              const dayName = date.toLocaleDateString(uiLocale, { weekday: 'long' });
+              const dateStr = date.toLocaleDateString(uiLocale, { day: 'numeric', month: 'numeric', year: '2-digit' });
+              const time = date.toLocaleTimeString(uiLocale, { hour: '2-digit', minute: '2-digit' });
+              dateText = t('match.search.dateExact', { dayName, date: dateStr, time });
             } catch (e) {
-              dateText = 'Datum: offen';
+              dateText = t('match.search.dateOpen');
             }
           } else if (m.kickoff_at) {
             try {
               const date = new Date(m.kickoff_at);
-              const dayName = date.toLocaleDateString('de-DE', { weekday: 'long' });
-              const dateStr = date.toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric', year: '2-digit' });
-              const time = date.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
-              dateText = `am ${dayName} ${dateStr}, um ${time} Uhr`;
+              const dayName = date.toLocaleDateString(uiLocale, { weekday: 'long' });
+              const dateStr = date.toLocaleDateString(uiLocale, { day: 'numeric', month: 'numeric', year: '2-digit' });
+              const time = date.toLocaleTimeString(uiLocale, { hour: '2-digit', minute: '2-digit' });
+              dateText = t('match.search.dateExact', { dayName, date: dateStr, time });
             } catch (e) {
-              dateText = 'Datum: offen';
+              dateText = t('match.search.dateOpen');
             }
           }
           
@@ -1172,12 +1146,12 @@ export default function SearchMatchDialog() {
             border: '1px solid #2f6b57'
           }}>
             <div style={{ fontSize: 48, marginBottom: 16 }}>🗺️</div>
-            <h3 style={{ margin: '0 0 12px 0', color: '#debc7c' }}>Kartenansicht</h3>
+            <h3 style={{ margin: '0 0 12px 0', color: '#debc7c' }}>{t('match.search.mapViewTitle')}</h3>
             <p style={{ color: '#8bbfad', margin: 0, maxWidth: 400, marginLeft: 'auto', marginRight: 'auto' }}>
-              Die Kartenansicht zeigt alle verfügbaren Matches auf einer interaktiven Karte mit ihren Standorten.
+              {t('match.search.mapViewDesc')}
             </p>
             <p style={{ color: '#9db', fontSize: 13, marginTop: 16 }}>
-              🚧 In Entwicklung - Verfügbar in einer kommenden Version
+              {t('match.search.mapViewWip')}
             </p>
           </div>
         </div>
@@ -1194,7 +1168,7 @@ export default function SearchMatchDialog() {
           cursor: !authed ? 'not-allowed' : 'pointer', 
           fontWeight: 700,
           opacity: !authed ? 0.6 : 1
-        }}>Eigenes Match eröffnen</button>
+        }}>{t('match.search.openOwnMatch')}</button>
       </div>
 
       {/* Create Match Modal */}
@@ -1228,7 +1202,7 @@ export default function SearchMatchDialog() {
             {/* Header */}
             <div style={{ marginBottom: 16, paddingBottom: 12, borderBottom: '1px solid #1a3c33' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: 4, gap: 8 }}>
-                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, lineHeight: 1.3 }}>Öffentliches Match erstellen</h2>
+                <h2 style={{ margin: 0, fontSize: 18, fontWeight: 700, lineHeight: 1.3 }}>{t('match.createPublic.title')}</h2>
                 <button 
                   onClick={closeCreate}
                   style={{
@@ -1246,7 +1220,7 @@ export default function SearchMatchDialog() {
                 >×</button>
               </div>
               <p style={{ margin: 0, color: '#9db', fontSize: 13, lineHeight: 1.4 }}>
-                Erstelle ein öffentliches Match, das andere Spieler finden und beitreten können.
+                {t('match.createPublic.subtitle')}
               </p>
             </div>
 
@@ -1267,7 +1241,7 @@ export default function SearchMatchDialog() {
                     fontSize: 14,
                     transition: 'all 0.3s'
                   }}>1</div>
-                  <span style={{ fontWeight: 700, fontSize: 16, color: '#debc7c' }}>Sport und Ort</span>
+                  <span style={{ fontWeight: 700, fontSize: 16, color: '#debc7c' }}>{t('match.search.step1Label')}</span>
                 </div>
                 
                 <div style={{ display: 'grid', gap: 10, marginLeft: 36 }}>
@@ -1275,7 +1249,7 @@ export default function SearchMatchDialog() {
                     sports={sportCategories}
                     value={cmSportId ? (sports.find(s => String(s.id) === String(cmSportId))?.name || '') : ''}
                     onChange={(sportName, sportIdVal) => setCmSportId(sportIdVal)}
-                    placeholder="🏃 Sportart wählen"
+                    placeholder={t('match.search.selectSportEmoji')}
                   />
                   
                   <LocationSelector
@@ -1295,14 +1269,14 @@ export default function SearchMatchDialog() {
                         loadAvailableLocations(cmSportId, cityId);
                       }
                     }}
-                    placeholder="Stadt wählen"
+                    placeholder={t('match.search.selectCity')}
                   />
                   
                   {/* Location Selection */}
                   {cmSportId && cmCityId && availableLocations.length > 0 && (
                     <div style={{ marginTop: 4 }}>
                       <label style={{ display: 'block', fontSize: 12, color: '#9db', marginBottom: 6, fontWeight: 600 }}>
-                        🏟️ Platz buchen (optional)
+                        🏟️ {t('match.search.bookVenueOptional')}
                       </label>
                       <select
                         value={cmLocationId}
@@ -1318,7 +1292,7 @@ export default function SearchMatchDialog() {
                           cursor: 'pointer'
                         }}
                       >
-                        <option value="">Kein Platz ausgewählt</option>
+                        <option value="">{t('match.search.noVenueSelected')}</option>
                         {availableLocations.map(loc => (
                           <option key={loc.id} value={loc.id}>
                             {loc.name} {loc.hourly_rate ? `(${loc.hourly_rate}€/h)` : ''}
@@ -1350,25 +1324,25 @@ export default function SearchMatchDialog() {
                 </div>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6, marginLeft: 36, opacity: step1Complete ? 1 : 0.5 }}>
-                  {['Starter','Experienced','Pro'].map(t => (
+                  {['Starter','Experienced','Pro'].map(lvl => (
                     <button
-                      key={t}
+                      key={lvl}
                       type="button"
-                      onClick={()=> step1Complete && setCmType(t)}
+                      onClick={()=> step1Complete && setCmType(lvl)}
                       disabled={!step1Complete}
                       style={{ 
                         padding: '10px 8px', 
                         borderRadius: 8, 
-                        border: cmType===t ? '2px solid #debc7c' : '2px solid #2f6b57', 
-                        background: cmType===t ? '#1a3c33' : '#0e2a22',
-                        color: cmType===t ? '#debc7c' : '#e8efe8',
+                        border: cmType===lvl ? '2px solid #debc7c' : '2px solid #2f6b57', 
+                        background: cmType===lvl ? '#1a3c33' : '#0e2a22',
+                        color: cmType===lvl ? '#debc7c' : '#e8efe8',
                         cursor: step1Complete ? 'pointer' : 'not-allowed',
                         fontWeight: 600,
                         fontSize: 12,
                         transition: 'all 0.2s'
                       }}
                     >
-                      {t}
+                      {lvl}
                     </button>
                   ))}
                 </div>
@@ -1390,7 +1364,7 @@ export default function SearchMatchDialog() {
                     fontSize: 14,
                     transition: 'all 0.3s'
                   }}>4</div>
-                  <span style={{ fontWeight: 700, fontSize: 16, color: '#debc7c' }}>Gewünschter Zeitpunkt</span>
+                  <span style={{ fontWeight: 700, fontSize: 16, color: '#debc7c' }}>{t('match.search.desiredTime')}</span>
                 </div>
                 
                 {/* Wann-Typ Auswahl */}
@@ -1416,7 +1390,7 @@ export default function SearchMatchDialog() {
                     }}
                   >
                     <div style={{ fontSize: 18 }}>📅</div>
-                    <div>Fester Tag</div>
+                    <div>{t('match.search.fixedDay')}</div>
                   </button>
                   <button 
                     type="button"
@@ -1439,7 +1413,7 @@ export default function SearchMatchDialog() {
                     }}
                   >
                     <div style={{ fontSize: 18 }}>📆</div>
-                    <div>Zeitraum</div>
+                    <div>{t('match.search.period')}</div>
                   </button>
                   <button 
                     type="button"
@@ -1462,7 +1436,7 @@ export default function SearchMatchDialog() {
                     }}
                   >
                     <div style={{ fontSize: 20 }}>🗓️</div>
-                    <div>Zeitfenster</div>
+                    <div>{t('match.search.timeWindow')}</div>
                   </button>
                 </div>
 
@@ -1470,7 +1444,7 @@ export default function SearchMatchDialog() {
                 {cmWhenType === 'exact' && (
                   <div style={{ marginLeft: 36, padding: 14, background: 'rgba(26, 60, 51, 0.3)', borderRadius: 10, border: '1px solid #2f6b57' }}>
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, color: '#9db', marginBottom: 6, fontWeight: 600 }}>Datum</label>
+                      <label style={{ display: 'block', fontSize: 12, color: '#9db', marginBottom: 6, fontWeight: 600 }}>{t('match.search.date')}</label>
                       <input 
                         type="date" 
                         value={cmExactDate} 
@@ -1485,12 +1459,12 @@ export default function SearchMatchDialog() {
                 {/* Option 2: Zeitraum */}
                 {cmWhenType === 'range' && (
                   <div style={{ marginLeft: 36, padding: 14, background: 'rgba(26, 60, 51, 0.3)', borderRadius: 10, border: '1px solid #2f6b57' }}>
-                    <div style={{ fontSize: 12, color: '#9db', marginBottom: 10, fontWeight: 600 }}>In den nächsten:</div>
+                    <div style={{ fontSize: 12, color: '#9db', marginBottom: 10, fontWeight: 600 }}>{t('match.search.inTheNext')}</div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                       {[
-                        { label: '3 Tage', days: 3 },
-                        { label: '7 Tage', days: 7 },
-                        { label: '14 Tage', days: 14 },
+                        { label: t('match.search.threeDays'), days: 3 },
+                        { label: t('match.search.sevenDays'), days: 7 },
+                        { label: t('match.search.fourteenDays'), days: 14 },
                       ].map(opt => (
                         <button
                           key={opt.days}
@@ -1520,7 +1494,7 @@ export default function SearchMatchDialog() {
                   <div style={{ marginLeft: 36, padding: 14, background: 'rgba(26, 60, 51, 0.3)', borderRadius: 10, border: '1px solid #2f6b57' }}>
                     <div style={{ display: 'grid', gap: 10 }}>
                       <div>
-                        <label style={{ display: 'block', fontSize: 12, color: '#9db', marginBottom: 6, fontWeight: 600 }}>Von (Start-Datum)</label>
+                        <label style={{ display: 'block', fontSize: 12, color: '#9db', marginBottom: 6, fontWeight: 600 }}>{t('match.search.fromStartDate')}</label>
                         <input 
                           type="date" 
                           value={cmTimeWindowStart} 
@@ -1539,7 +1513,7 @@ export default function SearchMatchDialog() {
                         />
                       </div>
                       <div>
-                        <label style={{ display: 'block', fontSize: 12, color: '#9db', marginBottom: 6, fontWeight: 600 }}>Bis (End-Datum)</label>
+                        <label style={{ display: 'block', fontSize: 12, color: '#9db', marginBottom: 6, fontWeight: 600 }}>{t('match.search.toEndDate')}</label>
                         <input 
                           type="date" 
                           value={cmTimeWindowEnd} 
@@ -1557,7 +1531,7 @@ export default function SearchMatchDialog() {
                       
                       {/* Time preference */}
                       <div style={{ marginTop: 8 }}>
-                        <label style={{ display: 'block', fontSize: 12, color: '#9db', marginBottom: 6, fontWeight: 600 }}>Bevorzugte Zeit (optional)</label>
+                        <label style={{ display: 'block', fontSize: 12, color: '#9db', marginBottom: 6, fontWeight: 600 }}>{t('match.search.preferredTimeOptional')}</label>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                           <button
                             type="button"
@@ -1573,7 +1547,7 @@ export default function SearchMatchDialog() {
                               fontWeight: 600
                             }}
                           >
-                            Konkrete Zeit
+                            {t('match.search.specificTime')}
                           </button>
                           <button
                             type="button"
@@ -1589,14 +1563,14 @@ export default function SearchMatchDialog() {
                               fontWeight: 600
                             }}
                           >
-                            Tageszeit
+                            {t('match.search.timeOfDay')}
                           </button>
                         </div>
                         
                         {cmTimeMode === 'specific' ? (
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
                             <div>
-                              <label style={{ display: 'block', fontSize: 11, color: '#9db', marginBottom: 4 }}>Von</label>
+                              <label style={{ display: 'block', fontSize: 11, color: '#9db', marginBottom: 4 }}>{t('match.search.from')}</label>
                               <input 
                                 type="time" 
                                 value={cmTimeFrom} 
@@ -1605,7 +1579,7 @@ export default function SearchMatchDialog() {
                               />
                             </div>
                             <div>
-                              <label style={{ display: 'block', fontSize: 11, color: '#9db', marginBottom: 4 }}>Bis</label>
+                              <label style={{ display: 'block', fontSize: 11, color: '#9db', marginBottom: 4 }}>{t('match.search.to')}</label>
                               <input 
                                 type="time" 
                                 value={cmTimeTo} 
@@ -1617,9 +1591,9 @@ export default function SearchMatchDialog() {
                         ) : (
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
                             {[
-                              { value: 'morning', label: '🌅 Morgens', time: '6-12' },
-                              { value: 'afternoon', label: '☀️ Mittags', time: '12-18' },
-                              { value: 'evening', label: '🌙 Abends', time: '18-22' }
+                              { value: 'morning', label: t('match.search.presetMorning'), time: '6-12' },
+                              { value: 'afternoon', label: t('match.search.presetMidday'), time: '12-18' },
+                              { value: 'evening', label: t('match.search.presetEvening'), time: '18-22' }
                             ].map(tod => (
                               <button
                                 key={tod.value}
@@ -1668,14 +1642,14 @@ export default function SearchMatchDialog() {
                     fontSize: 14,
                     transition: 'all 0.3s'
                   }}>3</div>
-                  <span style={{ fontWeight: 700, fontSize: 16, color: '#debc7c' }}>Spiellänge</span>
+                  <span style={{ fontWeight: 700, fontSize: 16, color: '#debc7c' }}>{t('match.search.gameDuration')}</span>
                 </div>
                 
                 <div style={{ marginLeft: 36, padding: 14, background: 'rgba(26, 60, 51, 0.3)', borderRadius: 10, border: '1px solid #2f6b57', opacity: step4Complete ? 1 : 0.8 }}>
                   {/* Slot-Dauer als eigener Punkt */}
                   <div style={{ marginBottom: 0 }}>
                     <label style={{ display: 'block', fontSize: 12, color: '#9db', marginBottom: 6, fontWeight: 600 }}>
-                      Spiellänge (gilt für das gesamte Match)
+                      {t('match.search.gameDurationDesc')}
                     </label>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, width: '100%', maxWidth: 320, margin: '0 auto' }}>
                       <button
@@ -1692,7 +1666,7 @@ export default function SearchMatchDialog() {
                           fontSize: 18,
                           cursor: 'pointer'
                         }}
-                        aria-label="Slotdauer verkürzen"
+                        aria-label={t('match.search.decreaseDuration')}
                       >
                         −
                       </button>
@@ -1723,12 +1697,12 @@ export default function SearchMatchDialog() {
                           fontSize: 18,
                           cursor: 'pointer'
                         }}
-                        aria-label="Slotdauer verlängern"
+                        aria-label={t('match.search.increaseDuration')}
                       >
                         +
                       </button>
                     </div>
-                    <div style={{ marginTop: 6, fontSize: 12, color: '#9db', textAlign: 'center' }}>Gilt für alle Verfügbarkeiten dieses Matches.</div>
+                    <div style={{ marginTop: 6, fontSize: 12, color: '#9db', textAlign: 'center' }}>{t('match.search.appliesAllAvailabilities')}</div>
                   </div>
                 </div>
               </div>
@@ -1749,14 +1723,14 @@ export default function SearchMatchDialog() {
                     fontSize: 14,
                     transition: 'all 0.3s'
                   }}>5</div>
-                  <span style={{ fontWeight: 700, fontSize: 16, color: '#debc7c' }}>Verfügbarkeiten eintragen</span>
+                  <span style={{ fontWeight: 700, fontSize: 16, color: '#debc7c' }}>{t('match.search.enterAvailabilities')}</span>
                 </div>
 
                 <div style={{ marginLeft: 36, padding: 14, background: 'rgba(26, 60, 51, 0.3)', borderRadius: 10, border: '1px solid #2f6b57' }}>
                   <div style={{ display: 'grid', gap: 12 }}>
                     {/* Modus: Presets für alle Tage oder pro Tag */}
                     <div style={{ display: 'grid', gap: 8 }}>
-                      <label style={{ fontSize: 12, color: '#9db', fontWeight: 600 }}>Konfiguration</label>
+                      <label style={{ fontSize: 12, color: '#9db', fontWeight: 600 }}>{t('match.search.configuration')}</label>
                       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                         <button
                           type="button"
@@ -1775,7 +1749,7 @@ export default function SearchMatchDialog() {
                             cursor: 'pointer'
                           }}
                         >
-                          Zeiträume für alle Tage
+                          {t('match.search.periodsForAllDays')}
                         </button>
                         <button
                           type="button"
@@ -1794,14 +1768,14 @@ export default function SearchMatchDialog() {
                             cursor: 'pointer'
                           }}
                         >
-                          Verfügbarkeit pro Tag
+                          {t('match.search.availabilityPerDay')}
                         </button>
                       </div>
                     </div>
 
                     {availabilityMode === 'preset' && (
                       <div style={{ display: 'grid', gap: 10, padding: 12, borderRadius: 10, border: '1px solid #2f6b57', background: '#0e2a22' }}>
-                        <div style={{ fontSize: 12, color: '#9db' }}>Wähle einen oder mehrere Zeiträume. Sie werden beim Absenden des Formulars auf alle markierten Tage angewendet.</div>
+                        <div style={{ fontSize: 12, color: '#9db' }}>{t('match.search.presetHint')}</div>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8 }}>
                           {presetOptions.map(p => (
                             <button
@@ -1832,18 +1806,18 @@ export default function SearchMatchDialog() {
                     {availabilityMode === 'per-day' && (
                       <div style={{ display: 'grid', gap: 8 }}>
                         {groupedSelectedDates.length === 0 ? (
-                          <div style={{ fontSize: 12, color: '#9db' }}>Bitte oben einen Zeitraum wählen.</div>
+                          <div style={{ fontSize: 12, color: '#9db' }}>{t('match.search.pleaseSelectPeriodAbove')}</div>
                         ) : (
                           groupedSelectedDates.map(group => (
                             <div key={group.key} style={{ border: '1px solid #2f6b57', borderRadius: 10, padding: 8, background: 'rgba(26,60,51,0.2)' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                                 <span style={{ color: '#debc7c', fontWeight: 700, fontSize: 14 }}>KW {group.weekNumber}</span>
-                                <span style={{ color: '#9db', fontSize: 11 }}>{new Date(group.weekStart).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })} - {new Date(group.weekEnd).toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit' })}</span>
+                                <span style={{ color: '#9db', fontSize: 11 }}>{new Date(group.weekStart).toLocaleDateString(uiLocale, { day: '2-digit', month: '2-digit' })} - {new Date(group.weekEnd).toLocaleDateString(uiLocale, { day: '2-digit', month: '2-digit' })}</span>
                               </div>
                               <div style={{ display: 'grid', gap: 8 }}>
                                 {group.days.map(ds => {
                                   const d = new Date(ds);
-                                  const label = d.toLocaleDateString('de-DE', { weekday: 'short', day: '2-digit', month: '2-digit' });
+                                  const label = d.toLocaleDateString(uiLocale, { weekday: 'short', day: '2-digit', month: '2-digit' });
                                   const ranges = tempTimesByDate[ds] || [createDefaultRange()];
                                   return (
                                     <div key={ds} style={{ border: '1px solid #2f6b57', borderRadius: 10, padding: 10, background: '#0e2a22', display: 'grid', gap: 8 }}>
@@ -1866,7 +1840,7 @@ export default function SearchMatchDialog() {
                                           return (
                                             <div key={range.id} style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(140px, 1fr)) auto', gap: 8, alignItems: 'center', opacity: step3Complete ? 1 : 0.5 }}>
                                               <div style={{ display: 'grid', gap: 4 }}>
-                                                <label style={{ fontSize: 11, color: '#9db', fontWeight: 600 }}>Von</label>
+                                                <label style={{ fontSize: 11, color: '#9db', fontWeight: 600 }}>{t('match.search.from')}</label>
                                                 <input
                                                   type="time"
                                                   value={range.start}
@@ -1877,7 +1851,7 @@ export default function SearchMatchDialog() {
                                                 />
                                               </div>
                                               <div style={{ display: 'grid', gap: 4 }}>
-                                                <label style={{ fontSize: 11, color: '#9db', fontWeight: 600 }}>Bis</label>
+                                                <label style={{ fontSize: 11, color: '#9db', fontWeight: 600 }}>{t('match.search.to')}</label>
                                                 <input
                                                   type="time"
                                                   value={range.end}
@@ -1906,9 +1880,9 @@ export default function SearchMatchDialog() {
                                                   fontWeight: 700,
                                                   fontSize: 12
                                                 }}
-                                                aria-label="Zeile entfernen"
+                                                aria-label={t('match.search.removeRow')}
                                               >
-                                                Zeile entfernen
+                                                {t('match.search.removeRow')}
                                               </button>
                                             </div>
                                           );
@@ -1942,7 +1916,7 @@ export default function SearchMatchDialog() {
                                             justifySelf: 'start'
                                           }}
                                         >
-                                          + Neue Zeile
+                                          {t('match.search.addNewRow')}
                                         </button>
                                       </div>
                                     </div>
@@ -1964,18 +1938,18 @@ export default function SearchMatchDialog() {
               {cmSportId && cmCityId && cmWhen && (
                 <div style={{ marginTop: 8 }}>
                   <h3 style={{ fontSize: 16, fontWeight: 600, marginBottom: 12, color: '#debc7c' }}>
-                    Verfügbare Plätze
+                    {t('match.search.availableVenues')}
                   </h3>
 
                   {loadingLocations && (
                     <div style={{ padding: 16, textAlign: 'center', color: '#9db', fontSize: 14 }}>
-                      Suche verfügbare Plätze...
+                      {t('match.search.searchingVenues')}
                     </div>
                   )}
 
                   {!loadingLocations && availableLocations.length === 0 && (
                     <div style={{ padding: 16, textAlign: 'center', color: '#9db', fontSize: 14 }}>
-                      Keine freien Plätze für diese Auswahl verfügbar
+                      {t('match.search.noVenuesAvailable')}
                     </div>
                   )}
 
@@ -1984,7 +1958,7 @@ export default function SearchMatchDialog() {
                       {availableLocations.map(loc => {
                         const photos = loc.photos ? (typeof loc.photos === 'string' ? JSON.parse(loc.photos) : loc.photos) : [];
                         const firstPhoto = photos.length > 0 ? photos[0] : null;
-                        const priceText = loc.hourly_rate ? `${loc.hourly_rate}€/h` : 'Preis auf Anfrage';
+                        const priceText = loc.hourly_rate ? `${loc.hourly_rate}€/h` : t('match.search.priceOnRequest');
 
                         return (
                           <div 
@@ -2022,13 +1996,13 @@ export default function SearchMatchDialog() {
                                 </div>
                               )}
                               <div style={{ fontSize: 13, color: '#debc7c', fontWeight: 600 }}>
-                                {loc.available_slots} {loc.available_slots === 1 ? 'freier Platz' : 'freie Plätze'} • {priceText}
+                                {loc.available_slots} {loc.available_slots === 1 ? t('match.search.freeSlot') : t('match.search.freeSlots')} • {priceText}
                               </div>
                             </div>
                             <button
                               onClick={() => {
                                 // TODO: Implement booking logic
-                                alert(`Platz bei ${loc.name} buchen`);
+                                alert(t('match.search.bookVenueAt', { name: loc.name }));
                               }}
                               style={{
                                 background: '#debc7c',
@@ -2042,7 +2016,7 @@ export default function SearchMatchDialog() {
                                 whiteSpace: 'nowrap'
                               }}
                             >
-                              Platz buchen
+                              {t('match.search.bookVenue')}
                             </button>
                           </div>
                         );
@@ -2076,7 +2050,7 @@ export default function SearchMatchDialog() {
                     transition: 'all 0.2s'
                   }}
                 >
-                  Abbrechen
+                  {t('match.search.cancel')}
                 </button>
                 <button 
                   onClick={handleCreate} 
@@ -2097,7 +2071,7 @@ export default function SearchMatchDialog() {
                   }}
                 >
                   {creating && <span>⏳</span>}
-                  <span>{creating ? 'Erstelle Match...' : 'Match erstellen'}</span>
+                  <span>{creating ? t('match.search.creatingMatch') : t('match.search.createMatch')}</span>
                 </button>
               </div>
             </div>

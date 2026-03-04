@@ -161,8 +161,12 @@ module.exports = function profileRoutes(ctx) {
   if (stateId && hasStates && hasCities) base.andWhere('st.id', stateId);
   if (countryId && hasCountries && hasCities) base.andWhere('co.id', countryId);
 
-      // ALWAYS filter to only show matches without opponent (regardless of status column)
-      base.whereNull('m.away_user_id').whereNull('m.away_team_id');
+      // Legacy filter: previously only matches without opponent.
+      // For multi-participant matches we later filter by capacity using match_participants.
+      base.whereNull('m.away_team_id');
+      if (Object.prototype.hasOwnProperty.call(info, 'away_user_id')) {
+        base.whereNull('m.away_user_id');
+      }
 
       const hasKickoffEndAt = Object.prototype.hasOwnProperty.call(info, 'kickoff_end_at');
       const hasWhenType = Object.prototype.hasOwnProperty.call(info, 'when_type');
@@ -178,11 +182,14 @@ module.exports = function profileRoutes(ctx) {
         // Custom date range
         if (hasKickoffEndAt) {
           base.andWhere(function() {
-            this.whereBetween('m.kickoff_at', [fromDate.toISOString(), toDate.toISOString()])
+            this.whereNull('m.kickoff_at')
+              .orWhereBetween('m.kickoff_at', [fromDate.toISOString(), toDate.toISOString()])
               .orWhereBetween('m.kickoff_end_at', [fromDate.toISOString(), toDate.toISOString()]);
           });
         } else {
-          base.whereBetween('m.kickoff_at', [fromDate.toISOString(), toDate.toISOString()]);
+          base.andWhere(function () {
+            this.whereNull('m.kickoff_at').orWhereBetween('m.kickoff_at', [fromDate.toISOString(), toDate.toISOString()]);
+          });
         }
       } else if (rangeDays && !isNaN(rangeDays)) {
         // Next X days from now
@@ -192,11 +199,14 @@ module.exports = function profileRoutes(ctx) {
         
         if (hasKickoffEndAt) {
           base.andWhere(function() {
-            this.whereBetween('m.kickoff_at', [now.toISOString(), endDate.toISOString()])
+            this.whereNull('m.kickoff_at')
+              .orWhereBetween('m.kickoff_at', [now.toISOString(), endDate.toISOString()])
               .orWhereBetween('m.kickoff_end_at', [now.toISOString(), endDate.toISOString()]);
           });
         } else {
-          base.whereBetween('m.kickoff_at', [now.toISOString(), endDate.toISOString()]);
+          base.andWhere(function () {
+            this.whereNull('m.kickoff_at').orWhereBetween('m.kickoff_at', [now.toISOString(), endDate.toISOString()]);
+          });
         }
       }
       
@@ -209,6 +219,11 @@ module.exports = function profileRoutes(ctx) {
         'm.home_team_id',
         'm.away_team_id'
       ];
+
+      if (Object.prototype.hasOwnProperty.call(info, 'max_players')) selectFields.push('m.max_players');
+      if (Object.prototype.hasOwnProperty.call(info, 'team_count')) selectFields.push('m.team_count');
+      if (Object.prototype.hasOwnProperty.call(info, 'players_per_team')) selectFields.push('m.players_per_team');
+      if (Object.prototype.hasOwnProperty.call(info, 'allow_team_choice')) selectFields.push('m.allow_team_choice');
       
       if (hasKickoffEndAt) selectFields.push('m.kickoff_end_at');
       if (hasWhenType) selectFields.push('m.when_type');
@@ -230,8 +245,54 @@ module.exports = function profileRoutes(ctx) {
         .orderBy(hasKickoffEndAt ? 'm.kickoff_end_at' : 'm.kickoff_at', 'asc')
         .orderBy('m.id', 'desc');
 
+      // Capacity filter (best-effort): if match_participants + format columns exist, only keep matches with free slots.
+      const hasParticipants = await k.schema.hasTable('match_participants').catch(() => false);
+      const matchHasMaxPlayers = Object.prototype.hasOwnProperty.call(info, 'max_players');
+      const matchHasTeamCount = Object.prototype.hasOwnProperty.call(info, 'team_count');
+      const matchHasPlayersPerTeam = Object.prototype.hasOwnProperty.call(info, 'players_per_team');
+
+      const ids = (rows || []).map(r => r.id).filter(Boolean);
+      let countsByMatchId = new Map();
+      if (hasParticipants && ids.length) {
+        const counts = await k('match_participants')
+          .whereIn('match_id', ids)
+          .andWhere(function () {
+            this.whereNull('status').orWhere('status', 'joined');
+          })
+          .groupBy('match_id')
+          .select('match_id')
+          .count({ c: '*' })
+          .catch(() => []);
+        countsByMatchId = new Map((counts || []).map(r => [Number(r.match_id), Number(r.c || 0)]));
+      }
+
+      const computeCapacity = (m) => {
+        if (matchHasMaxPlayers) {
+          const n = Number(m.max_players);
+          if (Number.isFinite(n) && n > 0) return Math.trunc(n);
+        }
+        if (matchHasTeamCount && matchHasPlayersPerTeam) {
+          const tc = Number(m.team_count);
+          const ppt = Number(m.players_per_team);
+          if (Number.isFinite(tc) && tc > 0 && Number.isFinite(ppt) && ppt > 0) return Math.trunc(tc * ppt);
+        }
+        return 2;
+      };
+
+      const filtered = (rows || []).filter(r => {
+        if (!hasParticipants) return true;
+        const capacity = computeCapacity(r);
+        const joined = countsByMatchId.get(Number(r.id)) || 0;
+        return !capacity || joined < capacity;
+      }).map(r => {
+        if (!hasParticipants) return r;
+        const capacity = computeCapacity(r);
+        const joined = countsByMatchId.get(Number(r.id)) || 0;
+        return { ...r, participant_count: joined, max_players: capacity };
+      });
+
       // Enrich with user and team names
-      const enrichedRows = await Promise.all((rows || []).map(async (row) => {
+      const enrichedRows = await Promise.all((filtered || []).map(async (row) => {
         const enriched = { ...row };
         
         // Fetch home user/team name
@@ -348,6 +409,61 @@ module.exports = function profileRoutes(ctx) {
       if (!leagueId) return res.status(500).json({ error: 'OPEN_LEAGUE_CREATE_FAILED' });
 
       const info = await k('matches').columnInfo().catch(() => ({}));
+
+      // Determine default match format from sport variant
+      const hasSports = await k.schema.hasTable('sports').catch(() => false);
+      let sportRow = null;
+      if (hasSports) {
+        sportRow = await k('sports').where({ id: sportId }).first().catch(() => null);
+      }
+
+      const sportName = String(sportRow?.name || '').toLowerCase();
+      const variantType = String(sportRow?.variant_type || '').toLowerCase();
+      const sportType = String(sportRow?.sport_type || sportRow?.type || '').toLowerCase();
+
+      const parseVv = (s) => {
+        const m = String(s || '').match(/(\d+)\s*v\s*(\d+)/i);
+        if (!m) return null;
+        const a = Number(m[1]);
+        const b = Number(m[2]);
+        if (!Number.isFinite(a) || !Number.isFinite(b) || a <= 0 || b <= 0) return null;
+        if (a !== b) return null;
+        return a;
+      };
+
+      let teamCount = 2;
+      let playersPerTeam = 1;
+      let maxPlayers = 2;
+
+      const vv = parseVv(variantType) || parseVv(sportName);
+      const isDoubles = variantType.includes('doppel') || sportName.includes('doppel') || variantType.includes('mixed') || sportName.includes('mixed') || sportName.includes('padel');
+      const isTeam = sportType.includes('team') || (vv != null);
+
+      if (vv != null) {
+        teamCount = 2;
+        playersPerTeam = vv;
+        maxPlayers = vv * 2;
+      } else if (isDoubles) {
+        teamCount = 2;
+        playersPerTeam = 2;
+        maxPlayers = 4;
+      } else if (isTeam) {
+        // Team sport but unknown size: allow creator override, default to 10 (5v5-like)
+        teamCount = 2;
+        playersPerTeam = Number(sportRow?.team_size || 0) || 5;
+        maxPlayers = teamCount * playersPerTeam;
+      } else {
+        teamCount = 2;
+        playersPerTeam = 1;
+        maxPlayers = 2;
+      }
+
+      // Allow explicit override (match value is authoritative)
+      const bodyMaxPlayers = req.body?.max_players != null ? Number(req.body.max_players) : null;
+      if (Number.isFinite(bodyMaxPlayers) && bodyMaxPlayers > 1 && bodyMaxPlayers <= 200) {
+        maxPlayers = Math.trunc(bodyMaxPlayers);
+      }
+
       const rec = {
         league_id: leagueId,
         home_user_id: req.user.id || null,
@@ -357,6 +473,13 @@ module.exports = function profileRoutes(ctx) {
         home_score: null,
         away_score: null,
       };
+
+      if (Object.prototype.hasOwnProperty.call(info, 'max_players')) rec.max_players = maxPlayers;
+      if (Object.prototype.hasOwnProperty.call(info, 'team_count')) rec.team_count = teamCount;
+      if (Object.prototype.hasOwnProperty.call(info, 'players_per_team')) rec.players_per_team = playersPerTeam;
+      if (Object.prototype.hasOwnProperty.call(info, 'allow_team_choice')) {
+        rec.allow_team_choice = maxPlayers > 2 ? 1 : 0;
+      }
       if (Object.prototype.hasOwnProperty.call(info, 'kickoff_at')) {
         const when = req.body?.kickoff_at ? new Date(req.body.kickoff_at) : null;
         rec.kickoff_at = when && !isNaN(when) ? when.toISOString() : null;
@@ -391,6 +514,21 @@ module.exports = function profileRoutes(ctx) {
 
       const ins = await k('matches').insert(rec);
       const id = Array.isArray(ins) ? ins[0] : ins;
+
+      // Insert host as participant (if table exists)
+      const hasParticipants = await k.schema.hasTable('match_participants').catch(() => false);
+      if (hasParticipants) {
+        await k('match_participants')
+          .insert({
+            match_id: id,
+            user_id: req.user.id,
+            // Creator is always Team 1 in MVP1 open matches
+            team_index: 1,
+            status: 'joined',
+            joined_at: new Date().toISOString(),
+          })
+          .catch(() => {});
+      }
 
       // Save availability slots if provided (match creation availability)
       const availability = req.body?.availability || [];

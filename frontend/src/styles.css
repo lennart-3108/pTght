@@ -34,8 +34,8 @@
   --ml-bg-surface-soft: rgba(13, 31, 26, 0.88);
   --ml-bg-elevated: #1a3329;
   --ml-border-soft: #264a3d;
-  --ml-accent: #3da87a;
-  --ml-accent-strong: #4ec48d;
+  --ml-accent: #debc7c;
+  --ml-accent-strong: #c9a55a;
   --ml-text-main: #dce5df;
   --ml-text-muted: #8a9e94;
   --ml-text-dark: #0d1f1a;
@@ -109,7 +109,7 @@ button:hover, .btn:hover {
 /* Accent button variant */
 .btn-gold {
   background: var(--ml-accent);
-  color: #fff;
+  color: #111827;
   font-weight: 700;
   border-radius: 8px;
   padding: 10px 14px;
@@ -169,7 +169,7 @@ button:hover, .btn:hover {
 .ml-btn-gold {
   border: none;
   background: var(--ml-accent);
-  color: #fff;
+  color: #111827;
   border-radius: 8px;
   padding: 12px 20px;
   font-weight: 700;
@@ -187,7 +187,7 @@ button:hover, .btn:hover {
 }
 
 .ml-btn-ghost-gold {
-  background: transparent;
+  background: var(--primary-600);
   border: 1px solid var(--ml-accent);
   color: var(--ml-accent);
   border-radius: 8px;
@@ -197,7 +197,7 @@ button:hover, .btn:hover {
 
 .ml-btn-ghost-gold:hover {
   background: var(--ml-accent);
-  color: #fff;
+  color: #111827;
 }
 
 .ml-segmented {
@@ -213,18 +213,24 @@ button:hover, .btn:hover {
 .ml-segmented-option {
   padding: 10px 12px;
   border-radius: 6px;
-  border: none;
+  border: 1px solid transparent;
   background: transparent;
   color: var(--ml-text-muted);
   cursor: pointer;
   font-weight: 600;
   font-size: 14px;
-  transition: background 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+
+.ml-segmented-option:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .ml-segmented-option--active {
-  background: var(--ml-accent);
-  color: #fff;
+  background: var(--primary-600);
+  border: 1px solid var(--ml-accent);
+  color: var(--ml-accent);
 }
 
 .ml-kpi-card {
@@ -328,12 +334,12 @@ button:hover, .btn:hover {
   border-radius: 8px;
 }
 .hero-stripe .hero-small-logo { 
-  width: 48px; 
-  height: 48px; 
+  width: 64px; 
+  height: 64px; 
   object-fit: contain; 
 }
-.hero-title { font-size: 28px; margin: 0; color: #dce5df; white-space: nowrap; font-weight: 700; }
-.hero-sub { color: rgba(220,229,223,0.8); margin-top: 12px; pointer-events: none; text-align: center; }
+.hero-title { font-size: 48px; margin: 0; color: #e6efe6; white-space: nowrap; font-weight: 800; letter-spacing: 1px; text-shadow: 0 2px 12px rgba(0,0,0,0.5); }
+.hero-sub { color: rgba(230,239,230,0.95); margin-top: 16px; pointer-events: none; text-align: center; font-size: 20px; letter-spacing: 0.3px; text-shadow: 0 1px 6px rgba(0,0,0,0.4); }
 
 /* Simple responsive: stack when not enough space */
 @media (max-width: 768px) {
@@ -344,7 +350,7 @@ button:hover, .btn:hover {
   .hero-overlay {
     padding: 16px 0 32px 0; /* Reduced vertical padding */
   }
-  .hero-title { font-size: 20px; }
+  .hero-title { font-size: 32px; }
   .hero-stripe {
     margin-left: 0;
     padding: 8px 16px;
@@ -352,13 +358,13 @@ button:hover, .btn:hover {
     gap: 8px;
   }
   .hero-stripe .hero-small-logo {
-    width: 36px;
-    height: 36px;
+    width: 44px;
+    height: 44px;
   }
   .hero-sub {
     margin-left: 0;
-    margin-top: 8px; /* Less margin */
-    font-size: 13px; /* Smaller text */
+    margin-top: 10px;
+    font-size: 16px;
   }
   .hero-inner {
     padding: 0 12px; /* Smaller padding */

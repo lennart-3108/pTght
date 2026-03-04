@@ -2,9 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { API_BASE } from "../config";
 import LocationSelector from "../components/LocationSelector";
+import { useLanguage } from "../i18n";
 
 export default function EditProfilePage() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [user, setUser] = useState(null);
@@ -96,7 +98,7 @@ export default function EditProfilePage() {
       })
       .catch((e) => {
         console.error('Error loading profile:', e);
-        alert('Fehler beim Laden des Profils');
+        alert(t('editProfile.loadError'));
         navigate('/profile');
       });
   }, [navigate]);
@@ -137,11 +139,11 @@ export default function EditProfilePage() {
       const result = await resp.json();
       console.log('Save result:', result);
       
-      alert('Profil erfolgreich gespeichert');
-      navigate('/profile');
+      alert(t('editProfile.saveOk'));
+      navigate('/profile', { replace: true });
     } catch (e) {
       console.error('Save exception:', e);
-      alert('Fehler beim Speichern: ' + (e.message || e));
+      alert(t('editProfile.saveErrorPrefix', { error: (e.message || e) }));
     } finally {
       setSaving(false);
     }
@@ -150,7 +152,7 @@ export default function EditProfilePage() {
   if (loading) {
     return (
       <div style={{ padding: 20, textAlign: 'center', color: '#e8efe8' }}>
-        Lädt...
+        {t('editProfile.loading')}
       </div>
     );
   }
@@ -204,7 +206,7 @@ export default function EditProfilePage() {
             color: '#e8efe8',
             margin: 0
           }}>
-            Persönliche Daten bearbeiten
+            {t('editProfile.title')}
           </h1>
           <button
             onClick={() => navigate('/profile')}
@@ -218,7 +220,7 @@ export default function EditProfilePage() {
               fontSize: 14
             }}
           >
-            Abbrechen
+            {t('common.cancel')}
           </button>
         </div>
 
@@ -276,12 +278,12 @@ export default function EditProfilePage() {
 
           {/* Bio */}
           <div style={sectionStyle}>
-            <label style={labelStyle}>Bio / Über mich</label>
+            <label style={labelStyle}>{t('editProfile.bio')}</label>
             <textarea
               value={formData.bio}
               onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
               style={{ ...inputStyle, minHeight: 100, resize: 'vertical' }}
-              placeholder="Erzähle etwas über dich..."
+              placeholder={t('editProfile.bioPlaceholder')}
             />
           </div>
 
@@ -303,7 +305,7 @@ export default function EditProfilePage() {
                   district_id: districtId || null
                 });
               }}
-              placeholder="Standort wählen"
+              placeholder={t('editProfile.locationPlaceholder')}
               onLoadDistricts={(cityId) => {
                 // Load districts for selected city
                 fetch(`${API_BASE}/cities/${cityId}/districts`)
@@ -339,7 +341,7 @@ export default function EditProfilePage() {
 
           {/* Gender */}
           <div style={sectionStyle}>
-            <label style={labelStyle}>Geschlecht</label>
+            <label style={labelStyle}>{t('editProfile.gender')}</label>
             <GenderSelector
               value={formData.gender}
               onChange={(value) => setFormData({ ...formData, gender: value })}
@@ -370,7 +372,7 @@ export default function EditProfilePage() {
                 opacity: saving ? 0.6 : 1
               }}
             >
-              {saving ? 'Speichert...' : 'Änderungen speichern'}
+              {saving ? t('editProfile.saving') : t('editProfile.saveChanges')}
             </button>
             <button
               onClick={() => navigate('/profile')}
@@ -386,7 +388,7 @@ export default function EditProfilePage() {
                 fontWeight: 600
               }}
             >
-              Abbrechen
+              {t('common.cancel')}
             </button>
           </div>
         </div>
@@ -397,13 +399,14 @@ export default function EditProfilePage() {
 
 // Shared Gender Selector (same look as RegisterPage)
 function GenderSelector({ value, onChange }) {
+  const { t } = useLanguage();
   const [showDropdown, setShowDropdown] = React.useState(false);
 
   const genderOptions = [
-    { value: 'male', label: 'Männlich', icon: '♂' },
-    { value: 'female', label: 'Weiblich', icon: '♀' },
-    { value: 'diverse', label: 'Divers', icon: '⚧' },
-    { value: 'prefer_not_to_say', label: 'Keine Angabe', icon: '–' }
+    { value: 'male', label: t('editProfile.gender.male'), icon: '♂' },
+    { value: 'female', label: t('editProfile.gender.female'), icon: '♀' },
+    { value: 'diverse', label: t('editProfile.gender.diverse'), icon: '⚧' },
+    { value: 'prefer_not_to_say', label: t('editProfile.gender.na'), icon: '–' }
   ];
 
   const selectedOption = genderOptions.find(opt => opt.value === value);
@@ -432,7 +435,7 @@ function GenderSelector({ value, onChange }) {
         onMouseLeave={(e) => e.currentTarget.style.borderColor = '#2f6b57'}
       >
         <span>
-          {selectedOption ? `${selectedOption.icon} ${selectedOption.label}` : 'Bitte wählen'}
+          {selectedOption ? `${selectedOption.icon} ${selectedOption.label}` : t('editProfile.selectPlaceholder')}
         </span>
         <span style={{ fontSize: 12, color: '#6b8578' }}>
           {showDropdown ? '▲' : '▼'}

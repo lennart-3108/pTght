@@ -99,22 +99,29 @@ function resolveInstanceType() {
 export const INSTANCE_TYPE = resolveInstanceType();
 
 // Feature flags based on instance type
+// MVP1 scope: only Matches + Leagues are active. Competitions, Bookings, Venues = coming soon.
 export const FEATURES = {
 	// Production: only show "coming soon" landing page
 	SHOW_ONLY_LANDING: INSTANCE_TYPE === 'production',
 	
-	// Test instance: limited features
-	SHOW_MATCHES: INSTANCE_TYPE === 'test' || INSTANCE_TYPE === 'development',
-	SHOW_LEAGUES: INSTANCE_TYPE === 'development', // Hidden in test with "coming soon"
-	SHOW_COMPETITIONS: INSTANCE_TYPE === 'development', // Hidden in test with "coming soon"
-	SHOW_BOOKINGS: INSTANCE_TYPE === 'development', // Hidden in test with "coming soon"
-	SHOW_VENUES: INSTANCE_TYPE === 'development', // Hidden in test with "coming soon"
+	// MVP1: Matches + Leagues active everywhere except production
+	SHOW_MATCHES: INSTANCE_TYPE !== 'production',
+	SHOW_LEAGUES: INSTANCE_TYPE !== 'production',
+
+	// Post-MVP1 features — disabled until ready
+	SHOW_COMPETITIONS: false,
+	SHOW_BOOKINGS: false,
+	SHOW_VENUES: false,
+	SHOW_TEAMS: INSTANCE_TYPE !== 'production',
+	SHOW_CHATS: INSTANCE_TYPE !== 'production',
+	SHOW_NEWS: INSTANCE_TYPE !== 'production',
+	SHOW_SUBSCRIPTIONS: INSTANCE_TYPE !== 'production',
 	
 	// Test disclaimer
 	SHOW_TEST_DISCLAIMER: INSTANCE_TYPE === 'test',
 	
-	// Sport restrictions for test
-	RESTRICT_TO_TENNIS_SINGLES: INSTANCE_TYPE === 'test',
+	// Sport restrictions for test (disabled — all sports available in MVP1)
+	RESTRICT_TO_TENNIS_SINGLES: false,
 };
 
 // Small helper: fetch with timeout (default 8s)
