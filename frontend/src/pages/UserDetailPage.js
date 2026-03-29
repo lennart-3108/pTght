@@ -216,10 +216,7 @@ export default function UserDetailPage() {
   const [showAvatarViewer, setShowAvatarViewer] = useState(false);
   const [showAvatarUpload, setShowAvatarUpload] = useState(false);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
-  const [avatarComments, setAvatarComments] = useState([]);
-  const [avatarLikes, setAvatarLikes] = useState(0);
-  const [avatarLiked, setAvatarLiked] = useState(false);
-  const [newComment, setNewComment] = useState("");
+
   const [avatarImage, setAvatarImage] = useState(null);
   const [avatarScale, setAvatarScale] = useState(1);
   const [showMatchInviteDialog, setShowMatchInviteDialog] = useState(false);
@@ -456,37 +453,7 @@ export default function UserDetailPage() {
     };
   }, [activeLeagueId]);
 
-  // Load avatar likes and comments when viewer is opened
-  useEffect(() => {
-    if (!showAvatarViewer || !user) return;
-    
-    let mounted = true;
-    
-    (async () => {
-      try {
-        const headers = token ? { Authorization: `Bearer ${token}` } : {};
-        
-        // Load likes
-        const likesRes = await fetch(`${API_BASE}/users/${user.id}/avatar/likes`, { headers });
-        if (likesRes.ok && mounted) {
-          const likesData = await likesRes.json();
-          setAvatarLikes(likesData.count || 0);
-          setAvatarLiked(likesData.userLiked || false);
-        }
-        
-        // Load comments
-        const commentsRes = await fetch(`${API_BASE}/users/${user.id}/avatar/comments`, { headers });
-        if (commentsRes.ok && mounted) {
-          const commentsData = await commentsRes.json();
-          setAvatarComments(Array.isArray(commentsData) ? commentsData : []);
-        }
-      } catch (err) {
-        console.error('Error loading avatar data:', err);
-      }
-    })();
-    
-    return () => { mounted = false; };
-  }, [showAvatarViewer, user, token]);
+
 
   const displayName = useMemo(() => {
     if (!user) return "";
@@ -1966,134 +1933,7 @@ export default function UserDetailPage() {
               />
             </div>
 
-            {/* Likes */}
-            <div style={{ marginBottom: 20, display: "flex", alignItems: "center", gap: 12 }}>
-              <button
-                onClick={async () => {
-                  try {
-                    const res = await fetch(`${API_BASE}/users/${user.id}/avatar/like`, {
-                      method: avatarLiked ? 'DELETE' : 'POST',
-                      headers: { Authorization: `Bearer ${token}` }
-                    });
-                    if (res.ok) {
-                      setAvatarLiked(!avatarLiked);
-                      setAvatarLikes(prev => avatarLiked ? prev - 1 : prev + 1);
-                    }
-                  } catch (err) {
-                    console.error('Like error:', err);
-                  }
-                }}
-                style={{
-                  background: avatarLiked ? "rgba(255,92,92,0.3)" : "rgba(14,44,34,0.7)",
-                  border: `1px solid ${avatarLiked ? "rgba(255,92,92,0.6)" : "rgba(92,200,165,0.4)"}`,
-                  color: avatarLiked ? "#ff5c5c" : "#bfead4",
-                  padding: "8px 16px",
-                  borderRadius: 12,
-                  cursor: "pointer",
-                  fontSize: 16
-                }}
-              >
-                {avatarLiked ? "❤️" : "🤍"} {avatarLikes}
-              </button>
-            </div>
 
-            {/* Comments */}
-            <div style={{ marginBottom: 20 }}>
-              <h3 style={{ margin: "0 0 12px 0", fontSize: 18, color: "#e8efe8" }}>Kommentare</h3>
-              <div style={{ maxHeight: 200, overflow: "auto", marginBottom: 12 }}>
-                {avatarComments.length === 0 ? (
-                  <p style={{ color: "#a9cabd", fontSize: 14 }}>Noch keine Kommentare</p>
-                ) : (
-                  avatarComments.map((comment, idx) => (
-                    <div key={idx} style={{ 
-                      padding: 10, 
-                      background: "rgba(14,44,34,0.5)", 
-                      borderRadius: 8, 
-                      marginBottom: 8,
-                      border: "1px solid rgba(92,200,165,0.2)"
-                    }}>
-                      <div style={{ fontWeight: 600, color: "#7fd9ba", fontSize: 13, marginBottom: 4 }}>
-                        {comment.username}
-                      </div>
-                      <div style={{ color: "#e8efe8", fontSize: 14 }}>{comment.text}</div>
-                    </div>
-                  ))
-                )}
-              </div>
-              
-              {/* Add Comment */}
-              <div style={{ display: "flex", gap: 8 }}>
-                <input 
-                  type="text"
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Kommentar schreiben..."
-                  style={{
-                    flex: 1,
-                    padding: 10,
-                    background: "rgba(14,44,34,0.7)",
-                    border: "1px solid rgba(92,200,165,0.4)",
-                    borderRadius: 12,
-                    color: "#e8efe8",
-                    fontSize: 14
-                  }}
-                  onKeyPress={async (e) => {
-                    if (e.key === 'Enter' && newComment.trim()) {
-                      try {
-                        const res = await fetch(`${API_BASE}/users/${user.id}/avatar/comment`, {
-                          method: 'POST',
-                          headers: { 
-                            'Content-Type': 'application/json',
-                            Authorization: `Bearer ${token}` 
-                          },
-                          body: JSON.stringify({ text: newComment })
-                        });
-                        if (res.ok) {
-                          const comment = await res.json();
-                          setAvatarComments(prev => [...prev, comment]);
-                          setNewComment('');
-                        }
-                      } catch (err) {
-                        console.error('Comment error:', err);
-                      }
-                    }
-                  }}
-                />
-                <button
-                  onClick={async () => {
-                    if (!newComment.trim()) return;
-                    try {
-                      const res = await fetch(`${API_BASE}/users/${user.id}/avatar/comment`, {
-                        method: 'POST',
-                        headers: { 
-                          'Content-Type': 'application/json',
-                          Authorization: `Bearer ${token}` 
-                        },
-                        body: JSON.stringify({ text: newComment })
-                      });
-                      if (res.ok) {
-                        const comment = await res.json();
-                        setAvatarComments(prev => [...prev, comment]);
-                        setNewComment('');
-                      }
-                    } catch (err) {
-                      console.error('Comment error:', err);
-                    }
-                  }}
-                  style={{
-                    background: "rgba(92,200,165,0.3)",
-                    border: "1px solid rgba(92,200,165,0.6)",
-                    color: "#7fd9ba",
-                    padding: "10px 20px",
-                    borderRadius: 12,
-                    cursor: "pointer",
-                    fontSize: 14
-                  }}
-                >
-                  Senden
-                </button>
-              </div>
-            </div>
           </div>
         </div>
       )}

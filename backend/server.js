@@ -868,7 +868,11 @@ app.get("/me/games", isAuthenticated, async (req, res) => {
         homeSelect,
         awaySelect,
         "g.home_score",
-        "g.away_score"
+        "g.away_score",
+        "g.home_user_id",
+        "g.away_user_id",
+        "g.max_players",
+        "g.team_count"
       );
 
     const userId = req.user.id;
@@ -876,6 +880,7 @@ app.get("/me/games", isAuthenticated, async (req, res) => {
       q = q.where(function () {
         if (hasHomeUserId) this.orWhere("g.home_user_id", userId);
         if (hasAwayUserId) this.orWhere("g.away_user_id", userId);
+        this.orWhereIn("g.id", k("match_participants").select("match_id").where("user_id", userId));
       });
     } else if (hasHomeText || hasAwayText) {
       // Fallback: show games from leagues the user is a member of
@@ -889,8 +894,27 @@ app.get("/me/games", isAuthenticated, async (req, res) => {
     else q = q.orderBy("g.id", "desc");
 
     const rows = await q;
+
+    // For team matches, fetch participants
+    const teamMatchIds = (rows || []).filter(r => r.max_players > 2 || r.team_count >= 2).map(r => r.id);
+    let participantsMap = {};
+    if (teamMatchIds.length) {
+      const parts = await k("match_participants as mp")
+        .join("users as u", "u.id", "mp.user_id")
+        .whereIn("mp.match_id", teamMatchIds)
+        .select("mp.match_id", "mp.user_id", "mp.team_index", k.raw(`COALESCE(NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')), ''), u.email) as name`));
+      for (const p of parts) {
+        if (!participantsMap[p.match_id]) participantsMap[p.match_id] = [];
+        participantsMap[p.match_id].push({ user_id: p.user_id, team_index: p.team_index, name: p.name });
+      }
+    }
+
     const now = Date.now();
-  const withTs = (rows || []).map(r => ({ ...r, ts: r.kickoff_at ? (Date.parse(r.kickoff_at) || 0) : 0 }));
+  const withTs = (rows || []).map(r => ({
+    ...r,
+    ts: r.kickoff_at ? (Date.parse(r.kickoff_at) || 0) : 0,
+    participants: participantsMap[r.id] || null
+  }));
   // Mutual exclusive buckets:
   // - completed: both scores present
   // - upcoming: no scores yet (regardless of time); treat missing/invalid ts as future-friendly

@@ -136,6 +136,7 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
   const [meta, setMeta] = useState(null);
   const [myAvailability, setMyAvailability] = useState([]);
   const [otherAvailability, setOtherAvailability] = useState([]);
+  const [allAvailability, setAllAvailability] = useState([]);
   const [proposals, setProposals] = useState([]);
 
   // Eigene Verfügbarkeiten anlegen
@@ -202,9 +203,11 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
       if (availRes.ok) {
         setMyAvailability(availData.myAvailability || []);
         setOtherAvailability(availData.theirAvailability || []);
+        setAllAvailability(availData.allAvailability || []);
       } else {
         setMyAvailability([]);
         setOtherAvailability([]);
+        setAllAvailability([]);
       }
 
       const terminData = await terminRes.json().catch(() => ({}));
@@ -468,6 +471,28 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
 
   // Split frames into "mine" (created by me) and "opponent" (created by other player)
   const viewerId = meta?.viewerId ? Number(meta.viewerId) : null;
+
+  // Find users whose availability overlaps a given date + time window
+  const usersForSlot = (date, timeStart, timeEnd) => {
+    const slotStart = parseTimeToMinutes(timeStart);
+    const slotEnd = parseTimeToMinutes(timeEnd);
+    if (slotStart === null || slotEnd === null) return [];
+    const result = [];
+    const seen = new Set();
+    allAvailability.forEach(day => {
+      if (day.date !== date || seen.has(day.userId)) return;
+      (day.windows || []).forEach(w => {
+        const wStart = parseTimeToMinutes(w.timeStart);
+        const wEnd = parseTimeToMinutes(w.timeEnd);
+        if (wStart === null || wEnd === null) return;
+        if (wStart < slotEnd && wEnd > slotStart && !seen.has(day.userId)) {
+          seen.add(day.userId);
+          result.push({ userId: day.userId, name: day.userName });
+        }
+      });
+    });
+    return result;
+  };
 
   const opponentFramesByWeek = useMemo(() => {
     if (!viewerId) return [];
@@ -894,14 +919,24 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
                     </div>
 
                     <div style={{ display: 'grid', gap: 10 }}>
-                      {dayFrames.map((frame) => (
-                        <div key={frame.id} style={styles.frameRow}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                            <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtTime(frame.time_start)} – {fmtTime(frame.time_end)}</div>
-                            <div style={{ color: '#9db', fontSize: 13 }}>{t('tm.duration', { min: slotDuration })}</div>
+                      {dayFrames.map((frame) => {
+                        const availUsers = usersForSlot(date, frame.time_start, frame.time_end);
+                        return (
+                          <div key={frame.id} style={styles.frameRow}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                              <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtTime(frame.time_start)} – {fmtTime(frame.time_end)}</div>
+                              <div style={{ color: '#9db', fontSize: 13 }}>{t('tm.duration', { min: slotDuration })}</div>
+                              {availUsers.length > 0 && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
+                                  {availUsers.map(u => (
+                                    <span key={u.userId} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: 'rgba(72,186,166,0.15)', color: '#48baa6', border: '1px solid rgba(72,186,166,0.3)' }}>{u.name}</span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </div>
                 ))}
@@ -938,11 +973,19 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
                           {dayFrames.map((frame) => {
                             const latest = latestStart(frame);
                             const chosen = customTimes[frame.id] || fmtTime(frame.time_start);
+                            const availUsers = usersForSlot(date, frame.time_start, frame.time_end);
                             return (
                               <div key={frame.id} style={styles.frameRow}>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                                   <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtTime(frame.time_start)} – {fmtTime(frame.time_end)}</div>
                                   <div style={{ color: '#9db', fontSize: 13 }}>{t('tm.latestStart', { time: latest || '—' })} · {t('tm.duration', { min: slotDuration })}</div>
+                                  {availUsers.length > 0 && (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 2 }}>
+                                      {availUsers.map(u => (
+                                        <span key={u.userId} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: 'rgba(72,186,166,0.15)', color: '#48baa6', border: '1px solid rgba(72,186,166,0.3)' }}>{u.name}</span>
+                                      ))}
+                                    </div>
+                                  )}
                                 </div>
                                 <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                                   <input
@@ -997,17 +1040,29 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
                         </div>
 
                         <div style={{ display: 'grid', gap: 8 }}>
-                          {frames.map((frame) => (
-                            <div key={frame.id} style={styles.windowRow}>
-                              <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtTime(frame.time_start)} - {fmtTime(frame.time_end)}</div>
-                              <button
-                                onClick={() => openAvailSlotModal({ ...frame, date })}
-                                style={{ ...styles.btnPrimary, fontSize: 12, padding: '6px 12px' }}
-                              >
-                                {t('tm.sendInvitation')}
-                              </button>
-                            </div>
-                          ))}
+                          {frames.map((frame) => {
+                            const availUsers = usersForSlot(date, frame.time_start, frame.time_end);
+                            return (
+                              <div key={frame.id} style={styles.windowRow}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+                                  <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtTime(frame.time_start)} - {fmtTime(frame.time_end)}</div>
+                                  {availUsers.length > 0 && (
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                                      {availUsers.map(u => (
+                                        <span key={u.userId} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: 'rgba(72,186,166,0.15)', color: '#48baa6', border: '1px solid rgba(72,186,166,0.3)' }}>{u.name}</span>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => openAvailSlotModal({ ...frame, date })}
+                                  style={{ ...styles.btnPrimary, fontSize: 12, padding: '6px 12px' }}
+                                >
+                                  {t('tm.sendInvitation')}
+                                </button>
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
                     ))}

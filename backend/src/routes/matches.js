@@ -767,6 +767,88 @@ module.exports = function matchesRoutes(ctx) {
     }
   });
 
+  // Leave a match (remove yourself as participant) — only before match is scheduled/completed
+  router.post('/:id/leave', requireAuth, async (req, res) => {
+    try {
+      const matchId = Number(req.params.id);
+      if (!matchId) return res.status(400).json({ error: 'INVALID_MATCH_ID' });
+      const viewerId = Number(req.user?.id);
+      if (!viewerId) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+      const k = getKnex();
+      const match = await k('matches').where({ id: matchId }).first();
+      if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+
+      // Cannot leave a scheduled or completed match
+      if (match.status === 'scheduled' || match.status === 'completed' || match.status === 'cancelled') {
+        return res.status(409).json({ error: 'MATCH_NOT_LEAVABLE' });
+      }
+      if (match.home_score != null || match.away_score != null) {
+        return res.status(409).json({ error: 'MATCH_ALREADY_COMPLETED' });
+      }
+
+      // Match creator cannot leave — they should cancel instead
+      if (match.home_user_id != null && String(match.home_user_id) === String(viewerId)) {
+        return res.status(403).json({ error: 'CREATOR_CANNOT_LEAVE' });
+      }
+
+      const hasParticipants = await ensureMatchParticipantsTable(k);
+      if (!hasParticipants) return res.status(500).json({ error: 'MATCH_PARTICIPANTS_NOT_AVAILABLE' });
+
+      const mp = await k('match_participants')
+        .where({ match_id: matchId, user_id: viewerId })
+        .andWhere(function () { this.whereNull('status').orWhere('status', 'joined'); })
+        .first();
+      if (!mp) return res.status(409).json({ error: 'NOT_A_PARTICIPANT' });
+
+      // Remove from match_participants
+      await k('match_participants').where({ match_id: matchId, user_id: viewerId }).del();
+
+      // Clear away_user_id if this user was the away player (1v1 compat)
+      const matchInfo = await k('matches').columnInfo().catch(() => ({}));
+      if (Object.prototype.hasOwnProperty.call(matchInfo, 'away_user_id') &&
+          match.away_user_id != null && String(match.away_user_id) === String(viewerId)) {
+        await k('matches').where({ id: matchId }).update({ away_user_id: null }).catch(() => {});
+      }
+
+      // Clean up availability data for this user
+      const hasAvailDays = await k.schema.hasTable('match_availability_days').catch(() => false);
+      if (hasAvailDays) {
+        const dayIds = await k('match_availability_days')
+          .where({ match_id: matchId, user_id: viewerId })
+          .select('id');
+        if (dayIds.length) {
+          const ids = dayIds.map(d => d.id);
+          const hasWindows = await k.schema.hasTable('match_availability_windows').catch(() => false);
+          if (hasWindows) {
+            await k('match_availability_windows').whereIn('day_id', ids).del().catch(() => {});
+          }
+          await k('match_availability_days').where({ match_id: matchId, user_id: viewerId }).del().catch(() => {});
+        }
+      }
+
+      // Notify the match creator
+      const hasNotifications = await k.schema.hasTable('notifications').catch(() => false);
+      if (hasNotifications && match.home_user_id) {
+        await k('notifications').insert({
+          user_id: match.home_user_id,
+          type: 'match_left',
+          match_id: matchId,
+          from_user_id: viewerId,
+          title: 'Spieler hat Match verlassen',
+          message: 'Ein Spieler hat das Match verlassen.',
+          created_at: new Date().toISOString(),
+        }).catch(() => {});
+      }
+
+      const detail = await fetchMatchDetail(k, matchId);
+      return res.json({ ok: true, left: true, ...(detail || {}) });
+    } catch (e) {
+      console.error('Leave match failed', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'DB_ERROR' });
+    }
+  });
+
   // Check whether the current user may submit a result
   router.get('/:id/can-submit', requireAuth, async (req, res) => {
     try {
@@ -1515,6 +1597,16 @@ module.exports = function matchesRoutes(ctx) {
         };
       }
 
+      // Count viewer's availability days
+      let myDaysCount = 0;
+      const hasAvailDays = await k.schema.hasTable('match_availability_days').catch(() => false);
+      if (hasAvailDays && viewerId) {
+        const countRow = await k('match_availability_days')
+          .where({ match_id: matchId, user_id: viewerId })
+          .count({ c: '*' });
+        myDaysCount = Array.isArray(countRow) ? Number(countRow[0]?.c || 0) : Number(countRow?.c || 0);
+      }
+
       res.json({
         meta: {
           viewerUserId: viewerId,
@@ -1522,7 +1614,8 @@ module.exports = function matchesRoutes(ctx) {
           isOwner: participant.side === 'home',
           homeUserId: match.home_user_id,
           opponentUserId: otherUserId,
-          opponentName: opponentName
+          opponentName: opponentName,
+          myDaysCount
         },
         options: (options || []).map((o) => ({ id: o.id, startsAt: o.starts_at, createdByUserId: o.created_by_user_id })),
         proposal
@@ -2005,9 +2098,33 @@ module.exports = function matchesRoutes(ctx) {
         }))
       });
 
+      // Build allAvailability with user names for all participants
+      const userIds = [...new Set(days.map(d => d.user_id))];
+      const users = userIds.length > 0
+        ? await k('users').whereIn('id', userIds).select('id', 'firstname', 'lastname', 'username')
+        : [];
+      const userMap = {};
+      users.forEach(u => {
+        userMap[u.id] = { id: u.id, name: `${u.firstname || ''} ${(u.lastname || '').charAt(0)}.`.trim() || u.username || `User ${u.id}` };
+      });
+
+      const allAvailability = days.map(day => ({
+        id: day.id,
+        date: day.date,
+        userId: day.user_id,
+        userName: userMap[day.user_id]?.name || `User ${day.user_id}`,
+        windows: windows.filter(w => w.day_id === day.id).map(w => ({
+          id: w.id,
+          timeStart: w.time_start,
+          timeEnd: w.time_end,
+          preset: w.preset
+        }))
+      }));
+
       res.json({
         myAvailability: myDays.map(formatDay),
         theirAvailability: theirDays.map(formatDay),
+        allAvailability,
         meta: {
           viewerUserId: viewerId,
           opponentUserId: otherUserId

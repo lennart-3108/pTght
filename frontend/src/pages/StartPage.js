@@ -60,7 +60,7 @@ export default function StartPage() {
   // news feed state
   const [newsFilter, setNewsFilter] = useState('all'); // 'all' | 'matches' | 'friends'
   const [newsFeed, setNewsFeed] = useState([]);
-  const [randomLocation, setRandomLocation] = useState(null);
+
   const [newsLoading, setNewsLoading] = useState(false);
   // current user id extraction from token for centering table
   const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
@@ -290,8 +290,7 @@ export default function StartPage() {
           }
         }
 
-        // Load random location for ad
-        loadRandomLocation();
+
 
         // Auto-location priority: 1) GPS, 2) Profil-Stadt, 3) erste Liga-Stadt
         const token = localStorage.getItem('token');
@@ -384,19 +383,7 @@ export default function StartPage() {
     }
   };
 
-  const loadRandomLocation = async () => {
-    try {
-      const res = await fetch(`${API_BASE}/locations/list?limit=100`);
-      if (!res.ok) return;
-      const locations = await res.json();
-      if (Array.isArray(locations) && locations.length > 0) {
-        const randomIdx = Math.floor(Math.random() * locations.length);
-        setRandomLocation(locations[randomIdx]);
-      }
-    } catch (err) {
-      console.error('[StartPage] Random location error:', err);
-    }
-  };
+
 
   // Update news feed when filter changes
   useEffect(() => {
@@ -688,15 +675,29 @@ export default function StartPage() {
                 };
                 const hId = g.home_user_id || g.homeUserId || g.home_id || g.homeId || toId(g.home);
                 const aId = g.away_user_id || g.awayUserId || g.away_id || g.awayId || toId(g.away);
-                const Name = ({ name, uid }) => uid ? (
-                  <Link to={`/user/${uid}`} style={{ color: '#cfe', textDecoration: 'none' }}>{name}</Link>
-                ) : (<span>{name}</span>);
                 const kx = g.kickoff_at || g.kickoffAt || g.date || null;
                 const when = kx ? new Date(kx).toLocaleDateString(uiLocale, { weekday: 'short', day: 'numeric', month: 'short' }) : '—';
+                const isTeamMatch = g.participants && g.participants.length > 0 && g.max_players > 2;
+                const team1 = isTeamMatch ? g.participants.filter(p => Number(p.team_index) === 1) : [];
+                const team2 = isTeamMatch ? g.participants.filter(p => Number(p.team_index) === 2) : [];
+
+                const TeamAvatars = ({ members, justify }) => (
+                  <div style={{ display: 'flex', alignItems: justify === 'end' ? 'center' : 'center', flexDirection: justify === 'end' ? 'row-reverse' : 'row' }}>
+                    {members.slice(0, 5).map((m, i) => (
+                      <Link key={m.user_id} to={`/user/${m.user_id}`} style={{ marginLeft: i === 0 ? 0 : (justify === 'end' ? 0 : -8), marginRight: i === 0 ? 0 : (justify === 'end' ? -8 : 0), position: 'relative', zIndex: members.length - i }}>
+                        <Avatar userId={m.user_id} name={formatPlayerName(m.name)} size={34} title={m.name} />
+                      </Link>
+                    ))}
+                    {members.length > 5 && <span style={{ fontSize: 11, color: '#9db', marginLeft: 4 }}>+{members.length - 5}</span>}
+                  </div>
+                );
+
                 return (
                   <div key={g.id} className="ml-match" style={{ padding: '10px 2px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                     <div className="ml-match__side">
-                      {hId ? (
+                      {isTeamMatch && team1.length > 0 ? (
+                        <TeamAvatars members={team1} justify="start" />
+                      ) : hId ? (
                         <Link to={`/user/${hId}`} style={{ display: 'contents' }}>
                           <Avatar userId={hId} name={formatPlayerName(g.home)} size={44} title={g.home} />
                           <span style={{ color: '#cfe', textDecoration: 'none' }}>{formatPlayerName(g.home)}</span>
@@ -710,7 +711,9 @@ export default function StartPage() {
                     </div>
                     <div className="ml-vs">VS</div>
                     <div className="ml-match__side" style={{ justifyContent: 'flex-end' }}>
-                      {aId ? (
+                      {isTeamMatch && team2.length > 0 ? (
+                        <TeamAvatars members={team2} justify="end" />
+                      ) : aId ? (
                         <Link to={`/user/${aId}`} style={{ display: 'contents' }}>
                           <Avatar userId={aId} name={formatPlayerName(g.away)} size={44} title={g.away} />
                           <span style={{ color: '#cfe', textDecoration: 'none' }}>{formatPlayerName(g.away)}</span>
@@ -756,14 +759,28 @@ export default function StartPage() {
                 };
                 const hId = g.home_user_id || g.homeUserId || g.home_id || g.homeId || toId(g.home);
                 const aId = g.away_user_id || g.awayUserId || g.away_id || g.awayId || toId(g.away);
-                const Name = ({ name, uid }) => uid ? (
-                  <Link to={`/user/${uid}`} style={{ color: '#cfe', textDecoration: 'none' }}>{name}</Link>
-                ) : (<span>{name}</span>);
                 const score = (g.home_score!=null && g.away_score!=null) ? `${g.home_score}:${g.away_score}` : '— : —';
+                const isTeamMatch = g.participants && g.participants.length > 0 && g.max_players > 2;
+                const team1 = isTeamMatch ? g.participants.filter(p => Number(p.team_index) === 1) : [];
+                const team2 = isTeamMatch ? g.participants.filter(p => Number(p.team_index) === 2) : [];
+
+                const TeamAvatars = ({ members, justify }) => (
+                  <div style={{ display: 'flex', alignItems: 'center', flexDirection: justify === 'end' ? 'row-reverse' : 'row' }}>
+                    {members.slice(0, 5).map((m, i) => (
+                      <Link key={m.user_id} to={`/user/${m.user_id}`} style={{ marginLeft: i === 0 ? 0 : (justify === 'end' ? 0 : -8), marginRight: i === 0 ? 0 : (justify === 'end' ? -8 : 0), position: 'relative', zIndex: members.length - i }}>
+                        <Avatar userId={m.user_id} name={formatPlayerName(m.name)} size={34} title={m.name} />
+                      </Link>
+                    ))}
+                    {members.length > 5 && <span style={{ fontSize: 11, color: '#9db', marginLeft: 4 }}>+{members.length - 5}</span>}
+                  </div>
+                );
+
                 return (
                   <div key={g.id} className="ml-match" style={{ padding: '10px 2px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
                     <div className="ml-match__side">
-                      {hId ? (
+                      {isTeamMatch && team1.length > 0 ? (
+                        <TeamAvatars members={team1} justify="start" />
+                      ) : hId ? (
                         <Link to={`/user/${hId}`} style={{ display: 'contents' }}>
                           <Avatar userId={hId} name={formatPlayerName(g.home)} size={44} title={g.home} />
                           <span style={{ color: '#cfe', textDecoration: 'none' }}>{formatPlayerName(g.home)}</span>
@@ -777,7 +794,9 @@ export default function StartPage() {
                     </div>
                     <div className="ml-vs" style={{ fontSize: 24 }}>{score}</div>
                     <div className="ml-match__side" style={{ justifyContent: 'flex-end' }}>
-                      {aId ? (
+                      {isTeamMatch && team2.length > 0 ? (
+                        <TeamAvatars members={team2} justify="end" />
+                      ) : aId ? (
                         <Link to={`/user/${aId}`} style={{ display: 'contents' }}>
                           <Avatar userId={aId} name={formatPlayerName(g.away)} size={44} title={g.away} />
                           <span style={{ color: '#cfe', textDecoration: 'none' }}>{formatPlayerName(g.away)}</span>
@@ -1072,20 +1091,7 @@ export default function StartPage() {
             // Kombiniere alle Feeds basierend auf dem aktiven Filter
             const combinedFeed = [];
             
-            // Füge Location-Werbung als ersten Eintrag bei "Alle" hinzu
-            if (newsFilter === 'all' && randomLocation) {
-              combinedFeed.push({
-                id: 'ad-location',
-                title: `Jetzt Platz buchen bei ${randomLocation.name || 'Location'}!`,
-                description: `${randomLocation.city || ''} ${randomLocation.address ? '· ' + randomLocation.address : ''}`.trim(),
-                timestamp: new Date().toISOString(),
-                type: 'ad',
-                feedType: 'ad',
-                locationId: randomLocation.id,
-                isAd: true
-              });
-            }
-            
+
             if (newsFilter === 'all') {
               combinedFeed.push(...(feedData.friends || []).map(item => ({...item, feedType: 'friends'})));
               combinedFeed.push(...(feedData.team || []).map(item => ({...item, feedType: 'team'})));
@@ -1098,15 +1104,12 @@ export default function StartPage() {
               combinedFeed.push(...(feedData.friends || []).map(item => ({...item, feedType: 'friends'})));
             }
             
-            // Sortiere nach Zeitstempel (neueste zuerst), aber behalte Werbung oben
-            const adItems = combinedFeed.filter(item => item.isAd);
-            const nonAdItems = combinedFeed.filter(item => !item.isAd);
-            nonAdItems.sort((a, b) => {
+            combinedFeed.sort((a, b) => {
               const timeA = new Date(a.timestamp || 0).getTime();
               const timeB = new Date(b.timestamp || 0).getTime();
               return timeB - timeA;
             });
-            const sortedFeed = [...adItems, ...nonAdItems];
+            const sortedFeed = combinedFeed;
 
             if (sortedFeed.length === 0) {
               const emptyMessages = {
@@ -1123,87 +1126,6 @@ export default function StartPage() {
             }
 
             return sortedFeed.slice(0, 8).map((item, idx) => {
-              // Werbung für Location
-              if (item.isAd && item.locationId) {
-                return (
-                  <Link
-                    key={`${item.feedType}-${idx}`}
-                    to={`/location/${item.locationId}`}
-                    style={{ textDecoration: 'none', color: 'inherit', display: 'block', width: '100%', minWidth: 0 }}
-                  >
-                    <div 
-                      style={{ 
-                        padding: '14px 16px', 
-                        borderRadius: 10, 
-                        background: 'linear-gradient(135deg, rgba(222,188,124,0.15) 0%, rgba(222,188,124,0.05) 100%)',
-                        border: '2px solid #debc7c',
-                        display: 'grid',
-                        gridTemplateColumns: '48px minmax(0, 1fr)',
-                        alignItems: 'start',
-                        columnGap: 12,
-                        rowGap: 8,
-                        transition: 'all 0.2s',
-                        cursor: 'pointer',
-                        position: 'relative',
-                        width: '100%',
-                        minWidth: 0,
-                        boxSizing: 'border-box',
-                        overflow: 'hidden'
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(222,188,124,0.25) 0%, rgba(222,188,124,0.1) 100%)';
-                        e.currentTarget.style.borderColor = '#f4a460';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.background = 'linear-gradient(135deg, rgba(222,188,124,0.15) 0%, rgba(222,188,124,0.05) 100%)';
-                        e.currentTarget.style.borderColor = '#debc7c';
-                      }}
-                    >
-                      <div style={{ 
-                        width: 48, 
-                        height: 48, 
-                        borderRadius: 8, 
-                        background: '#debc7c',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: 24,
-                        flexShrink: 0
-                      }}>
-                        🏟️
-                      </div>
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ 
-                          fontSize: 15, 
-                          fontWeight: 700, 
-                          color: '#debc7c',
-                          marginBottom: 4,
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: 6,
-                          flexWrap: 'wrap'
-                        }}>
-                          <span style={{ minWidth: 0, overflowWrap: 'anywhere', lineHeight: 1.35 }}>{item.title}</span>
-                          <span style={{
-                            fontSize: 10,
-                            fontWeight: 600,
-                            padding: '2px 6px',
-                            borderRadius: 4,
-                            background: '#debc7c',
-                            color: '#0f2a20'
-                          }}>
-                            {t('start.activities.adLabel')}
-                          </span>
-                        </div>
-                        <div style={{ fontSize: 13, color: '#9db', overflowWrap: 'anywhere', lineHeight: 1.4 }}>
-                          {item.description || t('start.activities.showCourts')}
-                        </div>
-                      </div>
-                    </div>
-                  </Link>
-                );
-              }
-
               // Normale Feed-Items
               const linkTo = item.matchId ? `/matches/${item.matchId}` : item.leagueId ? `/league/${item.leagueId}` : null;
               const Component = linkTo ? Link : 'div';

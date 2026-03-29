@@ -145,7 +145,7 @@ export default function GameDetailPage() {
       .catch(() => {}); // Silently fail if no booking
     
     // Fetch comments
-    fetch(`${API_BASE}/matches/${gameId}/comments`)
+    fetch(`${API_BASE}/matches/${gameId}/comments`, token ? { headers: { Authorization: `Bearer ${token}` } } : {})
       .then(async (r) => {
         if (!r.ok) return [];
         const data = await r.json().catch(() => []);
@@ -155,7 +155,7 @@ export default function GameDetailPage() {
       .catch(() => {});
     
     // Fetch likes
-    fetch(`${API_BASE}/matches/${gameId}/likes`)
+    fetch(`${API_BASE}/matches/${gameId}/likes`, token ? { headers: { Authorization: `Bearer ${token}` } } : {})
       .then(async (r) => {
         if (!r.ok) return { count: 0, hasLiked: false };
         return r.json().catch(() => ({ count: 0, hasLiked: false }));
@@ -782,9 +782,6 @@ export default function GameDetailPage() {
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
       setJoinMsg(isTeamMatch ? t('match.teamAvailability.prompt') : t('match.team.selected'));
       setGame(j);
-      if (isTeamMatch && j?.status !== 'scheduled' && j?.status !== 'completed') {
-        setShowTerminManager(true);
-      }
     } catch (e) {
       setJoinMsg(e.message || t('match.team.selectFailed'));
     }
@@ -905,6 +902,21 @@ export default function GameDetailPage() {
       setTimeout(() => window.location.reload(), 800);
     } catch (e) {
       setScheduleMsg(e.message || t('match.cancel.failed'));
+    }
+  }
+
+  async function leaveMatch() {
+    setScheduleMsg('');
+    if (!token) { setScheduleMsg(t('match.join.loginRequired')); return; }
+    if (!window.confirm(lang === 'en' ? 'Leave this match?' : 'Match verlassen?')) return;
+    try {
+      const r = await fetch(`${API_BASE}/matches/${gameId}/leave`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
+      setScheduleMsg(lang === 'en' ? 'You left the match.' : 'Du hast das Match verlassen.');
+      setTimeout(() => window.location.reload(), 800);
+    } catch (e) {
+      setScheduleMsg(e.message || (lang === 'en' ? 'Could not leave match.' : 'Match verlassen fehlgeschlagen.'));
     }
   }
 
@@ -1102,72 +1114,6 @@ export default function GameDetailPage() {
           );
         })()}
 
-        {/* Team selection for participant-based team matches */}
-        {(token && game && isParticipant && allowTeamChoice && teamCount >= 2 && (maxPlayers == null || maxPlayers > 2) && !isCompleted) && (
-          <div style={{
-            padding: isMobile ? '12px' : '14px',
-            background: 'rgba(47, 107, 87, 0.12)',
-            border: '1px solid rgba(47, 107, 87, 0.35)',
-            borderRadius: 14,
-            marginBottom: isMobile ? 14 : 18,
-          }}>
-            <div style={{ fontWeight: 800, color: '#debc7c', marginBottom: 10 }}>
-              {t('match.team.selectTitle')}
-            </div>
-            {viewerTeamIndex == null && (
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: isMobile ? '10px 12px' : '12px 16px',
-                marginBottom: 12,
-                background: 'rgba(222, 188, 124, 0.08)',
-                border: '1px dashed rgba(222, 188, 124, 0.4)',
-                borderRadius: 12,
-                color: '#e8efe8',
-                fontSize: isMobile ? 13 : 14,
-                lineHeight: 1.5,
-              }}>
-                <span style={{ fontSize: 22, flexShrink: 0 }}>👋</span>
-                <span>{t('match.team.notSelected')}</span>
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-              <button
-                onClick={() => selectTeam(1)}
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: 12,
-                  border: '1px solid #2f6b57',
-                  background: viewerTeamIndex === 1 ? 'linear-gradient(135deg, #debc7c, #c9a75f)' : '#0f2a20',
-                  color: viewerTeamIndex === 1 ? '#10261f' : '#e8efe8',
-                  cursor: 'pointer',
-                  fontWeight: 800,
-                }}
-              >
-                {t('match.team.team1')}
-              </button>
-              <button
-                onClick={() => selectTeam(2)}
-                style={{
-                  padding: '10px 14px',
-                  borderRadius: 12,
-                  border: '1px solid #2f6b57',
-                  background: viewerTeamIndex === 2 ? 'linear-gradient(135deg, #debc7c, #c9a75f)' : '#0f2a20',
-                  color: viewerTeamIndex === 2 ? '#10261f' : '#e8efe8',
-                  cursor: 'pointer',
-                  fontWeight: 800,
-                }}
-              >
-                {t('match.team.team2')}
-              </button>
-            </div>
-            {joinMsg && (
-              <div style={{ marginTop: 10, fontSize: 13, color: '#cfe8dc' }}>{joinMsg}</div>
-            )}
-          </div>
-        )}
-        
         {/* Terminvorschlag Widget - 1:1 wie im Termin Manager */}
         {terminProposal && terminProposal.status === 'sent' && (() => {
           const viewerIdNum = Number(viewerId);
@@ -1366,6 +1312,18 @@ export default function GameDetailPage() {
                   {localizedSportName}
                 </div>
               )}
+              <div style={{ 
+                display: 'inline-flex', 
+                alignItems: 'center', 
+                gap: 6,
+                padding: '4px 10px',
+                background: isCompleted ? 'rgba(74, 222, 128, 0.12)' : isCancelled ? 'rgba(248, 113, 113, 0.12)' : 'rgba(255, 211, 93, 0.12)',
+                border: `1px solid ${isCompleted ? 'rgba(74, 222, 128, 0.3)' : isCancelled ? 'rgba(248, 113, 113, 0.3)' : 'rgba(255, 211, 93, 0.3)'}`,
+                borderRadius: 20
+              }}>
+                <span style={{ width: 8, height: 8, background: isCompleted ? '#4ade80' : isCancelled ? '#f87171' : '#ffd35d', borderRadius: '50%' }} />
+                <span style={{ color: isCompleted ? '#4ade80' : isCancelled ? '#f87171' : '#ffd35d', fontSize: isMobile ? 11 : 12, fontWeight: 600 }}>{statusLabel || (isCompleted ? t('match.status.completed') : t('match.status.pending'))}</span>
+              </div>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <div style={{ 
@@ -1384,32 +1342,34 @@ export default function GameDetailPage() {
               </div>
               <div style={{
                 fontSize: isMobile ? 13 : 14,
-                color: (booking || (terminProposal && terminProposal.status === 'accepted') || game.kickoff_at) ? '#9db' : '#ff9',
+                color: (booking || (terminProposal && terminProposal.status === 'accepted') || game.status === 'scheduled') ? '#9db' : '#ff9',
                 fontWeight: 500
               }}>
-                {booking ? (
-                  <>
-                    📅 {formatDate(booking.start_time)}
-                    {formatTime(booking.start_time) && <span style={{ marginLeft: 6 }}>{formatTime(booking.start_time)}</span>}
-                  </>
-                ) : (terminProposal && terminProposal.status === 'accepted' && terminProposal.proposed_datetime) ? (
-                  <>
-                    📅 {formatDate(terminProposal.proposed_datetime)}
-                    {formatTime(terminProposal.proposed_datetime) && <span style={{ marginLeft: 6 }}>{formatTime(terminProposal.proposed_datetime)}</span>}
-                  </>
-                ) : game.kickoff_at ? (
-                  <>
-                    📅 {formatDate(game.kickoff_at)}
-                    {formatTime(game.kickoff_at) && <span style={{ marginLeft: 6 }}>{formatTime(game.kickoff_at)}</span>}
-                  </>
-                ) : game.when_type === 'range' && game.range_days ? (
-                  game.range_days !== 1 ? t('match.date.rangeNext', { count: game.range_days }) : t('match.date.rangeNext1')
-                ) : game.when_type === 'fixed' && game.kickoff_end_at ? (
-                  t('match.date.period', { from: formatDate(game.kickoff_at || ''), to: formatDate(game.kickoff_end_at) })
-                ) : game.kickoff_end_at ? (
-                  t('match.date.until', { date: formatDate(game.kickoff_end_at) })
+                {/* Option 2: Termin vereinbart — Datum + Uhrzeit + Counter */}
+                {(booking || (terminProposal && terminProposal.status === 'accepted') || game.status === 'scheduled') ? (
+                  (() => {
+                    const dt = booking ? booking.start_time : (terminProposal?.status === 'accepted' && terminProposal.proposed_datetime) ? terminProposal.proposed_datetime : game.kickoff_at;
+                    return dt ? (
+                      <>
+                        📅 {formatDate(dt)}
+                        {formatTime(dt) && <span style={{ marginLeft: 6 }}>{formatTime(dt)}</span>}
+                        <span style={{ marginLeft: 8, color: '#9db', fontSize: isMobile ? 12 : 13 }}>({relativeFromNow(dt)})</span>
+                      </>
+                    ) : t('match.date.noneYet');
+                  })()
                 ) : (
-                  t('match.date.noneYet')
+                  /* Option 1: Kein Termin — Zeitraum/Deadline des Erstellers */
+                  game.when_type === 'range' && game.kickoff_end_at ? (
+                    <>{timeRemaining(game.kickoff_end_at)}</>
+                  ) : game.when_type === 'exact' && game.kickoff_at ? (
+                    <>{lang === 'en' ? 'on' : 'am'} {formatDate(game.kickoff_at)}</>
+                  ) : game.when_type === 'fixed' && game.kickoff_at && game.kickoff_end_at ? (
+                    <>{t('match.date.period', { from: formatDate(game.kickoff_at), to: formatDate(game.kickoff_end_at) })}</>
+                  ) : game.kickoff_end_at ? (
+                    <>{timeRemaining(game.kickoff_end_at)}</>
+                  ) : (
+                    t('match.date.noneYet')
+                  )
                 )}
               </div>
             </div>
@@ -1457,31 +1417,20 @@ export default function GameDetailPage() {
               </Link>
             )}
             {(token && game && game.home_score == null && game.away_score == null && !booking && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
-                {terminProposal && terminProposal.status === 'accepted' && terminProposal.proposed_datetime ? (
-                  <div style={{ fontSize: 13, color: '#4ade80', fontWeight: 500 }}>
-                    {t('match.scheduled.countdown', { remaining: timeRemaining(terminProposal.proposed_datetime) })}
-                  </div>
-                ) : (showCountdown && game.kickoff_end_at) ? (
-                  <div style={{ fontSize: 13, color: '#ffd35d', fontWeight: 500 }}>
-                    {timeRemaining(game.kickoff_end_at)} {t('match.deadline.hint')}
-                  </div>
-                ) : null}
-                <button onClick={() => setShowTerminManager(true)} style={{ 
-                  padding: isMobile ? '8px 12px' : '10px 16px', 
-                  borderRadius: 10, 
-                  border: '1px solid rgba(212, 175, 55, 0.6)', 
-                  background: 'linear-gradient(135deg, #d4af37, #b8941f)', 
-                  color: '#000', 
-                  fontSize: isMobile ? 13 : 14,
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  boxShadow: '0 6px 20px rgba(212, 175, 55, 0.4)',
-                  transition: 'all 0.2s ease'
-                }}>
-                  {terminButtonLabel}
-                </button>
-              </div>
+              <button onClick={() => setShowTerminManager(true)} style={{ 
+                padding: isMobile ? '8px 12px' : '10px 16px', 
+                borderRadius: 10, 
+                border: '1px solid rgba(212, 175, 55, 0.6)', 
+                background: 'linear-gradient(135deg, #d4af37, #b8941f)', 
+                color: '#000', 
+                fontSize: isMobile ? 13 : 14,
+                fontWeight: 600,
+                cursor: 'pointer',
+                boxShadow: '0 6px 20px rgba(212, 175, 55, 0.4)',
+                transition: 'all 0.2s ease'
+              }}>
+                {terminButtonLabel}
+              </button>
             )}
             {(token && game && !isCancelled && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
               <button onClick={cancelMatch} style={{ 
@@ -1500,119 +1449,138 @@ export default function GameDetailPage() {
           </div>
         </div>
 
-        {/* Date + status in one line */}
-        <div style={{ 
-          marginTop: isMobile ? 16 : 20, 
-          padding: isMobile ? '12px' : '16px 20px',
-          background: 'linear-gradient(135deg, rgba(47, 107, 87, 0.15), rgba(47, 107, 87, 0.08))',
-          border: '1px solid rgba(47, 107, 87, 0.3)',
-          borderRadius: 12,
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: isMobile ? 10 : 16, 
-          flexWrap: 'wrap'
-        }}>
-          <div style={{ fontSize: isMobile ? 15 : 18, fontWeight: 600, color: '#c5d9ce' }}>
-            {(game.status === 'scheduled' || (terminProposal && terminProposal.status === 'accepted')) && game.kickoff_at ? (
-              <>
-                {formatDate(game.kickoff_at)}
-                {formatTime(game.kickoff_at) && <span style={{ marginLeft: 8, color: '#9db' }}>{formatTime(game.kickoff_at)}</span>}
-              </>
-            ) : game.when_type === 'range' && game.kickoff_end_at ? (
-              <span>{showCountdown ? timeRemaining(game.kickoff_end_at) : t('match.date.untilPlain', { date: formatDate(game.kickoff_end_at) })}</span>
-            ) : game.when_type === 'fixed' && game.kickoff_at && game.kickoff_end_at ? (
-              <span>{t('match.date.periodLabel', { from: formatDate(game.kickoff_at), to: formatDate(game.kickoff_end_at) })}</span>
-            ) : game.when_type === 'exact' && game.kickoff_at ? (
-              <>
-                {formatDate(game.kickoff_at)}
-                {formatTime(game.kickoff_at) && <span style={{ marginLeft: 8, color: '#9db' }}>{formatTime(game.kickoff_at)}</span>}
-              </>
-            ) : game.kickoff_at && game.kickoff_end_at ? (
-              <span>{t('match.date.periodLabel', { from: formatDate(game.kickoff_at), to: formatDate(game.kickoff_end_at) })}</span>
-            ) : game.kickoff_at ? (
-              <>
-                {formatDate(game.kickoff_at)}
-                {formatTime(game.kickoff_at) && <span style={{ marginLeft: 8, color: '#9db' }}>{formatTime(game.kickoff_at)}</span>}
-              </>
-            ) : game.kickoff_end_at ? (
-              t('match.date.periodFlex')
-            ) : (
-              t('match.status.datePending')
-            )}
-          </div>
-          <div style={{ 
-            display: 'inline-flex', 
-            alignItems: 'center', 
-            gap: 8,
-            padding: '6px 12px',
-            background: 'rgba(255, 211, 93, 0.12)',
-            border: '1px solid rgba(255, 211, 93, 0.3)',
-            borderRadius: 20
+
+
+        {/* Availability section - above participants */}
+        {(token && game && isParticipant && game.home_score == null && game.away_score == null && game.status !== 'scheduled' && game.status !== 'completed' && !isCancelled) && (
+          <div style={{
+            marginTop: isMobile ? 16 : 20,
+            padding: isMobile ? '16px' : '20px',
+            background: (terminMeta?.myDaysCount > 0) ? 'rgba(47, 107, 87, 0.12)' : 'rgba(72, 186, 170, 0.12)',
+            border: `1px solid ${(terminMeta?.myDaysCount > 0) ? 'rgba(47, 107, 87, 0.35)' : 'rgba(72, 186, 170, 0.35)'}`,
+            borderRadius: 12,
+            display: 'flex',
+            flexDirection: isMobile ? 'column' : 'row',
+            alignItems: isMobile ? 'stretch' : 'center',
+            justifyContent: 'space-between',
+            gap: 12
           }}>
-            <span style={{ width: 10, height: 10, background: '#ffd35d', borderRadius: '50%', boxShadow: '0 0 8px rgba(255, 211, 93, 0.5)' }} />
-            <span style={{ color: '#ffd35d', fontSize: isMobile ? 13 : 14, fontWeight: 600 }}>{statusLabel || (isCompleted ? t('match.status.completed') : t('match.status.pending'))}</span>
+            {(terminMeta?.myDaysCount > 0) ? (
+              <>
+                <div style={{ fontSize: isMobile ? 13 : 14, color: '#9db', fontWeight: 500 }}>
+                  {lang === 'en' ? 'Your availability is saved.' : 'Deine Verfügbarkeiten sind hinterlegt.'}
+                </div>
+                <button
+                  onClick={() => setShowTerminManager(true)}
+                  style={{
+                    padding: isMobile ? '8px 14px' : '10px 16px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(47, 107, 87, 0.55)',
+                    background: 'rgba(47, 107, 87, 0.3)',
+                    color: '#9db',
+                    fontSize: isMobile ? 13 : 14,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {lang === 'en' ? 'Change availability' : 'Verfügbarkeiten ändern'}
+                </button>
+              </>
+            ) : (
+              <>
+                <div>
+                  <div style={{ fontSize: isMobile ? 14 : 15, color: '#48baaa', fontWeight: 700, marginBottom: 4 }}>
+                    {t('match.teamAvailability.title')}
+                  </div>
+                  <div style={{ fontSize: isMobile ? 12 : 13, color: '#d7efe8', lineHeight: 1.5 }}>
+                    {t('match.teamAvailability.hint')}
+                  </div>
+                </div>
+                <button
+                  onClick={() => setShowTerminManager(true)}
+                  style={{
+                    padding: isMobile ? '10px 14px' : '12px 16px',
+                    borderRadius: 10,
+                    border: '1px solid rgba(72, 186, 170, 0.55)',
+                    background: 'linear-gradient(135deg, #48baaa, #2f8f7f)',
+                    color: '#071716',
+                    fontSize: isMobile ? 13 : 14,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  {t('match.teamAvailability.open')}
+                </button>
+              </>
+            )}
           </div>
-          {showCountdown && game.when_type === 'exact' && game.kickoff_at && (
-            <div style={{ color: '#9db', fontSize: 14 }}>{relativeFromNow(game.kickoff_at)}</div>
-          )}
-          {showCountdown && (game.when_type === 'fixed' || game.when_type === 'range') && game.kickoff_end_at && (
-            <div style={{ color: '#9db', fontSize: 14 }}>{timeRemaining(game.kickoff_end_at)}</div>
-          )}
-          {game.kickoff_end_at && !game.kickoff_at && (
-            <div style={{ color: '#9db', fontSize: 14 }}>{t('match.date.untilPlain', { date: formatDate(game.kickoff_end_at) })}</div>
-          )}
-        </div>
-        
-        {/* Date mode indicator when not yet assigned opponent */}
-        {(game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away)) && (
-          <div style={{ marginTop: 8, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {game.when_type === 'range' && game.kickoff_end_at && (
-              <div style={{ 
-                padding: '6px 12px', 
-                background: 'rgba(47, 107, 87, 0.2)', 
-                border: '1px solid rgba(47, 107, 87, 0.4)',
-                borderRadius: 8,
-                fontSize: 13,
-                color: '#9db'
+        )}
+
+        {/* Team selection for participant-based team matches */}
+        {(token && game && isParticipant && allowTeamChoice && teamCount >= 2 && (maxPlayers == null || maxPlayers > 2) && !isCompleted) && (
+          <div style={{
+            padding: isMobile ? '12px' : '14px',
+            background: 'rgba(47, 107, 87, 0.12)',
+            border: '1px solid rgba(47, 107, 87, 0.35)',
+            borderRadius: 14,
+            marginTop: isMobile ? 14 : 18,
+            marginBottom: isMobile ? 4 : 6,
+          }}>
+            <div style={{ fontWeight: 800, color: '#debc7c', marginBottom: 10 }}>
+              {t('match.team.selectTitle')}
+            </div>
+            {viewerTeamIndex == null && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                padding: isMobile ? '10px 12px' : '12px 16px',
+                marginBottom: 12,
+                background: 'rgba(222, 188, 124, 0.08)',
+                border: '1px dashed rgba(222, 188, 124, 0.4)',
+                borderRadius: 12,
+                color: '#e8efe8',
+                fontSize: isMobile ? 13 : 14,
+                lineHeight: 1.5,
               }}>
-                📅 {timeRemaining(game.kickoff_end_at)}
+                <span style={{ fontSize: 22, flexShrink: 0 }}>👋</span>
+                <span>{t('match.team.notSelected')}</span>
               </div>
             )}
-            {game.when_type === 'fixed' && game.kickoff_at && game.kickoff_end_at && (
-              <div style={{ 
-                padding: '6px 12px', 
-                background: 'rgba(47, 107, 87, 0.2)', 
-                border: '1px solid rgba(47, 107, 87, 0.4)',
-                borderRadius: 8,
-                fontSize: 13,
-                color: '#9db'
-              }}>
-                📅 {t('match.date.periodLabel', { from: formatDate(game.kickoff_at), to: formatDate(game.kickoff_end_at) })}
-              </div>
-            )}
-            {game.when_type === 'exact' && game.kickoff_at && (
-              <div style={{ 
-                padding: '6px 12px', 
-                background: 'rgba(47, 107, 87, 0.2)', 
-                border: '1px solid rgba(47, 107, 87, 0.4)',
-                borderRadius: 8,
-                fontSize: 13,
-                color: '#9db'
-              }}>
-                {t('match.date.fixedDate')}
-              </div>
-            )}
-            {!game.when_type && !game.kickoff_at && !game.kickoff_end_at && (
-              <div style={{ 
-                padding: '6px 12px', 
-                background: 'rgba(47, 107, 87, 0.2)', 
-                border: '1px solid rgba(47, 107, 87, 0.4)',
-                borderRadius: 8,
-                fontSize: 13,
-                color: '#9db'
-              }}>
-                {t('match.date.dateOpen')}
-              </div>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button
+                onClick={() => selectTeam(1)}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: 12,
+                  border: '1px solid #2f6b57',
+                  background: viewerTeamIndex === 1 ? 'linear-gradient(135deg, #debc7c, #c9a75f)' : '#0f2a20',
+                  color: viewerTeamIndex === 1 ? '#10261f' : '#e8efe8',
+                  cursor: 'pointer',
+                  fontWeight: 800,
+                }}
+              >
+                {t('match.team.team1')}
+              </button>
+              <button
+                onClick={() => selectTeam(2)}
+                style={{
+                  padding: '10px 14px',
+                  borderRadius: 12,
+                  border: '1px solid #2f6b57',
+                  background: viewerTeamIndex === 2 ? 'linear-gradient(135deg, #debc7c, #c9a75f)' : '#0f2a20',
+                  color: viewerTeamIndex === 2 ? '#10261f' : '#e8efe8',
+                  cursor: 'pointer',
+                  fontWeight: 800,
+                }}
+              >
+                {t('match.team.team2')}
+              </button>
+            </div>
+            {joinMsg && (
+              <div style={{ marginTop: 10, fontSize: 13, color: '#cfe8dc' }}>{joinMsg}</div>
             )}
           </div>
         )}
@@ -2264,66 +2232,6 @@ export default function GameDetailPage() {
           ) : null}
         </div>
 
-        {/* Info wenn kein Termin festgelegt */}
-        {(token && isParticipant && (game.home_score == null && game.away_score == null) && !game.kickoff_at) && (
-          <div style={{ 
-            marginTop: isMobile ? 16 : 20,
-            padding: isMobile ? '16px' : '20px',
-            background: 'rgba(255, 200, 100, 0.12)', 
-            border: '1px solid rgba(255, 200, 100, 0.35)', 
-            borderRadius: 12,
-            textAlign: 'center'
-          }}>
-            <div style={{ 
-              fontSize: isMobile ? 13 : 14, 
-              color: '#ffc864',
-              fontWeight: 500
-            }}>
-              {t('match.result.requiresTime')}
-            </div>
-          </div>
-        )}
-
-        {(token && game && isParticipant && isTeamMatch && game.home_score == null && game.away_score == null && game.status !== 'scheduled' && game.status !== 'completed') && (
-          <div style={{
-            marginTop: isMobile ? 16 : 20,
-            padding: isMobile ? '16px' : '20px',
-            background: 'rgba(72, 186, 170, 0.12)',
-            border: '1px solid rgba(72, 186, 170, 0.35)',
-            borderRadius: 12,
-            display: 'flex',
-            flexDirection: isMobile ? 'column' : 'row',
-            alignItems: isMobile ? 'stretch' : 'center',
-            justifyContent: 'space-between',
-            gap: 12
-          }}>
-            <div>
-              <div style={{ fontSize: isMobile ? 14 : 15, color: '#48baaa', fontWeight: 700, marginBottom: 4 }}>
-                {t('match.teamAvailability.title')}
-              </div>
-              <div style={{ fontSize: isMobile ? 12 : 13, color: '#d7efe8', lineHeight: 1.5 }}>
-                {t('match.teamAvailability.hint')}
-              </div>
-            </div>
-            <button
-              onClick={() => setShowTerminManager(true)}
-              style={{
-                padding: isMobile ? '10px 14px' : '12px 16px',
-                borderRadius: 10,
-                border: '1px solid rgba(72, 186, 170, 0.55)',
-                background: 'linear-gradient(135deg, #48baaa, #2f8f7f)',
-                color: '#071716',
-                fontSize: isMobile ? 13 : 14,
-                fontWeight: 700,
-                cursor: 'pointer',
-                whiteSpace: 'nowrap'
-              }}
-            >
-              {t('match.teamAvailability.open')}
-            </button>
-          </div>
-        )}
-
         {/* Location */}
         {game.location && (
           <div style={{ 
@@ -2382,37 +2290,25 @@ export default function GameDetailPage() {
           />
         )}
 
-        {/* Schedule form (toggled) - Hide when booking exists */}
-        {(token && game && isParticipant && game.home_score == null && game.away_score == null && showSchedule && !booking) && (
-          <ScheduleSection
-            open={showSchedule}
-            setOpen={setShowSchedule}
-            dateStr={dateStr}
-            setDateStr={setDateStr}
-            hours={scheduleHours}
-            minutes={scheduleMinutes}
-            setHours={setScheduleHours}
-            setMinutes={setScheduleMinutes}
-            onSubmit={scheduleMatch}
-            onSuggest={suggestNextSlot}
-            location={location}
-            setLocation={setLocation}
-            message={scheduleMsg}
-            loading={scheduleLoading}
-            game={game}
-            userProfile={userProfile}
-            onBookingConfirmed={(bookingData) => {
-              // Update booking state in main component
-              setBooking(bookingData);
-              // Close schedule form
-              setShowSchedule(false);
-              // Reload to show updated booking widget
-              setTimeout(() => window.location.reload(), 1000);
-            }}
-          />
-        )}
-
         {/* Join match CTA wird oben im Hero angezeigt */}
+
+        {/* Match verlassen Button */}
+        {(token && game && !isCancelled && isParticipant && game.home_score == null && game.away_score == null && game.status !== 'scheduled' && game.status !== 'completed' && viewerId && game.home_user_id && String(game.home_user_id) !== String(viewerId)) && (
+          <div style={{ marginTop: 20, textAlign: 'center' }}>
+            <button onClick={leaveMatch} style={{ 
+              padding: isMobile ? '10px 16px' : '12px 20px', 
+              borderRadius: 10, 
+              border: '1px solid rgba(85, 63, 63, 0.6)', 
+              background: 'linear-gradient(135deg, rgba(42, 27, 27, 0.9), rgba(42, 27, 27, 0.7))', 
+              color: '#e9d8d8', 
+              fontSize: isMobile ? 13 : 14,
+              fontWeight: 600,
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+              transition: 'all 0.2s ease'
+            }}>{lang === 'en' ? 'Leave Match' : 'Match verlassen'}</button>
+          </div>
+        )}
         
         {/* Kommentare und Likes Sektion */}
         <CommentsSection 

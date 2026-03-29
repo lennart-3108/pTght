@@ -318,12 +318,32 @@ module.exports = function meRoutes({ db }) {
           ...(cols.away === "away_user_id" ? [k.raw("g.away_user_id as away_user_id")] : [k.raw("NULL as away_user_id")]),
           "g.home_score",
           "g.away_score",
+          ...(Object.prototype.hasOwnProperty.call(ci, "max_players") ? ["g.max_players"] : []),
+          ...(Object.prototype.hasOwnProperty.call(ci, "team_count") ? ["g.team_count"] : []),
           ...(Object.prototype.hasOwnProperty.call(ci, "status") ? ["g.status"] : [])
         )
         .groupBy("g.id");
 
+      // For team matches, fetch participants
+      const teamMatchIds = (all || []).filter(r => (r.max_players != null && r.max_players > 2) || (r.team_count != null && r.team_count >= 2)).map(r => r.id);
+      let participantsMap = {};
+      if (teamMatchIds.length && hasParticipants) {
+        const parts = await k("match_participants as mp")
+          .join("users as u", "u.id", "mp.user_id")
+          .whereIn("mp.match_id", teamMatchIds)
+          .select("mp.match_id", "mp.user_id", "mp.team_index", k.raw(`COALESCE(NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')), ''), u.email) as name`));
+        for (const p of parts) {
+          if (!participantsMap[p.match_id]) participantsMap[p.match_id] = [];
+          participantsMap[p.match_id].push({ user_id: p.user_id, team_index: p.team_index, name: p.name });
+        }
+      }
+
       // Bucketing: completed (score set + confirmed), upcoming (everything else incl. result_pending)
-      const withTs = (all || []).map(r => ({ ...r, ts: r.kickoff_at ? (Date.parse(r.kickoff_at) || 0) : 0 }));
+      const withTs = (all || []).map(r => ({
+        ...r,
+        ts: r.kickoff_at ? (Date.parse(r.kickoff_at) || 0) : 0,
+        participants: participantsMap[r.id] || null
+      }));
       const completed = withTs.filter(r => r.status === 'completed' || (r.home_score != null && r.away_score != null && r.status !== 'result_pending')).sort((a,b) => (b.ts - a.ts));
       const upcoming = withTs.filter(r => !(r.status === 'completed' || (r.home_score != null && r.away_score != null && r.status !== 'result_pending'))).sort((a,b) => (a.ts - b.ts));
       return res.json({ upcoming, completed });
