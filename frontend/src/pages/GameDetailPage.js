@@ -759,8 +759,9 @@ export default function GameDetailPage() {
       // Re-fetch canonical projection to ensure names and permissions are fresh
       const fres = await fetch(`${API_BASE}/matches/${gameId}`);
       const fresh = await fres.json().catch(() => j);
-      setGame(fres.ok ? fresh : j);
-      if (isTeamMatch && !game?.kickoff_at) {
+      const freshGame = fres.ok ? fresh : j;
+      setGame(freshGame);
+      if (isTeamMatch && freshGame?.status !== 'scheduled' && freshGame?.status !== 'completed') {
         setShowTerminManager(true);
       }
     } catch (e) {
@@ -781,7 +782,7 @@ export default function GameDetailPage() {
       if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
       setJoinMsg(isTeamMatch ? t('match.teamAvailability.prompt') : t('match.team.selected'));
       setGame(j);
-      if (isTeamMatch && !game?.kickoff_at) {
+      if (isTeamMatch && j?.status !== 'scheduled' && j?.status !== 'completed') {
         setShowTerminManager(true);
       }
     } catch (e) {
@@ -2283,7 +2284,7 @@ export default function GameDetailPage() {
           </div>
         )}
 
-        {(token && game && isParticipant && isTeamMatch && game.home_score == null && game.away_score == null && !game.kickoff_at) && (
+        {(token && game && isParticipant && isTeamMatch && game.home_score == null && game.away_score == null && game.status !== 'scheduled' && game.status !== 'completed') && (
           <div style={{
             marginTop: isMobile ? 16 : 20,
             padding: isMobile ? '16px' : '20px',
