@@ -81,8 +81,7 @@ module.exports = function sportsRoutes(ctx) {
       ORDER BY s.sort_order, s.name
     `, [], (err, rows) => {
       if (err) return res.status(500).json({ error: "Datenbankfehler" });
-      const resultRows = isTestHost(req) ? filterSportsForTest(rows) : (rows || []);
-      res.json(resultRows);
+      res.json(rows || []);
     });
   });
 
@@ -123,12 +122,10 @@ module.exports = function sportsRoutes(ctx) {
         return res.json([]);
       }
 
-      const filteredSports = isTestHost(req) ? filterSportsForTest(sports) : sports;
-      
       // Group by sport_categories
       const categoryMap = {};
       
-      filteredSports.forEach(sport => {
+      sports.forEach(sport => {
         // Use category from sport_categories table if available
         const catId = sport.cat_id || 'uncategorized';
         const catName = sport.cat_name || 'Sonstige';
@@ -152,7 +149,7 @@ module.exports = function sportsRoutes(ctx) {
         // Only add main sports (not variants with parent_id)
         if (!sport.parent_id) {
           // Find variants for this sport
-          const variants = filteredSports.filter(v => v.parent_id === sport.id);
+          const variants = sports.filter(v => v.parent_id === sport.id);
           
           categoryMap[catId].sports.push({
             id: sport.id,
@@ -175,7 +172,7 @@ module.exports = function sportsRoutes(ctx) {
       
       // Sort by sort_order and convert to array
       const result = Object.values(categoryMap).sort((a, b) => a.sort_order - b.sort_order);
-      console.log(`[sports/categories] Returning ${result.length} categories with ${filteredSports.length} total sports`);
+      console.log(`[sports/categories] Returning ${result.length} categories with ${sports.length} total sports`);
       res.json(result);
     });
   });
