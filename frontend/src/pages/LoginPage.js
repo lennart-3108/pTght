@@ -628,11 +628,12 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
 
           {/* Quick-Login buttons for dev/test */}
           {(window.location.hostname === 'localhost' || window.location.hostname === 'test.matchleague.org') && (
-            <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
+            <div style={{ marginTop: 14, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {[
-                { label: 'Max', email: 'testuser@test.de' },
-                { label: 'Lena', email: 'auto-test-user-1@example.com' },
-                { label: 'Admin', email: 'admin@example.com' },
+                { label: 'Max', email: 'testspieler1@test.de' },
+                { label: 'Anna', email: 'testspieler2@test.de' },
+                { label: 'Tom', email: 'testspieler3@test.de' },
+                { label: 'Lennart', email: 'lennart.allenstein@gmail.com' },
               ].map(u => (
                 <button
                   key={u.email}
