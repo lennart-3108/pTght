@@ -29,11 +29,24 @@ module.exports = function commentsRoutes(ctx) {
           'match_comments.text',
           'match_comments.userId',
           'match_comments.parentCommentId',
-          'match_comments.likes',
           'match_comments.createdAt',
           'users.username as userName'
         );
       
+      // Count likes per comment from comment_likes table
+      const commentIds = comments.map(c => c.id);
+      if (commentIds.length) {
+        const likeCounts = await knex('comment_likes')
+          .whereIn('commentId', commentIds)
+          .groupBy('commentId')
+          .select('commentId')
+          .count('* as likes');
+        const likeMap = Object.fromEntries(likeCounts.map(r => [r.commentId, r.likes]));
+        comments.forEach(c => c.likes = likeMap[c.id] || 0);
+      } else {
+        comments.forEach(c => c.likes = 0);
+      }
+
       // Check if user has liked each comment
       if (userId) {
         const commentIds = comments.map(c => c.id);
@@ -68,7 +81,6 @@ module.exports = function commentsRoutes(ctx) {
         userId,
         text: text.trim(),
         parentCommentId: parentCommentId || null,
-        likes: 0,
         createdAt: new Date().toISOString()
       });
       
@@ -81,11 +93,11 @@ module.exports = function commentsRoutes(ctx) {
           'match_comments.text',
           'match_comments.userId',
           'match_comments.parentCommentId',
-          'match_comments.likes',
           'match_comments.createdAt',
           'users.username as userName'
         );
       
+      newComment.likes = 0;
       newComment.hasLiked = false;
       
       res.status(201).json(newComment);
