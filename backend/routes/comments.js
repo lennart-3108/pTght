@@ -1,24 +1,15 @@
 const express = require('express');
-const { isAuthenticated } = require('../middleware/auth');
+const { isAuthenticated, optionalAuth } = require('../middleware/auth');
 
 module.exports = function commentsRoutes(ctx) {
   const router = express.Router();
   const { knex } = ctx;
 
   // GET /api/matches/:matchId/comments - Get all comments for a match
-  router.get('/matches/:matchId/comments', async (req, res) => {
+  router.get('/matches/:matchId/comments', optionalAuth, async (req, res) => {
     try {
       const { matchId } = req.params;
-      const token = req.headers.authorization?.replace('Bearer ', '');
-      
-      let userId = null;
-      if (token) {
-        try {
-          const jwt = require('jsonwebtoken');
-          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key');
-          userId = decoded.id;
-        } catch (err) {}
-      }
+      const userId = req.user?.id || null;
       
       const comments = await knex('match_comments')
         .join('users', 'match_comments.userId', 'users.id')
@@ -108,21 +99,10 @@ module.exports = function commentsRoutes(ctx) {
   });
 
   // GET /api/matches/:matchId/likes - Get likes count and user's like status
-  router.get('/matches/:matchId/likes', async (req, res) => {
+  router.get('/matches/:matchId/likes', optionalAuth, async (req, res) => {
     try {
       const { matchId } = req.params;
-      const token = req.headers.authorization?.replace('Bearer ', '');
-      
-      let userId = null;
-      if (token) {
-        try {
-          const jwt = require('jsonwebtoken');
-          const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your_jwt_secret_key');
-          userId = decoded.id;
-        } catch (err) {
-          // Token invalid, continue without userId
-        }
-      }
+      const userId = req.user?.id || null;
       
       const count = await knex('match_likes')
         .where({ matchId })
