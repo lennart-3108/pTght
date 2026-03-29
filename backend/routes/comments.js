@@ -202,26 +202,21 @@ module.exports = function commentsRoutes(ctx) {
         await knex('comment_likes')
           .where({ commentId, userId })
           .delete();
-        await knex('match_comments')
-          .where({ id: commentId })
-          .decrement('likes', 1);
       } else {
         await knex('comment_likes').insert({
           commentId,
           userId,
           createdAt: new Date().toISOString()
         });
-        await knex('match_comments')
-          .where({ id: commentId })
-          .increment('likes', 1);
       }
       
-      const comment = await knex('match_comments')
-        .where({ id: commentId })
-        .first('likes');
+      const countRow = await knex('comment_likes')
+        .where({ commentId })
+        .count('* as count')
+        .first();
       
       res.json({
-        count: comment?.likes || 0,
+        count: countRow?.count || 0,
         hasLiked: !existingLike
       });
     } catch (error) {
