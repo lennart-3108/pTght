@@ -532,6 +532,10 @@ export default function Header() {
   const latestChats = useMemo(() => chatThreads.slice(0, 6), [chatThreads]);
   const notifHasUnread = unreadNotificationsCount > 0;
   const chatHasUnread = unreadChatsCount > 0;
+  const isNotifUnread = useCallback((item) => {
+    const ts = item?.timestamp ? Date.parse(item.timestamp) || 0 : 0;
+    return ts > lastNewsSeen;
+  }, [lastNewsSeen]);
 
   const handleToggleNotifications = () => {
     try { console.log('[Header] click bell'); } catch {}
@@ -682,7 +686,7 @@ export default function Header() {
                             const busy = !!acceptingFriendRequests[Number(item.fromUserId)];
                             const details = item.details || `${fromName} hat dir eine Freundschaftsanfrage gesendet.`;
                             return (
-                              <li key={item.id} className="ml-popover__item">
+                              <li key={item.id} className={`ml-popover__item${isNotifUnread(item) ? ' ml-popover__item--unread' : ''}`}>
                                 <div className="ml-popover__itemLinkBody">
                                   <div className="ml-popover__avatar">
                                     <Link
@@ -724,7 +728,7 @@ export default function Header() {
                           }
 
                           return (
-                            <li key={item.id} className="ml-popover__item">
+                            <li key={item.id} className={`ml-popover__item${isNotifUnread(item) ? ' ml-popover__item--unread' : ''}`}>
                               {(item.type === 'schedule_proposal' || item.type === 'player_joined' || item.type === 'availability_shared' || item.type === 'schedule_accepted' || item.type === 'schedule_rejected') && item.avatarUrl ? (
                                 <div style={{
                                   display: 'flex',
