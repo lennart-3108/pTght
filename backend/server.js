@@ -340,6 +340,36 @@ try {
       logInfo("[DB] Created table direct_messages via Knex");
     }
 
+    if (!(await k.schema.hasTable("direct_match_invitations"))) {
+      await k.schema.createTable("direct_match_invitations", (t) => {
+        t.increments("id").primary();
+        t.integer("chat_id").notNullable();
+        t.integer("requester_user_id").notNullable();
+        t.integer("recipient_user_id").notNullable();
+        t.integer("sport_id").notNullable();
+        t.integer("city_id").notNullable();
+        t.integer("location_id");
+        t.text("when_type");
+        t.text("kickoff_at");
+        t.text("kickoff_end_at");
+        t.integer("range_days");
+        t.text("player_level");
+        t.text("time_of_day");
+        t.text("time_from");
+        t.text("time_to");
+        t.text("note");
+        t.text("availability_json");
+        t.text("status").notNullable().defaultTo("pending");
+        t.integer("match_id");
+        t.text("created_at").defaultTo(k.raw("CURRENT_TIMESTAMP"));
+        t.text("updated_at");
+        t.text("responded_at");
+        t.index(["chat_id", "created_at"], "dmi_chat_created_idx");
+        t.index(["recipient_user_id", "status"], "dmi_recipient_status_idx");
+      });
+      logInfo("[DB] Created table direct_match_invitations via Knex");
+    }
+
     // match_message_reads – per user, per match last read timestamp
     if (!(await k.schema.hasTable("match_message_reads"))) {
       await k.schema.createTable("match_message_reads", (t) => {

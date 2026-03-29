@@ -62,118 +62,157 @@ module.exports = function sportsRoutes(ctx) {
   const router = express.Router();
   const { db } = ctx;
 
+  function withSportsColumns(callback) {
+    db.all(`PRAGMA table_info(sports)`, [], (err, cols) => {
+      if (err) return callback(err);
+      const names = new Set((cols || []).map((col) => String(col.name || '').toLowerCase()));
+      callback(null, {
+        hasPublished: names.has('published'),
+        hasActive: names.has('active')
+      });
+    });
+  }
+
+  function sportsVisibilityWhere(meta, alias = 'sports') {
+    const filters = [];
+    if (meta?.hasPublished) filters.push(`${alias}.published = 1`);
+    if (meta?.hasActive) filters.push(`${alias}.active = 1`);
+    return filters.length ? `WHERE ${filters.join(' AND ')}` : '';
+  }
+
   // Liste aller Sportarten mit Kategorie-Info
   router.get("/list", (req, res) => {
-    db.all(`
-      SELECT 
-        s.id, 
-        s.name,
-        s.name_en,
-        s.category_id,
-        s.parent_sport_id,
-        s.variant_type,
-        s.type,
-        sc.name as category_name,
-        sc.name_en as category_name_en
-      FROM sports s
-      LEFT JOIN sport_categories sc ON s.category_id = sc.id
-      WHERE s.published = 1
-      ORDER BY s.sort_order, s.name
-    `, [], (err, rows) => {
-      if (err) return res.status(500).json({ error: "Datenbankfehler" });
-      res.json(rows || []);
+    withSportsColumns((metaErr, meta) => {
+      if (metaErr) return res.status(500).json({ error: "Datenbankfehler" });
+      db.all(`
+        SELECT 
+          s.id, 
+          s.name,
+          s.name_en,
+          s.category_id,
+          s.parent_sport_id,
+          s.variant_type,
+          s.type,
+          s.parent_id,
+          sc.name as category_name,
+          sc.name_en as category_name_en
+        FROM sports s
+        LEFT JOIN sport_categories sc ON s.category_id = sc.id
+        ${sportsVisibilityWhere(meta, 's')}
+        ORDER BY s.sort_order, s.name
+      `, [], (err, rows) => {
+        if (err) return res.status(500).json({ error: "Datenbankfehler" });
+        const sports = rows || [];
+        const parentIdsWithVisibleChildren = new Set(
+          sports
+            .filter((row) => row.parent_id)
+            .map((row) => Number(row.parent_id))
+            .filter((id) => Number.isFinite(id))
+        );
+
+        const concreteOptions = sports.filter((row) => {
+          const sportId = Number(row.id);
+          if (Number.isFinite(sportId) && parentIdsWithVisibleChildren.has(sportId)) {
+            return false;
+          }
+          return true;
+        });
+
+        res.json(concreteOptions);
+      });
     });
   });
 
   // Kategorien mit ihren Sportarten (hierarchisch)
   router.get("/categories", (req, res) => {
-    // Get all sports with their category info
-    db.all(`
-      SELECT 
-        s.id, 
-        s.name,
-        s.name_en,
-        s.type,
-        s.category,
-        s.parent_id,
-        s.team_size,
-        s.sport_type,
-        s.category_id,
-        sc.id as cat_id,
-        sc.name as cat_name,
-        sc.name_en as cat_name_en,
-        sc.slug as cat_slug,
-        sc.name as category_name,
-        sc.slug as category_slug,
-        sc.icon as cat_icon,
-        sc.sort_order as cat_sort
-      FROM sports s
-      LEFT JOIN sport_categories sc ON s.category_id = sc.id
-      WHERE s.published = 1
-      ORDER BY sc.sort_order, s.name
-    `, [], (err, sports) => {
-      if (err) {
-        console.error('[sports/categories] Database error:', err);
+    withSportsColumns((metaErr, meta) => {
+      if (metaErr) {
+        console.error('[sports/categories] Column metadata error:', metaErr);
         return res.status(500).json({ error: "Datenbankfehler" });
       }
-      
-      if (!sports || !sports.length) {
-        console.log('[sports/categories] No sports found in database');
-        return res.json([]);
-      }
 
-      // Group by sport_categories
-      const categoryMap = {};
-      
-      sports.forEach(sport => {
-        // Use category from sport_categories table if available
-        const catId = sport.cat_id || 'uncategorized';
-        const catName = sport.cat_name || 'Sonstige';
-        const catNameEn = sport.cat_name_en || catName;
-        const catSlug = sport.cat_slug || 'other';
-        const catIcon = sport.cat_icon || '🏆';
-        const catSort = sport.cat_sort || 99;
-        
-        if (!categoryMap[catId]) {
-          categoryMap[catId] = {
-            id: catId,
-            name: catName,
-            name_en: catNameEn,
-            slug: catSlug,
-            icon: catIcon,
-            sort_order: catSort,
-            sports: []
-          };
+      db.all(`
+        SELECT 
+          s.id, 
+          s.name,
+          s.name_en,
+          s.type,
+          s.category,
+          s.parent_id,
+          s.team_size,
+          s.sport_type,
+          s.category_id,
+          sc.id as cat_id,
+          sc.name as cat_name,
+          sc.name_en as cat_name_en,
+          sc.slug as cat_slug,
+          sc.name as category_name,
+          sc.slug as category_slug,
+          sc.icon as cat_icon,
+          sc.sort_order as cat_sort
+        FROM sports s
+        LEFT JOIN sport_categories sc ON s.category_id = sc.id
+        ${sportsVisibilityWhere(meta, 's')}
+        ORDER BY sc.sort_order, s.name
+      `, [], (err, sports) => {
+        if (err) {
+          console.error('[sports/categories] Database error:', err);
+          return res.status(500).json({ error: "Datenbankfehler" });
         }
         
-        // Only add main sports (not variants with parent_id)
-        if (!sport.parent_id) {
-          // Find variants for this sport
-          const variants = sports.filter(v => v.parent_id === sport.id);
+        if (!sports || !sports.length) {
+          console.log('[sports/categories] No sports found in database');
+          return res.json([]);
+        }
+
+        const categoryMap = {};
+        
+        sports.forEach(sport => {
+          const catId = sport.cat_id || 'uncategorized';
+          const catName = sport.cat_name || 'Sonstige';
+          const catNameEn = sport.cat_name_en || catName;
+          const catSlug = sport.cat_slug || 'other';
+          const catIcon = sport.cat_icon || '🏆';
+          const catSort = sport.cat_sort || 99;
           
-          categoryMap[catId].sports.push({
-            id: sport.id,
-            name: sport.name,
-            name_en: sport.name_en || sport.name,
-            type: sport.type,
-            category: sport.category,
-            team_size: sport.team_size,
-            sport_type: sport.sport_type,
-            variants: variants.map(v => ({
-              id: v.id,
-              name: v.name,
-              name_en: v.name_en || v.name,
-              type: v.type,
-              category: v.category
-            }))
-          });
-        }
+          if (!categoryMap[catId]) {
+            categoryMap[catId] = {
+              id: catId,
+              name: catName,
+              name_en: catNameEn,
+              slug: catSlug,
+              icon: catIcon,
+              sort_order: catSort,
+              sports: []
+            };
+          }
+          
+          if (!sport.parent_id) {
+            const variants = sports.filter(v => v.parent_id === sport.id);
+            
+            categoryMap[catId].sports.push({
+              id: sport.id,
+              name: sport.name,
+              name_en: sport.name_en || sport.name,
+              type: sport.type,
+              category: sport.category,
+              team_size: sport.team_size,
+              sport_type: sport.sport_type,
+              variants: variants.map(v => ({
+                id: v.id,
+                name: v.name,
+                name_en: v.name_en || v.name,
+                type: v.type,
+                category: v.category
+              }))
+            });
+          }
+        });
+        
+        const result = Object.values(categoryMap).sort((a, b) => a.sort_order - b.sort_order);
+        console.log(`[sports/categories] Returning ${result.length} categories with ${sports.length} total sports`);
+        res.json(result);
       });
-      
-      // Sort by sort_order and convert to array
-      const result = Object.values(categoryMap).sort((a, b) => a.sort_order - b.sort_order);
-      console.log(`[sports/categories] Returning ${result.length} categories with ${sports.length} total sports`);
-      res.json(result);
     });
   });
 
@@ -182,18 +221,28 @@ module.exports = function sportsRoutes(ctx) {
   // Einzelne Sportart
   router.get("/:id", (req, res) => {
     const id = Number(req.params.id);
-    db.get(`SELECT id, name, name_en FROM sports WHERE id = ? AND published = 1`, [id], (err, row) => {
-      if (err) return res.status(500).json({ error: "Datenbankfehler" });
-      if (!row) return res.status(404).json({ error: "Nicht gefunden" });
-      res.json(row);
+    withSportsColumns((metaErr, meta) => {
+      if (metaErr) return res.status(500).json({ error: "Datenbankfehler" });
+      const filters = [];
+      if (meta?.hasPublished) filters.push('published = 1');
+      if (meta?.hasActive) filters.push('active = 1');
+      const whereSql = filters.length ? `AND ${filters.join(' AND ')}` : '';
+      db.get(`SELECT id, name, name_en, team_size, type, sport_type FROM sports WHERE id = ? ${whereSql}`, [id], (err, row) => {
+        if (err) return res.status(500).json({ error: "Datenbankfehler" });
+        if (!row) return res.status(404).json({ error: "Nicht gefunden" });
+        res.json(row);
+      });
     });
   });
 
   // Namen aller Sportarten (ohne IDs)
   router.get("/names", (_req, res) => {
-    db.all("SELECT name FROM sports WHERE published = 1 ORDER BY name", (err, rows) =>
-      err ? res.status(500).json({ error: "Datenbankfehler" }) : res.json((rows || []).map(r => r.name))
-    );
+    withSportsColumns((metaErr, meta) => {
+      if (metaErr) return res.status(500).json({ error: "Datenbankfehler" });
+      db.all(`SELECT name FROM sports ${sportsVisibilityWhere(meta)} ORDER BY name`, (err, rows) =>
+        err ? res.status(500).json({ error: "Datenbankfehler" }) : res.json((rows || []).map(r => r.name))
+      );
+    });
   });
 
   // Ligen einer Sportart
@@ -209,7 +258,7 @@ module.exports = function sportsRoutes(ctx) {
       FROM leagues l
       JOIN cities c ON l.city_id = c.id
       JOIN sports s ON l.sport_id = s.id
-      WHERE l.sport_id = ?
+      WHERE l.sport_id = ? AND COALESCE(s.active, 1) = 1
       ORDER BY c.name, l.name
     `;
     db.all(sql, [sportId], (err, rows) =>

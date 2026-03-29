@@ -432,6 +432,7 @@ module.exports = function matchesRoutes(ctx) {
     const hasLeagues = await knex.schema.hasTable('leagues').catch(() => false);
     const hasSports = await knex.schema.hasTable('sports').catch(() => false);
     const hasUsers = await knex.schema.hasTable('users').catch(() => false);
+    const hasTeams = await knex.schema.hasTable('teams').catch(() => false);
     const leaguesInfo = hasLeagues ? await knex('leagues').columnInfo().catch(() => ({})) : {};
     const canJoinSport = hasLeagues && hasSports && hasColumn(leaguesInfo, 'sport_id');
 
@@ -463,9 +464,12 @@ module.exports = function matchesRoutes(ctx) {
       ...(hasColumn(matchInfo, 'home_score') ? ['m.home_score'] : []),
       ...(hasColumn(matchInfo, 'away_score') ? ['m.away_score'] : []),
       ...(hasColumn(matchInfo, 'status') ? ['m.status'] : []),
+      ...(hasColumn(matchInfo, 'result_submitted_by') ? ['m.result_submitted_by'] : []),
+      ...(hasColumn(matchInfo, 'result_submitted_at') ? ['m.result_submitted_at'] : []),
       ...(hasColumn(matchInfo, 'created_at') ? ['m.created_at'] : []),
       ...(hasLeagues ? [{ league: 'l.name' }] : [knex.raw("'' as league")]),
       ...(canJoinSport ? [{ sport: 's.name' }] : [knex.raw("'' as sport")]),
+      ...(hasTeams ? [{ home_team_name: 'th.name' }, { away_team_name: 'ta.name' }] : [knex.raw("'' as home_team_name"), knex.raw("'' as away_team_name")]),
       knex.raw(`${homeExpr} as home_user_name`),
       knex.raw(`${awayExpr} as away_user_name`),
     ];
@@ -476,6 +480,10 @@ module.exports = function matchesRoutes(ctx) {
     if (hasUsers) {
       q.leftJoin({ uh: 'users' }, 'uh.id', 'm.home_user_id');
       q.leftJoin({ ua: 'users' }, 'ua.id', 'm.away_user_id');
+    }
+    if (hasTeams) {
+      q.leftJoin({ th: 'teams' }, 'th.id', 'm.home_team_id');
+      q.leftJoin({ ta: 'teams' }, 'ta.id', 'm.away_team_id');
     }
 
     const match = await q.where('m.id', matchId).first(selectCols);
@@ -545,6 +553,7 @@ module.exports = function matchesRoutes(ctx) {
       const hasLeagues = await k.schema.hasTable('leagues').catch(() => false);
       const hasSports = await k.schema.hasTable('sports').catch(() => false);
       const hasUsers = await k.schema.hasTable('users').catch(() => false);
+      const hasTeams = await k.schema.hasTable('teams').catch(() => false);
       const leaguesInfo = hasLeagues ? await k('leagues').columnInfo().catch(() => ({})) : {};
       const canJoinSport = hasLeagues && hasSports && hasColumn(leaguesInfo, 'sport_id');
 
@@ -576,9 +585,12 @@ module.exports = function matchesRoutes(ctx) {
         ...(hasColumn(matchInfo, 'home_score') ? ['m.home_score'] : []),
         ...(hasColumn(matchInfo, 'away_score') ? ['m.away_score'] : []),
         ...(hasColumn(matchInfo, 'status') ? ['m.status'] : []),
+        ...(hasColumn(matchInfo, 'result_submitted_by') ? ['m.result_submitted_by'] : []),
+        ...(hasColumn(matchInfo, 'result_submitted_at') ? ['m.result_submitted_at'] : []),
         ...(hasColumn(matchInfo, 'created_at') ? ['m.created_at'] : []),
         ...(hasLeagues ? [{ league: 'l.name' }] : [k.raw("'' as league")]),
         ...(canJoinSport ? [{ sport: 's.name' }] : [k.raw("'' as sport")]),
+        ...(hasTeams ? [{ home_team_name: 'th.name' }, { away_team_name: 'ta.name' }] : [k.raw("'' as home_team_name"), k.raw("'' as away_team_name")]),
         k.raw(`${homeExpr} as home_user_name`),
         k.raw(`${awayExpr} as away_user_name`),
       ];
@@ -589,6 +601,10 @@ module.exports = function matchesRoutes(ctx) {
       if (hasUsers) {
         q.leftJoin({ uh: 'users' }, 'uh.id', 'm.home_user_id');
         q.leftJoin({ ua: 'users' }, 'ua.id', 'm.away_user_id');
+      }
+      if (hasTeams) {
+        q.leftJoin({ th: 'teams' }, 'th.id', 'm.home_team_id');
+        q.leftJoin({ ta: 'teams' }, 'ta.id', 'm.away_team_id');
       }
 
       const match = await q.where('m.id', matchId).first(selectCols);
@@ -657,9 +673,10 @@ module.exports = function matchesRoutes(ctx) {
           match_id: matchId,
           user_id: viewerId,
           // For 1v1: creator is Team 1, joiner is Team 2 automatically.
+          // For team matches: accept team_index from request body, or null to choose later.
           team_index: (!allowTeamChoice || capacity <= 2)
             ? ((match.home_user_id != null && Number(match.home_user_id) === Number(viewerId)) ? 1 : 2)
-            : null,
+            : (req.body?.team_index != null ? Number(req.body.team_index) : null),
           status: 'joined',
           joined_at: new Date().toISOString(),
         });
@@ -1152,7 +1169,9 @@ module.exports = function matchesRoutes(ctx) {
       if (!isParticipant) return res.status(403).json({ error: 'NOT_A_PARTICIPANT' });
 
       const matchInfo = await k('matches').columnInfo().catch(() => ({}));
-      const patch = { status: 'completed', updated_at: new Date().toISOString() };
+      const patch = {};
+      if (hasColumn(matchInfo, 'status')) patch.status = 'completed';
+      if (hasColumn(matchInfo, 'updated_at')) patch.updated_at = new Date().toISOString();
       if (hasColumn(matchInfo, 'result_confirmed_by')) patch.result_confirmed_by = req.user.id;
       if (hasColumn(matchInfo, 'result_confirmed_at')) patch.result_confirmed_at = new Date().toISOString();
       await k('matches').where({ id: matchId }).update(patch);
@@ -1229,7 +1248,7 @@ module.exports = function matchesRoutes(ctx) {
       // Only set columns that exist
       const safePatch = {};
       for (const [col, val] of Object.entries(patch)) {
-        if (hasColumn(matchInfo, col) || col === 'status' || col === 'updated_at') safePatch[col] = val;
+        if (hasColumn(matchInfo, col)) safePatch[col] = val;
       }
       await k('matches').where({ id: matchId }).update(safePatch);
 

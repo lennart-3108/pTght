@@ -50,6 +50,45 @@ function fmtWeekRange(startStr, endStr, loc = 'de-DE') {
   return `${start.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' })} - ${end.toLocaleDateString(loc, { day: '2-digit', month: '2-digit' })}`;
 }
 
+function createDefaultRange(start = '18:00', end = '20:00') {
+  return { id: `r-${Math.random().toString(36).slice(2, 8)}`, start, end };
+}
+
+function parseTimeToMinutes(timeStr) {
+  const [h, m] = String(timeStr || '').split(':').map(Number);
+  if (!Number.isFinite(h) || !Number.isFinite(m)) return null;
+  return h * 60 + m;
+}
+
+function minutesToTimeString(minutes) {
+  const capped = Math.max(0, Math.min(23 * 60 + 45, minutes));
+  const h = Math.floor(capped / 60);
+  const m = capped % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+function snapToQuarter(timeStr) {
+  const mins = parseTimeToMinutes(timeStr);
+  if (mins === null) return '';
+  return minutesToTimeString(Math.round(mins / 15) * 15);
+}
+
+function enumerateDates(startIso, endIso) {
+  if (!startIso) return [];
+  const start = new Date(startIso);
+  const end = endIso ? new Date(endIso) : new Date(startIso);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return [];
+  const startDay = new Date(start);
+  const endDay = new Date(end);
+  startDay.setHours(12, 0, 0, 0);
+  endDay.setHours(12, 0, 0, 0);
+  const dates = [];
+  for (let current = new Date(startDay); current <= endDay; current.setDate(current.getDate() + 1)) {
+    dates.push(new Date(current).toISOString().slice(0, 10));
+  }
+  return dates;
+}
+
 function generateAvailableTimes(startTime, endTime, durationMinutes) {
   if (!startTime || !endTime) return [];
   const times = [];
@@ -95,14 +134,17 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
   const [frames, setFrames] = useState([]);
   const [slots, setSlots] = useState([]);
   const [meta, setMeta] = useState(null);
+  const [myAvailability, setMyAvailability] = useState([]);
   const [otherAvailability, setOtherAvailability] = useState([]);
   const [proposals, setProposals] = useState([]);
 
-  // Host: neuen Verfügbarkeits-Slot anlegen
+  // Eigene Verfügbarkeiten anlegen
   const [showAddSlot, setShowAddSlot] = useState(false);
-  const [newDate, setNewDate] = useState('');
-  const [newStart, setNewStart] = useState('');
-  const [newEnd, setNewEnd] = useState('');
+  const [availabilityMode, setAvailabilityMode] = useState('preset');
+  const [presetSelections, setPresetSelections] = useState({ morning: false, midday: false, evening: false });
+  const [selectedDates, setSelectedDates] = useState([]);
+  const [tempTimesByDate, setTempTimesByDate] = useState({});
+  const [savingAvailability, setSavingAvailability] = useState(false);
 
   // Gast: Wunschstart je Frame
   const [customTimes, setCustomTimes] = useState({});
@@ -120,6 +162,12 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
     const n = Number(candidate);
     return Number.isFinite(n) && n > 0 ? n : 60;
   }, [meta]);
+
+  const presetOptions = useMemo(() => ([
+    { key: 'morning', label: t('match.search.presetMorning'), start: '08:00', end: '11:00' },
+    { key: 'midday', label: t('match.search.presetMidday'), start: '12:00', end: '16:00' },
+    { key: 'evening', label: t('match.search.presetEvening'), start: '17:00', end: '21:00' },
+  ]), [t]);
 
   useEffect(() => {
     if (matchId && token) load();
@@ -152,8 +200,10 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
       const availData = await availRes.json().catch(() => ({}));
       // availability endpoint is best-effort; do not block UI if it fails
       if (availRes.ok) {
+        setMyAvailability(availData.myAvailability || []);
         setOtherAvailability(availData.theirAvailability || []);
       } else {
+        setMyAvailability([]);
         setOtherAvailability([]);
       }
 
@@ -171,38 +221,6 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
       setError(e.message);
     } finally {
       setLoading(false);
-    }
-  }
-
-  async function addFrame() {
-    setError('');
-    if (!newDate || !newStart || !newEnd) {
-      setError(t('tm.fillDateAndTime'));
-      return;
-    }
-    if (newStart >= newEnd) {
-      setError(t('tm.endAfterStart'));
-      return;
-    }
-    try {
-      const res = await fetch(`${API_BASE}/matches/${matchId}/time-frames`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({ date: newDate, timeStart: newStart, timeEnd: newEnd })
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || t('tm.saveError'));
-      setShowAddSlot(false);
-      setNewDate('');
-      setNewStart('');
-      setNewEnd('');
-      setSuccess(t('tm.frameSaved'));
-      load();
-    } catch (e) {
-      setError(e.message);
     }
   }
 
@@ -283,23 +301,6 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || t('tm.deleteError'));
-      load();
-    } catch (e) {
-      setError(e.message);
-    }
-  }
-
-  async function deleteFrame(frameId) {
-    setError('');
-    if (!window.confirm(t('tm.deleteFrameConfirm'))) return;
-    try {
-      const res = await fetch(`${API_BASE}/matches/${matchId}/time-frames/${frameId}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || t('tm.deleteError'));
-      setSuccess(t('tm.frameDeleted'));
       load();
     } catch (e) {
       setError(e.message);
@@ -468,12 +469,6 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
   // Split frames into "mine" (created by me) and "opponent" (created by other player)
   const viewerId = meta?.viewerId ? Number(meta.viewerId) : null;
 
-  const myFramesByWeek = useMemo(() => {
-    if (!viewerId) return [];
-    const myFrames = (frames || []).filter(f => Number(f.created_by_user_id) === viewerId);
-    return groupFramesByWeek(myFrames);
-  }, [frames, viewerId]);
-
   const opponentFramesByWeek = useMemo(() => {
     if (!viewerId) return [];
     const theirFrames = (frames || []).filter(f => Number(f.created_by_user_id) !== viewerId);
@@ -508,7 +503,189 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
       .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
   }, [otherAvailability]);
 
-  // myAvailability data is now shown via myFramesByWeek (time-frames system)
+  const selectableDates = useMemo(() => {
+    const fromMatch = enumerateDates(matchInfo?.kickoff_at, matchInfo?.kickoff_end_at);
+    if (fromMatch.length) return fromMatch;
+    const fromAvailability = Array.from(new Set([
+      ...(myAvailability || []).map((day) => day.date),
+      ...(otherAvailability || []).map((day) => day.date),
+      ...(frames || []).map((frame) => frame.date),
+    ].filter(Boolean))).sort();
+    if (fromAvailability.length) return fromAvailability;
+    const today = new Date();
+    today.setHours(12, 0, 0, 0);
+    return Array.from({ length: 7 }, (_, index) => {
+      const current = new Date(today);
+      current.setDate(today.getDate() + index);
+      return current.toISOString().slice(0, 10);
+    });
+  }, [matchInfo?.kickoff_at, matchInfo?.kickoff_end_at, myAvailability, otherAvailability, frames]);
+
+  const groupedSelectedDates = useMemo(() => {
+    const grouped = {};
+    selectedDates.forEach((dateStr) => {
+      const info = getWeekInfo(dateStr);
+      if (!info) return;
+      if (!grouped[info.key]) grouped[info.key] = { ...info, days: [] };
+      grouped[info.key].days.push(dateStr);
+    });
+    return Object.values(grouped)
+      .map((group) => ({ ...group, days: group.days.sort((a, b) => a.localeCompare(b)) }))
+      .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
+  }, [selectedDates]);
+
+  const myAvailabilityByWeek = useMemo(() => {
+    const grouped = {};
+    (myAvailability || []).forEach((day) => {
+      const info = getWeekInfo(day.date);
+      if (!info) return;
+      if (!grouped[info.key]) grouped[info.key] = { ...info, daysMap: {} };
+      if (!grouped[info.key].daysMap[day.date]) grouped[info.key].daysMap[day.date] = [];
+      (day.windows || []).forEach((window, index) => {
+        grouped[info.key].daysMap[day.date].push({
+          id: window.id || `${day.date}-${index}`,
+          date: day.date,
+          time_start: window.timeStart,
+          time_end: window.timeEnd,
+        });
+      });
+    });
+
+    return Object.values(grouped)
+      .map((week) => ({
+        ...week,
+        days: Object.entries(week.daysMap)
+          .map(([date, dayFrames]) => ({ date, frames: dayFrames.sort((a, b) => (a.time_start || '').localeCompare(b.time_start || '')) }))
+          .sort((a, b) => a.date.localeCompare(b.date))
+      }))
+      .filter((week) => week.days.length > 0)
+      .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
+  }, [myAvailability]);
+
+  useEffect(() => {
+    setSelectedDates((prev) => {
+      if (!prev.length) return selectableDates;
+      const next = prev.filter((dateStr) => selectableDates.includes(dateStr));
+      return next.length ? next : selectableDates;
+    });
+  }, [selectableDates]);
+
+  useEffect(() => {
+    setTempTimesByDate((prev) => {
+      const next = {};
+      selectedDates.forEach((dateStr) => {
+        const existing = myAvailability.find((day) => day.date === dateStr);
+        if (existing?.windows?.length) {
+          next[dateStr] = existing.windows.map((window, index) => ({
+            id: window.id || `r-${dateStr}-${index}`,
+            start: snapToQuarter(window.timeStart) || window.timeStart,
+            end: snapToQuarter(window.timeEnd) || window.timeEnd,
+          }));
+        } else if (prev[dateStr]?.length) {
+          next[dateStr] = prev[dateStr];
+        } else {
+          next[dateStr] = [createDefaultRange()];
+        }
+      });
+      return next;
+    });
+  }, [selectedDates, myAvailability]);
+
+  function toggleDateSelection(dateStr) {
+    setSelectedDates((prev) => prev.includes(dateStr) ? prev.filter((entry) => entry !== dateStr) : [...prev, dateStr].sort());
+  }
+
+  function buildAvailabilityPayload() {
+    if (!selectedDates.length) {
+      throw new Error(t('match.search.errorSelectAtLeastOneDate'));
+    }
+
+    if (availabilityMode === 'preset') {
+      const activePresets = presetOptions.filter((preset) => presetSelections[preset.key]);
+      if (!activePresets.length) {
+        throw new Error(t('match.search.errorSelectTimePeriod'));
+      }
+      return selectedDates.flatMap((dateStr) => activePresets.map((preset) => ({
+        date: dateStr,
+        timeStart: preset.start,
+        timeEnd: preset.end,
+      })));
+    }
+
+    const payload = [];
+    selectedDates.forEach((dateStr) => {
+      const ranges = tempTimesByDate[dateStr] || [];
+      ranges.forEach((range) => {
+        const start = snapToQuarter(range.start) || range.start;
+        const end = snapToQuarter(range.end) || range.end;
+        const startMinutes = parseTimeToMinutes(start);
+        const endMinutes = parseTimeToMinutes(end);
+        if (startMinutes === null || endMinutes === null || startMinutes >= endMinutes) {
+          throw new Error(t('match.search.errorValidTimeRanges'));
+        }
+        payload.push({ date: dateStr, timeStart: start, timeEnd: end });
+      });
+    });
+    if (!payload.length) {
+      throw new Error(t('match.search.errorEnterAvailability'));
+    }
+    return payload;
+  }
+
+  async function saveAvailabilityConfiguration() {
+    setSavingAvailability(true);
+    setError('');
+    setSuccess('');
+    try {
+      const payload = buildAvailabilityPayload();
+      for (const day of myAvailability) {
+        await fetch(`${API_BASE}/matches/${matchId}/availability/days/${day.id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
+
+      const grouped = payload.reduce((acc, item) => {
+        if (!acc[item.date]) acc[item.date] = [];
+        acc[item.date].push(item);
+        return acc;
+      }, {});
+
+      for (const [dateStr, windowsForDay] of Object.entries(grouped)) {
+        const dayRes = await fetch(`${API_BASE}/matches/${matchId}/availability/days`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({ date: dateStr })
+        });
+        const dayData = await dayRes.json().catch(() => ({}));
+        if (!dayRes.ok) throw new Error(dayData.error || t('tm.saveError'));
+
+        for (const window of windowsForDay) {
+          const windowRes = await fetch(`${API_BASE}/matches/${matchId}/availability/days/${dayData.id}/windows`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ timeStart: window.timeStart, timeEnd: window.timeEnd })
+          });
+          const windowData = await windowRes.json().catch(() => ({}));
+          if (!windowRes.ok) throw new Error(windowData.error || t('tm.saveError'));
+        }
+      }
+
+      setShowAddSlot(false);
+      setSuccess(t('tm.frameSaved'));
+      await load();
+    } catch (e) {
+      setError(e.message || t('tm.saveError'));
+    } finally {
+      setSavingAvailability(false);
+    }
+  }
 
   if (loading) return <div style={styles.overlay}><div style={styles.modal}>{t('tm.loading')}</div></div>;
 
@@ -529,7 +706,7 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
         {error && <div style={styles.error}>{error}</div>}
         {success && <div style={styles.success}>{success}</div>}
 
-        {/* ── My Availability Frames (with add + delete) ── */}
+        {/* ── My Availability ── */}
         <div style={styles.sectionHeader}>
           <div>
             <h3 style={{ margin: 0, color: '#e8efe8' }}>{t('tm.myTimes')}</h3>
@@ -542,33 +719,166 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
 
         {showAddSlot && (
           <div style={styles.addForm}>
-            <div style={styles.formRow}>
+            <div style={{ display: 'grid', gap: 12 }}>
               <div style={styles.formGroup}>
-                <label style={styles.label}>{t('tm.date')}</label>
-                <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)} style={styles.input} />
+                <label style={styles.label}>{t('match.search.configuration')}</label>
+                <div style={styles.modeGroup}>
+                  <button
+                    type="button"
+                    onClick={() => setAvailabilityMode('preset')}
+                    style={{ ...styles.modeBtn, ...(availabilityMode === 'preset' ? styles.modeBtnActive : null) }}
+                  >
+                    {t('match.search.periodsForAllDays')}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setAvailabilityMode('per-day')}
+                    style={{ ...styles.modeBtn, ...(availabilityMode === 'per-day' ? styles.modeBtnActive : null) }}
+                  >
+                    {t('match.search.availabilityPerDay')}
+                  </button>
+                </div>
               </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>{t('tm.from')}</label>
-                <input type="time" value={newStart} onChange={(e) => setNewStart(e.target.value)} style={styles.input} />
+
+              <div style={styles.configCard}>
+                <div style={{ fontSize: 12, color: '#9db', marginBottom: 8 }}>{t('tm.date')}</div>
+                <div style={styles.dateGrid}>
+                  {selectableDates.map((dateStr) => {
+                    const active = selectedDates.includes(dateStr);
+                    return (
+                      <button
+                        key={dateStr}
+                        type="button"
+                        onClick={() => toggleDateSelection(dateStr)}
+                        style={{ ...styles.dateToggle, ...(active ? styles.dateToggleActive : null) }}
+                      >
+                        {fmtDate(dateStr, locale)}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div style={styles.formGroup}>
-                <label style={styles.label}>{t('tm.to')}</label>
-                <input type="time" value={newEnd} onChange={(e) => setNewEnd(e.target.value)} style={styles.input} />
+
+              {availabilityMode === 'preset' && (
+                <div style={styles.configCard}>
+                  <div style={{ fontSize: 12, color: '#9db', marginBottom: 8 }}>{t('match.search.presetHint')}</div>
+                  <div style={styles.presetGrid}>
+                    {presetOptions.map((preset) => (
+                      <button
+                        key={preset.key}
+                        type="button"
+                        onClick={() => setPresetSelections((prev) => ({ ...prev, [preset.key]: !prev[preset.key] }))}
+                        style={{ ...styles.presetBtn, ...(presetSelections[preset.key] ? styles.presetBtnActive : null) }}
+                      >
+                        <span>{preset.label}</span>
+                        <span style={{ fontSize: 11, color: '#9db' }}>{preset.start} - {preset.end}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {availabilityMode === 'per-day' && (
+                <div style={{ display: 'grid', gap: 10 }}>
+                  {groupedSelectedDates.map((week) => (
+                    <div key={week.key} style={styles.weekCard}>
+                      <div style={styles.weekHeader}>
+                        <div style={{ fontWeight: 800, color: '#debc7c' }}>{lang === 'en' ? 'W' : 'KW'} {week.week}</div>
+                        <div style={{ color: '#9db', fontSize: 12 }}>{fmtWeekRange(week.weekStartStr, week.weekEndStr, locale)}</div>
+                      </div>
+
+                      <div style={{ display: 'grid', gap: 10 }}>
+                        {week.days.map((dateStr) => {
+                          const ranges = tempTimesByDate[dateStr] || [];
+                          return (
+                            <div key={dateStr} style={styles.dateCard}>
+                              <div style={styles.dateHeader}>
+                                <div style={{ fontWeight: 700 }}>{fmtDate(dateStr, locale)}</div>
+                              </div>
+
+                              <div style={{ display: 'grid', gap: 8 }}>
+                                {ranges.map((range) => (
+                                  <div key={range.id} style={styles.rangeRow}>
+                                    <div style={styles.formGroup}>
+                                      <label style={styles.label}>{t('tm.from')}</label>
+                                      <input
+                                        type="time"
+                                        step={900}
+                                        value={range.start}
+                                        onChange={(e) => setTempTimesByDate((prev) => ({
+                                          ...prev,
+                                          [dateStr]: (prev[dateStr] || []).map((entry) => entry.id === range.id ? { ...entry, start: snapToQuarter(e.target.value) || e.target.value } : entry)
+                                        }))}
+                                        style={styles.input}
+                                      />
+                                    </div>
+                                    <div style={styles.formGroup}>
+                                      <label style={styles.label}>{t('tm.to')}</label>
+                                      <input
+                                        type="time"
+                                        step={900}
+                                        value={range.end}
+                                        onChange={(e) => setTempTimesByDate((prev) => ({
+                                          ...prev,
+                                          [dateStr]: (prev[dateStr] || []).map((entry) => entry.id === range.id ? { ...entry, end: snapToQuarter(e.target.value) || e.target.value } : entry)
+                                        }))}
+                                        style={styles.input}
+                                      />
+                                    </div>
+                                    <button
+                                      type="button"
+                                      onClick={() => setTempTimesByDate((prev) => ({
+                                        ...prev,
+                                        [dateStr]: (prev[dateStr] || []).filter((entry) => entry.id !== range.id)
+                                      }))}
+                                      style={{ ...styles.btnGhost, color: '#ff6b6b', borderColor: '#ff6b6b44', padding: '10px 12px' }}
+                                    >
+                                      {t('tm.delete')}
+                                    </button>
+                                  </div>
+                                ))}
+                                <button
+                                  type="button"
+                                  onClick={() => setTempTimesByDate((prev) => {
+                                    const current = prev[dateStr] || [];
+                                    const last = current[current.length - 1];
+                                    const nextStart = last?.end || '18:00';
+                                    const nextEnd = minutesToTimeString((parseTimeToMinutes(nextStart) || (18 * 60)) + 120);
+                                    return {
+                                      ...prev,
+                                      [dateStr]: [...current, createDefaultRange(snapToQuarter(nextStart), snapToQuarter(nextEnd))]
+                                    };
+                                  })}
+                                  style={styles.btnSecondary}
+                                >
+                                  {t('tm.addSlot')}
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <div style={styles.formActions}>
+                <button onClick={saveAvailabilityConfiguration} disabled={savingAvailability} style={{ ...styles.btnPrimary, opacity: savingAvailability ? 0.6 : 1 }}>
+                  {savingAvailability ? t('tm.loading') : t('tm.save')}
+                </button>
+                <button onClick={() => setShowAddSlot(false)} style={styles.btnGhost}>{t('tm.cancel')}</button>
               </div>
-            </div>
-            <div style={styles.formActions}>
-              <button onClick={addFrame} style={styles.btnPrimary}>{t('tm.save')}</button>
-              <button onClick={() => { setShowAddSlot(false); setNewDate(''); setNewStart(''); setNewEnd(''); }} style={styles.btnGhost}>{t('tm.cancel')}</button>
             </div>
           </div>
         )}
 
-        {myFramesByWeek.length === 0 && !showAddSlot && (
+        {myAvailabilityByWeek.length === 0 && !showAddSlot && (
           <div style={styles.empty}>{t('tm.noMyTimes')}</div>
         )}
 
         <div style={{ display: 'grid', gap: 14 }}>
-          {myFramesByWeek.map((week) => (
+          {myAvailabilityByWeek.map((week) => (
             <div key={week.key} style={styles.weekCard}>
               <div style={styles.weekHeader}>
                 <div style={{ fontWeight: 800, color: '#debc7c' }}>{lang === 'en' ? 'W' : 'KW'} {week.week}</div>
@@ -590,12 +900,6 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
                             <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtTime(frame.time_start)} – {fmtTime(frame.time_end)}</div>
                             <div style={{ color: '#9db', fontSize: 13 }}>{t('tm.duration', { min: slotDuration })}</div>
                           </div>
-                          <button
-                            onClick={() => deleteFrame(frame.id)}
-                            style={{ ...styles.btnGhost, fontSize: 12, padding: '6px 12px', color: '#ff6b6b', borderColor: '#ff6b6b44' }}
-                          >
-                            {t('tm.delete')}
-                          </button>
                         </div>
                       ))}
                     </div>
@@ -1002,6 +1306,77 @@ const styles = {
     gridTemplateColumns: '1fr 1fr 1fr',
     gap: 12
   },
+  modeGroup: {
+    display: 'flex',
+    flexWrap: 'wrap',
+    gap: 8
+  },
+  modeBtn: {
+    background: '#0a1c17',
+    color: '#cfe',
+    border: '1px solid #26493c',
+    padding: '10px 14px',
+    fontSize: 13,
+    fontWeight: 700,
+    cursor: 'pointer',
+    borderRadius: 10
+  },
+  modeBtnActive: {
+    background: 'rgba(222, 188, 124, 0.16)',
+    color: '#debc7c',
+    borderColor: '#c9a75f'
+  },
+  configCard: {
+    backgroundColor: '#08241c',
+    border: '1px solid #26493c',
+    borderRadius: 10,
+    padding: 12
+  },
+  dateGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+    gap: 8
+  },
+  dateToggle: {
+    background: '#0a1c17',
+    color: '#cfe',
+    border: '1px solid #26493c',
+    padding: '10px 12px',
+    fontSize: 13,
+    fontWeight: 600,
+    cursor: 'pointer',
+    borderRadius: 10,
+    textAlign: 'left'
+  },
+  dateToggleActive: {
+    background: 'rgba(222, 188, 124, 0.16)',
+    color: '#debc7c',
+    borderColor: '#c9a75f'
+  },
+  presetGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+    gap: 8
+  },
+  presetBtn: {
+    background: '#0a1c17',
+    color: '#e8efe8',
+    border: '1px solid #26493c',
+    padding: '12px 14px',
+    fontSize: 13,
+    fontWeight: 700,
+    cursor: 'pointer',
+    borderRadius: 10,
+    display: 'flex',
+    flexDirection: 'column',
+    gap: 4,
+    alignItems: 'flex-start',
+    textAlign: 'left'
+  },
+  presetBtnActive: {
+    background: 'rgba(222, 188, 124, 0.16)',
+    borderColor: '#c9a75f'
+  },
   formGroup: {
     display: 'flex',
     flexDirection: 'column',
@@ -1074,6 +1449,16 @@ const styles = {
     justifyContent: 'space-between',
     alignItems: 'center',
     gap: 12,
+    backgroundColor: '#0a1c17',
+    border: '1px solid #26493c',
+    borderRadius: 10,
+    padding: '10px 12px'
+  },
+  rangeRow: {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr) auto',
+    gap: 10,
+    alignItems: 'end',
     backgroundColor: '#0a1c17',
     border: '1px solid #26493c',
     borderRadius: 10,

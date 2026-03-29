@@ -626,6 +626,37 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
             </div>
           )}
 
+          {/* Quick-Login buttons for dev/test */}
+          {(window.location.hostname === 'localhost' || window.location.hostname === 'test.matchleague.org') && (
+            <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
+              {[
+                { label: 'Max', email: 'testuser@test.de' },
+                { label: 'Lena', email: 'auto-test-user-1@example.com' },
+                { label: 'Admin', email: 'admin@example.com' },
+              ].map(u => (
+                <button
+                  key={u.email}
+                  type="button"
+                  onClick={() => { setEmail(u.email); setPassword('test1234'); setTimeout(() => document.querySelector('form')?.requestSubmit(), 50); }}
+                  style={{
+                    flex: 1,
+                    padding: '7px 6px',
+                    borderRadius: 8,
+                    border: '1px solid rgba(72,186,170,0.4)',
+                    background: 'rgba(72,186,170,0.1)',
+                    color: '#48baaa',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  {u.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Email confirmation notice - small popup below login */}
           {showEmailConfirmPopup && (
             <div style={{

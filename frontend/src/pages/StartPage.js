@@ -452,10 +452,24 @@ export default function StartPage() {
   return (
     <div className="ml-page-shell">
       <AuthNoticeBanner />
-      <section className="hero-carousel" style={{ marginBottom: 24 }}>
+      <section className="hero-carousel" style={{ marginBottom: 0 }}>
         {heroBackgrounds.map((b, i) => (
           <div key={i} className={`hero-slide ${i === index ? 'active' : ''}`} style={{ backgroundImage: `url(${b.src})` }} />
         ))}
+
+        <div
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: '36%',
+            background: 'linear-gradient(180deg, rgba(5,15,13,0) 0%, rgba(6,18,15,0.16) 24%, rgba(6,20,17,0.42) 64%, rgba(7,23,22,0.68) 100%)',
+            zIndex: 1,
+            pointerEvents: 'none'
+          }}
+        />
 
         <div className="hero-overlay">
           <div className="hero-inner">
@@ -592,7 +606,53 @@ export default function StartPage() {
         </div>
       </section>
 
-  <div className="ml-main-container" style={{ marginTop: 16, paddingBottom: 32 }}>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'relative',
+          height: 'clamp(72px, 10vw, 108px)',
+          marginTop: -33,
+          background: 'linear-gradient(180deg, rgba(6, 18, 15, 0) 0%, rgba(6, 18, 15, 0.88) 18%, rgba(6, 18, 15, 0.96) 34%, rgba(6, 18, 15, 0.96) 66%, rgba(6, 18, 15, 0.88) 82%, rgba(6, 18, 15, 0) 100%)',
+          overflow: 'hidden',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}
+      >
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          background: 'linear-gradient(180deg, rgba(255,255,255,0.012) 0%, rgba(255,255,255,0.01) 16%, rgba(255,255,255,0.018) 50%, rgba(255,255,255,0.01) 84%, rgba(255,255,255,0.012) 100%)'
+        }} />
+        <div style={{
+          width: 'min(100%, 920px)',
+          padding: '0 28px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 0,
+          position: 'relative',
+          zIndex: 1
+        }}>
+          <div style={{
+            flex: 1,
+            height: 2,
+            maxWidth: 760,
+            background: 'linear-gradient(90deg, transparent 0%, rgba(222,188,124,0.06) 12%, rgba(222,188,124,0.42) 26%, rgba(222,188,124,0.5) 50%, rgba(222,188,124,0.42) 74%, rgba(222,188,124,0.06) 88%, transparent 100%)',
+            boxShadow: '0 0 14px rgba(222,188,124,0.08)'
+          }} />
+        </div>
+        <div style={{
+          position: 'absolute',
+          left: 0,
+          right: 0,
+          bottom: 0,
+          height: '58%',
+          background: 'linear-gradient(180deg, rgba(6,18,15,0) 0%, rgba(6,18,15,0.08) 30%, rgba(6,18,15,0.22) 72%, rgba(6,18,15,0.34) 100%)'
+        }} />
+      </div>
+
+  <div className="ml-main-container" style={{ marginTop: -8, paddingTop: 16, paddingBottom: 32, position: 'relative', zIndex: 2 }}>
       {/* Dashboard Sections */}
       {/* Row 1: Upcoming and Last games, 3 items each, stacked vertically */}
       <div style={{ display: 'grid', gap: 16 }}>
@@ -1069,7 +1129,7 @@ export default function StartPage() {
                   <Link
                     key={`${item.feedType}-${idx}`}
                     to={`/location/${item.locationId}`}
-                    style={{ textDecoration: 'none', color: 'inherit' }}
+                    style={{ textDecoration: 'none', color: 'inherit', display: 'block', width: '100%', minWidth: 0 }}
                   >
                     <div 
                       style={{ 
@@ -1077,12 +1137,18 @@ export default function StartPage() {
                         borderRadius: 10, 
                         background: 'linear-gradient(135deg, rgba(222,188,124,0.15) 0%, rgba(222,188,124,0.05) 100%)',
                         border: '2px solid #debc7c',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 12,
+                        display: 'grid',
+                        gridTemplateColumns: '48px minmax(0, 1fr)',
+                        alignItems: 'start',
+                        columnGap: 12,
+                        rowGap: 8,
                         transition: 'all 0.2s',
                         cursor: 'pointer',
-                        position: 'relative'
+                        position: 'relative',
+                        width: '100%',
+                        minWidth: 0,
+                        boxSizing: 'border-box',
+                        overflow: 'hidden'
                       }}
                       onMouseEnter={(e) => {
                         e.currentTarget.style.background = 'linear-gradient(135deg, rgba(222,188,124,0.25) 0%, rgba(222,188,124,0.1) 100%)';
@@ -1106,7 +1172,7 @@ export default function StartPage() {
                       }}>
                         🏟️
                       </div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ minWidth: 0 }}>
                         <div style={{ 
                           fontSize: 15, 
                           fontWeight: 700, 
@@ -1114,9 +1180,10 @@ export default function StartPage() {
                           marginBottom: 4,
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 6
+                          gap: 6,
+                          flexWrap: 'wrap'
                         }}>
-                          {item.title}
+                          <span style={{ minWidth: 0, overflowWrap: 'anywhere', lineHeight: 1.35 }}>{item.title}</span>
                           <span style={{
                             fontSize: 10,
                             fontWeight: 600,
@@ -1128,7 +1195,7 @@ export default function StartPage() {
                             {t('start.activities.adLabel')}
                           </span>
                         </div>
-                        <div style={{ fontSize: 13, color: '#9db' }}>
+                        <div style={{ fontSize: 13, color: '#9db', overflowWrap: 'anywhere', lineHeight: 1.4 }}>
                           {item.description || t('start.activities.showCourts')}
                         </div>
                       </div>
@@ -1140,7 +1207,7 @@ export default function StartPage() {
               // Normale Feed-Items
               const linkTo = item.matchId ? `/matches/${item.matchId}` : item.leagueId ? `/league/${item.leagueId}` : null;
               const Component = linkTo ? Link : 'div';
-              const extraProps = linkTo ? { to: linkTo, style: { textDecoration: 'none', color: 'inherit' } } : {};
+              const extraProps = linkTo ? { to: linkTo, style: { textDecoration: 'none', color: 'inherit', display: 'block', width: '100%', minWidth: 0 } } : {};
               
               return (
                 <Component
@@ -1153,11 +1220,17 @@ export default function StartPage() {
                       borderRadius: 10, 
                       background: 'rgba(15,43,39,0.7)', 
                       border: '1px solid rgba(127,252,204,0.2)',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: 12,
+                      display: 'grid',
+                      gridTemplateColumns: '36px minmax(0, 1fr)',
+                      alignItems: 'start',
+                      columnGap: 12,
+                      rowGap: 8,
                       transition: 'all 0.2s',
-                      cursor: linkTo ? 'pointer' : 'default'
+                      cursor: linkTo ? 'pointer' : 'default',
+                      width: '100%',
+                      minWidth: 0,
+                      boxSizing: 'border-box',
+                      overflow: 'hidden'
                     }}
                     onMouseEnter={(e) => {
                       e.currentTarget.style.background = 'rgba(32,74,58,0.6)';
@@ -1191,10 +1264,10 @@ export default function StartPage() {
 
                 {/* Activity Content */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, color: '#e8efe8', fontWeight: 600, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: 14, color: '#e8efe8', fontWeight: 600, marginBottom: 2, whiteSpace: 'normal', overflowWrap: 'anywhere', lineHeight: 1.35 }}>
                     {item.title}
                   </div>
-                  <div style={{ fontSize: 12, color: '#9db', lineHeight: 1.4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontSize: 12, color: '#9db', lineHeight: 1.4, whiteSpace: 'normal', overflowWrap: 'anywhere' }}>
                     {item.description}
                   </div>
                   {item.timestamp && (

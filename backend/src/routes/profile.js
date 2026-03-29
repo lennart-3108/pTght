@@ -123,13 +123,21 @@ module.exports = function profileRoutes(ctx) {
       // Detect sports linking
       const hasLeagues = await k.schema.hasTable('leagues').catch(() => false);
       const hasSports = await k.schema.hasTable('sports').catch(() => false);
+      const sportInfo = hasSports ? await k('sports').columnInfo().catch(() => ({})) : {};
+      const sportsHaveActive = Object.prototype.hasOwnProperty.call(sportInfo, 'active');
       const hasCities = await k.schema.hasTable('cities').catch(() => false);
       const hasStates = await k.schema.hasTable('counties').catch(() => false);
       const hasCountries = await k.schema.hasTable('countries').catch(() => false);
       let sportId = req.query.sportId ? Number(req.query.sportId) : null;
       const sportName = (req.query.sport || '').trim();
       if (!sportId && sportName && hasSports) {
-        const srow = await k('sports').whereRaw('LOWER(name) = ?', [sportName.toLowerCase()]).first().catch(() => null);
+        const srow = await k('sports')
+          .modify((qb) => {
+            if (sportsHaveActive) qb.where('active', 1);
+          })
+          .whereRaw('LOWER(name) = ?', [sportName.toLowerCase()])
+          .first()
+          .catch(() => null);
         sportId = srow && srow.id ? Number(srow.id) : null;
       }
       // Select matches:
@@ -153,6 +161,7 @@ module.exports = function profileRoutes(ctx) {
           this.whereIn('m.status', ['open', 'proposed']).orWhereNull('m.status');
         });
       }
+  if (hasSports && hasLeagues && sportsHaveActive) base.andWhere('s.active', 1);
   if (sportId && hasLeagues && hasSports) base.andWhere('s.id', sportId);
   const cityId = req.query.cityId ? Number(req.query.cityId) : null;
   const stateId = req.query.stateId ? Number(req.query.stateId) : null;
@@ -416,10 +425,15 @@ module.exports = function profileRoutes(ctx) {
       if (hasSports) {
         sportRow = await k('sports').where({ id: sportId }).first().catch(() => null);
       }
+      if (!sportRow) return res.status(404).json({ error: 'SPORT_NOT_FOUND' });
+      if (Object.prototype.hasOwnProperty.call(sportRow, 'active') && Number(sportRow.active) !== 1) {
+        return res.status(403).json({ error: 'SPORT_INACTIVE' });
+      }
 
       const sportName = String(sportRow?.name || '').toLowerCase();
       const variantType = String(sportRow?.variant_type || '').toLowerCase();
       const sportType = String(sportRow?.sport_type || sportRow?.type || '').toLowerCase();
+      const configuredTeamSize = Number(sportRow?.team_size || 0);
 
       const parseVv = (s) => {
         const m = String(s || '').match(/(\d+)\s*v\s*(\d+)/i);
@@ -437,7 +451,7 @@ module.exports = function profileRoutes(ctx) {
 
       const vv = parseVv(variantType) || parseVv(sportName);
       const isDoubles = variantType.includes('doppel') || sportName.includes('doppel') || variantType.includes('mixed') || sportName.includes('mixed') || sportName.includes('padel');
-      const isTeam = sportType.includes('team') || (vv != null);
+      const isTeam = sportType.includes('team') || (vv != null) || configuredTeamSize > 1;
 
       if (vv != null) {
         teamCount = 2;
@@ -448,9 +462,9 @@ module.exports = function profileRoutes(ctx) {
         playersPerTeam = 2;
         maxPlayers = 4;
       } else if (isTeam) {
-        // Team sport but unknown size: allow creator override, default to 10 (5v5-like)
+        // Team sport configured via sport metadata.
         teamCount = 2;
-        playersPerTeam = Number(sportRow?.team_size || 0) || 5;
+        playersPerTeam = configuredTeamSize || 5;
         maxPlayers = teamCount * playersPerTeam;
       } else {
         teamCount = 2;

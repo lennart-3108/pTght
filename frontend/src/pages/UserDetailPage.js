@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useState, useRef } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { API_BASE } from "../config";
 import Avatar from "../components/Avatar";
 import { useResponsive } from "../hooks/useResponsive";
 import AvatarEditor from "react-avatar-editor";
+import MatchInviteDialog from "../components/MatchInviteDialog";
 
 // Responsive page styling function (now dynamic)
 const getPageStyle = (isMobile) => ({
@@ -186,6 +187,7 @@ function extractOpponents(games, myId, displayName) {
 
 export default function UserDetailPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
   const viewerId = useMemo(() => extractUserIdFromToken(token), [token]);
   
@@ -220,6 +222,7 @@ export default function UserDetailPage() {
   const [newComment, setNewComment] = useState("");
   const [avatarImage, setAvatarImage] = useState(null);
   const [avatarScale, setAvatarScale] = useState(1);
+  const [showMatchInviteDialog, setShowMatchInviteDialog] = useState(false);
   const editorRef = useRef(null);
 
   const isOwnProfile = user && Number(user.id) === Number(viewerId);
@@ -932,21 +935,23 @@ export default function UserDetailPage() {
               </>
             ) : (
               <>
-                <Link
-                  to={`/chat/user/${user.id}`}
+                <button
+                  type="button"
+                  onClick={() => setShowMatchInviteDialog(true)}
                   style={{
-                    textDecoration: "none",
                     fontWeight: 600,
                     background: "linear-gradient(135deg,#48c9a9,#2f9c7a)",
                     color: "#07271f",
                     padding: "10px 16px",
                     borderRadius: 12,
                     textAlign: "center",
-                    fontSize: 13
+                    fontSize: 13,
+                    border: "none",
+                    cursor: "pointer"
                   }}
                 >
                   Match anfragen
-                </Link>
+                </button>
                 
                 {/* Freund hinzufügen Button */}
                 {friendship.status === "accepted" && (
@@ -1092,6 +1097,19 @@ export default function UserDetailPage() {
               <div style={{ fontSize: isMobile ? 7 : 8, color: "#6b9688" }}>
                 Neueste Form
               </div>
+
+              {user && !isOwnProfile && (
+                <MatchInviteDialog
+                  open={showMatchInviteDialog}
+                  onClose={() => setShowMatchInviteDialog(false)}
+                  targetUserId={user.id}
+                  targetUserName={`${user.firstname || ""} ${user.lastname || ""}`.trim() || user.email || `User #${user.id}`}
+                  onCreated={() => {
+                    setShowMatchInviteDialog(false);
+                    navigate(`/chat/user/${user.id}`);
+                  }}
+                />
+              )}
             </div>
           )}
 
@@ -1594,9 +1612,12 @@ export default function UserDetailPage() {
                   borderRadius: 10, 
                   background: "rgba(32,74,58,0.5)", 
                   border: "1px solid rgba(127,217,186,0.25)",
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10
+                  display: "grid",
+                  gridTemplateColumns: isMobile ? "28px minmax(0, 1fr)" : "28px minmax(0, 1fr) auto",
+                  alignItems: "start",
+                  columnGap: 10,
+                  rowGap: 8,
+                  overflow: "hidden"
                 }}
               >
                 {/* Activity Icon - kleiner und heller */}
@@ -1622,16 +1643,16 @@ export default function UserDetailPage() {
                 </div>
 
                 {/* Activity Content - hellere Farben */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 11, color: "#e1f5ed", fontWeight: 600, marginBottom: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontSize: 11, color: "#e1f5ed", fontWeight: 600, marginBottom: 1, whiteSpace: "normal", overflowWrap: "anywhere", lineHeight: 1.35 }}>
                     {item.title}
                   </div>
-                  <div style={{ fontSize: 10, color: "#b8dec9", lineHeight: 1.3, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                    {item.description}
+                  <div style={{ fontSize: 10, color: "#b8dec9", lineHeight: 1.3, whiteSpace: "normal", overflowWrap: "anywhere" }}>
+                    {item.description || item.subtitle}
                   </div>
                   {item.timestamp && (
                     <div style={{ fontSize: 8, color: "#94cabf", marginTop: 3 }}>
-                      {item.timestamp}
+                      {formatDateTime(item.timestamp)}
                     </div>
                   )}
                 </div>
@@ -1643,7 +1664,8 @@ export default function UserDetailPage() {
                   background: "rgba(127,217,186,0.2)",
                   padding: "1px 3px",
                   borderRadius: 4,
-                  flexShrink: 0
+                  flexShrink: 0,
+                  justifySelf: "start"
                 }}>
                   {item.feedType === "friends" ? "👥" : item.feedType === "team" ? "🏆" : "🌐"}
                 </div>
@@ -1659,7 +1681,10 @@ export default function UserDetailPage() {
                       padding: "3px 6px",
                       borderRadius: 6,
                       background: "rgba(127,217,186,0.1)",
-                      flexShrink: 0
+                      flexShrink: 0,
+                      maxWidth: "100%",
+                      justifySelf: isMobile ? "start" : "end",
+                      gridColumn: isMobile ? "2" : "auto"
                     }}
                   >
                     Details
