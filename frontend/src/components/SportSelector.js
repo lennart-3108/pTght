@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useLanguage } from '../i18n';
 
 /**
  * Hierarchical Sport Selector Component
@@ -13,6 +14,11 @@ import React, { useState, useEffect } from 'react';
  *   - onClose: callback when dropdown closes
  */
 export default function SportSelector({ sports = [], value = '', onChange, placeholder = 'Sportart wählen', onOpen, isOpen, onClose }) {
+  const { lang } = useLanguage();
+  const localizedName = useCallback((item) => {
+    if (lang === 'en' && item?.name_en) return item.name_en;
+    return item?.name || '';
+  }, [lang]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState({});
   const [expandedSports, setExpandedSports] = useState({});
@@ -57,16 +63,18 @@ export default function SportSelector({ sports = [], value = '', onChange, place
     }
   }, [value, sports, showDropdown]);
 
-  // Filter by search query
-  const matchesSearch = (name) => {
+  // Filter by search query (search both languages)
+  const matchesSearch = (item) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
-    return name.toLowerCase().includes(query);
+    const name = (item?.name || '').toLowerCase();
+    const nameEn = (item?.name_en || '').toLowerCase();
+    return name.includes(query) || nameEn.includes(query);
   };
 
   const handleSportSelect = (sport) => {
     if (onChange) {
-      onChange(sport.name, sport.id);
+      onChange(sport.name, sport.id, localizedName(sport));
     }
     setShowDropdown(false);
   };
@@ -111,7 +119,7 @@ export default function SportSelector({ sports = [], value = '', onChange, place
         }}
       >
         <span style={{ color: value ? '#e8efe8' : '#9ca3af' }}>
-          {value || placeholder}
+          {value ? localizedName({ name: value, name_en: (() => { for (const c of sports) { for (const s of c.sports || []) { if (s.name === value) return s.name_en; for (const v of s.variants || []) { if (v.name === value) return v.name_en; } } } return null; })() }) : placeholder}
         </span>
         <span style={{ fontSize: 12 }}>
           {showDropdown ? '▲' : '▼'}
@@ -160,13 +168,13 @@ export default function SportSelector({ sports = [], value = '', onChange, place
             {sports
               .filter(category => {
                 // Show category if it matches search or any of its children match
-                if (matchesSearch(category.name)) return true;
+                if (matchesSearch(category)) return true;
                 const childSports = category.sports || [];
-                return childSports.some(s => matchesSearch(s.name)) || 
-                       childSports.some(s => (s.variants || []).some(v => matchesSearch(v.name)));
+                return childSports.some(s => matchesSearch(s)) || 
+                       childSports.some(s => (s.variants || []).some(v => matchesSearch(v)));
               })
               .map(category => {
-                const childSports = (category.sports || []).filter(s => matchesSearch(s.name));
+                const childSports = (category.sports || []).filter(s => matchesSearch(s));
                 const isExpanded = expandedCategories[category.id];
 
                 return (
@@ -192,7 +200,7 @@ export default function SportSelector({ sports = [], value = '', onChange, place
                       onMouseEnter={(e) => e.currentTarget.style.background = '#0d2422'}
                       onMouseLeave={(e) => e.currentTarget.style.background = isExpanded ? '#0d2422' : 'transparent'}
                     >
-                      <span>{category.icon || '📁'} {category.name}</span>
+                      <span>{category.icon || '📁'} {localizedName(category)}</span>
                       <span style={{ fontSize: 11, color: '#9ca3af' }}>
                         {isExpanded ? '▼' : '▶'}
                       </span>
@@ -200,7 +208,7 @@ export default function SportSelector({ sports = [], value = '', onChange, place
 
                     {/* Sports in category */}
                     {isExpanded && childSports.map(sport => {
-                      const variants = (sport.variants || []).filter(v => matchesSearch(v.name));
+                      const variants = (sport.variants || []).filter(v => matchesSearch(v));
                       const hasVariants = variants.length > 0;
                       const isSportExpanded = expandedSports[sport.id];
 
@@ -231,7 +239,7 @@ export default function SportSelector({ sports = [], value = '', onChange, place
                             onMouseLeave={(e) => e.currentTarget.style.background = value === sport.name ? '#2f6b57' : 'transparent'}
                           >
                             <span>
-                              {hasVariants ? '📂' : '🏃'} {sport.name}
+                              {hasVariants ? '📂' : '🏃'} {localizedName(sport)}
                             </span>
                             {hasVariants && (
                               <span style={{ fontSize: 11, color: '#9ca3af' }}>
@@ -259,7 +267,7 @@ export default function SportSelector({ sports = [], value = '', onChange, place
                               onMouseEnter={(e) => e.currentTarget.style.background = value === variant.name ? '#2f6b57' : '#0d2422'}
                               onMouseLeave={(e) => e.currentTarget.style.background = value === variant.name ? '#2f6b57' : 'transparent'}
                             >
-                              ⚡ {variant.name}
+                              ⚡ {localizedName(variant)}
                               {variant.category && (
                                 <span style={{ marginLeft: 8, color: '#9ca3af', fontSize: 11 }}>
                                   ({variant.category})

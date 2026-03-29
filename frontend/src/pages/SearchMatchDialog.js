@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLanguage } from "../i18n";
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { API_BASE } from '../config';
+import { API_BASE, FEATURES, filterSportsCategories, filterSportsList } from '../config';
 import Avatar from '../components/Avatar';
 import LocationSelector from '../components/LocationSelector';
 import SportSelector from '../components/SportSelector';
@@ -254,8 +254,8 @@ export default function SearchMatchDialog() {
       fetch(`${API_BASE}/states/list`).then(r => r.ok ? r.json() : []),
     ]).then(([ss, scat, cs, cos, sts]) => {
       if (!mounted) return;
-      setSports(Array.isArray(ss) ? ss : []);
-      setSportCategories(Array.isArray(scat) ? scat : []);
+      setSports(filterSportsList(Array.isArray(ss) ? ss : []));
+      setSportCategories(filterSportsCategories(Array.isArray(scat) ? scat : []));
       setCities(Array.isArray(cs) ? cs : []);
       // Store in window for LocationSelector
       window.__countriesData = Array.isArray(cos) ? cos : [];

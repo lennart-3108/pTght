@@ -524,6 +524,7 @@ const translations = {
     // GameDetailPage – chat & action buttons
     'match.chat': 'Match-Chat',
     'match.deadline.hint': '{remaining} um den Termin zu vereinbaren',
+    'match.scheduled.countdown': 'noch {remaining} bis zum Termin',
     'match.cancel': 'ABSAGEN',
 
     // GameDetailPage – last form
@@ -1148,6 +1149,7 @@ const translations = {
     'match.networkError': 'Network error',
     'match.chat': 'Match Chat',
     'match.deadline.hint': '{remaining} to schedule the match',
+    'match.scheduled.countdown': '{remaining} until the match',
     'match.cancel': 'CANCEL',
     'match.lastForm': 'Last 5',
     'match.form.win': 'W',

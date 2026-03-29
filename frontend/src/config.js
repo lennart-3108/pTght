@@ -99,13 +99,13 @@ function resolveInstanceType() {
 export const INSTANCE_TYPE = resolveInstanceType();
 
 // Feature flags based on instance type
-// MVP1 scope: only Matches + Leagues are active. Competitions, Bookings, Venues = coming soon.
+// Production MVP1: Tennis 1v1 only. Dev/Test: all sports.
 export const FEATURES = {
-	// Production: only show "coming soon" landing page
-	SHOW_ONLY_LANDING: INSTANCE_TYPE === 'production',
+	// Production: full app (no more "coming soon")
+	SHOW_ONLY_LANDING: false,
 	
-	// MVP1: Matches + Leagues active everywhere except production
-	SHOW_MATCHES: INSTANCE_TYPE !== 'production',
+	// MVP1: Matches active everywhere
+	SHOW_MATCHES: true,
 	SHOW_LEAGUES: INSTANCE_TYPE !== 'production',
 
 	// Post-MVP1 features — disabled until ready
@@ -120,9 +120,58 @@ export const FEATURES = {
 	// Test disclaimer
 	SHOW_TEST_DISCLAIMER: INSTANCE_TYPE === 'test',
 	
-	// Sport restrictions for test (disabled — all sports available in MVP1)
-	RESTRICT_TO_TENNIS_SINGLES: false,
+	// Production: only Tennis Einzel (1v1)
+	RESTRICT_TO_TENNIS_SINGLES: INSTANCE_TYPE === 'production',
 };
+
+/**
+ * Filter sports categories for production (Tennis Einzel only).
+ * Structure: Category[] → Sport[] → Variant[]
+ * SAFETY: If the filter produces zero results, returns ALL sports unfiltered
+ * and logs a warning. This prevents an empty sport-selector in production.
+ */
+export function filterSportsCategories(categories) {
+	if (!FEATURES.RESTRICT_TO_TENNIS_SINGLES) return categories;
+	if (!Array.isArray(categories) || !categories.length) return categories;
+
+	const filtered = categories
+		.map(cat => ({
+			...cat,
+			sports: (cat.sports || []).map(sport => {
+				if (!/tennis/i.test(sport.name)) return null;
+				const variants = (sport.variants || []).filter(v =>
+					/einzel|singles/i.test(v.name || v.category || '')
+				);
+				// Keep sport with only matching variants (or sport itself if no variants)
+				return { ...sport, variants: variants.length ? variants : sport.variants || [] };
+			}).filter(Boolean)
+		}))
+		.filter(cat => cat.sports.length > 0);
+
+	// SAFETY: never show empty list — fallback to all sports
+	if (!filtered.length) {
+		console.warn('[PROD SAFETY] Sport filter produced 0 results — showing all sports. Check API data!');
+		return categories;
+	}
+
+	return filtered;
+}
+
+/**
+ * Filter flat sports list for production (Tennis only).
+ * SAFETY: same fallback as above.
+ */
+export function filterSportsList(sports) {
+	if (!FEATURES.RESTRICT_TO_TENNIS_SINGLES) return sports;
+	if (!Array.isArray(sports) || !sports.length) return sports;
+
+	const filtered = sports.filter(s => /tennis/i.test(s.name) && /einzel|singles/i.test(s.name));
+	if (!filtered.length) {
+		console.warn('[PROD SAFETY] Sport list filter produced 0 results — showing all. Check API data!');
+		return sports;
+	}
+	return filtered;
+}
 
 // Small helper: fetch with timeout (default 8s)
 export async function fetchWithTimeout(resource, options = {}) {

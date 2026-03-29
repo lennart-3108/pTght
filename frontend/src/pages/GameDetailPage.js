@@ -1318,11 +1318,15 @@ export default function GameDetailPage() {
             )}
             {(token && game && game.home_score == null && game.away_score == null && !booking && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-start' }}>
-                {game.kickoff_end_at && (
+                {terminProposal && terminProposal.status === 'accepted' && terminProposal.proposed_datetime ? (
+                  <div style={{ fontSize: 13, color: '#4ade80', fontWeight: 500 }}>
+                    {t('match.scheduled.countdown', { remaining: timeRemaining(terminProposal.proposed_datetime) })}
+                  </div>
+                ) : game.kickoff_end_at ? (
                   <div style={{ fontSize: 13, color: '#ffd35d', fontWeight: 500 }}>
                     {timeRemaining(game.kickoff_end_at)} {t('match.deadline.hint')}
                   </div>
-                )}
+                ) : null}
                 <button onClick={() => setShowTerminManager(true)} style={{ 
                   padding: isMobile ? '8px 12px' : '10px 16px', 
                   borderRadius: 10, 

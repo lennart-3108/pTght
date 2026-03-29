@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { API_BASE, FEATURES } from "../config";
+import { API_BASE, FEATURES, filterSportsCategories } from "../config";
 import smallLogo from "../images/logo/matchleague_logo_4x4-removebg-preview.png";
 import Avatar from "../components/Avatar";
 import LocationSelector from "../components/LocationSelector";
@@ -266,7 +266,7 @@ export default function StartPage() {
         });
         console.log('[StartPage] Sample state:', sts?.[0]);
         setLeagues(Array.isArray(ls) ? ls : []);
-        setSports(Array.isArray(ss) ? ss : []);
+        setSports(filterSportsCategories(Array.isArray(ss) ? ss : []));
         setCities([]);
         const initialCountries = Array.isArray(co) ? co : [];
         setCountries(initialCountries);
