@@ -345,7 +345,9 @@ export default function GameDetailPage() {
       const viewerUserId = terminMeta?.viewerUserId || viewerId || null;
       const tc = Number(game?.team_count); const ppt = Number(game?.players_per_team);
       const isTeam = tc >= 2 && ppt > 1;
-      if (isTeam) return t('match.termin.arrange');
+      if (isTeam) {
+        return game?.status === 'scheduled' ? t('match.termin.change') : t('match.termin.arrange');
+      }
       if (terminProposal && terminProposal.status === 'accepted') return t('match.termin.change');
       if (!terminProposal || terminProposal.status !== 'sent') return t('match.termin.arrange');
       if (viewerUserId != null && Number(terminProposal.proposerUserId) === Number(viewerUserId)) return t('match.termin.invitationSent');
@@ -1296,10 +1298,10 @@ export default function GameDetailPage() {
         )}
 
         {/* Header row with action buttons */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, flexWrap: 'wrap', marginTop: isMobile ? 16 : 20 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-              <div style={{ fontSize: isMobile ? 20 : 28, fontWeight: 800, letterSpacing: '-0.5px', color: '#f4fff8' }}>{game.league || 'Liga'}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: isMobile ? 12 : 14, marginTop: isMobile ? 16 : 20 }}>
+          {/* Row 1: Title + Sport + Status */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+              <div style={{ fontSize: isMobile ? 22 : 30, fontWeight: 800, letterSpacing: '-0.5px', color: '#f4fff8' }}>{game.league || 'Liga'}</div>
               {localizedSportName && (
                 <div style={{
                   padding: '4px 12px',
@@ -1328,6 +1330,8 @@ export default function GameDetailPage() {
                 <span style={{ color: isCompleted ? '#4ade80' : isCancelled ? '#f87171' : '#ffd35d', fontSize: isMobile ? 11 : 12, fontWeight: 600 }}>{statusLabel || (isCompleted ? t('match.status.completed') : t('match.status.pending'))}</span>
               </div>
             </div>
+
+            {/* Row 2: Match ID + Date/Time */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
               <div style={{ 
                 display: 'inline-flex',
@@ -1376,10 +1380,9 @@ export default function GameDetailPage() {
                 )}
               </div>
             </div>
-          </div>
           
-          {/* Action buttons moved to top right */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {/* Row 3: Action buttons */}
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
             {token && game && (
               <Link
                 to={`/matches/${gameId}/chat`}
@@ -1451,9 +1454,6 @@ export default function GameDetailPage() {
             )}
           </div>
         </div>
-
-
-
         {/* Availability section - above participants */}
         {(token && game && isParticipant && game.home_score == null && game.away_score == null && game.status !== 'scheduled' && game.status !== 'completed' && !isCancelled) && (
           <div style={{
