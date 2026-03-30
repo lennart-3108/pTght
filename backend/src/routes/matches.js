@@ -703,6 +703,34 @@ module.exports = function matchesRoutes(ctx) {
       }
 
       const detail = await fetchMatchDetail(k, matchId);
+
+      // Notify all other participants that a new player joined
+      try {
+        const hasNotifications = await k.schema.hasTable('notifications').catch(() => false);
+        if (hasNotifications && hasParticipants) {
+          const joiner = await k('users').where({ id: viewerId }).select('firstname', 'lastname', 'username').first().catch(() => null);
+          const joinerName = joiner ? `${joiner.firstname || ''} ${(joiner.lastname || '').charAt(0)}.`.trim() || joiner.username : `Spieler ${viewerId}`;
+          const otherParticipants = await k('match_participants')
+            .where({ match_id: matchId })
+            .andWhere('user_id', '!=', viewerId)
+            .andWhere(function () { this.whereNull('status').orWhere('status', 'joined'); })
+            .select('user_id');
+          for (const p of otherParticipants) {
+            await k('notifications').insert({
+              user_id: p.user_id,
+              type: 'match_joined',
+              match_id: matchId,
+              from_user_id: viewerId,
+              title: `${joinerName} ist dem Match beigetreten`,
+              message: `${joinerName} ist Match #${matchId} beigetreten.`,
+              created_at: new Date().toISOString(),
+            }).catch(() => {});
+          }
+        }
+      } catch (notifErr) {
+        console.error('Join notification failed', notifErr?.message);
+      }
+
       return res.json(detail || { ok: true });
     } catch (e) {
       console.error('Join match failed', e && (e.stack || e.message || e));
@@ -1607,6 +1635,10 @@ module.exports = function matchesRoutes(ctx) {
         myDaysCount = Array.isArray(countRow) ? Number(countRow[0]?.c || 0) : Number(countRow?.c || 0);
       }
 
+      const teamCount = match.team_count != null ? Number(match.team_count) : null;
+      const playersPerTeam = match.players_per_team != null ? Number(match.players_per_team) : null;
+      const isTeamMatch = teamCount >= 2 && playersPerTeam > 1;
+
       res.json({
         meta: {
           viewerUserId: viewerId,
@@ -1615,7 +1647,8 @@ module.exports = function matchesRoutes(ctx) {
           homeUserId: match.home_user_id,
           opponentUserId: otherUserId,
           opponentName: opponentName,
-          myDaysCount
+          myDaysCount,
+          isTeamMatch
         },
         options: (options || []).map((o) => ({ id: o.id, startsAt: o.starts_at, createdByUserId: o.created_by_user_id })),
         proposal
@@ -2049,6 +2082,81 @@ module.exports = function matchesRoutes(ctx) {
       res.status(201).json({ id: newId, status: 'sent', optionId: newOptionId, startsAt: opt.starts_at });
     } catch (e) {
       console.error('Counter proposal failed', e && (e.stack || e.message || e));
+      res.status(500).json({ error: 'DB_ERROR' });
+    }
+  });
+
+  // -------------------- Direct Schedule (team matches) --------------------
+  // Creator directly sets the match date/time (no invitation flow)
+  router.post('/:id/schedule', requireAuth, async (req, res) => {
+    try {
+      const matchId = Number(req.params.id);
+      if (!matchId) return res.status(400).json({ error: 'INVALID_MATCH_ID' });
+
+      const datetime = req.body?.datetime;
+      if (!datetime) return res.status(400).json({ error: 'DATETIME_REQUIRED' });
+      const parsed = new Date(datetime);
+      if (Number.isNaN(parsed.getTime())) return res.status(400).json({ error: 'INVALID_DATETIME' });
+
+      const k = getKnex();
+      const viewerId = Number(req.user.id);
+      const { match } = await loadMatch(k, matchId, viewerId);
+      if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+
+      // Only the match creator (home_user_id) can directly schedule
+      if (Number(match.home_user_id) !== viewerId) {
+        return res.status(403).json({ error: 'NOT_CREATOR' });
+      }
+
+      // Set kickoff_at and status
+      const matchInfo = await k('matches').columnInfo().catch(() => ({}));
+      const updateData = {};
+      if (Object.prototype.hasOwnProperty.call(matchInfo, 'kickoff_at')) {
+        updateData.kickoff_at = parsed.toISOString();
+      }
+      if (Object.prototype.hasOwnProperty.call(matchInfo, 'status')) {
+        updateData.status = 'scheduled';
+      }
+      if (Object.keys(updateData).length > 0) {
+        await k('matches').where({ id: matchId }).update(updateData);
+      }
+
+      // Notify all participants
+      try {
+        const hasNotifications = await k.schema.hasTable('notifications').catch(() => false);
+        const hasParticipants = await k.schema.hasTable('match_participants').catch(() => false);
+        if (hasNotifications && hasParticipants) {
+          const creator = await k('users').where({ id: viewerId }).select('firstname', 'lastname', 'username').first().catch(() => null);
+          const creatorName = creator ? `${creator.firstname || ''} ${(creator.lastname || '').charAt(0)}.`.trim() || creator.username : `Spieler ${viewerId}`;
+          const dateStr = parsed.toLocaleString('de-DE', {
+            weekday: 'short', day: '2-digit', month: '2-digit',
+            year: 'numeric', hour: '2-digit', minute: '2-digit'
+          });
+          const participants = await k('match_participants')
+            .where({ match_id: matchId })
+            .andWhere('user_id', '!=', viewerId)
+            .andWhere(function () { this.whereNull('status').orWhere('status', 'joined'); })
+            .select('user_id');
+          for (const p of participants) {
+            await k('notifications').insert({
+              user_id: p.user_id,
+              type: 'match_scheduled',
+              match_id: matchId,
+              from_user_id: viewerId,
+              title: `Match-Termin festgelegt`,
+              message: `${creatorName} hat den Termin für Match #${matchId} festgelegt: ${dateStr}`,
+              created_at: new Date().toISOString(),
+              is_read: 0
+            }).catch(() => {});
+          }
+        }
+      } catch (notifErr) {
+        console.error('Schedule notification failed', notifErr?.message);
+      }
+
+      res.json({ ok: true, kickoff_at: parsed.toISOString(), status: 'scheduled' });
+    } catch (e) {
+      console.error('Direct schedule failed', e && (e.stack || e.message || e));
       res.status(500).json({ error: 'DB_ERROR' });
     }
   });

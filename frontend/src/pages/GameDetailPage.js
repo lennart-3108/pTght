@@ -1825,15 +1825,36 @@ export default function GameDetailPage() {
                       <div style={{ fontSize: isMobile ? 11 : 12, color: '#7a9a8a', fontStyle: 'italic' }}>Noch keine Spieler</div>
                     ) : (
                       teamMembers.map(p => (
-                        <div key={p.user_id} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                        <Link key={p.user_id} to={`/user/${p.user_id}`} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6, textDecoration: 'none' }}>
                           <Avatar userId={p.user_id} name={p.display_name || p.username || `Spieler ${p.user_id}`} size={28} />
                           <span style={{ fontSize: isMobile ? 12 : 13, color: '#e8efe8', fontWeight: 500 }}>{p.display_name || p.username || `Spieler ${p.user_id}`}</span>
-                        </div>
+                        </Link>
                       ))
                     )}
                   </div>
                 );
               })}
+            </div>
+          )}
+
+          {/* Teams full message - creator will schedule */}
+          {isTeamMatch && team1Full && team2Full && game.status === 'open' && (
+            <div style={{
+              padding: isMobile ? '10px 14px' : '12px 16px',
+              marginBottom: isMobile ? 12 : 16,
+              background: 'rgba(222, 188, 124, 0.1)',
+              border: '1px solid rgba(222, 188, 124, 0.3)',
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8
+            }}>
+              <span style={{ fontSize: 16 }}>&#9203;</span>
+              <span style={{ fontSize: isMobile ? 12 : 13, color: '#debc7c', fontWeight: 500 }}>
+                {lang === 'en'
+                  ? `All teams are full! ${playerA.name} will set the date for this match.`
+                  : `Alle Teams sind voll! ${playerA.name} wird das Datum für dieses Match festlegen.`}
+              </span>
             </div>
           )}
 
@@ -2259,6 +2280,7 @@ export default function GameDetailPage() {
           <TerminManagerKalender
             matchId={gameId}
             token={token}
+            isTeamMatch={isTeamMatch}
             matchInfo={{
               home_player: isTeamMatch ? teamDisplayA : (game.home_user_name || game.home || t('tm.player1')),
               away_player: isTeamMatch ? teamDisplayB : (game.away_user_name || game.away || t('tm.player2')),

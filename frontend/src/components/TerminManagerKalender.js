@@ -125,9 +125,10 @@ function groupFramesByWeek(frameList) {
     .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
 }
 
-export default function TerminManagerKalender({ matchId, token, onClose, onInvitationSent, matchInfo }) {
+export default function TerminManagerKalender({ matchId, token, onClose, onInvitationSent, matchInfo, isTeamMatch: isTeamMatchProp }) {
   const { t, lang } = useLanguage();
   const locale = lang === 'en' ? 'en-GB' : 'de-DE';
+  const isEn = lang === 'en';
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -157,6 +158,14 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
   const [availableTimes, setAvailableTimes] = useState([]);
   const [timeIndex, setTimeIndex] = useState(0);
   const [rejectingProposal, setRejectingProposal] = useState(null);
+
+  // Direct schedule (team matches only, creator)
+  const [scheduleDate, setScheduleDate] = useState('');
+  const [scheduleTime, setScheduleTime] = useState('');
+  const [scheduling, setScheduling] = useState(false);
+
+  const isTeamMatch = isTeamMatchProp || meta?.isTeamMatch || false;
+  const isCreator = meta?.isHost || false;
 
   const slotDuration = useMemo(() => {
     const candidate = meta?.slotDurationMinutes ?? meta?.matchDurationMinutes ?? 60;
@@ -469,6 +478,44 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
     }
   }
 
+  // Direct schedule: creator sets match date (team matches)
+  async function scheduleMatch() {
+    if (!scheduleDate || !scheduleTime) {
+      setError(isEn ? 'Please select date and time.' : 'Bitte Datum und Uhrzeit auswählen.');
+      return;
+    }
+    const datetime = new Date(`${scheduleDate}T${scheduleTime}`);
+    if (Number.isNaN(datetime.getTime())) {
+      setError(isEn ? 'Invalid date/time.' : 'Ungültiges Datum/Uhrzeit.');
+      return;
+    }
+    setScheduling(true);
+    setError('');
+    setSuccess('');
+    try {
+      const res = await fetch(`${API_BASE}/matches/${matchId}/schedule`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ datetime: datetime.toISOString() })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || (isEn ? 'Failed to schedule' : 'Termin konnte nicht festgelegt werden'));
+      setSuccess(isEn ? 'Match scheduled!' : 'Match-Termin festgelegt!');
+      if (onInvitationSent) {
+        setTimeout(() => onInvitationSent(), 500);
+      } else {
+        load();
+      }
+    } catch (e) {
+      setError(e.message);
+    } finally {
+      setScheduling(false);
+    }
+  }
+
   // Split frames into "mine" (created by me) and "opponent" (created by other player)
   const viewerId = meta?.viewerId ? Number(meta.viewerId) : null;
 
@@ -527,6 +574,36 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
       .filter((w) => w.days.length > 0)
       .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
   }, [otherAvailability]);
+
+  // All participants' availability grouped by week (for team matches)
+  const allAvailabilityByWeek = useMemo(() => {
+    const grouped = {};
+    (allAvailability || []).forEach((day) => {
+      const info = getWeekInfo(day.date);
+      if (!info) return;
+      if (!grouped[info.key]) grouped[info.key] = { ...info, daysMap: {} };
+      if (!grouped[info.key].daysMap[day.date]) grouped[info.key].daysMap[day.date] = [];
+      (day.windows || []).forEach((w, idx) => {
+        grouped[info.key].daysMap[day.date].push({
+          id: w.id || `${day.date}-${day.userId}-${idx}`,
+          date: day.date,
+          time_start: w.timeStart,
+          time_end: w.timeEnd,
+          userId: day.userId,
+          userName: day.userName
+        });
+      });
+    });
+    return Object.values(grouped)
+      .map((w) => ({
+        ...w,
+        days: Object.entries(w.daysMap)
+          .map(([date, arr]) => ({ date, frames: arr.sort((a, b) => (a.time_start || '').localeCompare(b.time_start || '')) }))
+          .sort((a, b) => a.date.localeCompare(b.date))
+      }))
+      .filter((w) => w.days.length > 0)
+      .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
+  }, [allAvailability]);
 
   const selectableDates = useMemo(() => {
     const fromMatch = enumerateDates(matchInfo?.kickoff_at, matchInfo?.kickoff_end_at);
@@ -945,8 +1022,8 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
           ))}
         </div>
 
-        {/* ── Opponent Frames (with propose slot) ── */}
-        {opponentFramesByWeek.length > 0 && (
+        {/* ── Opponent Frames (with propose slot) — only for 1v1 ── */}
+        {!isTeamMatch && opponentFramesByWeek.length > 0 && (
           <div style={{ marginTop: 22 }}>
             <div style={styles.sectionHeaderSimple}>
               <h3 style={{ margin: 0, color: '#e8efe8' }}>{t('tm.opponentTimes')}</h3>
@@ -1017,7 +1094,8 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
           </div>
         )}
 
-        {otherAvailabilityByWeek.length > 0 && (
+        {/* ── Opponent / All Availability ── */}
+        {!isTeamMatch && otherAvailabilityByWeek.length > 0 && (
           <div style={{ marginTop: 18 }}>
             <div style={styles.sectionHeaderSimple}>
               <h3 style={{ margin: 0, color: '#e8efe8' }}>{t('tm.opponentAvailability')}</h3>
@@ -1073,6 +1151,93 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
           </div>
         )}
 
+        {/* ── Team Match: All Participants' Availability ── */}
+        {isTeamMatch && allAvailabilityByWeek.length > 0 && (
+          <div style={{ marginTop: 18 }}>
+            <div style={styles.sectionHeaderSimple}>
+              <h3 style={{ margin: 0, color: '#e8efe8' }}>{isEn ? 'All Availabilities' : 'Alle Verfügbarkeiten'}</h3>
+              <div style={{ color: '#9db', fontSize: 13 }}>{isEn ? 'Overview of all participants' : 'Übersicht aller Teilnehmer'}</div>
+            </div>
+
+            <div style={{ display: 'grid', gap: 14 }}>
+              {allAvailabilityByWeek.map((week) => (
+                <div key={week.key} style={styles.weekCard}>
+                  <div style={styles.weekHeader}>
+                    <div style={{ fontWeight: 800, color: '#debc7c' }}>{lang === 'en' ? 'W' : 'KW'} {week.week}</div>
+                    <div style={{ color: '#9db', fontSize: 12 }}>{fmtWeekRange(week.weekStartStr, week.weekEndStr, locale)}</div>
+                  </div>
+
+                  <div style={{ display: 'grid', gap: 10 }}>
+                    {week.days.map(({ date, frames: dayFrames }) => {
+                      const availUsers = usersForSlot(date, dayFrames[0]?.time_start, dayFrames[dayFrames.length - 1]?.time_end);
+                      return (
+                        <div key={date} style={styles.dateCard}>
+                          <div style={styles.dateHeader}>
+                            <div style={{ fontWeight: 700 }}>{fmtDate(date, locale)}</div>
+                            <div style={{ color: '#9db', fontSize: 13 }}>{dayFrames.length} Slot{dayFrames.length !== 1 ? 's' : ''}</div>
+                          </div>
+
+                          <div style={{ display: 'grid', gap: 8 }}>
+                            {dayFrames.map((frame) => (
+                              <div key={frame.id} style={styles.windowRow}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
+                                  <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtTime(frame.time_start)} - {fmtTime(frame.time_end)}</div>
+                                  <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: 'rgba(72,186,166,0.15)', color: '#48baa6', border: '1px solid rgba(72,186,166,0.3)', alignSelf: 'flex-start' }}>{frame.userName}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Team Match: Schedule (creator only) ── */}
+        {isTeamMatch && isCreator && (
+          <div style={{ marginTop: 22 }}>
+            <div style={styles.sectionHeaderSimple}>
+              <h3 style={{ margin: 0, color: '#e8efe8' }}>{isEn ? 'Set Match Date' : 'Match-Termin festlegen'}</h3>
+              <div style={{ color: '#9db', fontSize: 13 }}>{isEn ? 'You are the creator — choose the date and time for this match.' : 'Du bist der Ersteller — wähle Datum und Uhrzeit für dieses Match.'}</div>
+            </div>
+
+            <div style={{ ...styles.configCard, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>{isEn ? 'Date' : 'Datum'}</label>
+                <input
+                  type="date"
+                  value={scheduleDate}
+                  onChange={(e) => setScheduleDate(e.target.value)}
+                  style={styles.input}
+                />
+              </div>
+              <div style={styles.formGroup}>
+                <label style={styles.label}>{isEn ? 'Time' : 'Uhrzeit'}</label>
+                <input
+                  type="time"
+                  value={scheduleTime}
+                  step={900}
+                  onChange={(e) => setScheduleTime(e.target.value)}
+                  style={styles.input}
+                />
+              </div>
+              <button
+                onClick={scheduleMatch}
+                disabled={scheduling || !scheduleDate || !scheduleTime}
+                style={{ ...styles.btnPrimary, opacity: (scheduling || !scheduleDate || !scheduleTime) ? 0.5 : 1, cursor: (scheduling || !scheduleDate || !scheduleTime) ? 'not-allowed' : 'pointer', padding: '10px 20px' }}
+              >
+                {scheduling ? (isEn ? 'Saving...' : 'Speichern...') : (isEn ? 'Schedule Match' : 'Termin festlegen')}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ── Proposals — only for 1v1 ── */}
+        {!isTeamMatch && (
         <div style={{ marginTop: 24 }}>
           <div style={styles.sectionHeaderSimple}>
             <h3 style={{ margin: 0, color: '#e8efe8' }}>{t('tm.proposals')}</h3>
@@ -1130,8 +1295,10 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
             </div>
           )}
         </div>
+        )}
 
-        {selectedAvailSlot && (
+        {/* ── Invitation modal — only for 1v1 ── */}
+        {!isTeamMatch && selectedAvailSlot && (
           <div style={styles.overlay} onClick={closeAvailSlotModal}>
             <div style={{ ...styles.modal, maxWidth: 500 }} onClick={(e) => e.stopPropagation()}>
               <div style={styles.headerRow}>
