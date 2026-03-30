@@ -937,18 +937,12 @@ export default function SearchMatchDialog() {
                   const status = (m.status || t('match.search.statusPending'));
                   
                   let dateText = t('match.search.dateOpen');
-                  if (m.when_type === 'range' && m.range_days) {
-                    const createdDate = m.created_at ? new Date(m.created_at) : null;
-                    if (createdDate && !isNaN(createdDate)) {
-                      const deadline = new Date(createdDate);
-                      deadline.setDate(deadline.getDate() + Number(m.range_days));
-                      const now = new Date();
-                      const diffMs = deadline - now;
-                      const diffDays = Math.max(0, Math.ceil(diffMs / 86400000));
-                      dateText = lang === 'en' ? `In the next ${diffDays} day${diffDays !== 1 ? 's' : ''}` : `In den nächsten ${diffDays} Tag(en)`;
-                    } else {
-                      dateText = t('match.search.inDays', { days: m.range_days });
-                    }
+                  if (m.when_type === 'range' && m.kickoff_end_at) {
+                    const deadline = new Date(m.kickoff_end_at);
+                    const now = new Date();
+                    const diffMs = deadline - now;
+                    const diffDays = Math.max(0, Math.ceil(diffMs / 86400000));
+                    dateText = lang === 'en' ? `In the next ${diffDays} day${diffDays !== 1 ? 's' : ''}` : `In den nächsten ${diffDays} Tag(en)`;
                   } else if (m.when_type === 'fixed' && m.kickoff_at && m.kickoff_end_at) {
                     try {
                       const start = new Date(m.kickoff_at);
@@ -986,18 +980,18 @@ export default function SearchMatchDialog() {
                         onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
                       <td style={{ padding: '12px 8px' }}>
                         <div style={{ fontWeight: 600 }}>{m.league || 'Open Match'}</div>
-                        <div style={{ fontSize: 12, color: '#8bbfad' }}>{m.sport_name || 'Sport'}</div>
+                        <div style={{ fontSize: 12, color: '#8bbfad' }}>{m.sport || 'Sport'}</div>
                       </td>
                       <td style={{ padding: '12px 8px' }}>
                         <span style={{ 
-                          background: m.type === 'Pro' ? '#debc7c' : m.type === 'Experienced' ? '#7fc' : '#9db', 
+                          background: m.player_level === 'Pro' ? '#debc7c' : m.player_level === 'Experienced' ? '#7fc' : '#9db', 
                           color: '#081c19', 
                           padding: '4px 8px', 
                           borderRadius: 6, 
                           fontSize: 11, 
                           fontWeight: 700 
                         }}>
-                          {m.type || t('match.search.levelOpen')}
+                          {m.player_level || t('match.search.levelOpen')}
                         </span>
                       </td>
                       <td style={{ padding: '12px 8px' }}>
@@ -1005,8 +999,7 @@ export default function SearchMatchDialog() {
                         {bName !== formatPlayerName(t('match.search.opponentWanted')) && <div style={{ fontSize: 12, color: '#8bbfad' }}>vs {bName}</div>}
                       </td>
                       <td style={{ padding: '12px 8px' }}>
-                        <div>{m.location_name || m.city_name || '-'}</div>
-                        <div style={{ fontSize: 11, color: '#8bbfad' }}>{m.city_name || ''}</div>
+                        <div>{m.city || '-'}</div>
                       </td>
                       <td style={{ padding: '12px 8px', fontSize: 13 }}>{dateText}</td>
                       <td style={{ padding: '12px 8px' }}>
@@ -1056,18 +1049,12 @@ export default function SearchMatchDialog() {
           // Format date based on when_type
           let dateText = t('match.search.dateOpen');
           
-          if (m.when_type === 'range' && m.range_days) {
-            const createdDate = m.created_at ? new Date(m.created_at) : null;
-            if (createdDate && !isNaN(createdDate)) {
-              const deadline = new Date(createdDate);
-              deadline.setDate(deadline.getDate() + Number(m.range_days));
-              const now = new Date();
-              const diffMs = deadline - now;
-              const diffDays = Math.max(0, Math.ceil(diffMs / 86400000));
-              dateText = lang === 'en' ? `In the next ${diffDays} day${diffDays !== 1 ? 's' : ''}` : `In den nächsten ${diffDays} Tag(en)`;
-            } else {
-              dateText = t('match.search.inNextDays', { days: m.range_days });
-            }
+          if (m.when_type === 'range' && m.kickoff_end_at) {
+            const deadline = new Date(m.kickoff_end_at);
+            const now = new Date();
+            const diffMs = deadline - now;
+            const diffDays = Math.max(0, Math.ceil(diffMs / 86400000));
+            dateText = lang === 'en' ? `In the next ${diffDays} day${diffDays !== 1 ? 's' : ''}` : `In den nächsten ${diffDays} Tag(en)`;
           } else if (m.when_type === 'fixed' && m.kickoff_at && m.kickoff_end_at) {
             try {
               const start = new Date(m.kickoff_at);
@@ -1109,7 +1096,6 @@ export default function SearchMatchDialog() {
                 <div style={{ fontWeight: 700 }}>
                   {m.league || 'Open Match'}
                   {m.sport ? <span style={{ color: '#9db' }}> · {m.sport}</span> : null}
-                  {m.player_level ? <span style={{ color: '#debc7c', fontWeight: 600 }}> · {m.player_level}</span> : null}
                   {m.player_level ? <span style={{ color: '#debc7c', fontWeight: 600 }}> · {m.player_level}</span> : null}
                 </div>
                 <div className="ml-chip"><span className="ml-status-dot" /> {status}</div>

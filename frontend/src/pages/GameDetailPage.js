@@ -788,7 +788,8 @@ export default function GameDetailPage() {
       setJoinMsg(isTeamMatch ? t('match.teamAvailability.prompt') : t('match.team.selected'));
       setGame(j);
     } catch (e) {
-      setJoinMsg(e.message || t('match.team.selectFailed'));
+      const msg = e.message === 'TEAM_FULL' ? t('match.team.teamFull') : (e.message || t('match.team.selectFailed'));
+      setJoinMsg(msg);
     }
   }
 
@@ -1304,7 +1305,7 @@ export default function GameDetailPage() {
             {game.league || 'Liga'}
           </div>
 
-          {/* Row 2: Badges — Sport + Status + Match ID */}
+          {/* Row 2: Badges + Action buttons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginTop: isMobile ? 8 : 10 }}>
             {localizedSportName && (
               <div style={{
@@ -1345,6 +1346,75 @@ export default function GameDetailPage() {
             }}>
               #{game.id}
             </div>
+            {/* Action buttons — pushed right */}
+            <div style={{ marginLeft: 'auto', display: 'flex', gap: 6, alignItems: 'center' }}>
+              {token && game && (
+                <Link
+                  to={`/matches/${gameId}/chat`}
+                  style={{
+                    padding: '3px 10px',
+                    borderRadius: 20,
+                    border: '1px solid rgba(47, 107, 87, 0.6)',
+                    background: 'rgba(14, 42, 34, 0.8)',
+                    color: '#dfe',
+                    fontSize: isMobile ? 11 : 12,
+                    fontWeight: 600,
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 5,
+                    position: 'relative',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <svg width="14" height="14" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
+                    <path d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V14C20 15.1046 19.1046 16 18 16H11.5L7 19.5V16H6C4.89543 16 4 15.1046 4 14V6Z" fill="none" stroke="currentColor" strokeWidth="2" />
+                  </svg>
+                  {t('match.chat')}
+                  {chatUnread && (
+                    <span style={{
+                      position: 'absolute',
+                      top: -4,
+                      right: -4,
+                      width: 10,
+                      height: 10,
+                      background: '#ff4444',
+                      borderRadius: '50%',
+                      border: '2px solid #0c1f1a',
+                      boxShadow: '0 0 6px rgba(255, 68, 68, 0.6)'
+                    }} />
+                  )}
+                </Link>
+              )}
+              {(token && game && game.home_score == null && game.away_score == null && !booking && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
+                <button onClick={() => setShowTerminManager(true)} style={{ 
+                  padding: '3px 10px', 
+                  borderRadius: 20, 
+                  border: '1px solid rgba(212, 175, 55, 0.6)', 
+                  background: 'linear-gradient(135deg, #d4af37, #b8941f)', 
+                  color: '#000', 
+                  fontSize: isMobile ? 11 : 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}>
+                  {terminButtonLabel}
+                </button>
+              )}
+              {(token && game && !isCancelled && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
+                <button onClick={cancelMatch} style={{ 
+                  padding: '3px 10px', 
+                  borderRadius: 20, 
+                  border: '1px solid rgba(85, 63, 63, 0.6)', 
+                  background: 'rgba(42, 27, 27, 0.8)', 
+                  color: '#e9d8d8', 
+                  fontSize: isMobile ? 11 : 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease'
+                }}>{t('match.cancel')}</button>
+              )}
+            </div>
           </div>
 
           {/* Row 3: Date/Time */}
@@ -1380,76 +1450,7 @@ export default function GameDetailPage() {
             )}
           </div>
 
-          {/* Row 4: Action buttons */}
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginTop: isMobile ? 14 : 16 }}>
-            {token && game && (
-              <Link
-                to={`/matches/${gameId}/chat`}
-                style={{
-                  padding: isMobile ? '7px 12px' : '8px 14px',
-                  borderRadius: 8,
-                  border: '1px solid rgba(47, 107, 87, 0.6)',
-                  background: 'rgba(14, 42, 34, 0.8)',
-                  color: '#dfe',
-                  fontSize: isMobile ? 13 : 14,
-                  fontWeight: 600,
-                  textDecoration: 'none',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 6,
-                  position: 'relative',
-                  transition: 'all 0.2s ease'
-                }}
-              >
-                <svg width="16" height="16" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" style={{ display: 'block' }}>
-                  <path d="M4 6C4 4.89543 4.89543 4 6 4H18C19.1046 4 20 4.89543 20 6V14C20 15.1046 19.1046 16 18 16H11.5L7 19.5V16H6C4.89543 16 4 15.1046 4 14V6Z" fill="none" stroke="currentColor" strokeWidth="2" />
-                </svg>
-                {t('match.chat')}
-                {chatUnread && (
-                  <span style={{
-                    position: 'absolute',
-                    top: -5,
-                    right: -5,
-                    width: 12,
-                    height: 12,
-                    background: '#ff4444',
-                    borderRadius: '50%',
-                    border: '2px solid #0c1f1a',
-                    boxShadow: '0 0 6px rgba(255, 68, 68, 0.6)'
-                  }} />
-                )}
-              </Link>
-            )}
-            {(token && game && game.home_score == null && game.away_score == null && !booking && ((game.home_user_id != null || game.home) && (game.away_user_id != null || game.away))) && (
-              <button onClick={() => setShowTerminManager(true)} style={{ 
-                padding: isMobile ? '7px 12px' : '8px 14px', 
-                borderRadius: 8, 
-                border: '1px solid rgba(212, 175, 55, 0.6)', 
-                background: 'linear-gradient(135deg, #d4af37, #b8941f)', 
-                color: '#000', 
-                fontSize: isMobile ? 13 : 14,
-                fontWeight: 600,
-                cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(212, 175, 55, 0.35)',
-                transition: 'all 0.2s ease'
-              }}>
-                {terminButtonLabel}
-              </button>
-            )}
-            {(token && game && !isCancelled && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
-              <button onClick={cancelMatch} style={{ 
-                padding: isMobile ? '7px 12px' : '8px 14px', 
-                borderRadius: 8, 
-                border: '1px solid rgba(85, 63, 63, 0.6)', 
-                background: 'rgba(42, 27, 27, 0.8)', 
-                color: '#e9d8d8', 
-                fontSize: isMobile ? 13 : 14,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.2s ease'
-              }}>{t('match.cancel')}</button>
-            )}
-          </div>
+
         </div>
         {/* Availability section - above participants */}
         {(token && game && isParticipant && game.home_score == null && game.away_score == null && game.status !== 'scheduled' && game.status !== 'completed' && !isCancelled) && (
@@ -1519,7 +1520,7 @@ export default function GameDetailPage() {
         )}
 
         {/* Team selection for participant-based team matches */}
-        {(token && game && isParticipant && allowTeamChoice && teamCount >= 2 && (maxPlayers == null || maxPlayers > 2) && !isCompleted) && (
+        {(token && game && isParticipant && allowTeamChoice && teamCount >= 2 && (maxPlayers == null || maxPlayers > 2) && !isCompleted && game.status !== 'scheduled') && (
           <div style={{
             padding: isMobile ? '12px' : '14px',
             background: 'rgba(47, 107, 87, 0.12)',
