@@ -605,6 +605,72 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
       .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
   }, [allAvailability]);
 
+  // Time Assistant: find best 3 slots with most player overlap
+  const bestSlots = useMemo(() => {
+    if (!allAvailability || allAvailability.length === 0) return [];
+    // Build per-date windows: { date -> [{ userId, startMin, endMin }] }
+    const byDate = {};
+    allAvailability.forEach((day) => {
+      if (!day.date || !day.windows) return;
+      if (!byDate[day.date]) byDate[day.date] = [];
+      day.windows.forEach((w) => {
+        const s = parseTimeToMinutes(w.timeStart);
+        const e = parseTimeToMinutes(w.timeEnd);
+        if (s !== null && e !== null && e > s) {
+          byDate[day.date].push({ userId: day.userId, userName: day.userName, startMin: s, endMin: e });
+        }
+      });
+    });
+    const dur = slotDuration || 60;
+    const candidates = [];
+    Object.entries(byDate).forEach(([date, windows]) => {
+      // Collect all unique start/end boundaries as candidate start times (snapped to 15min)
+      const starts = new Set();
+      windows.forEach((w) => {
+        for (let t = Math.ceil(w.startMin / 15) * 15; t + dur <= w.endMin; t += 15) {
+          starts.add(t);
+        }
+      });
+      starts.forEach((startMin) => {
+        const endMin = startMin + dur;
+        const users = new Set();
+        const names = [];
+        windows.forEach((w) => {
+          if (w.startMin <= startMin && w.endMin >= endMin && !users.has(w.userId)) {
+            users.add(w.userId);
+            names.push(w.userName);
+          }
+        });
+        if (users.size > 0) {
+          candidates.push({
+            date,
+            startTime: minutesToTimeString(startMin),
+            endTime: minutesToTimeString(endMin),
+            playerCount: users.size,
+            playerNames: names
+          });
+        }
+      });
+    });
+    // Sort by playerCount desc, then date asc, then startTime asc
+    candidates.sort((a, b) => b.playerCount - a.playerCount || a.date.localeCompare(b.date) || a.startTime.localeCompare(b.startTime));
+    // Deduplicate: skip slots that overlap heavily with already-picked ones
+    const picked = [];
+    for (const c of candidates) {
+      if (picked.length >= 3) break;
+      const overlap = picked.some((p) => p.date === c.date && p.startTime === c.startTime);
+      if (!overlap) picked.push(c);
+    }
+    return picked;
+  }, [allAvailability, slotDuration]);
+
+  // Total unique participants who submitted availability
+  const totalAvailPlayers = useMemo(() => {
+    const ids = new Set();
+    (allAvailability || []).forEach((d) => ids.add(d.userId));
+    return ids.size;
+  }, [allAvailability]);
+
   const selectableDates = useMemo(() => {
     const fromMatch = enumerateDates(matchInfo?.kickoff_at, matchInfo?.kickoff_end_at);
     if (fromMatch.length) return fromMatch;
@@ -1202,7 +1268,59 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
             </div>
 
             {allTeamsFull ? (
-            <div style={{ ...styles.configCard, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
+            <>
+              {/* Time Assistant */}
+              {bestSlots.length > 0 && (
+                <div style={{ ...styles.configCard, marginBottom: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+                    <span style={{ fontSize: 18 }}>⏱</span>
+                    <span style={{ color: '#debc7c', fontWeight: 700, fontSize: 15 }}>{isEn ? 'Time Assistant' : 'Zeit-Assistent'}</span>
+                    <span style={{ color: '#9db', fontSize: 13 }}> — {isEn ? 'Best slots based on availability' : 'Beste Slots basierend auf Verfügbarkeit'}</span>
+                  </div>
+                  <div style={{ display: 'grid', gap: 8 }}>
+                    {bestSlots.map((slot, idx) => {
+                      const isSelected = scheduleDate === slot.date && scheduleTime === slot.startTime;
+                      return (
+                        <button
+                          key={`${slot.date}-${slot.startTime}`}
+                          onClick={() => { setScheduleDate(slot.date); setScheduleTime(slot.startTime); }}
+                          style={{
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            background: isSelected ? 'rgba(222, 188, 124, 0.16)' : '#0a1c17',
+                            border: isSelected ? '2px solid #debc7c' : '1px solid #26493c',
+                            borderRadius: 10, padding: '12px 14px', cursor: 'pointer',
+                            transition: 'all 0.15s ease'
+                          }}
+                        >
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+                            <div style={{ color: '#e8efe8', fontWeight: 700, fontSize: 15 }}>
+                              {fmtDate(slot.date, locale)} · {fmtTime(slot.startTime)} - {fmtTime(slot.endTime)}
+                            </div>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                              {slot.playerNames.map((name, ni) => (
+                                <span key={ni} style={{
+                                  background: 'rgba(72, 186, 166, 0.15)', color: '#48baa6',
+                                  borderRadius: 6, padding: '2px 8px', fontSize: 12, fontWeight: 600
+                                }}>{name}</span>
+                              ))}
+                            </div>
+                          </div>
+                          <div style={{
+                            background: slot.playerCount === totalAvailPlayers ? 'rgba(107, 255, 157, 0.15)' : 'rgba(222, 188, 124, 0.15)',
+                            color: slot.playerCount === totalAvailPlayers ? '#6bff9d' : '#debc7c',
+                            borderRadius: 8, padding: '4px 10px', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap'
+                          }}>
+                            {slot.playerCount}/{totalAvailPlayers} {isEn ? 'players' : 'Spieler'}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Date/Time picker */}
+              <div style={{ ...styles.configCard, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
               <div style={styles.formGroup}>
                 <label style={styles.label}>{isEn ? 'Date' : 'Datum'}</label>
                 <input
@@ -1230,6 +1348,7 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
                 {scheduling ? (isEn ? 'Saving...' : 'Speichern...') : (isEn ? 'Schedule Match' : 'Termin festlegen')}
               </button>
             </div>
+            </>
             ) : (
               <div style={{ ...styles.configCard, padding: '14px 16px', color: '#9db', fontSize: 14, textAlign: 'center' }}>
                 {isEn ? 'The schedule can be set once all teams are full.' : 'Der Termin kann festgelegt werden, sobald alle Teams voll sind.'}
