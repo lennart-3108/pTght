@@ -2615,7 +2615,11 @@ module.exports = function matchesRoutes(ctx) {
       const hasUsers = await k.schema.hasTable('users').catch(() => false);
       if (hasUsers && hostUserId) {
         const hostUser = await k('users').where({ id: hostUserId }).first();
-        if (hostUser) hostName = hostUser.username || hostUser.email || `User #${hostUserId}`;
+        if (hostUser) {
+          const fn = (hostUser.firstname || '').trim();
+          const ln = (hostUser.lastname || '').trim();
+          hostName = (fn && ln) ? `${fn} ${ln}` : (fn || ln || hostUser.username || hostUser.email || `User #${hostUserId}`);
+        }
       }
 
       const opponentId = isHost ? (match.away_user_id || participant.opponentId) : (match.owner_id || match.home_user_id);

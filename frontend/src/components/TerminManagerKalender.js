@@ -874,6 +874,75 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
         {error && <div style={styles.error}>{error}</div>}
         {success && <div style={styles.success}>{success}</div>}
 
+        {/* ── Team Match: Info Box ── */}
+        {isTeamMatch && (
+          <div style={{ ...styles.instructions, display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <div style={{ color: '#e8efe8', fontWeight: 700, fontSize: 14 }}>
+              {isEn ? 'How it works' : 'So funktioniert\'s'}
+            </div>
+            <div style={{ fontSize: 13 }}>
+              {isEn
+                ? `${meta?.hostName || 'The match creator'} is the organizer and can set the match date once all players have joined.`
+                : `${meta?.hostName || 'Der Match-Ersteller'} ist der Organisator und kann den Termin festlegen, sobald alle Spieler beigetreten sind.`}
+            </div>
+            <div style={{ fontSize: 13 }}>
+              {isEn
+                ? 'Please enter your availabilities so the best time slot can be found for everyone.'
+                : 'Bitte trage deine Verfügbarkeiten ein, damit der beste Zeitslot für alle gefunden werden kann.'}
+            </div>
+          </div>
+        )}
+
+        {/* ── Team Match: Time Assistant (best slots) — shown at top ── */}
+        {isTeamMatch && allTeamsFull && bestSlots.length > 0 && (
+          <div style={{ ...styles.configCard, marginBottom: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <span style={{ fontSize: 18 }}>⏱</span>
+              <span style={{ color: '#debc7c', fontWeight: 700, fontSize: 15 }}>{isEn ? 'Time Assistant' : 'Zeit-Assistent'}</span>
+              <span style={{ color: '#9db', fontSize: 13 }}> — {isEn ? 'Best slots based on availability' : 'Beste Slots basierend auf Verfügbarkeit'}</span>
+            </div>
+            <div style={{ display: 'grid', gap: 8 }}>
+              {bestSlots.map((slot) => {
+                const isSelected = scheduleDate === slot.date && scheduleTime === slot.startTime;
+                return (
+                  <button
+                    key={`${slot.date}-${slot.startTime}`}
+                    onClick={() => { setScheduleDate(slot.date); setScheduleTime(slot.startTime); }}
+                    style={{
+                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                      background: isSelected ? 'rgba(222, 188, 124, 0.16)' : '#0a1c17',
+                      border: isSelected ? '2px solid #debc7c' : '1px solid #26493c',
+                      borderRadius: 10, padding: '12px 14px', cursor: 'pointer',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+                      <div style={{ color: '#e8efe8', fontWeight: 700, fontSize: 15 }}>
+                        {fmtDate(slot.date, locale)} · {fmtTime(slot.startTime)} - {fmtTime(slot.endTime)}
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {slot.playerNames.map((name, ni) => (
+                          <span key={ni} style={{
+                            background: 'rgba(72, 186, 166, 0.15)', color: '#48baa6',
+                            borderRadius: 6, padding: '2px 8px', fontSize: 12, fontWeight: 600
+                          }}>{name}</span>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{
+                      background: slot.playerCount === totalAvailPlayers ? 'rgba(107, 255, 157, 0.15)' : 'rgba(222, 188, 124, 0.15)',
+                      color: slot.playerCount === totalAvailPlayers ? '#6bff9d' : '#debc7c',
+                      borderRadius: 8, padding: '4px 10px', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap'
+                    }}>
+                      {slot.playerCount}/{totalAvailPlayers} {isEn ? 'players' : 'Spieler'}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
         {/* ── My Availability ── */}
         <div style={styles.sectionHeader}>
           <div>
@@ -1268,58 +1337,6 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
             </div>
 
             {allTeamsFull ? (
-            <>
-              {/* Time Assistant */}
-              {bestSlots.length > 0 && (
-                <div style={{ ...styles.configCard, marginBottom: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
-                    <span style={{ fontSize: 18 }}>⏱</span>
-                    <span style={{ color: '#debc7c', fontWeight: 700, fontSize: 15 }}>{isEn ? 'Time Assistant' : 'Zeit-Assistent'}</span>
-                    <span style={{ color: '#9db', fontSize: 13 }}> — {isEn ? 'Best slots based on availability' : 'Beste Slots basierend auf Verfügbarkeit'}</span>
-                  </div>
-                  <div style={{ display: 'grid', gap: 8 }}>
-                    {bestSlots.map((slot, idx) => {
-                      const isSelected = scheduleDate === slot.date && scheduleTime === slot.startTime;
-                      return (
-                        <button
-                          key={`${slot.date}-${slot.startTime}`}
-                          onClick={() => { setScheduleDate(slot.date); setScheduleTime(slot.startTime); }}
-                          style={{
-                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                            background: isSelected ? 'rgba(222, 188, 124, 0.16)' : '#0a1c17',
-                            border: isSelected ? '2px solid #debc7c' : '1px solid #26493c',
-                            borderRadius: 10, padding: '12px 14px', cursor: 'pointer',
-                            transition: 'all 0.15s ease'
-                          }}
-                        >
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
-                            <div style={{ color: '#e8efe8', fontWeight: 700, fontSize: 15 }}>
-                              {fmtDate(slot.date, locale)} · {fmtTime(slot.startTime)} - {fmtTime(slot.endTime)}
-                            </div>
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                              {slot.playerNames.map((name, ni) => (
-                                <span key={ni} style={{
-                                  background: 'rgba(72, 186, 166, 0.15)', color: '#48baa6',
-                                  borderRadius: 6, padding: '2px 8px', fontSize: 12, fontWeight: 600
-                                }}>{name}</span>
-                              ))}
-                            </div>
-                          </div>
-                          <div style={{
-                            background: slot.playerCount === totalAvailPlayers ? 'rgba(107, 255, 157, 0.15)' : 'rgba(222, 188, 124, 0.15)',
-                            color: slot.playerCount === totalAvailPlayers ? '#6bff9d' : '#debc7c',
-                            borderRadius: 8, padding: '4px 10px', fontSize: 13, fontWeight: 700, whiteSpace: 'nowrap'
-                          }}>
-                            {slot.playerCount}/{totalAvailPlayers} {isEn ? 'players' : 'Spieler'}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Date/Time picker */}
               <div style={{ ...styles.configCard, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
               <div style={styles.formGroup}>
                 <label style={styles.label}>{isEn ? 'Date' : 'Datum'}</label>
@@ -1348,7 +1365,6 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
                 {scheduling ? (isEn ? 'Saving...' : 'Speichern...') : (isEn ? 'Schedule Match' : 'Termin festlegen')}
               </button>
             </div>
-            </>
             ) : (
               <div style={{ ...styles.configCard, padding: '14px 16px', color: '#9db', fontSize: 14, textAlign: 'center' }}>
                 {isEn ? 'The schedule can be set once all teams are full.' : 'Der Termin kann festgelegt werden, sobald alle Teams voll sind.'}
