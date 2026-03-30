@@ -343,12 +343,14 @@ export default function GameDetailPage() {
 
     const terminButtonLabel = useMemo(() => {
       const viewerUserId = terminMeta?.viewerUserId || viewerId || null;
-      if (isTeamMatch) return t('match.termin.arrange');
+      const tc = Number(game?.team_count); const ppt = Number(game?.players_per_team);
+      const isTeam = tc >= 2 && ppt > 1;
+      if (isTeam) return t('match.termin.arrange');
       if (terminProposal && terminProposal.status === 'accepted') return t('match.termin.change');
       if (!terminProposal || terminProposal.status !== 'sent') return t('match.termin.arrange');
       if (viewerUserId != null && Number(terminProposal.proposerUserId) === Number(viewerUserId)) return t('match.termin.invitationSent');
       return t('match.termin.proposalReceived');
-    }, [terminProposal, terminMeta, viewerId, isTeamMatch]);
+    }, [terminProposal, terminMeta, viewerId, game]);
   useEffect(() => {
     let mounted = true;
     (async () => {
