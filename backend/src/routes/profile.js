@@ -237,6 +237,7 @@ module.exports = function profileRoutes(ctx) {
       if (hasKickoffEndAt) selectFields.push('m.kickoff_end_at');
       if (hasWhenType) selectFields.push('m.when_type');
       if (hasRangeDays) selectFields.push('m.range_days');
+      if (Object.prototype.hasOwnProperty.call(info, 'created_at')) selectFields.push('m.created_at');
       if (hasPlayerLevel) selectFields.push('m.player_level');
       if (hasStatus) selectFields.push('m.status');
       if (hasLeagues) selectFields.push('l.name as league');

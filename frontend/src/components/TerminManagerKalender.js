@@ -940,6 +940,32 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
                 );
               })}
             </div>
+
+            {/* Set Match Date — directly under Time Assistant */}
+            {isCreator && (
+              <div style={{ marginTop: 14 }}>
+                <div style={styles.sectionHeaderSimple}>
+                  <h3 style={{ margin: 0, color: '#e8efe8' }}>{isEn ? 'Set Match Date' : 'Match-Termin festlegen'}</h3>
+                </div>
+                <div style={{ ...styles.configCard, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>{isEn ? 'Date' : 'Datum'}</label>
+                    <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} style={styles.input} />
+                  </div>
+                  <div style={styles.formGroup}>
+                    <label style={styles.label}>{isEn ? 'Time' : 'Uhrzeit'}</label>
+                    <input type="time" value={scheduleTime} step={900} onChange={(e) => setScheduleTime(e.target.value)} style={styles.input} />
+                  </div>
+                  <button
+                    onClick={scheduleMatch}
+                    disabled={scheduling || !scheduleDate || !scheduleTime}
+                    style={{ ...styles.btnPrimary, opacity: (scheduling || !scheduleDate || !scheduleTime) ? 0.5 : 1, cursor: (scheduling || !scheduleDate || !scheduleTime) ? 'not-allowed' : 'pointer', padding: '10px 20px' }}
+                  >
+                    {scheduling ? (isEn ? 'Saving...' : 'Speichern...') : (isEn ? 'Schedule Match' : 'Termin festlegen')}
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -1324,8 +1350,8 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
           </div>
         )}
 
-        {/* ── Team Match: Schedule (creator only) ── */}
-        {isTeamMatch && isCreator && (
+        {/* ── Team Match: Schedule (creator only, when no time assistant visible) ── */}
+        {isTeamMatch && isCreator && !(allTeamsFull && bestSlots.length > 0) && (
           <div style={{ marginTop: 22 }}>
             <div style={styles.sectionHeaderSimple}>
               <h3 style={{ margin: 0, color: '#e8efe8' }}>{isEn ? 'Set Match Date' : 'Match-Termin festlegen'}</h3>
@@ -1340,22 +1366,11 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
               <div style={{ ...styles.configCard, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
               <div style={styles.formGroup}>
                 <label style={styles.label}>{isEn ? 'Date' : 'Datum'}</label>
-                <input
-                  type="date"
-                  value={scheduleDate}
-                  onChange={(e) => setScheduleDate(e.target.value)}
-                  style={styles.input}
-                />
+                <input type="date" value={scheduleDate} onChange={(e) => setScheduleDate(e.target.value)} style={styles.input} />
               </div>
               <div style={styles.formGroup}>
                 <label style={styles.label}>{isEn ? 'Time' : 'Uhrzeit'}</label>
-                <input
-                  type="time"
-                  value={scheduleTime}
-                  step={900}
-                  onChange={(e) => setScheduleTime(e.target.value)}
-                  style={styles.input}
-                />
+                <input type="time" value={scheduleTime} step={900} onChange={(e) => setScheduleTime(e.target.value)} style={styles.input} />
               </div>
               <button
                 onClick={scheduleMatch}

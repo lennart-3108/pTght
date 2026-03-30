@@ -932,13 +932,23 @@ export default function SearchMatchDialog() {
               </thead>
               <tbody>
                 {rows.map(m => {
-                  const aName = m.home || m.home_name || 'A';
-                  const bName = m.away || m.away_name || t('match.search.opponentWanted');
+                  const aName = formatPlayerName(m.home || m.home_name || 'A');
+                  const bName = formatPlayerName(m.away || m.away_name || t('match.search.opponentWanted'));
                   const status = (m.status || t('match.search.statusPending'));
                   
                   let dateText = t('match.search.dateOpen');
                   if (m.when_type === 'range' && m.range_days) {
-                    dateText = t('match.search.inDays', { days: m.range_days });
+                    const createdDate = m.created_at ? new Date(m.created_at) : null;
+                    if (createdDate && !isNaN(createdDate)) {
+                      const deadline = new Date(createdDate);
+                      deadline.setDate(deadline.getDate() + Number(m.range_days));
+                      const now = new Date();
+                      const diffMs = deadline - now;
+                      const diffDays = Math.max(0, Math.ceil(diffMs / 86400000));
+                      dateText = lang === 'en' ? `In the next ${diffDays} day${diffDays !== 1 ? 's' : ''}` : `In den nächsten ${diffDays} Tag(en)`;
+                    } else {
+                      dateText = t('match.search.inDays', { days: m.range_days });
+                    }
                   } else if (m.when_type === 'fixed' && m.kickoff_at && m.kickoff_end_at) {
                     try {
                       const start = new Date(m.kickoff_at);
@@ -991,8 +1001,8 @@ export default function SearchMatchDialog() {
                         </span>
                       </td>
                       <td style={{ padding: '12px 8px' }}>
-                        <div style={{ fontWeight: 600 }}>{aName}</div>
-                        {bName !== t('match.search.opponentWanted') && <div style={{ fontSize: 12, color: '#8bbfad' }}>vs {bName}</div>}
+                        <Link to={`/matches/${m.id}`} style={{ fontWeight: 600, color: '#e8efe8', textDecoration: 'none' }}>{aName}</Link>
+                        {bName !== formatPlayerName(t('match.search.opponentWanted')) && <div style={{ fontSize: 12, color: '#8bbfad' }}>vs {bName}</div>}
                       </td>
                       <td style={{ padding: '12px 8px' }}>
                         <div>{m.location_name || m.city_name || '-'}</div>
@@ -1047,7 +1057,17 @@ export default function SearchMatchDialog() {
           let dateText = t('match.search.dateOpen');
           
           if (m.when_type === 'range' && m.range_days) {
-            dateText = t('match.search.inNextDays', { days: m.range_days });
+            const createdDate = m.created_at ? new Date(m.created_at) : null;
+            if (createdDate && !isNaN(createdDate)) {
+              const deadline = new Date(createdDate);
+              deadline.setDate(deadline.getDate() + Number(m.range_days));
+              const now = new Date();
+              const diffMs = deadline - now;
+              const diffDays = Math.max(0, Math.ceil(diffMs / 86400000));
+              dateText = lang === 'en' ? `In the next ${diffDays} day${diffDays !== 1 ? 's' : ''}` : `In den nächsten ${diffDays} Tag(en)`;
+            } else {
+              dateText = t('match.search.inNextDays', { days: m.range_days });
+            }
           } else if (m.when_type === 'fixed' && m.kickoff_at && m.kickoff_end_at) {
             try {
               const start = new Date(m.kickoff_at);
