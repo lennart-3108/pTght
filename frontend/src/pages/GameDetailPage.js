@@ -311,6 +311,10 @@ export default function GameDetailPage() {
   const [showTerminManager, setShowTerminManager] = useState(false);
   const [terminMeta, setTerminMeta] = useState(null);
   const [terminProposal, setTerminProposal] = useState(null);
+  // Teams managen
+  const [showManageTeams, setShowManageTeams] = useState(false);
+  const [teamAssignments, setTeamAssignments] = useState({});
+  const [manageTeamsLoading, setManageTeamsLoading] = useState(false);
     // Load termin-manager status to show the correct button label
     useEffect(() => {
       if (!token || !gameId) return;
@@ -790,6 +794,30 @@ export default function GameDetailPage() {
     } catch (e) {
       const msg = e.message === 'TEAM_FULL' ? t('match.team.teamFull') : (e.message || t('match.team.selectFailed'));
       setJoinMsg(msg);
+    }
+  }
+
+  async function saveTeamAssignments() {
+    if (!token) return;
+    setManageTeamsLoading(true);
+    try {
+      const assignments = Object.entries(teamAssignments).map(([userId, ti]) => ({
+        user_id: Number(userId),
+        team_index: Number(ti)
+      }));
+      const r = await fetch(`${API_BASE}/matches/${gameId}/manage-teams`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ assignments })
+      });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) throw new Error(j?.error || `HTTP ${r.status}`);
+      setGame(j);
+      setShowManageTeams(false);
+    } catch (e) {
+      setJoinMsg(e.message || 'Failed');
+    } finally {
+      setManageTeamsLoading(false);
     }
   }
 
@@ -1520,7 +1548,7 @@ export default function GameDetailPage() {
         )}
 
         {/* Team selection for participant-based team matches */}
-        {(token && game && isParticipant && allowTeamChoice && teamCount >= 2 && (maxPlayers == null || maxPlayers > 2) && !isCompleted && game.status !== 'scheduled') && (
+        {(token && game && isParticipant && allowTeamChoice && teamCount >= 2 && (maxPlayers == null || maxPlayers > 2) && !isCompleted && game.status !== 'scheduled' && !(team1Full && team2Full)) && (
           <div style={{
             padding: isMobile ? '12px' : '14px',
             background: 'rgba(47, 107, 87, 0.12)',
@@ -1838,6 +1866,109 @@ export default function GameDetailPage() {
             </div>
           )}
 
+          {/* Teams managen - only for creator of team matches */}
+          {isTeamMatch && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId) && !isCompleted && participants.length > 0 && (
+            <>
+              {!showManageTeams ? (
+                <div style={{ marginBottom: isMobile ? 8 : 12, textAlign: 'right' }}>
+                  <button
+                    onClick={() => {
+                      const initial = {};
+                      participants.forEach(p => { if (p.team_index != null) initial[p.user_id] = Number(p.team_index); });
+                      setTeamAssignments(initial);
+                      setShowManageTeams(true);
+                    }}
+                    style={{
+                      padding: '4px 12px',
+                      borderRadius: 16,
+                      border: '1px solid rgba(47, 107, 87, 0.5)',
+                      background: 'rgba(14, 42, 34, 0.7)',
+                      color: '#9db',
+                      fontSize: isMobile ? 11 : 12,
+                      fontWeight: 600,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    {lang === 'en' ? '⚙ Manage teams' : '⚙ Teams managen'}
+                  </button>
+                </div>
+              ) : (
+                <div style={{
+                  padding: isMobile ? 12 : 16,
+                  marginBottom: isMobile ? 12 : 16,
+                  background: 'rgba(15, 42, 32, 0.7)',
+                  border: '1px solid rgba(47, 107, 87, 0.4)',
+                  borderRadius: 12,
+                }}>
+                  <div style={{ fontWeight: 700, color: '#debc7c', marginBottom: 10, fontSize: isMobile ? 13 : 14 }}>
+                    {lang === 'en' ? 'Reassign players to teams' : 'Spieler den Teams zuweisen'}
+                  </div>
+                  {participants.filter(p => p.user_id != null).map(p => {
+                    const pName = p.display_name || p.username || `Spieler ${p.user_id}`;
+                    const currentTi = teamAssignments[p.user_id] ?? Number(p.team_index) ?? 0;
+                    return (
+                      <div key={p.user_id} style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                        <Avatar userId={p.user_id} name={pName} size={24} />
+                        <span style={{ fontSize: isMobile ? 12 : 13, color: '#e8efe8', fontWeight: 500, flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{pName}</span>
+                        {[1, 2].map(ti => (
+                          <button
+                            key={ti}
+                            onClick={() => setTeamAssignments(prev => ({ ...prev, [p.user_id]: ti }))}
+                            style={{
+                              padding: '3px 10px',
+                              borderRadius: 8,
+                              border: currentTi === ti ? '1px solid #debc7c' : '1px solid rgba(47, 107, 87, 0.4)',
+                              background: currentTi === ti ? 'rgba(222, 188, 124, 0.2)' : 'rgba(10, 28, 23, 0.5)',
+                              color: currentTi === ti ? '#debc7c' : '#7a9a8a',
+                              fontSize: isMobile ? 11 : 12,
+                              fontWeight: 600,
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Team {ti}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })}
+                  <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                    <button
+                      onClick={saveTeamAssignments}
+                      disabled={manageTeamsLoading}
+                      style={{
+                        padding: '6px 16px',
+                        borderRadius: 10,
+                        border: 'none',
+                        background: 'linear-gradient(135deg, #debc7c, #c9a75f)',
+                        color: '#10261f',
+                        fontSize: isMobile ? 12 : 13,
+                        fontWeight: 700,
+                        cursor: manageTeamsLoading ? 'not-allowed' : 'pointer'
+                      }}
+                    >
+                      {manageTeamsLoading ? '...' : (lang === 'en' ? 'Save' : 'Speichern')}
+                    </button>
+                    <button
+                      onClick={() => setShowManageTeams(false)}
+                      style={{
+                        padding: '6px 16px',
+                        borderRadius: 10,
+                        border: '1px solid rgba(47, 107, 87, 0.4)',
+                        background: 'transparent',
+                        color: '#9db',
+                        fontSize: isMobile ? 12 : 13,
+                        fontWeight: 600,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {lang === 'en' ? 'Cancel' : 'Abbrechen'}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+
           {/* Teams full message - creator will schedule */}
           {isTeamMatch && team1Full && team2Full && game.status === 'open' && (
             <div style={{
@@ -1848,14 +1979,38 @@ export default function GameDetailPage() {
               borderRadius: 10,
               display: 'flex',
               alignItems: 'center',
-              gap: 8
+              gap: 8,
+              flexWrap: 'wrap'
             }}>
               <span style={{ fontSize: 16 }}>&#9203;</span>
-              <span style={{ fontSize: isMobile ? 12 : 13, color: '#debc7c', fontWeight: 500 }}>
-                {lang === 'en'
-                  ? `All teams are full! ${playerA.name} will set the date for this match.`
-                  : `Alle Teams sind voll! ${playerA.name} wird das Datum für dieses Match festlegen.`}
+              <span style={{ fontSize: isMobile ? 12 : 13, color: '#debc7c', fontWeight: 500, flex: 1 }}>
+                {terminMeta && terminMeta.totalParticipants > 0 && terminMeta.participantsWithAvailability >= terminMeta.totalParticipants
+                  ? (lang === 'en'
+                    ? 'All teams are full and everyone has entered their availability!'
+                    : 'Alle Teams sind voll und alle haben ihre Verfügbarkeit eingetragen!')
+                  : (lang === 'en'
+                    ? `All teams are full! ${playerA.name} will set the date for this match.`
+                    : `Alle Teams sind voll! ${playerA.name} wird das Datum für dieses Match festlegen.`)}
               </span>
+              {viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId) && (
+                <button
+                  onClick={() => setShowTerminManager(true)}
+                  style={{
+                    padding: '6px 14px',
+                    borderRadius: 20,
+                    border: '1px solid rgba(212, 175, 55, 0.6)',
+                    background: 'linear-gradient(135deg, #d4af37, #b8941f)',
+                    color: '#000',
+                    fontSize: isMobile ? 11 : 12,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    whiteSpace: 'nowrap',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  {lang === 'en' ? 'Schedule match' : 'Termin festlegen'}
+                </button>
+              )}
             </div>
           )}
 

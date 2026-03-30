@@ -795,6 +795,74 @@ module.exports = function matchesRoutes(ctx) {
     }
   });
 
+  // Manage teams: creator can reassign any participant's team_index
+  router.post('/:id/manage-teams', requireAuth, async (req, res) => {
+    try {
+      const matchId = Number(req.params.id);
+      if (!matchId) return res.status(400).json({ error: 'INVALID_MATCH_ID' });
+      const viewerId = Number(req.user?.id);
+      if (!viewerId) return res.status(401).json({ error: 'UNAUTHORIZED' });
+
+      const k = getKnex();
+      const match = await k('matches').where({ id: matchId }).first();
+      if (!match) return res.status(404).json({ error: 'MATCH_NOT_FOUND' });
+
+      // Only the match creator can manage teams
+      if (Number(match.home_user_id) !== viewerId) {
+        return res.status(403).json({ error: 'NOT_CREATOR' });
+      }
+
+      const teamCount = match.team_count != null ? Number(match.team_count) : 0;
+      if (!teamCount || teamCount < 2) return res.status(409).json({ error: 'MATCH_HAS_NO_TEAMS' });
+
+      // assignments: [{ user_id, team_index }]
+      const assignments = req.body?.assignments;
+      if (!Array.isArray(assignments) || assignments.length === 0) {
+        return res.status(400).json({ error: 'INVALID_ASSIGNMENTS' });
+      }
+
+      // Validate each assignment
+      for (const a of assignments) {
+        const ti = Number(a.team_index);
+        if (!Number.isFinite(ti) || ti < 1 || ti > teamCount) {
+          return res.status(400).json({ error: 'INVALID_TEAM_INDEX' });
+        }
+      }
+
+      const hasParticipants = await ensureMatchParticipantsTable(k);
+      if (!hasParticipants) return res.status(500).json({ error: 'MATCH_PARTICIPANTS_NOT_AVAILABLE' });
+
+      // Check capacity per team
+      const playersPerTeam = match.players_per_team != null ? Number(match.players_per_team) : null;
+      if (Number.isFinite(playersPerTeam) && playersPerTeam > 0) {
+        const teamCounts = {};
+        for (const a of assignments) {
+          const ti = Number(a.team_index);
+          teamCounts[ti] = (teamCounts[ti] || 0) + 1;
+        }
+        for (const [ti, cnt] of Object.entries(teamCounts)) {
+          if (cnt > playersPerTeam) {
+            return res.status(409).json({ error: 'TEAM_FULL', team_index: Number(ti) });
+          }
+        }
+      }
+
+      // Apply assignments
+      for (const a of assignments) {
+        await k('match_participants')
+          .where({ match_id: matchId, user_id: Number(a.user_id) })
+          .andWhere(function () { this.whereNull('status').orWhere('status', 'joined'); })
+          .update({ team_index: Number(a.team_index) });
+      }
+
+      const detail = await fetchMatchDetail(k, matchId);
+      return res.json(detail || { ok: true });
+    } catch (e) {
+      console.error('Manage teams failed', e && (e.stack || e.message || e));
+      return res.status(500).json({ error: 'DB_ERROR' });
+    }
+  });
+
   // Leave a match (remove yourself as participant) — only before match is scheduled/completed
   router.post('/:id/leave', requireAuth, async (req, res) => {
     try {
@@ -1635,6 +1703,25 @@ module.exports = function matchesRoutes(ctx) {
         myDaysCount = Array.isArray(countRow) ? Number(countRow[0]?.c || 0) : Number(countRow?.c || 0);
       }
 
+      // Count how many participants have entered availability and total participants
+      let participantsWithAvailability = 0;
+      let totalParticipants = 0;
+      const hasMpTable = await k.schema.hasTable('match_participants').catch(() => false);
+      if (hasMpTable) {
+        const allParts = await k('match_participants')
+          .where({ match_id: matchId })
+          .andWhere(function () { this.whereNull('status').orWhere('status', 'joined'); })
+          .select('user_id');
+        totalParticipants = allParts.length;
+        if (hasAvailDays && totalParticipants > 0) {
+          const withAvail = await k('match_availability_days')
+            .where({ match_id: matchId })
+            .whereIn('user_id', allParts.map(p => p.user_id))
+            .distinct('user_id');
+          participantsWithAvailability = withAvail.length;
+        }
+      }
+
       const teamCount = match.team_count != null ? Number(match.team_count) : null;
       const playersPerTeam = match.players_per_team != null ? Number(match.players_per_team) : null;
       const isTeamMatch = teamCount >= 2 && playersPerTeam > 1;
@@ -1648,7 +1735,9 @@ module.exports = function matchesRoutes(ctx) {
           opponentUserId: otherUserId,
           opponentName: opponentName,
           myDaysCount,
-          isTeamMatch
+          isTeamMatch,
+          totalParticipants,
+          participantsWithAvailability
         },
         options: (options || []).map((o) => ({ id: o.id, startsAt: o.starts_at, createdByUserId: o.created_by_user_id })),
         proposal
