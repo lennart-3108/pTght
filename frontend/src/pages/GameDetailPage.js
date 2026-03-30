@@ -343,11 +343,12 @@ export default function GameDetailPage() {
 
     const terminButtonLabel = useMemo(() => {
       const viewerUserId = terminMeta?.viewerUserId || viewerId || null;
+      if (isTeamMatch) return t('match.termin.arrange');
       if (terminProposal && terminProposal.status === 'accepted') return t('match.termin.change');
       if (!terminProposal || terminProposal.status !== 'sent') return t('match.termin.arrange');
       if (viewerUserId != null && Number(terminProposal.proposerUserId) === Number(viewerUserId)) return t('match.termin.invitationSent');
       return t('match.termin.proposalReceived');
-    }, [terminProposal, terminMeta, viewerId]);
+    }, [terminProposal, terminMeta, viewerId, isTeamMatch]);
   useEffect(() => {
     let mounted = true;
     (async () => {
@@ -1114,8 +1115,8 @@ export default function GameDetailPage() {
           );
         })()}
 
-        {/* Terminvorschlag Widget - 1:1 wie im Termin Manager */}
-        {terminProposal && terminProposal.status === 'sent' && (() => {
+        {/* Terminvorschlag Widget - only for 1v1 matches */}
+        {!isTeamMatch && terminProposal && terminProposal.status === 'sent' && (() => {
           const viewerIdNum = Number(viewerId);
           const byYou = viewerIdNum && Number(terminProposal.proposerUserId) === viewerIdNum;
           const canAccept = viewerIdNum && Number(terminProposal.recipientUserId) === viewerIdNum;
@@ -2281,6 +2282,7 @@ export default function GameDetailPage() {
             matchId={gameId}
             token={token}
             isTeamMatch={isTeamMatch}
+            allTeamsFull={isTeamMatch && team1Full && team2Full}
             matchInfo={{
               home_player: isTeamMatch ? teamDisplayA : (game.home_user_name || game.home || t('tm.player1')),
               away_player: isTeamMatch ? teamDisplayB : (game.away_user_name || game.away || t('tm.player2')),

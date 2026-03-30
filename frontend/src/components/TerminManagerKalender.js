@@ -125,7 +125,7 @@ function groupFramesByWeek(frameList) {
     .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
 }
 
-export default function TerminManagerKalender({ matchId, token, onClose, onInvitationSent, matchInfo, isTeamMatch: isTeamMatchProp }) {
+export default function TerminManagerKalender({ matchId, token, onClose, onInvitationSent, matchInfo, isTeamMatch: isTeamMatchProp, allTeamsFull }) {
   const { t, lang } = useLanguage();
   const locale = lang === 'en' ? 'en-GB' : 'de-DE';
   const isEn = lang === 'en';
@@ -997,19 +997,11 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
 
                     <div style={{ display: 'grid', gap: 10 }}>
                       {dayFrames.map((frame) => {
-                        const availUsers = usersForSlot(date, frame.time_start, frame.time_end);
                         return (
                           <div key={frame.id} style={styles.frameRow}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                               <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtTime(frame.time_start)} – {fmtTime(frame.time_end)}</div>
                               <div style={{ color: '#9db', fontSize: 13 }}>{t('tm.duration', { min: slotDuration })}</div>
-                              {availUsers.length > 0 && (
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 4 }}>
-                                  {availUsers.map(u => (
-                                    <span key={u.userId} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: 'rgba(72,186,166,0.15)', color: '#48baa6', border: '1px solid rgba(72,186,166,0.3)' }}>{u.name}</span>
-                                  ))}
-                                </div>
-                              )}
                             </div>
                           </div>
                         );
@@ -1202,9 +1194,14 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
           <div style={{ marginTop: 22 }}>
             <div style={styles.sectionHeaderSimple}>
               <h3 style={{ margin: 0, color: '#e8efe8' }}>{isEn ? 'Set Match Date' : 'Match-Termin festlegen'}</h3>
-              <div style={{ color: '#9db', fontSize: 13 }}>{isEn ? 'You are the creator — choose the date and time for this match.' : 'Du bist der Ersteller — wähle Datum und Uhrzeit für dieses Match.'}</div>
+              <div style={{ color: '#9db', fontSize: 13 }}>
+                {allTeamsFull
+                  ? (isEn ? 'All players have joined — choose the date and time for this match.' : 'Alle Spieler sind beigetreten — wähle Datum und Uhrzeit für dieses Match.')
+                  : (isEn ? 'Waiting for all players to join before scheduling.' : 'Warte bis alle Spieler beigetreten sind.')}
+              </div>
             </div>
 
+            {allTeamsFull ? (
             <div style={{ ...styles.configCard, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'flex-end' }}>
               <div style={styles.formGroup}>
                 <label style={styles.label}>{isEn ? 'Date' : 'Datum'}</label>
@@ -1233,6 +1230,11 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
                 {scheduling ? (isEn ? 'Saving...' : 'Speichern...') : (isEn ? 'Schedule Match' : 'Termin festlegen')}
               </button>
             </div>
+            ) : (
+              <div style={{ ...styles.configCard, padding: '14px 16px', color: '#9db', fontSize: 14, textAlign: 'center' }}>
+                {isEn ? 'The schedule can be set once all teams are full.' : 'Der Termin kann festgelegt werden, sobald alle Teams voll sind.'}
+              </div>
+            )}
           </div>
         )}
 
