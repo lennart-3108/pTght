@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import Avatar from './Avatar';
 import { API_BASE } from '../config';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 export default function CommentsSection({
   gameId,
@@ -223,9 +223,9 @@ export default function CommentsSection({
           marginBottom: 6
         }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
-            <span style={{ fontWeight: 700, fontSize: 15, color: '#cfe' }}>
+            <Link to={`/user/${comment.userId}`} style={{ fontWeight: 700, fontSize: 15, color: '#cfe', textDecoration: 'none' }}>
               {comment.userName || 'User'}
-            </span>
+            </Link>
             <span style={{ fontSize: 12, color: '#7a9' }}>
               {new Date(comment.createdAt).toLocaleString('de-DE', {
                 day: '2-digit',
