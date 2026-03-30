@@ -21,8 +21,17 @@ module.exports = function commentsRoutes(ctx) {
           'match_comments.userId',
           'match_comments.parentCommentId',
           'match_comments.createdAt',
-          'users.username as userName'
+          'users.firstname',
+          'users.lastname',
+          'users.username'
         );
+
+      comments.forEach(c => {
+        const fn = (c.firstname || '').trim();
+        const ln = (c.lastname || '').trim();
+        c.userName = (fn && ln) ? `${fn} ${ln}` : (fn || ln || c.username || `User ${c.userId}`);
+        delete c.firstname; delete c.lastname; delete c.username;
+      });
       
       // Count likes per comment from comment_likes table
       const commentIds = comments.map(c => c.id);
@@ -85,9 +94,15 @@ module.exports = function commentsRoutes(ctx) {
           'match_comments.userId',
           'match_comments.parentCommentId',
           'match_comments.createdAt',
-          'users.username as userName'
+          'users.firstname',
+          'users.lastname',
+          'users.username'
         );
       
+      const fn = (newComment.firstname || '').trim();
+      const ln = (newComment.lastname || '').trim();
+      newComment.userName = (fn && ln) ? `${fn} ${ln}` : (fn || ln || newComment.username || `User ${newComment.userId}`);
+      delete newComment.firstname; delete newComment.lastname; delete newComment.username;
       newComment.likes = 0;
       newComment.hasLiked = false;
       
