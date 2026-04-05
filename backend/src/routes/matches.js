@@ -2728,7 +2728,7 @@ module.exports = function matchesRoutes(ctx) {
         frames: frames || [],
         slots: slots || [],
         meta: {
-          isHost: isHost || (parti.side === 'home'),
+          isHost: isHost,
           isJoined: isJoined || (parti.side === 'away'),
           viewerId,
           opponentId,
