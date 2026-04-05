@@ -971,6 +971,8 @@ module.exports = function matchesRoutes(ctx) {
           ...(hasColumn(matchInfo, 'allow_team_choice') ? ['m.allow_team_choice'] : []),
           ...(hasColumn(matchInfo, 'home_score') ? ['m.home_score'] : []),
           ...(hasColumn(matchInfo, 'away_score') ? ['m.away_score'] : []),
+          ...(hasColumn(matchInfo, 'result_submitted_by') ? ['m.result_submitted_by'] : []),
+          ...(hasColumn(matchInfo, 'status') ? ['m.status'] : []),
           ...(hasSports ? [{ sport_type: 's.sport_type' }, { team_size: 's.team_size' }, { type: 's.type' }] : []),
           { league_name: 'l.name' }
         );
