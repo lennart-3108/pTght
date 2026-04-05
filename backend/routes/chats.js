@@ -121,9 +121,18 @@ module.exports = function chatsRoutes({ db }) {
     } else {
       base.select(k.raw('0 as isAwayMember'));
     }
+    // match_participants: detect viewer team via team_index
+    const hasMP = await k.schema.hasTable('match_participants').catch(() => false);
+    if (hasMP) {
+      base.select(k.raw('CASE WHEN EXISTS (SELECT 1 FROM match_participants mp WHERE mp.match_id = m.id AND mp.user_id = ? AND mp.team_index = 1 AND (mp.status IS NULL OR mp.status = \'joined\')) THEN 1 ELSE 0 END as isHomeParticipant', [userId]));
+      base.select(k.raw('CASE WHEN EXISTS (SELECT 1 FROM match_participants mp WHERE mp.match_id = m.id AND mp.user_id = ? AND mp.team_index = 2 AND (mp.status IS NULL OR mp.status = \'joined\')) THEN 1 ELSE 0 END as isAwayParticipant', [userId]));
+    } else {
+      base.select(k.raw('0 as isHomeParticipant'));
+      base.select(k.raw('0 as isAwayParticipant'));
+    }
 
     let appliedFilter = false;
-    if (hasHomeUserId || hasAwayUserId || hasHomeTeamId || hasAwayTeamId) {
+    if (hasHomeUserId || hasAwayUserId || hasHomeTeamId || hasAwayTeamId || hasMP) {
       base.where(function () {
         if (hasHomeUserId) this.orWhere('m.home_user_id', userId);
         if (hasAwayUserId) this.orWhere('m.away_user_id', userId);
@@ -135,6 +144,11 @@ module.exports = function chatsRoutes({ db }) {
         if (hasTeamMembers && hasAwayTeamId) {
           this.orWhereExists(function () {
             this.select(1).from({ tm: 'team_members' }).whereColumn('tm.team_id', 'm.away_team_id').andWhere('tm.user_id', userId);
+          });
+        }
+        if (hasMP) {
+          this.orWhereExists(function () {
+            this.select(1).from('match_participants as mp2').whereColumn('mp2.match_id', 'm.id').andWhere('mp2.user_id', userId).andWhere(function () { this.whereNull('mp2.status').orWhere('mp2.status', 'joined'); });
           });
         }
       });
@@ -228,7 +242,7 @@ module.exports = function chatsRoutes({ db }) {
         for (const u of rowsU) {
           const parts = [];
           if (u.firstname) parts.push(u.firstname);
-          if (u.lastname) parts.push(u.lastname);
+          if (u.lastname) parts.push(u.lastname.charAt(0).toUpperCase() + '.');
           const fn = parts.join(' ').trim();
           const label = fn || u.name || u.email || `User ${u.id}`;
           userMap.set(Number(u.id), { name: label, avatar_url: u.avatar_url || null });
@@ -245,6 +259,27 @@ module.exports = function chatsRoutes({ db }) {
       }
     }
 
+    // Query match_participants for participant-based team matches
+    const hasMatchParticipants = await k.schema.hasTable('match_participants').catch(() => false);
+    const participantsByMatch = new Map();
+    if (hasMatchParticipants && matchIds.length) {
+      const mp = await k('match_participants as mp')
+        .join('users as u', 'u.id', 'mp.user_id')
+        .whereIn('mp.match_id', matchIds)
+        .andWhere(function () { this.whereNull('mp.status').orWhere('mp.status', 'joined'); })
+        .select('mp.match_id', 'mp.user_id', 'mp.team_index', 'u.firstname', 'u.lastname', 'u.avatar_url')
+        .orderBy('mp.id', 'asc')
+        .catch(() => []);
+      for (const p of mp) {
+        const mid = Number(p.match_id);
+        if (!participantsByMatch.has(mid)) participantsByMatch.set(mid, []);
+        const fn = p.firstname || '';
+        const ln = p.lastname ? (p.lastname.charAt(0).toUpperCase() + '.') : '';
+        const name = (fn + ' ' + ln).trim() || `User ${p.user_id}`;
+        participantsByMatch.get(mid).push({ userId: Number(p.user_id), teamIndex: p.team_index, name, avatar_url: p.avatar_url });
+      }
+    }
+
     function determineTimestamp(m) {
       const order = [m.updatedAt, m.completedAt, m.createdAt, m.kickoffAt];
       return order.find(v => v != null) || null;
@@ -252,8 +287,8 @@ module.exports = function chatsRoutes({ db }) {
 
     return rows.map(m => {
       const matchType = (m.homeTeamId != null || m.awayTeamId != null) ? 'teams' : 'singles';
-      const viewerHome = Number(m.isHomeUser) === 1 || Number(m.isHomeMember) === 1;
-      const viewerAway = Number(m.isAwayUser) === 1 || Number(m.isAwayMember) === 1;
+      const viewerHome = Number(m.isHomeUser) === 1 || Number(m.isHomeMember) === 1 || Number(m.isHomeParticipant) === 1;
+      const viewerAway = Number(m.isAwayUser) === 1 || Number(m.isAwayMember) === 1 || Number(m.isAwayParticipant) === 1;
       const fallbackSide = (m.homeName || m.awayName) ? 'home' : null;
       const viewerSide = viewerHome ? 'home' : (viewerAway ? 'away' : fallbackSide);
       if (!viewerSide) return null;
@@ -276,6 +311,21 @@ module.exports = function chatsRoutes({ db }) {
           const opp = m.homeUserId && userMap.get(Number(m.homeUserId));
           opponentName = (opp && opp.name) || m.homeName || 'Noch kein Gegner';
           opponentAvatar = (opp && opp.avatar_url) || null;
+        }
+      }
+      // Fallback to match_participants for participant-based team matches
+      if (opponentName === 'Noch kein Gegner' || opponentName === 'Gegner gesucht') {
+        const participants = participantsByMatch.get(Number(m.id));
+        if (participants && participants.length > 0) {
+          const team1 = participants.filter(p => p.teamIndex === 1);
+          const team2 = participants.filter(p => p.teamIndex === 2);
+          const leaders = [];
+          if (team1.length > 0) leaders.push(team1[0].name);
+          if (team2.length > 0) leaders.push(team2[0].name);
+          const totalOthers = participants.length - leaders.length;
+          opponentName = leaders.join(' & ');
+          if (totalOthers > 0) opponentName += ` + ${totalOthers} weitere`;
+          if (team1.length > 0) opponentAvatar = team1[0].avatar_url || null;
         }
       }
       const last = lastMessages.get(Number(m.id));

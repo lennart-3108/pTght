@@ -1468,6 +1468,13 @@ export default function GameDetailPage() {
                   </>
                 ) : t('match.date.noneYet');
               })()
+            ) : (game.home_score != null && game.away_score != null) ? (
+              (() => {
+                const dt = game.kickoff_at || game.kickoff_end_at;
+                return dt ? (
+                  <>📅 {formatDate(dt)}{formatTime(dt) && <span style={{ marginLeft: 6 }}>{formatTime(dt)}</span>}</>
+                ) : t('match.date.noneYet');
+              })()
             ) : (
               game.when_type === 'range' && game.kickoff_end_at ? (
                 <>{timeRemaining(game.kickoff_end_at)}</>

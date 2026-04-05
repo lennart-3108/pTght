@@ -382,7 +382,7 @@ export default function LoginPage({ setToken, setIsAdminFlag }) {
           <div className="hero-inner">
             <div className="hero-stripe">
               <img src={smallLogo} alt="ML" className="hero-small-logo" />
-              <h1 className="hero-title">Match League<sup style={{ fontSize: '0.5em', marginLeft: '2px' }}>™</sup></h1>
+              <h1 className="hero-title">Match League<sup style={{ fontSize: '0.5em', marginLeft: '2px' }}>®</sup></h1>
             </div>
             <p className="hero-sub"><b>Connect. Match. Win.</b></p>
           </div>

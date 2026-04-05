@@ -573,7 +573,7 @@ export default function Header() {
           <Link to="/start" className="ml-logo-link" aria-label="Start">
             <div className="ml-logo-badge">
               <img src={smallLogo} alt="ML" className="ml-logo-badge__icon" />
-              <h1 className="ml-logo-badge__title">Match League<sup>™</sup></h1>
+              <h1 className="ml-logo-badge__title">Match League<sup>®</sup></h1>
             </div>
           </Link>
         </div>
