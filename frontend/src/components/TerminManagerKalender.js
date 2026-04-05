@@ -125,7 +125,7 @@ function groupFramesByWeek(frameList) {
     .sort((a, b) => (a.weekStartStr || '').localeCompare(b.weekStartStr || ''));
 }
 
-export default function TerminManagerKalender({ matchId, token, onClose, onInvitationSent, matchInfo, isTeamMatch: isTeamMatchProp, allTeamsFull }) {
+export default function TerminManagerKalender({ matchId, token, onClose, onInvitationSent, matchInfo, isTeamMatch: isTeamMatchProp, allTeamsFull, autoOpenAddSlot }) {
   const { t, lang } = useLanguage();
   const locale = lang === 'en' ? 'en-GB' : 'de-DE';
   const isEn = lang === 'en';
@@ -141,7 +141,7 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
   const [proposals, setProposals] = useState([]);
 
   // Eigene Verfügbarkeiten anlegen
-  const [showAddSlot, setShowAddSlot] = useState(false);
+  const [showAddSlot, setShowAddSlot] = useState(!!autoOpenAddSlot);
   const [availabilityMode, setAvailabilityMode] = useState('preset');
   const [presetSelections, setPresetSelections] = useState({ morning: false, midday: false, evening: false });
   const [selectedDates, setSelectedDates] = useState([]);

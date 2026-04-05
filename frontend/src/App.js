@@ -183,9 +183,9 @@ function App() {
         <Route path="/welcome" element={<WelcomePage setToken={setToken} setIsAdminFlag={setIsAdminFlag} />} />
         <Route path="/registration-success" element={<WelcomePage setToken={setToken} setIsAdminFlag={setIsAdminFlag} />} />
 
-        {/* Login & Register without header */}
+        {/* Login, Register & Reset Password without header */}
         {routes
-          .filter(r => r.path === "/login" || r.path === "/register")
+          .filter(r => r.path === "/login" || r.path === "/register" || r.path === "/resetpassword")
           .map(r => (
             <Route
               key={r.path}
@@ -208,6 +208,7 @@ function App() {
             .filter(r => ![
               "/login",
               "/register",
+              "/resetpassword",
               "/leagues",
               "/create",
               "/tasks",

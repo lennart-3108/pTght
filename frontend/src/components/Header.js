@@ -613,7 +613,6 @@ export default function Header() {
               {_FEATURES.SHOW_CHATS && <Link to="/chats" className="ml-nav__item" onClick={handleNavigate}>{t('nav.chats')}</Link>}
               {_FEATURES.SHOW_NEWS && <Link to="/news" className="ml-nav__item" onClick={handleNavigate}>{t('nav.news')}</Link>}
               {myUserId && <Link to={`/user/${myUserId}`} className="ml-nav__item" onClick={handleNavigate}>{t('nav.profile')}</Link>}
-              <Link to="/tasks" className="ml-nav__item" onClick={handleNavigate}>{t('nav.tasks')}</Link>
             </>
           )}
 

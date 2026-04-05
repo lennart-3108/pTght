@@ -99,29 +99,19 @@ function resolveInstanceType() {
 export const INSTANCE_TYPE = resolveInstanceType();
 
 // Feature flags based on instance type
-// Production MVP1: Tennis 1v1 only. Dev/Test: all sports.
 export const FEATURES = {
-	// Production: full app (no more "coming soon")
 	SHOW_ONLY_LANDING: false,
-	
-	// MVP1: Matches active everywhere
 	SHOW_MATCHES: true,
-	SHOW_LEAGUES: INSTANCE_TYPE !== 'production',
-
-	// Post-MVP1 features — disabled until ready
+	SHOW_LEAGUES: true,
 	SHOW_COMPETITIONS: false,
 	SHOW_BOOKINGS: false,
 	SHOW_VENUES: false,
-	SHOW_TEAMS: INSTANCE_TYPE !== 'production',
-	SHOW_CHATS: INSTANCE_TYPE !== 'production',
-	SHOW_NEWS: INSTANCE_TYPE !== 'production',
-	SHOW_SUBSCRIPTIONS: INSTANCE_TYPE !== 'production',
-	
-	// Test disclaimer
+	SHOW_TEAMS: false,
+	SHOW_CHATS: true,
+	SHOW_NEWS: true,
+	SHOW_SUBSCRIPTIONS: false,
 	SHOW_TEST_DISCLAIMER: INSTANCE_TYPE === 'test',
-	
-	// Production: only Tennis Einzel (1v1)
-	RESTRICT_TO_TENNIS_SINGLES: INSTANCE_TYPE === 'production',
+	RESTRICT_TO_TENNIS_SINGLES: false,
 };
 
 /**

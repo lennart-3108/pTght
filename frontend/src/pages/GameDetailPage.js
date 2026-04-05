@@ -309,6 +309,7 @@ export default function GameDetailPage() {
   const [showSchedule, setShowSchedule] = useState(true);
   // Termin-Manager
   const [showTerminManager, setShowTerminManager] = useState(false);
+  const [autoOpenAddSlot, setAutoOpenAddSlot] = useState(false);
   const [terminMeta, setTerminMeta] = useState(null);
   const [terminProposal, setTerminProposal] = useState(null);
   // Teams managen
@@ -770,7 +771,8 @@ export default function GameDetailPage() {
       const fresh = await fres.json().catch(() => j);
       const freshGame = fres.ok ? fresh : j;
       setGame(freshGame);
-      if (isTeamMatch && freshGame?.status !== 'scheduled' && freshGame?.status !== 'completed') {
+      if (freshGame?.status !== 'scheduled' && freshGame?.status !== 'completed') {
+        setAutoOpenAddSlot(true);
         setShowTerminManager(true);
       }
     } catch (e) {
@@ -2438,6 +2440,7 @@ export default function GameDetailPage() {
             token={token}
             isTeamMatch={isTeamMatch}
             allTeamsFull={isTeamMatch && team1Full && team2Full}
+            autoOpenAddSlot={autoOpenAddSlot}
             matchInfo={{
               home_player: isTeamMatch ? teamDisplayA : (game.home_user_name || game.home || t('tm.player1')),
               away_player: isTeamMatch ? teamDisplayB : (game.away_user_name || game.away || t('tm.player2')),
@@ -2449,10 +2452,12 @@ export default function GameDetailPage() {
             }}
             onInvitationSent={() => {
               setShowTerminManager(false);
+              setAutoOpenAddSlot(false);
               window.location.reload();
             }}
             onClose={() => {
               setShowTerminManager(false);
+              setAutoOpenAddSlot(false);
               // refresh label state after close
               setTimeout(() => {
                 if (!token) return;

@@ -401,13 +401,11 @@ module.exports = function authRoutes(ctx) {
               return res.status(500).json({ success: false, error: "Fehler beim Erstellen des Reset-Links" });
             }
 
-            // Build reset URL
-            const fallbackPort = process.env.PORT || 5001;
-            const inferredHost = req && req.get && req.get('host') ? req.get('host') : `localhost:${fallbackPort}`;
-            const inferredProto = req && req.protocol ? req.protocol : (process.env.BACKEND_PROTO || 'http');
-            const publicPrefix = (req && typeof req.baseUrl === 'string') ? req.baseUrl : '';
-            const backendBase = process.env.BACKEND_PUBLIC_URL || `${inferredProto}://${inferredHost}${publicPrefix}`;
-            const resetUrl = `${backendBase}/reset-password/${resetToken}`;
+            // Build reset URL — link directly to frontend reset page
+            const host = req && req.get && req.get('host') ? req.get('host') : 'localhost:3000';
+            const proto = req && req.protocol ? req.protocol : (process.env.BACKEND_PROTO || 'http');
+            const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${proto}://${host.replace(/:\d+$/, '')}`;
+            const resetUrl = `${frontendBase}/resetpassword?token=${resetToken}`;
 
             // Send email
             if (ctx && ctx.mailerState && ctx.mailerState.enabled && ctx.transporter && ctx.sendMail) {
@@ -564,12 +562,15 @@ module.exports = function authRoutes(ctx) {
       }
       
       // Redirect to frontend password reset page with token
-      const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
-      return res.redirect(`${frontendBase}/reset-password?token=${token}`);
+      // On prod, the frontend is on the same host (no port). Fallback strips port for same-origin.
+      const host = req.get('host') || 'localhost:3000';
+      const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${host.replace(/:\d+$/, '')}`;
+      return res.redirect(`${frontendBase}/resetpassword?token=${token}`);
     } catch (e) {
       console.error('[reset-password-link] token verification failed', e.message);
-      const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${req.get('host').replace(/:\d+$/, ':3000')}`;
-      return res.redirect(`${frontendBase}/reset-password?error=invalid_token`);
+      const host = req.get('host') || 'localhost:3000';
+      const frontendBase = process.env.FRONTEND_PUBLIC_URL || `${req.protocol}://${host.replace(/:\d+$/, '')}`;
+      return res.redirect(`${frontendBase}/resetpassword?error=invalid_token`);
     }
   });
 
