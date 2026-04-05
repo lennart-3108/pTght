@@ -988,7 +988,19 @@ module.exports = function matchesRoutes(ctx) {
       // If result is pending confirmation, check who can do what
       if (hasColumn(matchInfo, 'status') && match.status === 'result_pending') {
         const isSubmitter = hasColumn(matchInfo, 'result_submitted_by') && String(match.result_submitted_by) === String(req.user.id);
-        if (isSubmitter) {
+        // For team matches: same-team members see the "waiting" view like the submitter
+        let isSameTeamAsSubmitter = false;
+        if (!isSubmitter && hasParticipantsTable && match.result_submitted_by) {
+          const teamCount = match.team_count != null ? Number(match.team_count) : 0;
+          if (teamCount >= 2) {
+            const viewerMp = await k('match_participants').where({ match_id: matchId, user_id: req.user.id }).first().catch(() => null);
+            const submitterMp = await k('match_participants').where({ match_id: matchId, user_id: match.result_submitted_by }).first().catch(() => null);
+            if (viewerMp && submitterMp && viewerMp.team_index != null && submitterMp.team_index != null && Number(viewerMp.team_index) === Number(submitterMp.team_index)) {
+              isSameTeamAsSubmitter = true;
+            }
+          }
+        }
+        if (isSubmitter || isSameTeamAsSubmitter) {
           return res.json({ canSubmit: false, reason: 'RESULT_PENDING_CONFIRMATION', resultPending: true, isSubmitter: true });
         } else {
           return res.json({ canSubmit: false, reason: 'RESULT_PENDING_CONFIRMATION', resultPending: true, isSubmitter: false,
@@ -1340,6 +1352,19 @@ module.exports = function matchesRoutes(ctx) {
           .andWhere(function () { this.whereNull('status').orWhere('status', 'joined'); })
           .first();
         isParticipant = !!mp;
+
+        // For team matches: confirmer must be from the opposing team
+        if (isParticipant && mp && match.result_submitted_by) {
+          const teamCount = match.team_count != null ? Number(match.team_count) : 0;
+          if (teamCount >= 2 && mp.team_index != null) {
+            const submitterMp = await k('match_participants')
+              .where({ match_id: matchId, user_id: match.result_submitted_by })
+              .first();
+            if (submitterMp && submitterMp.team_index != null && Number(mp.team_index) === Number(submitterMp.team_index)) {
+              return res.status(403).json({ error: 'SAME_TEAM', message: 'Nur ein Spieler aus dem gegnerischen Team kann das Ergebnis bestätigen.' });
+            }
+          }
+        }
       }
       if (!isParticipant) {
         isParticipant = (String(match.home_user_id) === String(req.user.id)) || (String(match.away_user_id) === String(req.user.id));
@@ -1407,6 +1432,19 @@ module.exports = function matchesRoutes(ctx) {
           .andWhere(function () { this.whereNull('status').orWhere('status', 'joined'); })
           .first();
         isParticipant = !!mp;
+
+        // For team matches: rejector must be from the opposing team
+        if (isParticipant && mp && match.result_submitted_by) {
+          const teamCount = match.team_count != null ? Number(match.team_count) : 0;
+          if (teamCount >= 2 && mp.team_index != null) {
+            const submitterMp = await k('match_participants')
+              .where({ match_id: matchId, user_id: match.result_submitted_by })
+              .first();
+            if (submitterMp && submitterMp.team_index != null && Number(mp.team_index) === Number(submitterMp.team_index)) {
+              return res.status(403).json({ error: 'SAME_TEAM', message: 'Nur ein Spieler aus dem gegnerischen Team kann das Ergebnis ablehnen.' });
+            }
+          }
+        }
       }
       if (!isParticipant) {
         isParticipant = (String(match.home_user_id) === String(req.user.id)) || (String(match.away_user_id) === String(req.user.id));

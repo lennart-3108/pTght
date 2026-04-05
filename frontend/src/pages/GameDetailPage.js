@@ -2016,31 +2016,6 @@ export default function GameDetailPage() {
             </div>
           )}
 
-          {/* Info: Wer trägt Ergebnis ein — bei geplanten Matches vor Kickoff */}
-          {game.status === 'scheduled' && !!game.kickoff_at && !isCompleted && !isResultPending && (() => {
-            const kickoff = new Date(game.kickoff_at);
-            const now = new Date();
-            return kickoff > now;
-          })() && isParticipant && (
-            <div style={{
-              padding: isMobile ? '10px 14px' : '12px 16px',
-              marginBottom: isMobile ? 12 : 16,
-              background: 'rgba(47, 107, 87, 0.15)',
-              border: '1px solid rgba(47, 107, 87, 0.4)',
-              borderRadius: 10,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-            }}>
-              <span style={{ fontSize: 16 }}>ℹ️</span>
-              <span style={{ fontSize: isMobile ? 12 : 13, color: '#9db', fontWeight: 500 }}>
-                {lang === 'en'
-                  ? 'After the match, any participant can enter the result. The opponent must then confirm it.'
-                  : 'Nach dem Match kann jeder Teilnehmer das Ergebnis eintragen. Der Gegner muss es anschließend bestätigen.'}
-              </span>
-            </div>
-          )}
-
           {/* Zeile 3: Ergebnis / Ergebnis Eintragen */}
           <div>
             {isCompleted ? (
