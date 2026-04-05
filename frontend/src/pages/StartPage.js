@@ -98,7 +98,15 @@ export default function StartPage() {
       }
       return false;
     };
-    return (myGames.upcoming || []).filter((g) => hasParticipant(g, 'home') && hasParticipant(g, 'away'));
+    return (myGames.upcoming || []).filter((g) => {
+      // Never show cancelled matches
+      if (g.status === 'cancelled') return false;
+      // Team matches with participants are always shown
+      if (g.participants && g.participants.length > 0) return true;
+      if (g.team_count >= 2) return true;
+      // 1v1: require both sides
+      return hasParticipant(g, 'home') && hasParticipant(g, 'away');
+    });
   }, [myGames.upcoming]);
 
   // rotate backgrounds every 5s

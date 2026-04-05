@@ -1278,7 +1278,7 @@ export default function GameDetailPage() {
         })()}
         
         {/* Mitspieler gesucht Info - für Match Creator (oben im Hero) */}
-        {(token && game && game.home_score == null && game.away_score == null && (game.away_user_id == null && !game.away) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
+        {(token && game && game.home_score == null && game.away_score == null && (isTeamMatch ? !(team1Full && team2Full) : (game.away_user_id == null && !game.away)) && viewerId && game.home_user_id && String(game.home_user_id) === String(viewerId)) && (
           <div style={{ 
             marginTop: isMobile ? 16 : 20,
             padding: isMobile ? '16px' : '24px', 
@@ -2016,6 +2016,31 @@ export default function GameDetailPage() {
             </div>
           )}
 
+          {/* Info: Wer trägt Ergebnis ein — bei geplanten Matches vor Kickoff */}
+          {game.status === 'scheduled' && !!game.kickoff_at && !isCompleted && !isResultPending && (() => {
+            const kickoff = new Date(game.kickoff_at);
+            const now = new Date();
+            return kickoff > now;
+          })() && isParticipant && (
+            <div style={{
+              padding: isMobile ? '10px 14px' : '12px 16px',
+              marginBottom: isMobile ? 12 : 16,
+              background: 'rgba(47, 107, 87, 0.15)',
+              border: '1px solid rgba(47, 107, 87, 0.4)',
+              borderRadius: 10,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 8,
+            }}>
+              <span style={{ fontSize: 16 }}>ℹ️</span>
+              <span style={{ fontSize: isMobile ? 12 : 13, color: '#9db', fontWeight: 500 }}>
+                {lang === 'en'
+                  ? 'After the match, any participant can enter the result. The opponent must then confirm it.'
+                  : 'Nach dem Match kann jeder Teilnehmer das Ergebnis eintragen. Der Gegner muss es anschließend bestätigen.'}
+              </span>
+            </div>
+          )}
+
           {/* Zeile 3: Ergebnis / Ergebnis Eintragen */}
           <div>
             {isCompleted ? (
@@ -2140,7 +2165,7 @@ export default function GameDetailPage() {
                   </div>
                 )}
               </div>
-            ) : (token && isParticipant && !!game.kickoff_at && (game.away_user_id != null || game.away)) ? (
+            ) : (token && isParticipant && !!game.kickoff_at && (isTeamMatch ? (team1Full && team2Full) : (game.away_user_id != null || game.away))) ? (
               /* Teilnehmer kann Ergebnis eintragen */
               (() => {
                 const isTennis = game?.sport?.toLowerCase().includes('tennis');

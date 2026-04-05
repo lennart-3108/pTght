@@ -345,7 +345,7 @@ module.exports = function meRoutes({ db }) {
         participants: participantsMap[r.id] || null
       }));
       const completed = withTs.filter(r => r.status === 'completed' || (r.home_score != null && r.away_score != null && r.status !== 'result_pending')).sort((a,b) => (b.ts - a.ts));
-      const upcoming = withTs.filter(r => !(r.status === 'completed' || (r.home_score != null && r.away_score != null && r.status !== 'result_pending'))).sort((a,b) => (a.ts - b.ts));
+      const upcoming = withTs.filter(r => r.status !== 'cancelled' && !(r.status === 'completed' || (r.home_score != null && r.away_score != null && r.status !== 'result_pending'))).sort((a,b) => (a.ts - b.ts));
       return res.json({ upcoming, completed });
     } catch (e) {
       console.error("/me/games failed:", {
