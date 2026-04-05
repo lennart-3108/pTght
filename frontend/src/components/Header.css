@@ -110,9 +110,11 @@
 
 .ml-header__menu.is-open {
   max-height: 72vh;
-  overflow-y: auto;
+  overflow: hidden;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
   pointer-events: auto;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Actions on the right (bell + burger) */
@@ -246,6 +248,25 @@
   display: grid;
   gap: 10px;
   padding: 12px;
+  flex: 1;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(127, 202, 170, 0.45) rgba(255, 255, 255, 0.06);
+}
+.ml-nav::-webkit-scrollbar {
+  width: 6px;
+}
+.ml-nav::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 3px;
+}
+.ml-nav::-webkit-scrollbar-thumb {
+  background: rgba(127, 202, 170, 0.45);
+  border-radius: 3px;
+}
+.ml-nav::-webkit-scrollbar-thumb:hover {
+  background: rgba(127, 202, 170, 0.65);
 }
 .ml-nav__item {
   color: #d3d3d3;
@@ -545,4 +566,5 @@
 /* Responsive fine-tuning */
 @media (max-width: 1024px) {
   .ml-header__menu.is-open { max-height: 50vh; }
+  .ml-nav { max-height: none; }
 }

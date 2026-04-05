@@ -578,12 +578,11 @@ export default function Header() {
           </Link>
         </div>
 
-        <div className={"ml-header__menu" + (open ? " is-open" : "")}>
-        <nav className="ml-nav">
+        <div className={"ml-header__menu" + (open ? " is-open" : "")} style={{ display: open ? 'flex' : undefined, flexDirection: 'column' }}>
+        <nav className="ml-nav" style={{ flex: 1, overflowY: 'scroll', WebkitOverflowScrolling: 'touch' }}>
           {!token && (
             <>
               <Link to="/login" className="ml-nav__item" onClick={handleNavigate}>{t('nav.login')}</Link>
-              <Link to="/leagues" className="ml-nav__item" onClick={handleNavigate}>{t('nav.leagues')}</Link>
               <Link to="/abos" className="ml-nav__item" onClick={handleNavigate}>{t('nav.subscriptions')}</Link>
               {showProjectTasks ? <Link to="/tasks" className="ml-nav__item" onClick={handleNavigate}>{t('nav.tasks')}</Link> : null}
               <Link to="/register" className="ml-nav__item" onClick={handleNavigate}>{t('nav.register')}</Link>
@@ -593,7 +592,6 @@ export default function Header() {
           {token && (
             <>
               {showProjectTasks ? <Link to="/tasks" className="ml-nav__item" onClick={handleNavigate}>{t('nav.tasks')}</Link> : null}
-              {_FEATURES.SHOW_LEAGUES && <Link to="/leagues" className="ml-nav__item" onClick={handleNavigate}>{t('nav.leagues')}</Link>}
               <Link to="/mymatches" className="ml-nav__item" onClick={handleNavigate}>{t('nav.myMatches')}</Link>
               {_FEATURES.SHOW_SUBSCRIPTIONS && <Link to="/abos" className="ml-nav__item" onClick={handleNavigate}>{t('nav.subscriptions')}</Link>}
               {_FEATURES.SHOW_BOOKINGS && <Link to="/booking" className="ml-nav__item" onClick={handleNavigate}>{t('nav.booking')}</Link>}
@@ -623,23 +621,26 @@ export default function Header() {
               <Link to="/create" className="ml-nav__item" onClick={handleNavigate}>Create</Link>
             </>
           )}
+        </nav>
 
+        <div style={{ borderTop: '1px solid rgba(47, 107, 87, 0.4)', padding: '12px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 0 }}>
           <button
             type="button"
             className="ml-nav__item"
             onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleLang(); }}
-            style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+            style={{ background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', flex: 'none' }}
             title={t('lang.title')}
           >
             {t('lang.switch')}
           </button>
-        </nav>
 
-        {token && (
-          <div className="ml-logout">
-            <a href="#logout" onClick={(e) => { handleNavigate(); handleLogout(e); }} className="ml-nav__item">{t('nav.logout')}</a>
-          </div>
-        )}
+          {token && (
+            <>
+              <span style={{ width: 1, alignSelf: 'stretch', margin: '0 12px', background: 'linear-gradient(180deg, rgba(212,175,55,0.15), rgba(212,175,55,0.7), rgba(212,175,55,0.15))' }} />
+              <a href="#logout" onClick={(e) => { handleNavigate(); handleLogout(e); }} className="ml-nav__item" style={{ flex: 'none' }}>{t('nav.logout')}</a>
+            </>
+          )}
+        </div>
       </div>
 
       <div className="ml-header__actions">

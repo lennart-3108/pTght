@@ -166,6 +166,8 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
 
   const isTeamMatch = isTeamMatchProp || meta?.isTeamMatch || false;
   const isCreator = meta?.isHost || false;
+  const [slotPage, setSlotPage] = useState(0);
+  const SLOTS_PER_PAGE = 5;
 
   const slotDuration = useMemo(() => {
     const candidate = meta?.slotDurationMinutes ?? meta?.matchDurationMinutes ?? 60;
@@ -622,6 +624,7 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
       });
     });
     const dur = slotDuration || 60;
+    const now = new Date();
     const candidates = [];
     Object.entries(byDate).forEach(([date, windows]) => {
       // Collect all unique start/end boundaries as candidate start times (snapped to 15min)
@@ -642,6 +645,9 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
           }
         });
         if (users.size > 0) {
+          // Skip slots in the past
+          const slotStart = new Date(date + 'T' + minutesToTimeString(startMin));
+          if (slotStart <= now) return;
           candidates.push({
             date,
             startTime: minutesToTimeString(startMin),
@@ -657,7 +663,7 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
     // Deduplicate: skip slots that overlap heavily with already-picked ones
     const picked = [];
     for (const c of candidates) {
-      if (picked.length >= 3) break;
+      if (picked.length >= 15) break;
       const overlap = picked.some((p) => p.date === c.date && p.startTime === c.startTime);
       if (!overlap) picked.push(c);
     }
@@ -893,8 +899,8 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
           </div>
         )}
 
-        {/* ── Team Match: Time Assistant (best slots) — shown at top ── */}
-        {isTeamMatch && allTeamsFull && bestSlots.length > 0 && (
+        {/* ── Time Assistant (best slots) — shown at top ── */}
+        {bestSlots.length > 0 && (
           <div style={{ ...styles.configCard, marginBottom: 14 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <span style={{ fontSize: 18 }}>⏱</span>
@@ -902,7 +908,7 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
               <span style={{ color: '#9db', fontSize: 13 }}> — {isEn ? 'Best slots based on availability' : 'Beste Slots basierend auf Verfügbarkeit'}</span>
             </div>
             <div style={{ display: 'grid', gap: 8 }}>
-              {bestSlots.map((slot) => {
+              {bestSlots.slice(slotPage * SLOTS_PER_PAGE, (slotPage + 1) * SLOTS_PER_PAGE).map((slot) => {
                 const isSelected = scheduleDate === slot.date && scheduleTime === slot.startTime;
                 return (
                   <button
@@ -940,6 +946,25 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
                 );
               })}
             </div>
+            {/* Pagination */}
+            {bestSlots.length > SLOTS_PER_PAGE && (
+              <div style={{ display: 'flex', justifyContent: 'center', gap: 8, marginTop: 10 }}>
+                {Array.from({ length: Math.min(3, Math.ceil(bestSlots.length / SLOTS_PER_PAGE)) }, (_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setSlotPage(i)}
+                    style={{
+                      width: 32, height: 32, borderRadius: 8, border: 'none', cursor: 'pointer',
+                      background: slotPage === i ? '#debc7c' : 'rgba(255,255,255,0.08)',
+                      color: slotPage === i ? '#1a2e1a' : '#9db',
+                      fontWeight: 700, fontSize: 14
+                    }}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {/* Set Match Date — directly under Time Assistant */}
             {isCreator && (
@@ -1304,54 +1329,10 @@ export default function TerminManagerKalender({ matchId, token, onClose, onInvit
           </div>
         )}
 
-        {/* ── Team Match: All Participants' Availability ── */}
-        {isTeamMatch && allAvailabilityByWeek.length > 0 && (
-          <div style={{ marginTop: 18 }}>
-            <div style={styles.sectionHeaderSimple}>
-              <h3 style={{ margin: 0, color: '#e8efe8' }}>{isEn ? 'All Availabilities' : 'Alle Verfügbarkeiten'}</h3>
-              <div style={{ color: '#9db', fontSize: 13 }}>{isEn ? 'Overview of all participants' : 'Übersicht aller Teilnehmer'}</div>
-            </div>
-
-            <div style={{ display: 'grid', gap: 14 }}>
-              {allAvailabilityByWeek.map((week) => (
-                <div key={week.key} style={styles.weekCard}>
-                  <div style={styles.weekHeader}>
-                    <div style={{ fontWeight: 800, color: '#debc7c' }}>{lang === 'en' ? 'W' : 'KW'} {week.week}</div>
-                    <div style={{ color: '#9db', fontSize: 12 }}>{fmtWeekRange(week.weekStartStr, week.weekEndStr, locale)}</div>
-                  </div>
-
-                  <div style={{ display: 'grid', gap: 10 }}>
-                    {week.days.map(({ date, frames: dayFrames }) => {
-                      const availUsers = usersForSlot(date, dayFrames[0]?.time_start, dayFrames[dayFrames.length - 1]?.time_end);
-                      return (
-                        <div key={date} style={styles.dateCard}>
-                          <div style={styles.dateHeader}>
-                            <div style={{ fontWeight: 700 }}>{fmtDate(date, locale)}</div>
-                            <div style={{ color: '#9db', fontSize: 13 }}>{dayFrames.length} Slot{dayFrames.length !== 1 ? 's' : ''}</div>
-                          </div>
-
-                          <div style={{ display: 'grid', gap: 8 }}>
-                            {dayFrames.map((frame) => (
-                              <div key={frame.id} style={styles.windowRow}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1 }}>
-                                  <div style={{ fontWeight: 700, color: '#e8efe8' }}>{fmtTime(frame.time_start)} - {fmtTime(frame.time_end)}</div>
-                                  <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 8, background: 'rgba(72,186,166,0.15)', color: '#48baa6', border: '1px solid rgba(72,186,166,0.3)', alignSelf: 'flex-start' }}>{frame.userName}</span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Alle Verfügbarkeiten section removed — Zeit-Assistent shows aggregated best slots instead */}
 
         {/* ── Team Match: Schedule (creator only, when no time assistant visible) ── */}
-        {isTeamMatch && isCreator && !(allTeamsFull && bestSlots.length > 0) && (
+        {isTeamMatch && isCreator && !bestSlots.length && (
           <div style={{ marginTop: 22 }}>
             <div style={styles.sectionHeaderSimple}>
               <h3 style={{ margin: 0, color: '#e8efe8' }}>{isEn ? 'Set Match Date' : 'Match-Termin festlegen'}</h3>
