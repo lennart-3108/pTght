@@ -76,6 +76,7 @@ export default function GameDetailPage() {
   // permission to submit result (must be declared before any early return)
   const [canSubmit, setCanSubmit] = useState(false);
   const [cannotReason, setCannotReason] = useState('');
+  const [captainNames, setCaptainNames] = useState([]);
   // Result confirmation state
   const [resultPending, setResultPending] = useState(false);
   const [resultIsSubmitter, setResultIsSubmitter] = useState(false);
@@ -389,6 +390,7 @@ export default function GameDetailPage() {
         if (!mounted) return;
         setCanSubmit(!!j.canSubmit);
         setCannotReason(j.reason || '');
+        setCaptainNames(Array.isArray(j.captainNames) ? j.captainNames : []);
         // Handle result_pending confirmation flow
         if (j.resultPending) {
           setResultPending(true);
@@ -2141,6 +2143,23 @@ export default function GameDetailPage() {
                 )}
               </div>
             ) : (token && isParticipant && !!game.kickoff_at && (isTeamMatch ? (team1Full && team2Full) : (game.away_user_id != null || game.away))) ? (
+              cannotReason === 'ONLY_TEAM_CAPTAINS' ? (
+                /* Non-captain: Info-Box statt Ergebnis-Eingabe */
+                <div style={{
+                  marginTop: isMobile ? 12 : 16,
+                  padding: isMobile ? '14px 16px' : '16px 20px',
+                  background: 'rgba(47, 107, 87, 0.15)',
+                  border: '1px solid rgba(47, 107, 87, 0.4)',
+                  borderRadius: 12,
+                  textAlign: 'center'
+                }}>
+                  <div style={{ fontSize: isMobile ? 13 : 15, color: '#9db', fontWeight: 500, lineHeight: 1.6 }}>
+                    {lang === 'en'
+                      ? `Only ${captainNames.join(' or ')} can enter the result.`
+                      : `Nur ${captainNames.join(' oder ')} kann das Ergebnis eintragen.`}
+                  </div>
+                </div>
+              ) :
               /* Teilnehmer kann Ergebnis eintragen */
               (() => {
                 const isTennis = game?.sport?.toLowerCase().includes('tennis');

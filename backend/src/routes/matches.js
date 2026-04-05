@@ -988,23 +988,41 @@ module.exports = function matchesRoutes(ctx) {
       // If result is pending confirmation, check who can do what
       if (hasColumn(matchInfo, 'status') && match.status === 'result_pending') {
         const isSubmitter = hasColumn(matchInfo, 'result_submitted_by') && String(match.result_submitted_by) === String(req.user.id);
-        // For team matches: same-team members see the "waiting" view like the submitter
+        // For team matches: determine team captains and check roles
         let isSameTeamAsSubmitter = false;
-        if (!isSubmitter && hasParticipantsTable && match.result_submitted_by) {
+        let isOpposingCaptain = false;
+        if (hasParticipantsTable && match.result_submitted_by) {
           const teamCount = match.team_count != null ? Number(match.team_count) : 0;
           if (teamCount >= 2) {
-            const viewerMp = await k('match_participants').where({ match_id: matchId, user_id: req.user.id }).first().catch(() => null);
-            const submitterMp = await k('match_participants').where({ match_id: matchId, user_id: match.result_submitted_by }).first().catch(() => null);
-            if (viewerMp && submitterMp && viewerMp.team_index != null && submitterMp.team_index != null && Number(viewerMp.team_index) === Number(submitterMp.team_index)) {
+            const allMps = await k('match_participants')
+              .where({ match_id: matchId })
+              .andWhere(function () { this.whereNull('status').orWhere('status', 'joined'); })
+              .whereIn('team_index', [1, 2])
+              .orderBy('id', 'asc')
+              .select('id', 'user_id', 'team_index');
+            const viewerMp = allMps.find(p => Number(p.user_id) === Number(req.user.id));
+            const submitterMp = allMps.find(p => Number(p.user_id) === Number(match.result_submitted_by));
+            if (viewerMp && submitterMp && Number(viewerMp.team_index) === Number(submitterMp.team_index)) {
               isSameTeamAsSubmitter = true;
+            }
+            // Check if viewer is captain of the opposing team
+            if (viewerMp && submitterMp && Number(viewerMp.team_index) !== Number(submitterMp.team_index)) {
+              const opposingTeamIdx = Number(viewerMp.team_index);
+              const captain = allMps.find(p => Number(p.team_index) === opposingTeamIdx);
+              if (captain && Number(captain.user_id) === Number(req.user.id)) {
+                isOpposingCaptain = true;
+              }
             }
           }
         }
         if (isSubmitter || isSameTeamAsSubmitter) {
           return res.json({ canSubmit: false, reason: 'RESULT_PENDING_CONFIRMATION', resultPending: true, isSubmitter: true });
-        } else {
+        } else if (isOpposingCaptain) {
           return res.json({ canSubmit: false, reason: 'RESULT_PENDING_CONFIRMATION', resultPending: true, isSubmitter: false,
             pendingScore: { home_score: match.home_score, away_score: match.away_score } });
+        } else {
+          // Non-captain opposing team member — show waiting view
+          return res.json({ canSubmit: false, reason: 'RESULT_PENDING_CONFIRMATION', resultPending: true, isSubmitter: true });
         }
       }
       // If result is disputed, allow re-submission (scores were cleared)
@@ -1072,6 +1090,25 @@ module.exports = function matchesRoutes(ctx) {
               if (t1 < playersPerTeam || t2 < playersPerTeam) return res.json({ canSubmit: false, reason: 'OPPONENT_NOT_ASSIGNED' });
             } else {
               if (t1 < 1 || t2 < 1) return res.json({ canSubmit: false, reason: 'OPPONENT_NOT_ASSIGNED' });
+            }
+
+            // For team matches: only "member 1" (lowest id) of each team can submit
+            const teamCaptains = await k('match_participants')
+              .where({ match_id: matchId })
+              .andWhere(function () { this.whereNull('status').orWhere('status', 'joined'); })
+              .whereIn('team_index', [1, 2])
+              .orderBy('id', 'asc')
+              .select('id', 'user_id', 'team_index');
+            const captain1 = teamCaptains.find(p => Number(p.team_index) === 1);
+            const captain2 = teamCaptains.find(p => Number(p.team_index) === 2);
+            const isCaptain = (captain1 && Number(captain1.user_id) === viewerId) || (captain2 && Number(captain2.user_id) === viewerId);
+
+            if (!isCaptain) {
+              // Return the names of players who CAN submit
+              const captainIds = [captain1?.user_id, captain2?.user_id].filter(Boolean);
+              const captainUsers = captainIds.length ? await k('users').whereIn('id', captainIds).select('id', 'firstname', 'lastname') : [];
+              const captainNames = captainUsers.map(u => [u.firstname, u.lastname].filter(Boolean).join(' ') || `Spieler #${u.id}`);
+              return res.json({ canSubmit: false, reason: 'ONLY_TEAM_CAPTAINS', captainNames });
             }
           }
 
@@ -1353,7 +1390,7 @@ module.exports = function matchesRoutes(ctx) {
           .first();
         isParticipant = !!mp;
 
-        // For team matches: confirmer must be from the opposing team
+        // For team matches: only captain (member 1) of the opposing team can confirm
         if (isParticipant && mp && match.result_submitted_by) {
           const teamCount = match.team_count != null ? Number(match.team_count) : 0;
           if (teamCount >= 2 && mp.team_index != null) {
@@ -1361,7 +1398,16 @@ module.exports = function matchesRoutes(ctx) {
               .where({ match_id: matchId, user_id: match.result_submitted_by })
               .first();
             if (submitterMp && submitterMp.team_index != null && Number(mp.team_index) === Number(submitterMp.team_index)) {
-              return res.status(403).json({ error: 'SAME_TEAM', message: 'Nur ein Spieler aus dem gegnerischen Team kann das Ergebnis bestätigen.' });
+              return res.status(403).json({ error: 'SAME_TEAM', message: 'Nur Spieler 1 des gegnerischen Teams kann das Ergebnis bestätigen.' });
+            }
+            // Must be captain (lowest id) of opposing team
+            const opposingCaptain = await k('match_participants')
+              .where({ match_id: matchId, team_index: mp.team_index })
+              .andWhere(function () { this.whereNull('status').orWhere('status', 'joined'); })
+              .orderBy('id', 'asc')
+              .first();
+            if (opposingCaptain && Number(opposingCaptain.user_id) !== Number(req.user.id)) {
+              return res.status(403).json({ error: 'ONLY_TEAM_CAPTAIN', message: 'Nur Spieler 1 deines Teams kann das Ergebnis bestätigen.' });
             }
           }
         }
@@ -1433,7 +1479,7 @@ module.exports = function matchesRoutes(ctx) {
           .first();
         isParticipant = !!mp;
 
-        // For team matches: rejector must be from the opposing team
+        // For team matches: only captain (member 1) of the opposing team can reject
         if (isParticipant && mp && match.result_submitted_by) {
           const teamCount = match.team_count != null ? Number(match.team_count) : 0;
           if (teamCount >= 2 && mp.team_index != null) {
@@ -1441,7 +1487,15 @@ module.exports = function matchesRoutes(ctx) {
               .where({ match_id: matchId, user_id: match.result_submitted_by })
               .first();
             if (submitterMp && submitterMp.team_index != null && Number(mp.team_index) === Number(submitterMp.team_index)) {
-              return res.status(403).json({ error: 'SAME_TEAM', message: 'Nur ein Spieler aus dem gegnerischen Team kann das Ergebnis ablehnen.' });
+              return res.status(403).json({ error: 'SAME_TEAM', message: 'Nur Spieler 1 des gegnerischen Teams kann das Ergebnis ablehnen.' });
+            }
+            const opposingCaptain = await k('match_participants')
+              .where({ match_id: matchId, team_index: mp.team_index })
+              .andWhere(function () { this.whereNull('status').orWhere('status', 'joined'); })
+              .orderBy('id', 'asc')
+              .first();
+            if (opposingCaptain && Number(opposingCaptain.user_id) !== Number(req.user.id)) {
+              return res.status(403).json({ error: 'ONLY_TEAM_CAPTAIN', message: 'Nur Spieler 1 deines Teams kann das Ergebnis ablehnen.' });
             }
           }
         }
