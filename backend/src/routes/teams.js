@@ -208,7 +208,7 @@ module.exports = function teamsRoutes(ctx) {
       const members = await k('team_members as tm').leftJoin('users as u', 'u.id', 'tm.user_id').where({ 'tm.team_id': id }).select(selectCols);
       const memberList = (members || []).map(m => ({
         user_id: m.user_id,
-        display_name: (m.firstname || m.lastname) ? `${m.firstname||''} ${m.lastname||''}`.trim() : (m.name || m.email || `user:${m.user_id}`),
+        display_name: (m.firstname || m.lastname) ? `${m.firstname||''} ${m.lastname ? m.lastname.charAt(0).toUpperCase() + '.' : ''}`.trim() : (m.name || m.email || `user:${m.user_id}`),
         is_captain: !!m.is_captain
       }));
       res.json({ team, members: memberList });
@@ -261,7 +261,7 @@ module.exports = function teamsRoutes(ctx) {
           .where('rp.roster_id', r.id)
           .select('rp.user_id', 'rp.role', 'rp.shirt_number', 'u.firstname', 'u.lastname', 'u.email')
           .orderBy('rp.role', 'desc');
-        const mapped = (players || []).map(p => ({ user_id: p.user_id, role: p.role, shirt_number: p.shirt_number, display_name: (p.firstname || p.lastname) ? `${(p.firstname||'').trim()} ${(p.lastname||'').trim()}`.trim() : (p.email || `user:${p.user_id}`) }));
+        const mapped = (players || []).map(p => ({ user_id: p.user_id, role: p.role, shirt_number: p.shirt_number, display_name: (p.firstname || p.lastname) ? `${(p.firstname||'').trim()} ${p.lastname ? p.lastname.charAt(0).toUpperCase() + '.' : ''}`.trim() : (p.email || `user:${p.user_id}`) }));
         out.push({ id: r.id, match_id: r.match_id, created_by: r.created_by, created_at: r.created_at, players: mapped });
       }
       res.json(out);

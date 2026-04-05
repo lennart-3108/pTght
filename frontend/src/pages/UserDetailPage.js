@@ -457,7 +457,9 @@ export default function UserDetailPage() {
 
   const displayName = useMemo(() => {
     if (!user) return "";
-    const name = `${user.firstname || ""} ${user.lastname || ""}`.trim();
+    const fn = (user.firstname || '').trim();
+    const ln = (user.lastname || '').trim();
+    const name = ln ? `${fn} ${ln.charAt(0).toUpperCase()}.`.trim() : fn;
     return name || user.email || `User ${user.id}`;
   }, [user]);
 
@@ -1070,7 +1072,7 @@ export default function UserDetailPage() {
                   open={showMatchInviteDialog}
                   onClose={() => setShowMatchInviteDialog(false)}
                   targetUserId={user.id}
-                  targetUserName={`${user.firstname || ""} ${user.lastname || ""}`.trim() || user.email || `User #${user.id}`}
+                  targetUserName={(() => { const fn = (user.firstname || '').trim(); const ln = (user.lastname || '').trim(); return ln ? `${fn} ${ln.charAt(0).toUpperCase()}.`.trim() : fn; })() || user.email || `User #${user.id}`}
                   onCreated={() => {
                     setShowMatchInviteDialog(false);
                     navigate(`/chat/user/${user.id}`);

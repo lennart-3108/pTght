@@ -371,7 +371,7 @@ module.exports = function leaguesRoutes(ctx) {
     };
   }
 
-  const DISPLAY_NAME_SQL = "COALESCE(u.firstname || ' ' || u.lastname, u.name, u.email)";
+  const DISPLAY_NAME_SQL = "COALESCE(u.firstname || ' ' || CASE WHEN u.lastname IS NOT NULL AND u.lastname != '' THEN SUBSTR(u.lastname,1,1) || '.' ELSE '' END, u.name, u.email)";
 
   // GET / - Ligenliste (dynamisch publicState)
   router.get("/", async (req, res) => {
@@ -633,7 +633,7 @@ module.exports = function leaguesRoutes(ctx) {
             // Use EXACT same logic as resolveUserName to ensure consistency
             let fullName;
             if (m.firstname || m.lastname) {
-              fullName = `${m.firstname || ''} ${m.lastname || ''}`.trim();
+              fullName = `${m.firstname || ''} ${m.lastname ? m.lastname.charAt(0).toUpperCase() + '.' : ''}`.trim();
             } else if (m.email) {
               fullName = m.email;
             } else {
@@ -646,7 +646,9 @@ module.exports = function leaguesRoutes(ctx) {
             if (m.email) userIdByName.set(normalize(m.email), uid);
             if (m.firstname) userIdByName.set(normalize(m.firstname), uid);
             const combined = `${m.firstname || ''} ${m.lastname || ''}`.trim();
+            const combinedInitial = `${m.firstname || ''} ${m.lastname ? m.lastname.charAt(0).toUpperCase() + '.' : ''}`.trim();
             if (combined) userIdByName.set(normalize(combined), uid);
+            if (combinedInitial) userIdByName.set(normalize(combinedInitial), uid);
             
             // Pre-create entry with 0 stats for all members AND cache the name
             const key = `u:${uid}`;
@@ -664,7 +666,7 @@ module.exports = function leaguesRoutes(ctx) {
           let nm = String(uid);
           try {
             const u = await k('users').where({ id: uid }).first();
-            if (u) nm = (u.firstname || u.lastname) ? `${u.firstname || ''} ${u.lastname || ''}`.trim() : (u.email || nm);
+            if (u) nm = (u.firstname || u.lastname) ? `${u.firstname || ''} ${u.lastname ? u.lastname.charAt(0).toUpperCase() + '.' : ''}`.trim() : (u.email || nm);
           } catch {}
           nameCache.set(key, nm);
           return nm;
@@ -804,7 +806,7 @@ module.exports = function leaguesRoutes(ctx) {
       const hasName = Object.prototype.hasOwnProperty.call(usersInfo, "name");
       const hasEmail = Object.prototype.hasOwnProperty.call(usersInfo, "email");
       const fullNameExpr = (hasFirst || hasLast)
-        ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')), '')"
+        ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || CASE WHEN u.lastname IS NOT NULL AND u.lastname != '' THEN SUBSTR(u.lastname,1,1) || '.' ELSE '' END), '')"
         : null;
       const nameCoalesce = [
         ...(fullNameExpr ? [fullNameExpr] : []),
@@ -925,7 +927,7 @@ module.exports = function leaguesRoutes(ctx) {
       const membersArr = Array.isArray(members) ? members : [];
       membersArr.forEach(m => {
         const display = (m.firstname || m.lastname)
-          ? `${m.firstname || ''} ${m.lastname || ''}`.trim()
+          ? `${m.firstname || ''} ${m.lastname ? m.lastname.charAt(0).toUpperCase() + '.' : ''}`.trim()
           : (m.name || m.email || `user:${m.user_id}`);
         byTeam[m.team_id] = byTeam[m.team_id] || [];
         byTeam[m.team_id].push({ user_id: m.user_id, display_name: display });

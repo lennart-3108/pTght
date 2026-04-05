@@ -1,4 +1,42 @@
 import React, { useState, useEffect } from 'react';
+import { useLanguage } from '../i18n';
+
+// German translations for countries and states (DB stores English names)
+const DE_NAMES = {
+  // Countries
+  'Germany': 'Deutschland',
+  'Austria': 'Österreich',
+  'Switzerland': 'Schweiz',
+  // German states
+  'Bavaria': 'Bayern',
+  'Hesse': 'Hessen',
+  'Lower Saxony': 'Niedersachsen',
+  'North Rhine-Westphalia': 'Nordrhein-Westfalen',
+  'Rhineland-Palatinate': 'Rheinland-Pfalz',
+  'Saxony': 'Sachsen',
+  'Saxony-Anhalt': 'Sachsen-Anhalt',
+  'Thuringia': 'Thüringen',
+  // Austrian states
+  'Burgenland': 'Burgenland',
+  'Carinthia': 'Kärnten',
+  'Lower Austria': 'Niederösterreich',
+  'Salzburg': 'Salzburg',
+  'Styria': 'Steiermark',
+  'Tyrol': 'Tirol',
+  'Upper Austria': 'Oberösterreich',
+  'Vienna': 'Wien',
+  'Vorarlberg': 'Vorarlberg',
+  // Swiss cantons
+  'Lucerne': 'Luzern',
+  'Geneva': 'Genf',
+  'Ticino': 'Tessin',
+  'Valais': 'Wallis',
+  'Vaud': 'Waadt',
+  'Fribourg': 'Freiburg',
+  'Neuchâtel': 'Neuenburg',
+  'Graubünden': 'Graubünden',
+  'Zurich': 'Zürich',
+};
 
 /**
  * Hierarchical Location Selector Component
@@ -18,6 +56,8 @@ export default function LocationSelector({
   isOpen,
   onClose
 }) {
+  const { lang } = useLanguage();
+  const loc = (name) => (lang === 'de' && DE_NAMES[name]) ? DE_NAMES[name] : name;
   const [showDropdown, setShowDropdown] = useState(false);
   const [expandedCountries, setExpandedCountries] = useState(new Set());
   const [expandedStates, setExpandedStates] = useState(new Set());
@@ -158,7 +198,7 @@ export default function LocationSelector({
           boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
           padding: '8px 0'
         }}>
-          {[...countries].sort((a, b) => a.name.localeCompare(b.name)).map(country => {
+          {[...countries].sort((a, b) => loc(a.name).localeCompare(loc(b.name))).map(country => {
             const countryId = String(country.id);
             const isExpanded = expandedCountries.has(countryId);
             const countryStates = states.filter(s => String(s.countryId) === countryId);
@@ -183,7 +223,7 @@ export default function LocationSelector({
                   <span style={{ fontSize: 10, color: '#9ca3af' }}>
                     {isExpanded ? '▼' : '▶'}
                   </span>
-                  <span>{country.name}</span>
+                  <span>{loc(country.name)}</span>
                   <span style={{ marginLeft: 'auto', fontSize: 11, color: '#6b8578' }}>
                     {countryStates.length}
                   </span>
@@ -216,7 +256,7 @@ export default function LocationSelector({
                         <span style={{ fontSize: 10, color: '#9ca3af' }}>
                           {isStateExpanded ? '▼' : '▶'}
                         </span>
-                        <span>{state.name}</span>
+                        <span>{loc(state.name)}</span>
                         <span style={{ marginLeft: 'auto', fontSize: 11, color: '#6b8578' }}>
                           {stateCities.length}
                         </span>

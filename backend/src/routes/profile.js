@@ -321,7 +321,7 @@ module.exports = function profileRoutes(ctx) {
               if (homeUser) {
                 const parts = [];
                 if (homeUser.firstname) parts.push(homeUser.firstname);
-                if (homeUser.lastname) parts.push(homeUser.lastname);
+                if (homeUser.lastname) parts.push(homeUser.lastname.charAt(0).toUpperCase() + '.');
                 enriched.home = parts.length > 0 ? parts.join(' ').trim() : (homeUser.name || homeUser.email || `User ${homeUser.id}`);
                 enriched.home_id = homeUser.id;
               }
@@ -358,7 +358,7 @@ module.exports = function profileRoutes(ctx) {
               if (awayUser) {
                 const parts = [];
                 if (awayUser.firstname) parts.push(awayUser.firstname);
-                if (awayUser.lastname) parts.push(awayUser.lastname);
+                if (awayUser.lastname) parts.push(awayUser.lastname.charAt(0).toUpperCase() + '.');
                 enriched.away = parts.length > 0 ? parts.join(' ').trim() : (awayUser.name || awayUser.email || `User ${awayUser.id}`);
                 enriched.away_id = awayUser.id;
               }

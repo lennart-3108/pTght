@@ -837,7 +837,7 @@ app.get("/me/games", isAuthenticated, async (req, res) => {
     const hasName = Object.prototype.hasOwnProperty.call(usersInfo, "name");
     const hasEmail = Object.prototype.hasOwnProperty.call(usersInfo, "email");
     const fullNameExpr = (hasFirst || hasLast)
-      ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')), '')"
+      ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || CASE WHEN u.lastname IS NOT NULL AND u.lastname != '' THEN SUBSTR(u.lastname,1,1) || '.' ELSE '' END), '')"
       : null;
     const nameCoalesce = [
       ...(fullNameExpr ? [fullNameExpr] : []),
@@ -902,7 +902,7 @@ app.get("/me/games", isAuthenticated, async (req, res) => {
       const parts = await k("match_participants as mp")
         .join("users as u", "u.id", "mp.user_id")
         .whereIn("mp.match_id", teamMatchIds)
-        .select("mp.match_id", "mp.user_id", "mp.team_index", k.raw(`COALESCE(NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')), ''), u.email) as name`));
+        .select("mp.match_id", "mp.user_id", "mp.team_index", k.raw(`COALESCE(NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || CASE WHEN u.lastname IS NOT NULL AND u.lastname != '' THEN SUBSTR(u.lastname,1,1) || '.' ELSE '' END), ''), u.email) as name`));
       for (const p of parts) {
         if (!participantsMap[p.match_id]) participantsMap[p.match_id] = [];
         participantsMap[p.match_id].push({ user_id: p.user_id, team_index: p.team_index, name: p.name });
@@ -1064,10 +1064,10 @@ async function newsHandler(req, res) {
       
       if (hasProposals && matchTable && hasUsers) {
         const buildDisplayName = (row) => {
-          const parts = [row.firstname || "", row.lastname || ""]
-            .map((s) => String(s || "").trim())
-            .filter(Boolean);
-          if (parts.length) return parts.join(" ");
+          const first = String(row.firstname || '').trim();
+          const last = String(row.lastname || '').trim();
+          const lastInitial = last ? `${last.charAt(0).toUpperCase()}.` : '';
+          if (first || lastInitial) return `${first} ${lastInitial}`.trim();
           if (row.name && String(row.name).trim()) return String(row.name).trim();
           if (row.email && String(row.email).trim()) return String(row.email).trim();
           return row.userId ? `User ${row.userId}` : "Unbekannt";
@@ -1245,10 +1245,10 @@ async function newsHandler(req, res) {
       // Check for players joining matches
       if (matchTable && hasUsers) {
         const buildDisplayName = (row) => {
-          const parts = [row.firstname || "", row.lastname || ""]
-            .map((s) => String(s || "").trim())
-            .filter(Boolean);
-          if (parts.length) return parts.join(" ");
+          const first = String(row.firstname || '').trim();
+          const last = String(row.lastname || '').trim();
+          const lastInitial = last ? `${last.charAt(0).toUpperCase()}.` : '';
+          if (first || lastInitial) return `${first} ${lastInitial}`.trim();
           if (row.name && String(row.name).trim()) return String(row.name).trim();
           if (row.email && String(row.email).trim()) return String(row.email).trim();
           return row.userId ? `User ${row.userId}` : "Unbekannt";

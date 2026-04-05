@@ -304,7 +304,7 @@ module.exports = function leagueMatchesRoutes({ db }) {
       const hasName = Object.prototype.hasOwnProperty.call(usersInfo, "name");
       const hasEmail = Object.prototype.hasOwnProperty.call(usersInfo, "email");
       const fullNameExpr = (hasFirst || hasLast)
-        ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')), '')"
+        ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || CASE WHEN u.lastname IS NOT NULL AND u.lastname != '' THEN SUBSTR(u.lastname,1,1) || '.' ELSE '' END), '')"
         : null;
       const nameCoalesce = [
         ...(fullNameExpr ? [fullNameExpr] : []),
@@ -983,7 +983,7 @@ module.exports = function leagueMatchesRoutes({ db }) {
               if (t && t.name) nm = t.name;
             } else if (key) {
               const u = await k('users').where({ id: key }).first();
-              if (u) nm = (u.firstname || u.lastname) ? `${u.firstname || ''} ${u.lastname || ''}`.trim() : (u.name || u.email || nm);
+              if (u) nm = (u.firstname || u.lastname) ? `${u.firstname || ''} ${u.lastname ? u.lastname.charAt(0).toUpperCase() + '.' : ''}`.trim() : (u.name || u.email || nm);
             }
           } catch {}
           nameCache.set(key, nm);

@@ -68,7 +68,7 @@ export default function UserChatPage() {
           const rUser = await fetch(`${API_BASE}/users/${id}`, { headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
           if (rUser.ok) {
             const u = await rUser.json();
-            const name = `${u.firstname || ''} ${u.lastname || ''}`.trim() || u.email || `User ${id}`;
+            const name = (() => { const fn = (u.firstname || '').trim(); const ln = (u.lastname || '').trim(); return ln ? `${fn} ${ln.charAt(0).toUpperCase()}.`.trim() : fn; })() || u.email || `User ${id}`;
             setOpponent({ name, avatar_url: u.avatar_url || '' });
           }
         } catch {}

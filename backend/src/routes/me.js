@@ -22,7 +22,7 @@ async function gameCols(k, table) {
 }
 
 // Use only columns that exist in our current users schema
-const DISPLAY_NAME_SQL = "COALESCE(u.firstname || ' ' || u.lastname, u.name, u.email)";
+const DISPLAY_NAME_SQL = "COALESCE(u.firstname || ' ' || CASE WHEN u.lastname IS NOT NULL AND u.lastname != '' THEN SUBSTR(u.lastname,1,1) || '.' ELSE '' END, u.name, u.email)";
 
 // Utility: check if table exists
 async function tableExists(knex, tableName) {
@@ -262,7 +262,7 @@ module.exports = function meRoutes({ db }) {
       const hasName = Object.prototype.hasOwnProperty.call(usersInfo, "name");
       const hasEmail = Object.prototype.hasOwnProperty.call(usersInfo, "email");
       const fullNameExpr = (hasFirst || hasLast)
-        ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')), '')"
+        ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || CASE WHEN u.lastname IS NOT NULL AND u.lastname != '' THEN SUBSTR(u.lastname,1,1) || '.' ELSE '' END), '')"
         : null;
       const nameCoalesce = [
         ...(fullNameExpr ? [fullNameExpr] : []),
@@ -331,7 +331,7 @@ module.exports = function meRoutes({ db }) {
         const parts = await k("match_participants as mp")
           .join("users as u", "u.id", "mp.user_id")
           .whereIn("mp.match_id", teamMatchIds)
-          .select("mp.match_id", "mp.user_id", "mp.team_index", k.raw(`COALESCE(NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')), ''), u.email) as name`));
+          .select("mp.match_id", "mp.user_id", "mp.team_index", k.raw(`COALESCE(NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || CASE WHEN u.lastname IS NOT NULL AND u.lastname != '' THEN SUBSTR(u.lastname,1,1) || '.' ELSE '' END), ''), u.email) as name`));
         for (const p of parts) {
           if (!participantsMap[p.match_id]) participantsMap[p.match_id] = [];
           participantsMap[p.match_id].push({ user_id: p.user_id, team_index: p.team_index, name: p.name });

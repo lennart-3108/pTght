@@ -319,11 +319,14 @@ export default function CreatePage() {
                       disabled={!form.league_id}
                     >
                       <option value="">{form.league_id ? "– wählen –" : "Bitte zuerst Liga wählen"}</option>
-                      {leagueMembers.map((m) => (
-                        <option key={m.id} value={`${m.firstname} ${m.lastname}`.trim()}>
-                          {m.firstname} {m.lastname}
-                        </option>
-                      ))}
+                      {leagueMembers.map((m) => {
+                        const dn = `${m.firstname || ''} ${m.lastname ? m.lastname.charAt(0).toUpperCase() + '.' : ''}`.trim();
+                        return (
+                          <option key={m.id} value={dn}>
+                            {dn}
+                          </option>
+                        );
+                      })}
                     </select>
                   </label>
                 );

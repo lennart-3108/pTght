@@ -141,7 +141,7 @@ export default function LeagueDetailPage() {
         const uid = getMemberUserId(m);
         if (!uid) return null;
         const name = (m.firstname && m.lastname)
-          ? `${m.firstname} ${m.lastname}`
+          ? `${m.firstname} ${m.lastname.charAt(0).toUpperCase()}.`
           : (m.name || m.username || m.displayName || `User ${uid}`);
         return { id: uid, name };
       })
@@ -180,7 +180,7 @@ export default function LeagueDetailPage() {
         if (!uid) return null;
         if (existingIds.has(uid)) return null;
         const name = (m.firstname && m.lastname)
-          ? `${m.firstname} ${m.lastname}`
+          ? `${m.firstname} ${m.lastname.charAt(0).toUpperCase()}.`
           : (m.name || m.username || `User ${uid}`);
         return {
           _uid: uid,

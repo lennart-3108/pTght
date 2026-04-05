@@ -58,8 +58,10 @@ module.exports = function usersRoutes(ctx) {
   };
 
   const buildDisplayName = (row) => {
-    const parts = [row.firstname || "", row.lastname || ""].map(s => String(s || "").trim()).filter(Boolean);
-    if (parts.length) return parts.join(" ");
+    const first = String(row.firstname || '').trim();
+    const last = String(row.lastname || '').trim();
+    const lastInitial = last ? `${last.charAt(0).toUpperCase()}.` : '';
+    if (first || lastInitial) return `${first} ${lastInitial}`.trim();
     if (row.name && String(row.name).trim()) return String(row.name).trim();
     if (row.email && String(row.email).trim()) return String(row.email).trim();
     const id = row.id || row.user_id || row.friend_id;
@@ -502,7 +504,13 @@ module.exports = function usersRoutes(ctx) {
     const sql = `SELECT id, firstname, lastname, email FROM users WHERE email LIKE ? OR firstname LIKE ? OR lastname LIKE ? ORDER BY firstname, lastname LIMIT 20`;
     db.all(sql, [like, like, like], (err, rows) => {
       if (err) return res.status(500).json({ error: 'Datenbankfehler', details: err.message });
-      const out = (rows || []).map(r => ({ id: r.id, firstname: r.firstname, lastname: r.lastname, email: r.email, displayName: (r.firstname || r.lastname) ? `${(r.firstname||'').trim()} ${(r.lastname||'').trim()}`.trim() : r.email }));
+      const out = (rows || []).map(r => {
+        const fn = (r.firstname || '').trim();
+        const ln = (r.lastname || '').trim();
+        const lastInitial = ln ? `${ln.charAt(0).toUpperCase()}.` : '';
+        const dn = (fn || lastInitial) ? `${fn} ${lastInitial}`.trim() : r.email;
+        return { id: r.id, firstname: r.firstname, lastname: r.lastname, email: r.email, displayName: dn };
+      });
       res.json(out);
     });
   });
@@ -536,7 +544,7 @@ module.exports = function usersRoutes(ctx) {
       const hasLast = Object.prototype.hasOwnProperty.call(usersInfo, "lastname");
       const hasName = Object.prototype.hasOwnProperty.call(usersInfo, "name");
       const hasEmail = Object.prototype.hasOwnProperty.call(usersInfo, "email");
-      const fullNameExpr = (hasFirst || hasLast) ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || COALESCE(u.lastname,'')), '')" : null;
+      const fullNameExpr = (hasFirst || hasLast) ? "NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || CASE WHEN u.lastname IS NOT NULL AND u.lastname != '' THEN SUBSTR(u.lastname,1,1) || '.' ELSE '' END), '')" : null;
       const displayExpr = (alias) => {
         const parts = [];
         if (fullNameExpr) parts.push(fullNameExpr.replace(/u\./g, `${alias}.`));
@@ -564,6 +572,9 @@ module.exports = function usersRoutes(ctx) {
 
       if (hasHomeUserId) selectColumns.push(k.raw("g.home_user_id as home_user_id"));
       if (hasAwayUserId) selectColumns.push(k.raw("g.away_user_id as away_user_id"));
+      if (Object.prototype.hasOwnProperty.call(info, "team_count")) selectColumns.push("g.team_count");
+      if (Object.prototype.hasOwnProperty.call(info, "players_per_team")) selectColumns.push("g.players_per_team");
+      if (Object.prototype.hasOwnProperty.call(info, "status")) selectColumns.push("g.status");
 
       let q = k({ g: table })
         .leftJoin({ l: "leagues" }, "l.id", "g.league_id")
@@ -571,11 +582,22 @@ module.exports = function usersRoutes(ctx) {
         .leftJoin({ s: "sports" }, "s.id", "l.sport_id")
         .select(selectColumns);
 
+      // Also include matches where user is a match_participant (team matches)
+      const hasParticipants = await k.schema.hasTable("match_participants").catch(() => false);
+      let participantMatchIds = [];
+      if (hasParticipants) {
+        const mpRows = await k("match_participants").where({ user_id: userId }).andWhere(function () { this.whereNull("status").orWhere("status", "joined"); }).select("match_id");
+        participantMatchIds = (mpRows || []).map(r => r.match_id);
+      }
+
       if (hasHomeUserId || hasAwayUserId) {
         q = q.where(function () {
           if (hasHomeUserId) this.orWhere("g.home_user_id", userId);
           if (hasAwayUserId) this.orWhere("g.away_user_id", userId);
+          if (participantMatchIds.length) this.orWhereIn("g.id", participantMatchIds);
         });
+      } else if (participantMatchIds.length) {
+        q = q.whereIn("g.id", participantMatchIds);
       } else if (hasHomeText || hasAwayText) {
         q = q.join({ ul: "user_leagues" }, "ul.league_id", "g.league_id").where("ul.user_id", userId);
       } else {
@@ -585,7 +607,47 @@ module.exports = function usersRoutes(ctx) {
       if (tsCol) q = q.orderBy(`g.${tsCol}`, "desc"); else q = q.orderBy("g.id", "desc");
 
       const rows = await q;
-      const withTs = (rows || []).map(r => ({ ...r, ts: r.kickoff_at ? (Date.parse(r.kickoff_at) || 0) : 0 }));
+
+      // For team matches, enrich with participant names grouped by team
+      const hasTeamCount = Object.prototype.hasOwnProperty.call(info, "team_count");
+      const hasPlayersPerTeam = Object.prototype.hasOwnProperty.call(info, "players_per_team");
+      const teamMatchIds = (rows || []).filter(r => hasTeamCount && Number(r.team_count) >= 2).map(r => r.id);
+      let participantsMap = {};
+      if (teamMatchIds.length && hasParticipants) {
+        const parts = await k("match_participants as mp")
+          .join("users as u", "u.id", "mp.user_id")
+          .whereIn("mp.match_id", teamMatchIds)
+          .andWhere(function () { this.whereNull("mp.status").orWhere("mp.status", "joined"); })
+          .select("mp.match_id", "mp.user_id", "mp.team_index", k.raw(`COALESCE(NULLIF(TRIM(COALESCE(u.firstname,'') || ' ' || CASE WHEN u.lastname IS NOT NULL AND u.lastname != '' THEN SUBSTR(u.lastname,1,1) || '.' ELSE '' END), ''), u.email) as name`));
+        for (const p of parts) {
+          if (!participantsMap[p.match_id]) participantsMap[p.match_id] = [];
+          participantsMap[p.match_id].push({ user_id: p.user_id, team_index: p.team_index, name: p.name });
+        }
+      }
+
+      // Add team_count and players_per_team to select if available
+      const withTs = (rows || []).map(r => {
+        const out = { ...r, ts: r.kickoff_at ? (Date.parse(r.kickoff_at) || 0) : 0 };
+        if (hasTeamCount) out.team_count = r.team_count;
+        if (hasPlayersPerTeam) out.players_per_team = r.players_per_team;
+        // For team matches, add participants and build home/away from team names
+        if (participantsMap[r.id]) {
+          out.participants = participantsMap[r.id];
+          const team1 = participantsMap[r.id].filter(p => p.team_index === 1).map(p => p.name);
+          const team2 = participantsMap[r.id].filter(p => p.team_index === 2).map(p => p.name);
+          if (team1.length || team2.length) {
+            out.home = team1.join(', ') || out.home;
+            out.away = team2.join(', ') || out.away;
+            // Determine if this user is home or away based on team_index
+            const myMp = participantsMap[r.id].find(p => p.user_id === userId);
+            if (myMp) {
+              if (myMp.team_index === 1) out.home_user_id = userId;
+              else if (myMp.team_index === 2) out.away_user_id = userId;
+            }
+          }
+        }
+        return out;
+      });
       const completed = withTs.filter(r => (r.home_score != null && r.away_score != null)).sort((a, b) => (b.ts - a.ts));
       const upcoming = withTs.filter(r => (r.home_score == null && r.away_score == null)).sort((a, b) => (a.ts - b.ts));
       return res.json({ upcoming, completed });

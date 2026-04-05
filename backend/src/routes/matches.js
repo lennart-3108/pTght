@@ -10,7 +10,8 @@ function resolveKnex(db) {
 function formatUserName(row) {
   const first = (row?.firstname || '').trim();
   const last = (row?.lastname || '').trim();
-  if (first || last) return `${first} ${last}`.trim();
+  const lastInitial = last ? `${last.charAt(0).toUpperCase()}.` : '';
+  if (first || lastInitial) return `${first} ${lastInitial}`.trim();
   if (row?.name) return String(row.name).trim();
   if (row?.email) return String(row.email).trim();
   return row?.id ? `user:${row.id}` : '';
@@ -50,7 +51,7 @@ module.exports = function matchesRoutes(ctx) {
     const parts = [];
     if (hasColumn(info, 'firstname') || hasColumn(info, 'lastname')) {
       const firstExpr = hasColumn(info, 'firstname') ? `COALESCE(${alias}.firstname,'')` : "''";
-      const lastExpr = hasColumn(info, 'lastname') ? `COALESCE(${alias}.lastname,'')` : "''";
+      const lastExpr = hasColumn(info, 'lastname') ? `CASE WHEN ${alias}.lastname IS NOT NULL AND ${alias}.lastname != '' THEN SUBSTR(${alias}.lastname,1,1) || '.' ELSE '' END` : "''";
       parts.push(`NULLIF(TRIM(${firstExpr} || ' ' || ${lastExpr}), '')`);
     }
     if (hasColumn(info, 'name')) parts.push(`${alias}.name`);
@@ -1109,7 +1110,12 @@ module.exports = function matchesRoutes(ctx) {
               // Return the names of players who CAN submit
               const captainIds = [captain1?.user_id, captain2?.user_id].filter(Boolean);
               const captainUsers = captainIds.length ? await k('users').whereIn('id', captainIds).select('id', 'firstname', 'lastname') : [];
-              const captainNames = captainUsers.map(u => [u.firstname, u.lastname].filter(Boolean).join(' ') || `Spieler #${u.id}`);
+              const captainNames = captainUsers.map(u => {
+                const fn = (u.firstname || '').trim();
+                const ln = (u.lastname || '').trim();
+                const li = ln ? `${ln.charAt(0).toUpperCase()}.` : '';
+                return `${fn} ${li}`.trim() || `Spieler #${u.id}`;
+              });
               return res.json({ canSubmit: false, reason: 'ONLY_TEAM_CAPTAINS', captainNames });
             }
           }
