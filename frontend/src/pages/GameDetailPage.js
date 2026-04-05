@@ -670,8 +670,9 @@ export default function GameDetailPage() {
       // Determine if this is tennis and use appropriate data
       const isTennis = game?.sport?.toLowerCase().includes('tennis') || 
                        game?.sportType?.toLowerCase().includes('tennis');
+      const tennisNumSetsNow = tennisResult?.numSets || 1;
       
-      const requestBody = isTennis && tennisResult ? {
+      const requestBody = isTennis && tennisResult && tennisNumSetsNow > 1 ? {
         home_score: tennisResult.home_score,
         away_score: tennisResult.away_score,
         sets: tennisResult.sets,
