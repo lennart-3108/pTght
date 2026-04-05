@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { API_BASE } from "../config";
 import Avatar from "./Avatar";
 
-export default function MatchChat({ matchId, token }) {
+export default function MatchChat({ matchId, token, onMetaLoaded }) {
   const [messages, setMessages] = useState([]);
   const [meta, setMeta] = useState(null);
   const [text, setText] = useState("");
@@ -45,6 +45,7 @@ export default function MatchChat({ matchId, token }) {
           setError("");
           setMessages(Array.isArray(data.messages) ? data.messages : []);
           setMeta(data.meta || null);
+          if (initial && data.meta?.matchInfo && onMetaLoaded) onMetaLoaded(data.meta.matchInfo);
           if (initial) setTimeout(scrollToBottom, 0);
           // mark as read
           try {

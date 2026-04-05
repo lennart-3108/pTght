@@ -1668,7 +1668,63 @@ module.exports = function matchesRoutes(ctx) {
         senderUserName: row.sender_user_name || null,
         senderTeamName: row.sender_team_name || null
       }));
-  res.json({ messages, meta: { viewerTeamId: participant.teamId, viewerSide: participant.side, matchType: participant.matchType, viewerUserId: Number(req.user.id) || null } });
+
+      // Build match summary for chat header
+      let sportName = null, leagueName = null;
+      if (match.league_id) {
+        const league = await k('leagues').where({ id: match.league_id }).first().catch(() => null);
+        if (league) {
+          leagueName = league.name || null;
+          if (league.sport_id) {
+            const sport = await k('sports').where({ id: league.sport_id }).first().catch(() => null);
+            if (sport) sportName = sport.name || null;
+          }
+        }
+      }
+      // Gather participant names
+      const participantNames = [];
+      const hasMP = await k.schema.hasTable('match_participants').catch(() => false);
+      if (hasMP) {
+        const parts = await k('match_participants as mp')
+          .join('users as u', 'u.id', 'mp.user_id')
+          .where({ 'mp.match_id': matchId })
+          .andWhere(function () { this.whereNull('mp.status').orWhere('mp.status', 'joined'); })
+          .select('mp.team_index', 'u.firstname', 'u.lastname')
+          .orderBy('mp.team_index', 'asc')
+          .orderBy('mp.id', 'asc')
+          .catch(() => []);
+        for (const p of parts) {
+          const fn = p.firstname || '';
+          const ln = p.lastname ? (p.lastname.charAt(0).toUpperCase() + '.') : '';
+          participantNames.push({ name: (fn + ' ' + ln).trim(), teamIndex: p.team_index });
+        }
+      }
+      // Fallback to home/away user names
+      if (!participantNames.length) {
+        for (const uid of [match.home_user_id, match.away_user_id].filter(Boolean)) {
+          const u = await k('users').where({ id: uid }).first('firstname', 'lastname').catch(() => null);
+          if (u) {
+            const fn = u.firstname || '';
+            const ln = u.lastname ? (u.lastname.charAt(0).toUpperCase() + '.') : '';
+            participantNames.push({ name: (fn + ' ' + ln).trim(), teamIndex: null });
+          }
+        }
+      }
+
+      const matchInfo = {
+        sportName,
+        leagueName,
+        kickoffAt: match.kickoff_at || null,
+        kickoffEndAt: match.kickoff_end_at || null,
+        status: match.status || null,
+        homeScore: match.home_score != null ? match.home_score : null,
+        awayScore: match.away_score != null ? match.away_score : null,
+        participants: participantNames,
+        teamCount: match.team_count || null,
+        playersPerTeam: match.players_per_team || null,
+      };
+
+  res.json({ messages, meta: { viewerTeamId: participant.teamId, viewerSide: participant.side, matchType: participant.matchType, viewerUserId: Number(req.user.id) || null, matchInfo } });
     } catch (e) {
       const msg = (e && e.message || '').toLowerCase();
       if (msg.includes('db_not_available')) return res.status(500).json({ error: 'DB_NOT_AVAILABLE' });
