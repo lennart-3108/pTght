@@ -32,7 +32,13 @@ async function ensureCommunityLeagues(db, onLog = console.log) {
   }
 
   const cities = await k("cities").select("id", "name");
-  const sports = await k("sports").select("id", "name");
+
+  // Only create leagues for active/published sports
+  const sportsCols = await k("sports").columnInfo().catch(() => ({}));
+  const hasActive = !!sportsCols.active;
+  let sportsQuery = k("sports").select("id", "name");
+  if (hasActive) sportsQuery = sportsQuery.where("active", 1);
+  const sports = await sportsQuery;
 
   let created = 0;
   for (const city of cities) {
@@ -52,6 +58,10 @@ async function ensureCommunityLeagues(db, onLog = console.log) {
         if (hasSeasonYear) rec.season_year = year;
         if (startCol) rec[startCol] = start;
         if (endCol) rec[endCol] = end;
+        if (leaguesCols.published) rec.published = 1;
+        if (leaguesCols.status) rec.status = 'active';
+        if (leaguesCols.is_community) rec.is_community = 1;
+        if (leaguesCols.level) rec.level = 'community';
 
         try {
           await k("leagues").insert(rec);

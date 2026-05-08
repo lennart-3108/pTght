@@ -103,6 +103,7 @@ const translations = {
     'login.stats.teamMembers': 'Team-Mitglieder',
     'login.stats.memberships': 'Liga-Mitgliedschaften',
     'login.stats.sports': 'Sportarten',
+    'login.stats.liveSports': 'Sportarten live',
 
     'login.unconfirmed.title': 'E-Mail noch nicht bestätigt',
     'login.unconfirmed.subtitle': 'Bitte bestätige {email}',
@@ -983,6 +984,7 @@ const translations = {
     'login.stats.teamMembers': 'Team members',
     'login.stats.memberships': 'League memberships',
     'login.stats.sports': 'Sports',
+    'login.stats.liveSports': 'Sports live',
 
     'login.unconfirmed.title': 'Email not confirmed',
     'login.unconfirmed.subtitle': 'Please confirm {email}',

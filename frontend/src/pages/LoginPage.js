@@ -61,28 +61,22 @@ function StatsPanel({ stats, statsLoading, statsError }) {
   if (statsLoading && !stats) return <div style={{ padding: 16 }}>{t('login.stats.loading')}</div>;
   if (statsError) return <div style={{ padding: 16, opacity: 0.7 }}>{statsError}</div>;
   if (!stats) return null;
-  const items = [
-    { key: 'users', label: t('login.stats.users'), val: stats.users },
-    stats.confirmedUsers != null ? { key: 'confirmedUsers', label: t('login.stats.confirmed'), val: stats.confirmedUsers } : null,
-    { key: 'leagues', label: t('login.stats.leagues'), val: stats.leagues },
-    { key: 'matches', label: t('login.stats.matches'), val: stats.matches },
-    stats.teams != null ? { key: 'teams', label: t('login.stats.teams'), val: stats.teams } : null,
-    stats.teamMembers != null ? { key: 'teamMembers', label: t('login.stats.teamMembers'), val: stats.teamMembers } : null,
-    { key: 'memberships', label: t('login.stats.memberships'), val: stats.memberships },
-    { key: 'sports', label: t('login.stats.sports'), val: stats.sports }
-  ].filter(Boolean);
+  const sportNames = Array.isArray(stats.sportNames) ? stats.sportNames : [];
   return (
-    <div style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit,minmax(110px,1fr))',
-      gap: 12,
-      padding: 12
-    }}>
-      {items.map(it => (
-        <div key={it.key} style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, textAlign: 'center', padding: '12px 8px', backdropFilter: 'blur(6px)' }}>
-          <StatNumber value={typeof it.val === 'number' ? it.val : 0} label={it.label} />
+    <div style={{ padding: 12 }}>
+      <div style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 10, textAlign: 'center', padding: '12px 8px', backdropFilter: 'blur(6px)', display: 'inline-block', minWidth: 120 }}>
+        <StatNumber value={typeof stats.users === 'number' ? stats.users : 0} label={t('login.stats.users')} />
+      </div>
+      {sportNames.length > 0 && (
+        <div style={{ marginTop: 16 }}>
+          <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.75, marginBottom: 8 }}>{t('login.stats.liveSports')}</div>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
+            {sportNames.map(name => (
+              <span key={name} style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 20, padding: '6px 14px', fontSize: 14 }}>{name}</span>
+            ))}
+          </div>
         </div>
-      ))}
+      )}
     </div>
   );
 }

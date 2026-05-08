@@ -513,9 +513,9 @@ const jobKnex = (db && db.knex && db.knex.client) ? db.knex : knexDirect;
 // optional verbose job logger
 const jobLog = (process.env.JOBS_VERBOSE === '1') ? (...a) => console.log(...a) : () => {};
 if (jobKnex) {
-  // DISABLED: Creates thousands of leagues automatically (one per city per sport)
-  // ensureCommunityLeagues(jobKnex, () => jobLog("Community-Ligen synchronisiert."));
-  // setInterval(() => ensureCommunityLeagues(jobKnex, () => jobLog("Community-Ligen synchronisiert.")), 60 * 1000); // alle 60s prüfen
+  // Create community leagues for every active sport × city (idempotent)
+  ensureCommunityLeagues(jobKnex, (...a) => jobLog(...a));
+  setInterval(() => ensureCommunityLeagues(jobKnex, (...a) => jobLog(...a)), 60 * 60 * 1000); // hourly
   // Auto-pair community leagues every 5 minutes
   // autoPairCommunity(jobKnex, (...a) => jobLog(...a));
   // setInterval(() => autoPairCommunity(jobKnex, (...a) => jobLog(...a)), 5 * 60 * 1000);
@@ -2207,6 +2207,11 @@ server.on('error', (err) => {
       const teams = await countSafe('teams');
       const teamMembers = await countSafe('team_members');
 
+      let sportNames = [];
+      if (tables.sports) {
+        sportNames = await k('sports').select('name').orderBy('sort_order').then(rows => rows.map(r => r.name)).catch(() => []);
+      }
+
       const payload = {
         users,
         ...(confirmedUsers != null ? { confirmedUsers } : {}),
@@ -2216,6 +2221,7 @@ server.on('error', (err) => {
         teamMembers,
         memberships,
         sports,
+        sportNames,
         generatedAt: new Date().toISOString()
       };
       cache.data = payload;
@@ -2271,6 +2277,11 @@ app.get('/public/stats', async (req, res) => {
     const teams = await countSafe('teams');
     const teamMembers = await countSafe('team_members');
 
+    let sportNames = [];
+    if (tables.sports) {
+      sportNames = await k('sports').select('name').orderBy('sort_order').then(rows => rows.map(r => r.name)).catch(() => []);
+    }
+
     const payload = {
       users,
       ...(confirmedUsers != null ? { confirmedUsers } : {}),
@@ -2280,6 +2291,7 @@ app.get('/public/stats', async (req, res) => {
       teamMembers,
       memberships,
       sports,
+      sportNames,
       generatedAt: new Date().toISOString()
     };
     cache.data = payload;
