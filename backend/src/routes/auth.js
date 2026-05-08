@@ -181,10 +181,10 @@ module.exports = function authRoutes(ctx) {
       
       const selectRole = hasRole ? ', role' : '';
       const querySql = hasUsername && isAdminLogin
-        ? `SELECT id, email, password, is_admin, is_confirmed${selectRole} FROM users WHERE username = ?`
+        ? `SELECT id, email, password_hash, is_admin, is_confirmed${selectRole} FROM users WHERE username = ?`
         : hasUsername
-          ? `SELECT id, email, password, is_admin, is_confirmed${selectRole} FROM users WHERE username = ? OR email = ?`
-          : `SELECT id, email, password, is_admin, is_confirmed${selectRole} FROM users WHERE email = ?`;
+          ? `SELECT id, email, password_hash, is_admin, is_confirmed${selectRole} FROM users WHERE username = ? OR email = ?`
+          : `SELECT id, email, password_hash, is_admin, is_confirmed${selectRole} FROM users WHERE email = ?`;
       const params = hasUsername && isAdminLogin ? [key] : hasUsername ? [key, key] : [key];
 
       db.get(querySql, params, (err, user) => {
@@ -193,13 +193,13 @@ module.exports = function authRoutes(ctx) {
         if (!user.is_confirmed) return res.status(403).json({ error: "E-Mail noch nicht bestätigt" });
 
         // Defensive: if the password hash is missing/invalid, treat as invalid credentials
-        if (typeof user.password !== 'string' || user.password.length < 10) {
+        if (typeof user.password_hash !== 'string' || user.password_hash.length < 10) {
           return res.status(401).json({ error: "Ungültige Zugangsdaten" });
         }
 
         let ok = false;
         try {
-          ok = bcrypt.compareSync(password, user.password);
+          ok = bcrypt.compareSync(password, user.password_hash);
         } catch (e) {
           // Invalid hash format or other bcrypt error – treat as invalid credentials
           return res.status(401).json({ error: "Ungültige Zugangsdaten" });
@@ -244,7 +244,7 @@ module.exports = function authRoutes(ctx) {
         }
 
         db.run(
-          `UPDATE users SET password = ? WHERE id = ?`,
+          `UPDATE users SET password_hash = ? WHERE id = ?`,
           [hashed, user.id],
           function (uErr) {
             if (uErr) {

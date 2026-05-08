@@ -32,6 +32,7 @@ const newsRoutes = require("./news");
 const deployRoutes = require("./deploy");
 const tournamentsRoutes = require("../../routes/tournaments");
 const rulesetsRoutes = require("../../routes/rulesets");
+const communityLeaguesRoutes = require("../../routes/communityLeagues");
 
 function registerRoutes(app, ctx) {
   const { ensureTables } = createMiddleware(ctx);
@@ -75,6 +76,7 @@ function registerRoutes(app, ctx) {
   apiRouter.use('/deploy', deployRoutes);
   apiRouter.use('/tournaments', tournamentsRoutes);
   apiRouter.use('/rulesets', rulesetsRoutes);
+  apiRouter.use('/community-leagues', communityLeaguesRoutes);
 
   // --- Email status + test routes ---
   apiRouter.get("/admin/email-status", async (req, res) => {
