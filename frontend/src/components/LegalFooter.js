@@ -37,6 +37,7 @@ export default function LegalFooter() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <span>© {new Date().getFullYear()} Match League</span>
           <span>Made with 🧡 in Bremen</span>
+          <span style={{ opacity: 0.5, fontSize: 11 }}>v{process.env.REACT_APP_VERSION || require('../../package.json').version}</span>
         </div>
       </div>
     </footer>
