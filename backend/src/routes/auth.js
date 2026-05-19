@@ -179,12 +179,11 @@ module.exports = function authRoutes(ctx) {
       // Special case: allow "admin" as username only
       const isAdminLogin = key === 'admin';
       
-      const selectRole = hasRole ? ', role' : '';
       const querySql = hasUsername && isAdminLogin
-        ? `SELECT id, email, password, is_admin, is_confirmed${selectRole} FROM users WHERE username = ?`
+        ? `SELECT * FROM users WHERE username = ?`
         : hasUsername
-          ? `SELECT id, email, password, is_admin, is_confirmed${selectRole} FROM users WHERE username = ? OR email = ?`
-          : `SELECT id, email, password, is_admin, is_confirmed${selectRole} FROM users WHERE email = ?`;
+          ? `SELECT * FROM users WHERE username = ? OR email = ?`
+          : `SELECT * FROM users WHERE email = ?`;
       const params = hasUsername && isAdminLogin ? [key] : hasUsername ? [key, key] : [key];
 
       db.get(querySql, params, (err, user) => {
@@ -192,14 +191,15 @@ module.exports = function authRoutes(ctx) {
         if (!user) return res.status(401).json({ error: "Ungültige Zugangsdaten" });
         if (!user.is_confirmed) return res.status(403).json({ error: "E-Mail noch nicht bestätigt" });
 
-        // Defensive: if the password hash is missing/invalid, treat as invalid credentials
-        if (typeof user.password !== 'string' || user.password.length < 10) {
+        // Support both 'password' (prod) and 'password_hash' (local) column names
+        const hash = user.password || user.password_hash;
+        if (typeof hash !== 'string' || hash.length < 10) {
           return res.status(401).json({ error: "Ungültige Zugangsdaten" });
         }
 
         let ok = false;
         try {
-          ok = bcrypt.compareSync(password, user.password);
+          ok = bcrypt.compareSync(password, hash);
         } catch (e) {
           // Invalid hash format or other bcrypt error – treat as invalid credentials
           return res.status(401).json({ error: "Ungültige Zugangsdaten" });
