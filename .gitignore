@@ -93,3 +93,6 @@ backend-start-*.log
 mydb.sqlite
 sportplattform.db
 backend.pid
+# Prod-Snapshot (lokal, nicht im Repo)
+pTght-prod/
+.continue/
